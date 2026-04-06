@@ -1,0 +1,156 @@
+import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { UserRole } from "./backend";
+import SplashScreen from "./components/SplashScreen";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { BrowserRouter, Navigate, Route, Routes } from "./lib/router";
+
+import AboutPage from "./pages/AboutPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminPinPage from "./pages/AdminPinPage";
+import CategoryPage from "./pages/CategoryPage";
+import ChoosePlanPage from "./pages/ChoosePlanPage";
+import DeliveryAppPage from "./pages/DeliveryAppPage";
+import DeliveryOrderPage from "./pages/DeliveryOrderPage";
+import DeliveryRegisterPage from "./pages/DeliveryRegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import ManagerDashboardPage from "./pages/ManagerDashboardPage";
+import ManagerLoginPage from "./pages/ManagerLoginPage";
+import OrdersPage from "./pages/OrdersPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import ProviderDashboardPage from "./pages/ProviderDashboardPage";
+import ProviderProfilePage from "./pages/ProviderProfilePage";
+import ProviderSubscribePage from "./pages/ProviderSubscribePage";
+import ScrapCalculatorPage from "./pages/ScrapCalculatorPage";
+import SearchPage from "./pages/SearchPage";
+import SignupPage from "./pages/SignupPage";
+import TermsPage from "./pages/TermsPage";
+
+function ProviderRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-primary">Load Ho Raha Hai...</span>
+      </div>
+    );
+  if (!user || user.role !== UserRole.provider)
+    return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const adminVerified = sessionStorage.getItem("adminVerified") === "true";
+  if (!adminVerified) return <Navigate to="/admin/pin" replace />;
+  return <>{children}</>;
+}
+
+function ManagerRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-primary">Load Ho Raha Hai...</span>
+      </div>
+    );
+  if (!user || user.role !== "manager")
+    return <Navigate to="/manager-login" replace />;
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  useEffect(() => {
+    const savedColor = localStorage.getItem("dz_theme_color");
+    if (savedColor) {
+      document.documentElement.style.setProperty("--dz-accent", savedColor);
+    }
+  }, []);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    });
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/category/:categoryName" element={<CategoryPage />} />
+      <Route path="/provider/:userId" element={<ProviderProfilePage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/orders" element={<OrdersPage />} />
+      <Route path="/scrap-calculator" element={<ScrapCalculatorPage />} />
+      <Route path="/manager-login" element={<ManagerLoginPage />} />
+      {/* Delivery Module */}
+      <Route path="/delivery-register" element={<DeliveryRegisterPage />} />
+      <Route path="/delivery-app" element={<DeliveryAppPage />} />
+      <Route path="/delivery-order" element={<DeliveryOrderPage />} />
+      <Route
+        path="/manager"
+        element={
+          <ManagerRoute>
+            <ManagerDashboardPage />
+          </ManagerRoute>
+        }
+      />
+      <Route
+        path="/provider/choose-plan"
+        element={
+          <ProviderRoute>
+            <ChoosePlanPage />
+          </ProviderRoute>
+        }
+      />
+      <Route
+        path="/provider/subscribe"
+        element={
+          <ProviderRoute>
+            <ProviderSubscribePage />
+          </ProviderRoute>
+        }
+      />
+      <Route
+        path="/provider/dashboard"
+        element={
+          <ProviderRoute>
+            <ProviderDashboardPage />
+          </ProviderRoute>
+        }
+      />
+      <Route path="/admin/pin" element={<AdminPinPage />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <SplashScreen>
+            <AppRoutes />
+          </SplashScreen>
+          <Toaster richColors position="top-right" />
+        </BrowserRouter>
+      </LanguageProvider>
+    </AuthProvider>
+  );
+}

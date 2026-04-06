@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "PlusJakartaSans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Emerald green theme */
+    --background: 0.99 0.004 120;
+    --foreground: 0.13 0.02 150;
+    --card: 1 0 0;
+    --card-foreground: 0.13 0.02 150;
+    --popover: 1 0 0;
+    --popover-foreground: 0.13 0.02 150;
+
+    /* Primary = deep emerald */
+    --primary: 0.35 0.11 160;
+    --primary-foreground: 0.98 0 0;
+
+    /* Secondary = light gray */
+    --secondary: 0.97 0.005 150;
+    --secondary-foreground: 0.35 0.11 160;
+
+    --muted: 0.96 0.005 150;
+    --muted-foreground: 0.52 0.02 150;
+
+    --accent: 0.92 0.035 155;
+    --accent-foreground: 0.25 0.09 160;
+
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+
+    --border: 0.91 0.01 150;
+    --input: 0.91 0.01 150;
+    --ring: 0.42 0.13 160;
+
+    /* Emerald header gradient tokens */
+    --emerald-deep: oklch(0.3 0.1 160);
+    --emerald-mid: oklch(0.35 0.12 162);
+    --emerald-light: oklch(0.45 0.14 155);
+    --emerald-accent: oklch(0.52 0.17 152);
+    --emerald-bright: oklch(0.6 0.18 150);
+
+    --chart-1: 0.646 0.222 160;
+    --chart-2: 0.6 0.15 185;
+    --chart-3: 0.398 0.07 227;
+    --chart-4: 0.828 0.189 84;
+    --chart-5: 0.769 0.188 70;
+
+    --sidebar: 0.985 0 0;
+    --sidebar-foreground: 0.145 0 0;
+    --sidebar-primary: 0.35 0.11 160;
+    --sidebar-primary-foreground: 0.985 0 0;
+    --sidebar-accent: 0.92 0.035 155;
+    --sidebar-accent-foreground: 0.25 0.09 160;
+    --sidebar-border: 0.91 0.01 150;
+    --sidebar-ring: 0.42 0.13 160;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+  html {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Emerald gradient utilities */
+.bg-emerald-header {
+  background: linear-gradient(
+    135deg,
+    oklch(0.28 0.095 162) 0%,
+    oklch(0.22 0.08 164) 100%
+  );
+  width: 100%;
+}
+.bg-emerald-footer {
+  background: linear-gradient(
+    135deg,
+    oklch(0.2 0.075 164) 0%,
+    oklch(0.16 0.06 166) 100%
+  );
+  width: 100%;
+}
+.bg-emerald-hero {
+  background: linear-gradient(
+    135deg,
+    oklch(0.32 0.11 160) 0%,
+    oklch(0.26 0.09 163) 60%,
+    oklch(0.22 0.08 165) 100%
+  );
+  width: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(0.96 0.005 150);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.6 0.14 155);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.13 158);
+}
+
+/* Smooth transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Marquee animation for announcements */
+@keyframes marquee {
+  0% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+  display: inline-block;
+  white-space: nowrap;
+}
