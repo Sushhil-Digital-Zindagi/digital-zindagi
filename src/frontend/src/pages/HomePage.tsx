@@ -16,6 +16,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import HeroCarousel from "../components/HeroCarousel";
 import ProviderCard from "../components/ProviderCard";
+import VideoGallery from "../components/VideoGallery";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   useActiveBanners,
@@ -26,6 +27,23 @@ import { useUserLocation } from "../hooks/useUserLocation";
 import { Link, useNavigate } from "../lib/router";
 import { getDistanceKm } from "../utils/locationUtils";
 import { useSettingsListener } from "../utils/settingsSync";
+
+function readHomeSectionToggles() {
+  const keys = [
+    "dz_section_news",
+    "dz_section_jobs",
+    "dz_section_image_resizer",
+    "dz_section_ai_enhancer",
+    "dz_section_age_calculator",
+    "dz_section_percentage_calculator",
+  ];
+  const result: Record<string, boolean> = {};
+  for (const k of keys) {
+    const val = localStorage.getItem(k);
+    result[k] = val === null ? true : val === "true";
+  }
+  return result;
+}
 
 interface CustomSocialPlatform {
   key: string;
@@ -180,7 +198,7 @@ function readHomepageSettings() {
       localStorage.getItem("dz_show_register_banner") !== "false",
     tagline:
       localStorage.getItem("dz_app_tagline") ??
-      "डिजिटल जिंदगी से जुड़ो और लोकल सर्विस का फायदा उठाओ",
+      "डिजिटल जिंदगी से जुड़ो और लोकल सर्विस का फायदा उठाओ",
     announcementEnabled:
       localStorage.getItem("dz_announcement_enabled") === "true",
     announcementText: localStorage.getItem("dz_announcement") ?? "",
@@ -445,11 +463,14 @@ export default function HomePage() {
   const [homepageSettings, setHomepageSettings] =
     useState(readHomepageSettings);
 
+  const [sectionToggles, setSectionToggles] = useState(readHomeSectionToggles);
+
   const reloadSettings = useCallback(() => {
     setSocialSettings(readSocialSettings());
     setAffiliateSettings(readAffiliateSettings());
     setEbooks(readEbooksHome());
     setHomepageSettings(readHomepageSettings());
+    setSectionToggles(readHomeSectionToggles());
   }, []);
 
   // Re-read settings on focus (in case admin changed them)
@@ -482,7 +503,6 @@ export default function HomePage() {
     } catch {}
 
     const enriched: EnrichedProvider[] = providers.map((p) => {
-      // FIX: match by mobile, not just find first with GPS
       const pAny = p as unknown as { mobile?: string };
       const match = lsProviders.find(
         (lp) =>
@@ -590,12 +610,21 @@ export default function HomePage() {
     ...customSocialPlatforms,
   ];
 
+  // Whether any top-section button is visible
+  const hasTopSection =
+    sectionToggles.dz_section_news ||
+    sectionToggles.dz_section_jobs ||
+    sectionToggles.dz_section_image_resizer ||
+    sectionToggles.dz_section_ai_enhancer ||
+    sectionToggles.dz_section_age_calculator ||
+    sectionToggles.dz_section_percentage_calculator;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section — carousel only, logo removed to avoid duplication with header */}
+        {/* Hero Section */}
         {homepageSettings.showHeroCarousel && (
           <section className="bg-emerald-hero px-4 py-4 overflow-hidden w-full">
             <div className="max-w-7xl mx-auto">
@@ -655,81 +684,181 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Rate Calculator — Primary Feature Button */}
+        {/* Rate Calculator + Delivery side-by-side (Rate Calculator = 50% width) */}
         {homepageSettings.showRateCalculator && (
           <section className="max-w-7xl mx-auto px-4 pt-6 pb-2">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
+              className="flex gap-2"
             >
+              {/* Rate Calculator — 50% width */}
               <button
                 type="button"
                 onClick={() => navigate("/scrap-calculator")}
                 data-ocid="home.rate_calculator_button"
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white p-5 flex items-center gap-4 shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-emerald-600 transition-all active:scale-[0.99]"
+                className="w-1/2 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white p-4 flex flex-col items-center gap-2 shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-emerald-600 transition-all active:scale-[0.99]"
               >
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Calculator size={32} className="text-white" />
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Calculator size={26} className="text-white" />
                 </div>
-                <div className="text-left flex-1">
-                  <p className="font-heading font-bold text-xl">
-                    🧮 Rate Calculator
+                <div className="text-center">
+                  <p className="font-heading font-bold text-sm">
+                    🧭 Rate Calculator
                   </p>
-                  <p className="text-white/80 text-sm mt-0.5">
-                    Scrap ka sahi daam pata karein — Lohaa, Kaagaz, Taamba
+                  <p className="text-white/80 text-xs mt-0.5">
+                    Scrap ka sahi daam
                   </p>
-                </div>
-                <div className="ml-auto text-white/60 text-2xl flex-shrink-0">
-                  &rarr;
                 </div>
               </button>
+
+              {/* Delivery — 50% width, only if enabled */}
+              {(() => {
+                try {
+                  const ds = JSON.parse(
+                    localStorage.getItem("dz_delivery_settings") || "{}",
+                  );
+                  if (!ds.serviceEnabled) return null;
+                } catch {
+                  return null;
+                }
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/delivery-order")}
+                    data-ocid="home.delivery_button"
+                    className="w-1/2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-[0.99]"
+                  >
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">🚵</span>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-heading font-bold text-sm">
+                        🚗 Delivery
+                      </p>
+                      <p className="text-white/80 text-xs mt-0.5">
+                        Fast local delivery
+                      </p>
+                    </div>
+                  </button>
+                );
+              })()}
             </motion.div>
           </section>
         )}
 
-        {/* Delivery Service Button */}
-        {(() => {
-          try {
-            const ds = JSON.parse(
-              localStorage.getItem("dz_delivery_settings") || "{}",
-            );
-            if (!ds.serviceEnabled) return null;
-          } catch {
-            return null;
-          }
-          return (
-            <section className="max-w-7xl mx-auto px-4 pt-2 pb-2">
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.05 }}
-              >
+        {/* Quick Navigation Cards: News, Jobs, Student Tools */}
+        {hasTopSection && (
+          <section className="max-w-7xl mx-auto px-4 pt-2 pb-2">
+            <div className="grid grid-cols-2 gap-2">
+              {sectionToggles.dz_section_news && (
                 <button
                   type="button"
-                  onClick={() => navigate("/delivery-order")}
-                  data-ocid="home.delivery_button"
-                  className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-5 flex items-center gap-4 shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-600 transition-all active:scale-[0.99]"
+                  onClick={() => navigate("/news")}
+                  className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
                 >
-                  <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🛵</span>
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">📰</span>
                   </div>
-                  <div className="text-left flex-1">
-                    <p className="font-heading font-bold text-xl">
-                      🚴 Delivery Bhejein
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      Latest News
                     </p>
-                    <p className="text-white/80 text-sm mt-0.5">
-                      Fast local delivery — Same day, doorstep tak
-                    </p>
-                  </div>
-                  <div className="ml-auto text-white/60 text-2xl flex-shrink-0">
-                    &rarr;
+                    <p className="text-white/75 text-xs">Taza khabar</p>
                   </div>
                 </button>
-              </motion.div>
-            </section>
-          );
-        })()}
+              )}
+              {sectionToggles.dz_section_jobs && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/jobs")}
+                  className="rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">💼</span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      Sarkari Jobs
+                    </p>
+                    <p className="text-white/75 text-xs">Naukri dhundho</p>
+                  </div>
+                </button>
+              )}
+              {sectionToggles.dz_section_image_resizer && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/image-resizer")}
+                  className="rounded-2xl bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🖼️</span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      Image Resizer
+                    </p>
+                    <p className="text-white/75 text-xs">Photo compress</p>
+                  </div>
+                </button>
+              )}
+              {sectionToggles.dz_section_ai_enhancer && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/ai-enhancer")}
+                  className="rounded-2xl bg-gradient-to-r from-pink-500 to-violet-600 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">✨</span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      AI Enhancer
+                    </p>
+                    <p className="text-white/75 text-xs">Photo clear karo</p>
+                  </div>
+                </button>
+              )}
+              {/* New: Age Calculator */}
+              {sectionToggles.dz_section_age_calculator && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/age-calculator")}
+                  className="rounded-2xl bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🎂</span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      Age Calculator
+                    </p>
+                    <p className="text-white/75 text-xs">Saal/Mahine/Din</p>
+                  </div>
+                </button>
+              )}
+              {/* New: Percentage Calculator */}
+              {sectionToggles.dz_section_percentage_calculator && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/percentage-calculator")}
+                  className="rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-4 flex items-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl font-bold">%</span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-heading font-bold text-sm">
+                      % Calculator
+                    </p>
+                    <p className="text-white/75 text-xs">Marks, Change</p>
+                  </div>
+                </button>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* eBook Store Section */}
         {homepageSettings.ebookStoreEnabled && ebooks.length > 0 && (
@@ -886,7 +1015,7 @@ export default function HomePage() {
               {/* Radius fallback message */}
               {locationUsed && radiusUsed > 2 && (
                 <div className="mb-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700 font-medium">
-                  आपके पास अभी 2KM में कोई दुकान नहीं है, दायरा बढ़ा रहे हैं... (
+                  आपके पास अभी 2KM में कोई दुकान नहीं है, दायरा बढ़ा रहे हैं... (
                   {radiusUsed}KM तक की दुकानें दिख रही हैं)
                 </div>
               )}
@@ -945,6 +1074,9 @@ export default function HomePage() {
             </motion.div>
           </section>
         )}
+
+        {/* Video Gallery Section */}
+        <VideoGallery />
 
         {homepageSettings.showRegisterBanner && (
           <section className="px-4 mb-8">

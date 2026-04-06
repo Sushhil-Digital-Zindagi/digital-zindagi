@@ -28,6 +28,9 @@ interface AuthContextType {
 }
 
 const SESSION_KEY = "dz_session";
+const SESSION_EXPIRY_KEY = "dz_session_expiry";
+// 30 days in milliseconds
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -45,23 +48,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(SESSION_KEY);
+      const expiry = localStorage.getItem(SESSION_EXPIRY_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        const restored: SessionUser = {
-          ...parsed,
-          userId: BigInt(parsed.userId),
-        };
-        setUser(restored);
-        // Auto-grant admin access if Super Admin email is restored from session
-        if (
-          restored.isSuperAdmin ||
-          restored.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
-        ) {
-          sessionStorage.setItem("adminVerified", "true");
+        // Check 30-day expiry
+        if (expiry && Date.now() > Number(expiry)) {
+          // Expired — clear session
+          localStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem(SESSION_EXPIRY_KEY);
+          sessionStorage.removeItem("adminVerified");
+        } else {
+          const parsed = JSON.parse(stored);
+          const restored: SessionUser = {
+            ...parsed,
+            userId: BigInt(parsed.userId),
+          };
+          setUser(restored);
+          // Auto-grant admin access if Super Admin email is restored from session
+          if (
+            restored.isSuperAdmin ||
+            restored.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+          ) {
+            sessionStorage.setItem("adminVerified", "true");
+          }
+          // Refresh expiry on restore (sliding window)
+          localStorage.setItem(
+            SESSION_EXPIRY_KEY,
+            String(Date.now() + SESSION_DURATION_MS),
+          );
         }
       }
     } catch {
       localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SESSION_EXPIRY_KEY);
     } finally {
       setLoading(false);
     }
@@ -83,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       SESSION_KEY,
       JSON.stringify({ ...enriched, userId: enriched.userId.toString() }),
     );
+    // Set 30-day expiry timestamp
+    localStorage.setItem(
+      SESSION_EXPIRY_KEY,
+      String(Date.now() + SESSION_DURATION_MS),
+    );
     // Super Admin gets automatic admin panel access — no PIN needed
     if (isSuperAdminFlag) {
       sessionStorage.setItem("adminVerified", "true");
@@ -92,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY_KEY);
     sessionStorage.removeItem("adminVerified");
   };
 

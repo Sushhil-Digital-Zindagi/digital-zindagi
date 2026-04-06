@@ -2,7 +2,7 @@
   "name": "Digital Zindagi",
   "short_name": "Digital Zindagi",
   "id": "/",
-  "description": "Apka Local Digital Marketplace",
+  "description": "Apka Local Digital Marketplace - डिजिटल जिंदगी से जुड़ो",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,28 +12,37 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/assets/generated/dz-icon-192.dim_192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo.png",
+      "src": "/assets/generated/dz-icon-192.dim_192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "/assets/generated/dz-icon-512.dim_512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo.png",
+      "src": "/assets/generated/dz-icon-512.dim_512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/generated/dz-icon-512.dim_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Digital Zindagi - Local Marketplace"
     }
   ],
   "categories": ["business", "shopping", "utilities"],

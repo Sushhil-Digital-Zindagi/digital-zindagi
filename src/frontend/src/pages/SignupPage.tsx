@@ -1,12 +1,15 @@
 import {
   Briefcase,
+  CheckSquare,
   Crown,
   Eye,
   EyeOff,
   LocateFixed,
   QrCode,
+  Square,
   Tv2,
   User2,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
@@ -87,6 +90,14 @@ export default function SignupPage() {
   const [shopLat, setShopLat] = useState<number | null>(null);
   const [shopLng, setShopLng] = useState<number | null>(null);
   const [detectingGPS, setDetectingGPS] = useState(false);
+
+  // Revenue wall state
+  const [showAdsConsentModal, setShowAdsConsentModal] = useState(false);
+  const [adsConsentChecked, setAdsConsentChecked] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [_pendingPlanType, setPendingPlanType] = useState<
+    "pending_premium" | "free" | null
+  >(null);
 
   const handleDetectShopLocation = () => {
     if (!navigator.geolocation) {
@@ -170,7 +181,23 @@ export default function SignupPage() {
 
   const handleProviderSubmit = (planType: "pending_premium" | "free") => {
     if (!validate()) return;
+    setPendingPlanType(planType);
+    if (planType === "free") {
+      // Must show ads consent before completing
+      setAdsConsentChecked(false);
+      setShowAdsConsentModal(true);
+    } else {
+      // Show subscription payment confirmation
+      setShowSubscriptionModal(true);
+    }
+  };
+
+  const completeProviderRegistration = (
+    planType: "pending_premium" | "free",
+  ) => {
     setSubmitting(true);
+    setShowAdsConsentModal(false);
+    setShowSubscriptionModal(false);
 
     const providerData = {
       id: Date.now().toString(),
@@ -196,9 +223,7 @@ export default function SignupPage() {
         );
         navigate("/provider/subscribe");
       } else {
-        toast.success(
-          "Registration Successful! Admin will approve you soon. 🎉",
-        );
+        toast.success("Registration Successful! Aap ab listed hain. 🎉");
         navigate("/provider/dashboard");
       }
     }, 400);
@@ -584,6 +609,183 @@ export default function SignupPage() {
           </p>
         </form>
       </motion.div>
+
+      {/* ADS CONSENT MODAL — Revenue Wall */}
+      {showAdsConsentModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAdsConsentModal(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowAdsConsentModal(false);
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.93, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+          >
+            <div className="bg-slate-700 text-white px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-base">
+                  📺 Ads Plan — Shart Sunein
+                </h2>
+                <p className="text-white/70 text-xs mt-0.5">
+                  Free listing ke liye zaruri hai
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdsConsentModal(false)}
+                className="p-1 rounded-full hover:bg-white/20"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+                <p className="font-semibold mb-2">Ads Plan ke niyam:</p>
+                <ul className="space-y-1.5 list-none">
+                  <li>• Aapki profile par Digital Zindagi ke ads dikhenge</li>
+                  <li>• Aap ads band nahi kar sakte</li>
+                  <li>• Kabhi bhi paid plan mein upgrade kar sakte hain</li>
+                  <li>• Admin ads ON/OFF kar sakta hai</li>
+                </ul>
+              </div>
+              <div className="flex items-start gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  className="mt-0.5 flex-shrink-0"
+                  onClick={() => setAdsConsentChecked((v) => !v)}
+                >
+                  {adsConsentChecked ? (
+                    <CheckSquare size={20} className="text-primary" />
+                  ) : (
+                    <Square size={20} className="text-muted-foreground" />
+                  )}
+                </button>
+                <span className="text-sm text-foreground">
+                  Main samjhta/samajhti hoon ki meri profile par ads dikhenge
+                  aur main isko swikar karta/karti hoon.
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={!adsConsentChecked}
+                onClick={() => {
+                  if (!adsConsentChecked) {
+                    toast.error("Ads policy accept karna zaroori hai");
+                    return;
+                  }
+                  completeProviderRegistration("free");
+                }}
+                className="w-full bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-40 text-sm"
+              >
+                Swikar Karein aur Register Ho
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAdsConsentModal(false)}
+                className="w-full text-muted-foreground text-sm py-2 hover:underline"
+              >
+                Wapas Jao
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* SUBSCRIPTION PAYMENT MODAL — Revenue Wall */}
+      {showSubscriptionModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSubscriptionModal(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowSubscriptionModal(false);
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.93, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+          >
+            <div className="bg-emerald-header text-white px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-base">👑 Subscription Payment</h2>
+                <p className="text-white/70 text-xs mt-0.5">
+                  Registration complete karne ke liye
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSubscriptionModal(false)}
+                className="p-1 rounded-full hover:bg-white/20"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="font-semibold text-emerald-800 text-sm mb-2">
+                  Payment Process:
+                </p>
+                <ol className="space-y-2 text-sm text-emerald-700 list-none">
+                  <li>1. Neeche diya QR ya UPI se payment karein</li>
+                  <li>2. "Confirm Payment" dabayein</li>
+                  <li>3. Aapka account pending mein jayega</li>
+                  <li>4. Admin screenshot verify kar ke approve karega</li>
+                </ol>
+              </div>
+              {adminConfig?.qrCodeBlobId && (
+                <div className="text-center">
+                  <img
+                    src={adminConfig.qrCodeBlobId.getDirectURL()}
+                    alt="UPI QR Code"
+                    className="w-36 h-36 mx-auto object-contain border border-gray-200 rounded-xl"
+                  />
+                  {adminConfig.upiId && (
+                    <p className="text-xs text-muted-foreground mt-2 font-medium">
+                      UPI: {adminConfig.upiId}
+                    </p>
+                  )}
+                </div>
+              )}
+              {!adminConfig?.qrCodeBlobId && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Admin se UPI/QR code lein aur payment karein
+                  </p>
+                  <p className="text-xs text-primary font-semibold mt-1">
+                    Helpline: Admin se contact karein
+                  </p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => completeProviderRegistration("pending_premium")}
+                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm"
+              >
+                ✅ Payment Ho Gayi — Continue Karein
+              </button>
+              <p className="text-xs text-center text-muted-foreground">
+                Payment screenshot agle step mein upload karein
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowSubscriptionModal(false)}
+                className="w-full text-muted-foreground text-sm py-2 hover:underline"
+              >
+                Wapas Jao
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -164,7 +164,7 @@ export default function SplashScreen({
                     letterSpacing: "0.3px",
                   }}
                 >
-                  डिजिटल जिंदगी से जुड़ो
+                  डिजिटल जिंदगी में आपका स्वागत है!
                 </p>
               </div>
 

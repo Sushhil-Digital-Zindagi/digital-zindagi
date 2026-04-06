@@ -23,6 +23,11 @@ export default function ManagerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Check if manager login is disabled by owner
+    if (localStorage.getItem("dz_manager_login_enabled") === "false") {
+      toast.error("Manager login filhaal band hai. Owner se contact karein.");
+      return;
+    }
     if (!email.trim() || !password.trim()) {
       toast.error("Email aur password dono zaroori hain");
       return;

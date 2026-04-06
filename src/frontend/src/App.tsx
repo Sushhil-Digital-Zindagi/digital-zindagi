@@ -1,14 +1,19 @@
 import { Toaster } from "@/components/ui/sonner";
+import type React from "react";
 import { useEffect } from "react";
 import { UserRole } from "./backend";
+import NotificationBar from "./components/NotificationBar";
 import SplashScreen from "./components/SplashScreen";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { BrowserRouter, Navigate, Route, Routes } from "./lib/router";
+import { runAutoCleanup } from "./utils/autoCleanup";
 
+import AIEnhancerPage from "./pages/AIEnhancerPage";
 import AboutPage from "./pages/AboutPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminPinPage from "./pages/AdminPinPage";
+import AgeCalculatorPage from "./pages/AgeCalculatorPage";
 import CategoryPage from "./pages/CategoryPage";
 import ChoosePlanPage from "./pages/ChoosePlanPage";
 import DeliveryAppPage from "./pages/DeliveryAppPage";
@@ -16,10 +21,14 @@ import DeliveryOrderPage from "./pages/DeliveryOrderPage";
 import DeliveryRegisterPage from "./pages/DeliveryRegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import HomePage from "./pages/HomePage";
+import ImageResizerPage from "./pages/ImageResizerPage";
+import JobsPage from "./pages/JobsPage";
 import LoginPage from "./pages/LoginPage";
 import ManagerDashboardPage from "./pages/ManagerDashboardPage";
 import ManagerLoginPage from "./pages/ManagerLoginPage";
+import NewsPage from "./pages/NewsPage";
 import OrdersPage from "./pages/OrdersPage";
+import PercentageCalculatorPage from "./pages/PercentageCalculatorPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
 import ProviderProfilePage from "./pages/ProviderProfilePage";
@@ -63,80 +72,91 @@ function ManagerRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   useEffect(() => {
+    // Apply saved theme color
     const savedColor = localStorage.getItem("dz_theme_color");
     if (savedColor) {
       document.documentElement.style.setProperty("--dz-accent", savedColor);
     }
+    // Run auto-cleanup on app load — purges old orders/chats only
+    runAutoCleanup();
   }, []);
 
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    });
-  }
-
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/category/:categoryName" element={<CategoryPage />} />
-      <Route path="/provider/:userId" element={<ProviderProfilePage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/orders" element={<OrdersPage />} />
-      <Route path="/scrap-calculator" element={<ScrapCalculatorPage />} />
-      <Route path="/manager-login" element={<ManagerLoginPage />} />
-      {/* Delivery Module */}
-      <Route path="/delivery-register" element={<DeliveryRegisterPage />} />
-      <Route path="/delivery-app" element={<DeliveryAppPage />} />
-      <Route path="/delivery-order" element={<DeliveryOrderPage />} />
-      <Route
-        path="/manager"
-        element={
-          <ManagerRoute>
-            <ManagerDashboardPage />
-          </ManagerRoute>
-        }
-      />
-      <Route
-        path="/provider/choose-plan"
-        element={
-          <ProviderRoute>
-            <ChoosePlanPage />
-          </ProviderRoute>
-        }
-      />
-      <Route
-        path="/provider/subscribe"
-        element={
-          <ProviderRoute>
-            <ProviderSubscribePage />
-          </ProviderRoute>
-        }
-      />
-      <Route
-        path="/provider/dashboard"
-        element={
-          <ProviderRoute>
-            <ProviderDashboardPage />
-          </ProviderRoute>
-        }
-      />
-      <Route path="/admin/pin" element={<AdminPinPage />} />
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminDashboardPage />
-          </AdminRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      {/* Top notification bar — only visible when enabled by admin */}
+      <NotificationBar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/category/:categoryName" element={<CategoryPage />} />
+        <Route path="/provider/:userId" element={<ProviderProfilePage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/scrap-calculator" element={<ScrapCalculatorPage />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/image-resizer" element={<ImageResizerPage />} />
+        <Route path="/ai-enhancer" element={<AIEnhancerPage />} />
+        {/* Student Tools */}
+        <Route path="/age-calculator" element={<AgeCalculatorPage />} />
+        <Route
+          path="/percentage-calculator"
+          element={<PercentageCalculatorPage />}
+        />
+        <Route path="/manager-login" element={<ManagerLoginPage />} />
+        {/* Delivery Module */}
+        <Route path="/delivery-register" element={<DeliveryRegisterPage />} />
+        <Route path="/delivery-app" element={<DeliveryAppPage />} />
+        <Route path="/delivery-order" element={<DeliveryOrderPage />} />
+        <Route
+          path="/manager"
+          element={
+            <ManagerRoute>
+              <ManagerDashboardPage />
+            </ManagerRoute>
+          }
+        />
+        <Route
+          path="/provider/choose-plan"
+          element={
+            <ProviderRoute>
+              <ChoosePlanPage />
+            </ProviderRoute>
+          }
+        />
+        <Route
+          path="/provider/subscribe"
+          element={
+            <ProviderRoute>
+              <ProviderSubscribePage />
+            </ProviderRoute>
+          }
+        />
+        <Route
+          path="/provider/dashboard"
+          element={
+            <ProviderRoute>
+              <ProviderDashboardPage />
+            </ProviderRoute>
+          }
+        />
+        <Route path="/admin/pin" element={<AdminPinPage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboardPage />
+            </AdminRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
