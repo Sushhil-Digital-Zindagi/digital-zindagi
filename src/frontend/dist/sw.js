@@ -1,15 +1,16 @@
-const CACHE_NAME = 'digital-zindagi-v3';
+const CACHE_NAME = 'digital-zindagi-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/logo.png',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Add assets one by one so a single failure doesn't break install
       return Promise.allSettled(
         STATIC_ASSETS.map(url => cache.add(url).catch(() => {}))
       );
@@ -29,6 +30,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
@@ -41,7 +48,6 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      // Network first for HTML/navigation, cache first for assets
       const isNavigation = event.request.mode === 'navigate';
       if (isNavigation) {
         return fetch(event.request)

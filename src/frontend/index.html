@@ -14,7 +14,7 @@
     <meta property="og:title" content="Digital Zindagi" />
     <meta property="og:site_name" content="Digital Zindagi" />
     <meta property="og:description" content="Digital Zindagi - Apka Local Digital Marketplace" />
-    <meta property="og:image" content="/assets/generated/dz-icon-512.dim_512x512.png" />
+    <meta property="og:image" content="/icon-512.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content="Digital Zindagi Logo" />
@@ -22,49 +22,86 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Digital Zindagi" />
     <meta name="twitter:description" content="Apka Local Digital Marketplace" />
-    <meta name="twitter:image" content="/assets/generated/dz-icon-512.dim_512x512.png" />
+    <meta name="twitter:image" content="/icon-512.png" />
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="/assets/generated/dz-icon-192.dim_192x192.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/assets/generated/dz-icon-192.dim_192x192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/assets/generated/dz-icon-512.dim_512x512.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/generated/dz-icon-192.dim_192x192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/assets/generated/dz-icon-512.dim_512x512.png" />
-    <link rel="shortcut icon" href="/assets/generated/dz-icon-192.dim_192x192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="shortcut icon" href="/icon-192.png" />
     <title>Digital Zindagi</title>
     <style>
-      /* Splash screen background */
       html, body {
         background-color: #064420;
         margin: 0;
         padding: 0;
       }
-      /* Prevent horizontal scroll globally */
       html, body, #root {
         overflow-x: hidden;
         max-width: 100vw;
       }
-      /* Hide any Caffeine branding if it ever appears */
-      [data-caffeine], .caffeine-brand, .powered-by-caffeine {
+      /* Hide any external platform branding if it ever appears */
+      [data-caffeine],
+      .caffeine-brand,
+      .powered-by-caffeine,
+      [class*="caffeine"],
+      [id*="caffeine"] {
         display: none !important;
+        visibility: hidden !important;
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Capture PWA install prompt as early as possible -->
+    <script>
+      // Store the install prompt globally — capture it as early as possible
+      window.__dzInstallPrompt = null;
+      window.__dzInstallReady = false;
+
+      window.addEventListener('beforeinstallprompt', function(e) {
+        // CRITICAL: prevent Chrome mini-infobar from appearing
+        e.preventDefault();
+        // Save the event for later use when user clicks install button
+        window.__dzInstallPrompt = e;
+        window.__dzInstallReady = true;
+        // Notify any React components that are already mounted
+        window.dispatchEvent(new CustomEvent('dz_installprompt_ready', { detail: e }));
+        console.log('[DZ PWA] Install prompt captured and ready');
+      });
+
+      window.addEventListener('appinstalled', function() {
+        window.__dzInstallPrompt = null;
+        window.__dzInstallReady = false;
+        window.dispatchEvent(new Event('dz_app_installed'));
+        console.log('[DZ PWA] App installed successfully');
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Register Service Worker immediately for faster PWA eligibility -->
+    <!-- Register Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js', { scope: '/' })
             .then(function(reg) {
-              console.log('SW registered:', reg.scope);
+              console.log('[DZ SW] Registered:', reg.scope);
+              reg.addEventListener('updatefound', function() {
+                var newWorker = reg.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', function() {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                  });
+                }
+              });
             })
             .catch(function(err) {
-              console.log('SW registration failed:', err);
+              console.warn('[DZ SW] Registration failed:', err);
             });
         });
       }

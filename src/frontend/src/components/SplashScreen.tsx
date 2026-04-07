@@ -4,27 +4,23 @@ import React, { useEffect, useState } from "react";
 const SPLASH_KEY = "dz_splash_shown";
 
 function SplashLogoImg() {
-  const [src, setSrc] = React.useState(() => {
-    return (
-      localStorage.getItem("dz_splash_logo") ||
-      "/assets/generated/dz-logo-premium.dim_512x512.png"
-    );
-  });
+  // Use admin-customized splash logo if set, otherwise /logo.png
+  const logoSrc = localStorage.getItem("dz_splash_logo") || "/logo.png";
   const [failed, setFailed] = React.useState(false);
   if (failed) return <span style={{ fontSize: "52px" }}>🌿</span>;
   return (
     <img
-      src={src}
+      src={logoSrc}
       alt="Digital Zindagi"
       style={{
         width: "100%",
         height: "100%",
-        objectFit: "cover",
+        objectFit: "contain",
         borderRadius: "50%",
+        padding: "4px",
       }}
       onError={() => {
-        if (src !== "/logo.png") setSrc("/logo.png");
-        else setFailed(true);
+        setFailed(true);
       }}
     />
   );
@@ -34,17 +30,15 @@ export default function SplashScreen({
   children,
 }: { children: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(() => {
-    // Respect admin toggle — if disabled, never show
     const splashEnabled = localStorage.getItem("dz_splash_enabled");
     if (splashEnabled === "false") return false;
-    // Only show once per session
-    return !localStorage.getItem(SPLASH_KEY);
+    return !sessionStorage.getItem(SPLASH_KEY);
   });
 
   useEffect(() => {
     if (!showSplash) return;
     const timer = setTimeout(() => {
-      localStorage.setItem(SPLASH_KEY, "true");
+      sessionStorage.setItem(SPLASH_KEY, "true");
       setShowSplash(false);
     }, 2800);
     return () => clearTimeout(timer);

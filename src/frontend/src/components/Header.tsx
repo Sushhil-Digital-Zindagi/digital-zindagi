@@ -13,8 +13,6 @@ const ADMIN_EMAILS = [
 const ADMIN_PASSWORD = "123456";
 const ADMIN_PIN = "12345";
 
-// Global PWA install prompt capture — stored before React mounts
-// This ensures we don't miss the event if it fires before the component renders
 declare global {
   interface Window {
     __dzInstallPrompt?: BeforeInstallPromptEvent;
@@ -25,21 +23,10 @@ declare global {
   }
 }
 
-// Capture install prompt globally as early as possible
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    window.__dzInstallPrompt = e as BeforeInstallPromptEvent;
-    // Dispatch custom event so any mounted component can listen
-    window.dispatchEvent(new Event("dz_installprompt_ready"));
-  });
-}
-
 function LogoImage() {
+  // Use admin-customized logo if set, otherwise fall back to /logo.png
   const [src, setSrc] = useState(
-    () =>
-      localStorage.getItem("dz_app_logo") ||
-      "/assets/generated/dz-icon-512.dim_512x512.png",
+    () => localStorage.getItem("dz_app_logo") || "/logo.png",
   );
   const [failed, setFailed] = useState(false);
 
@@ -79,17 +66,14 @@ function LogoImage() {
       style={{
         width: "40px",
         height: "40px",
-        objectFit: "cover",
+        objectFit: "contain",
         display: "block",
         borderRadius: "50%",
+        padding: "2px",
         filter: "drop-shadow(0 0 4px rgba(212,175,55,0.5))",
       }}
       onError={() => {
-        if (src !== "/logo.png") {
-          setSrc("/logo.png");
-        } else {
-          setFailed(true);
-        }
+        setFailed(true);
       }}
     />
   );
@@ -102,42 +86,40 @@ export default function Header() {
   const langRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // PWA Install state
+  // PWA Install state — read from global capture in index.html
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(
-      () => window.__dzInstallPrompt ?? null,
+      () => (window.__dzInstallPrompt as BeforeInstallPromptEvent) ?? null,
     );
   const [isInstalled, setIsInstalled] = useState(() => {
     return (
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true ||
       document.referrer.includes("android-app://")
     );
   });
 
   useEffect(() => {
-    // If prompt already available globally, use it
     if (window.__dzInstallPrompt && !installPrompt) {
-      setInstallPrompt(window.__dzInstallPrompt);
+      setInstallPrompt(window.__dzInstallPrompt as BeforeInstallPromptEvent);
     }
 
-    // Listen for prompt becoming available (fires after component mounts)
     const promptHandler = () => {
       if (window.__dzInstallPrompt) {
-        setInstallPrompt(window.__dzInstallPrompt);
+        setInstallPrompt(window.__dzInstallPrompt as BeforeInstallPromptEvent);
       }
     };
     window.addEventListener("dz_installprompt_ready", promptHandler);
 
-    // Listen for app being installed
     const installedHandler = () => {
       setIsInstalled(true);
       setInstallPrompt(null);
       window.__dzInstallPrompt = undefined;
     };
     window.addEventListener("appinstalled", installedHandler);
+    window.addEventListener("dz_app_installed", installedHandler);
 
-    // Also listen for display-mode change (when user installs manually)
     const mqHandler = (e: MediaQueryListEvent) => {
       if (e.matches) setIsInstalled(true);
     };
@@ -147,19 +129,27 @@ export default function Header() {
     return () => {
       window.removeEventListener("dz_installprompt_ready", promptHandler);
       window.removeEventListener("appinstalled", installedHandler);
+      window.removeEventListener("dz_app_installed", installedHandler);
       mq.removeEventListener("change", mqHandler);
     };
   }, [installPrompt]);
 
   async function handleInstall() {
-    const prompt = installPrompt ?? window.__dzInstallPrompt;
+    // Try to get prompt from state or global variable
+    const prompt =
+      installPrompt ??
+      (window.__dzInstallPrompt as BeforeInstallPromptEvent | undefined) ??
+      null;
+
     if (prompt) {
       try {
+        // Must be called from user gesture (click handler) — this is correct
         await prompt.prompt();
         const { outcome } = await prompt.userChoice;
         if (outcome === "accepted") {
           toast.success(
             "Digital Zindagi install ho gaya! App List mein dikh raha hai.",
+            { duration: 4000 },
           );
           setInstallPrompt(null);
           setIsInstalled(true);
@@ -167,13 +157,26 @@ export default function Header() {
         } else {
           toast.info(
             "Install cancel kar diya. Baad mein phir try kar sakte hain.",
+            { duration: 4000 },
           );
+          // Keep prompt for next attempt
         }
-      } catch {
-        // prompt already used, show manual instructions
+      } catch (err) {
+        console.warn("[DZ Install] prompt() failed:", err);
+        // Prompt may have already been used — clear and show manual instructions
+        window.__dzInstallPrompt = undefined;
+        setInstallPrompt(null);
         showManualInstructions();
       }
     } else {
+      // No prompt available — check if already in standalone mode
+      if (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as Navigator & { standalone?: boolean }).standalone
+      ) {
+        setIsInstalled(true);
+        return;
+      }
       showManualInstructions();
     }
   }
@@ -294,6 +297,7 @@ export default function Header() {
                 border: "1.5px solid rgba(212,175,55,0.6)",
                 boxShadow: "0 0 8px rgba(212,175,55,0.3)",
                 overflow: "hidden",
+                background: "rgba(6,68,32,0.6)",
               }}
             >
               <LogoImage />
@@ -318,7 +322,7 @@ export default function Header() {
             </div>
           </button>
 
-          {/* Install Button — visible when not installed */}
+          {/* Install Button — visible when not installed, shows native Android install prompt */}
           {!isInstalled && (
             <button
               type="button"
@@ -332,7 +336,7 @@ export default function Header() {
                 whiteSpace: "nowrap",
                 boxShadow: "0 2px 8px rgba(212,175,55,0.4)",
               }}
-              title="App Install Karen — Mobile ki App List mein add karo"
+              title="Digital Zindagi Install Karen — Mobile ki App List mein add karo"
             >
               <Download size={12} />
               <span>Install</span>
@@ -414,16 +418,19 @@ export default function Header() {
                 }}
               >
                 <img
-                  src="/assets/generated/dz-icon-512.dim_512x512.png"
+                  src="/logo.png"
                   alt="Digital Zindagi"
                   style={{
                     width: "64px",
                     height: "64px",
-                    objectFit: "cover",
+                    objectFit: "contain",
                     borderRadius: "50%",
+                    padding: "2px",
                   }}
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/logo.png";
+                    // Hide broken image, show text fallback via parent
+                    (e.currentTarget as HTMLImageElement).style.display =
+                      "none";
                   }}
                 />
               </div>
