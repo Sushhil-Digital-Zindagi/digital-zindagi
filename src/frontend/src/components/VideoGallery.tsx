@@ -190,16 +190,19 @@ function buildUnifiedRows(
   return result;
 }
 
+// Ad gate states for strict pre/post-roll enforcement
+type AdGateState =
+  | "idle" // No ad, no video — normal gallery view
+  | "pre_ad" // Pre-roll ad showing; video player blocked
+  | "playing" // Video player open
+  | "post_ad"; // Post-roll ad showing; video selection blocked
+
 export default function VideoGallery() {
   const [sheetRows, setSheetRows] = useState<UnifiedRow[]>([]);
   const [activePlatform, setActivePlatform] = useState<Platform>("all");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [playingVideo, setPlayingVideo] = useState<UnifiedRow | null>(null);
-  const [showInterstitial, setShowInterstitial] = useState(false);
-  const [interstitialPhase, setInterstitialPhase] = useState<"pre" | "post">(
-    "pre",
-  );
-  const [pendingVideo, setPendingVideo] = useState<UnifiedRow | null>(null);
+  const [adGate, setAdGate] = useState<AdGateState>("idle");
+  const [currentVideo, setCurrentVideo] = useState<UnifiedRow | null>(null);
   const [adBlocked, setAdBlocked] = useState(false);
   const [showAdBlockPopup, setShowAdBlockPopup] = useState(false);
   const [customAds, setCustomAds] = useState<string[]>([]);
@@ -293,47 +296,65 @@ export default function VideoGallery() {
     adMobConfig.current.interstitialEnabled;
   const interstitialId = adMobConfig.current.interstitialId;
 
+  // Determine whether an ad should be shown at all (frequency throttle applies)
+  const shouldShowAd = (): boolean => {
+    if (!isAdMobEnabled) return false;
+    // Even if no AdMob ID, show fallback if adBlocked (custom ads or branded placeholder)
+    return checkAdFrequency();
+  };
+
   const handlePlayClick = async (row: UnifiedRow) => {
     const blocked = await detectAdBlock();
     setAdBlocked(blocked);
 
+    // If AdBlock detected and AdMob is enabled, use custom ads bypass
     if (blocked && isAdMobEnabled) {
       if (customAds.length > 0) {
-        setPendingVideo(row);
-        setInterstitialPhase("pre");
-        setShowInterstitial(true);
+        // Show interstitial with custom ads (no bypass possible — ad gate)
+        markAdShown();
+        setCurrentVideo(row);
+        setAdGate("pre_ad");
       } else {
+        // No custom ads available — inform user and still require them to acknowledge
+        setCurrentVideo(row);
         setShowAdBlockPopup(true);
       }
       return;
     }
 
-    if (isAdMobEnabled && interstitialId && checkAdFrequency()) {
+    if (isAdMobEnabled && shouldShowAd()) {
+      // Pre-roll ad gate: block video until ad countdown completes
       markAdShown();
-      setPendingVideo(row);
-      setInterstitialPhase("pre");
-      setShowInterstitial(true);
+      setCurrentVideo(row);
+      setAdGate("pre_ad");
     } else {
-      setPlayingVideo(row);
+      // Ad frequency throttle active (window not expired) — go straight to video
+      setCurrentVideo(row);
+      setAdGate("playing");
     }
   };
 
+  // Called when interstitial ad countdown completes and user taps skip
   const handleInterstitialClose = () => {
-    setShowInterstitial(false);
-    if (interstitialPhase === "pre" && pendingVideo) {
-      setPlayingVideo(pendingVideo);
-    } else {
-      setPendingVideo(null);
+    if (adGate === "pre_ad") {
+      // Pre-roll done — open video player
+      setAdGate("playing");
+    } else if (adGate === "post_ad") {
+      // Post-roll done — reset everything, allow next video selection
+      setAdGate("idle");
+      setCurrentVideo(null);
     }
   };
 
+  // Called when VideoPlayer is closed by user (X button)
   const handleVideoClose = () => {
-    const closedVideo = playingVideo;
-    setPlayingVideo(null);
-    if (isAdMobEnabled && interstitialId && closedVideo) {
-      setPendingVideo(closedVideo);
-      setInterstitialPhase("post");
-      setShowInterstitial(true);
+    if (isAdMobEnabled && interstitialId && currentVideo) {
+      // Show post-roll ad before allowing next video
+      setAdGate("post_ad");
+    } else {
+      // No post-roll configured — reset immediately
+      setAdGate("idle");
+      setCurrentVideo(null);
     }
   };
 
@@ -422,15 +443,21 @@ export default function VideoGallery() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {filtered.map((row) => {
                 const thumb = getVideoThumbnail(row);
+                // Block clicks while post-roll ad is pending
+                const isLocked = adGate === "post_ad" || adGate === "pre_ad";
                 return (
                   <motion.div
                     key={row.id}
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.25 }}
-                    className="relative group rounded-2xl overflow-hidden bg-card shadow-md cursor-pointer"
+                    className={`relative group rounded-2xl overflow-hidden bg-card shadow-md ${
+                      isLocked
+                        ? "opacity-50 pointer-events-none"
+                        : "cursor-pointer"
+                    }`}
                     style={{ aspectRatio: "16/9" }}
-                    onClick={() => handlePlayClick(row)}
+                    onClick={() => !isLocked && handlePlayClick(row)}
                   >
                     {thumb ? (
                       <img
@@ -486,7 +513,7 @@ export default function VideoGallery() {
         </motion.div>
       </section>
 
-      {/* AdBlock Popup */}
+      {/* AdBlock Popup — user must acknowledge before video plays */}
       {showAdBlockPopup && (
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center px-4">
           <div className="bg-card rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
@@ -503,8 +530,8 @@ export default function VideoGallery() {
                 type="button"
                 onClick={() => {
                   setShowAdBlockPopup(false);
-                  setPlayingVideo(pendingVideo);
-                  setPendingVideo(null);
+                  // Still go through ad gate (branded placeholder) — no direct bypass
+                  setAdGate("pre_ad");
                 }}
                 className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted"
               >
@@ -522,21 +549,22 @@ export default function VideoGallery() {
         </div>
       )}
 
-      {/* Interstitial Ad */}
-      {showInterstitial && (
+      {/* Interstitial Ad — pre-roll (adGate === "pre_ad") OR post-roll (adGate === "post_ad") */}
+      {(adGate === "pre_ad" || adGate === "post_ad") && (
         <InterstitialAd
-          phase={interstitialPhase}
+          phase={adGate === "pre_ad" ? "pre" : "post"}
           adBlocked={adBlocked}
           customAds={customAds}
           onClose={handleInterstitialClose}
         />
       )}
 
-      {/* Video Player */}
-      {playingVideo && (
+      {/* Video Player — ONLY renders when adGate === "playing", never during ad gate */}
+      {adGate === "playing" && currentVideo && (
         <VideoPlayer
-          url={playingVideo.videoLink}
-          title={playingVideo.title || playingVideo.category || "Video"}
+          url={currentVideo.videoLink}
+          title={currentVideo.title || currentVideo.category || "Video"}
+          autoplay={true}
           onClose={handleVideoClose}
         />
       )}

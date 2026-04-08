@@ -61,6 +61,9 @@ persistent actor {
   var videos = Map.empty<Nat, VideoItem>();
   var nextVideoId = 1;
 
+  // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
+  var appSettingsJson : Text = "{}";
+
   // Seed default scrap rates (Iron, Paper, Copper)
   var scrapRatesSeeded = false;
 
@@ -1296,5 +1299,18 @@ persistent actor {
       videos.remove(id);
       true;
     } else { false };
+  };
+
+  // ── APP SETTINGS (JSON blob for misc settings) ───────────────────────────
+
+  public query func getAppSettings() : async Text {
+    appSettingsJson;
+  };
+
+  public shared ({ caller }) func updateAppSettings(json : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update app settings");
+    };
+    appSettingsJson := json;
   };
 };

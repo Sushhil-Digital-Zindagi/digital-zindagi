@@ -243,6 +243,7 @@ service : {
                               bool;
                             }) query;
   getAllUsers: () -> (vec User) query;
+  getAppSettings: () -> (text) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole__1) query;
   getCategories: () -> (vec Category) query;
@@ -280,6 +281,7 @@ service : {
   setApproval: (user: principal, status: ApprovalStatus) -> ();
   setPlanType: (userId: nat, planType: PlanType) -> ();
   updateAdminConfig: (newConfig: AdminConfig) -> ();
+  updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:

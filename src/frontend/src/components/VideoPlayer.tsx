@@ -4,33 +4,42 @@ import React, { useEffect, useRef, useState } from "react";
 interface VideoPlayerProps {
   url: string;
   title?: string;
+  autoplay?: boolean;
   onClose: () => void;
 }
 
 type Quality = "auto" | "720" | "1080";
 
-function getEmbedUrl(url: string, quality: Quality = "auto"): string | null {
+const YT_BASE_PARAMS =
+  "rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&fs=1";
+
+function getEmbedUrl(
+  url: string,
+  quality: Quality = "auto",
+  autoplay = false,
+): string | null {
   if (!url) return null;
 
   // Quality param for YouTube (vq= parameter)
   const vq = quality === "1080" ? "hd1080" : quality === "720" ? "hd720" : "";
   const qualityParam = vq ? `&vq=${vq}` : "";
+  const autoplayParam = autoplay ? "&autoplay=1" : "";
 
   // YouTube
   const ytMatch = url.match(
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/?)([\w-]{11})/,
   );
   if (ytMatch) {
-    return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0${qualityParam}&fs=1`;
+    return `https://www.youtube.com/embed/${ytMatch[1]}?${YT_BASE_PARAMS}${qualityParam}${autoplayParam}`;
   }
 
-  // Facebook video
+  // Facebook video — unchanged
   if (url.includes("facebook.com") || url.includes("fb.watch")) {
     const encoded = encodeURIComponent(url);
     return `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&autoplay=true`;
   }
 
-  // Instagram
+  // Instagram — unchanged
   const igMatch = url.match(/instagram\.com\/(p|reel|tv)\/([\w-]+)/);
   if (igMatch) {
     return `https://www.instagram.com/${igMatch[1]}/${igMatch[2]}/embed/`;
@@ -39,12 +48,18 @@ function getEmbedUrl(url: string, quality: Quality = "auto"): string | null {
   return null;
 }
 
-export default function VideoPlayer({ url, title, onClose }: VideoPlayerProps) {
+export default function VideoPlayer({
+  url,
+  title,
+  autoplay = false,
+  onClose,
+}: VideoPlayerProps) {
   const [quality, setQuality] = useState<Quality>("auto");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const embedUrl = getEmbedUrl(url, quality);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const embedUrl = getEmbedUrl(url, quality, autoplay);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -53,6 +68,14 @@ export default function VideoPlayer({ url, title, onClose }: VideoPlayerProps) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
+
+  // Set webkit/moz fullscreen attributes via ref — JSX doesn't accept non-standard boolean attrs
+  useEffect(() => {
+    if (iframeRef.current) {
+      iframeRef.current.setAttribute("webkitallowfullscreen", "true");
+      iframeRef.current.setAttribute("mozallowfullscreen", "true");
+    }
+  });
 
   // Lock screen orientation to landscape when fullscreen on mobile
   const toggleFullscreen = async () => {
@@ -109,7 +132,8 @@ export default function VideoPlayer({ url, title, onClose }: VideoPlayerProps) {
         isFullscreen ? "" : "bg-opacity-95"
       }`}
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        // Do NOT close on overlay click — user must use the X button
+        if (e.target === overlayRef.current) return;
       }}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
@@ -178,17 +202,18 @@ export default function VideoPlayer({ url, title, onClose }: VideoPlayerProps) {
             }}
           >
             <iframe
+              ref={iframeRef}
               key={`${url}-${quality}`}
               src={embedUrl}
               title={title ?? "Video"}
               className="absolute inset-0 w-full h-full"
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
+              allowFullScreen={true}
               referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         ) : (
-          <div className="bg-gray-900 rounded-xl p-8 text-center text-white/60 text-sm mx-2">
+          <div className="bg-card rounded-xl p-8 text-center text-muted-foreground text-sm mx-2">
             <p>Yeh video link supported nahi hai.</p>
             <a
               href={url}

@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -28,6 +28,29 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
+
+  // Game visibility — controlled by Admin toggle (dz_game_visible)
+  const [showGame, setShowGame] = useState<boolean>(() => {
+    const val = localStorage.getItem("dz_game_visible");
+    return val === null || val === "true";
+  });
+
+  useEffect(() => {
+    const syncGameVisibility = () => {
+      const val = localStorage.getItem("dz_game_visible");
+      setShowGame(val === null || val === "true");
+    };
+
+    // Listen to real-time broadcast from Admin Panel
+    window.addEventListener("settings-sync", syncGameVisibility);
+    // Fallback: listen to raw storage event (cross-tab)
+    window.addEventListener("storage", syncGameVisibility);
+
+    return () => {
+      window.removeEventListener("settings-sync", syncGameVisibility);
+      window.removeEventListener("storage", syncGameVisibility);
+    };
+  }, []);
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
@@ -73,7 +96,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const navLinks = [
     { to: "/", label: t("home"), icon: <Home size={18} /> },
-    { to: "/game", label: "🎮 Game", icon: <Gamepad2 size={18} /> },
+    ...(showGame
+      ? [{ to: "/game", label: "🎮 Game", icon: <Gamepad2 size={18} /> }]
+      : []),
     ...(user
       ? [
           user.role === "provider"

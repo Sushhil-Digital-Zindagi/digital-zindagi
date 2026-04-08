@@ -269,6 +269,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+  'getAppSettings' : IDL.Func([], [IDL.Text], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
@@ -336,6 +337,7 @@ export const idlService = IDL.Service({
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+  'updateAppSettings' : IDL.Func([IDL.Text], [], []),
   'updateCategory' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
       [IDL.Bool],
@@ -664,6 +666,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+    'getAppSettings' : IDL.Func([], [IDL.Text], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
@@ -731,6 +734,7 @@ export const idlFactory = ({ IDL }) => {
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+    'updateAppSettings' : IDL.Func([IDL.Text], [], []),
     'updateCategory' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [IDL.Bool],

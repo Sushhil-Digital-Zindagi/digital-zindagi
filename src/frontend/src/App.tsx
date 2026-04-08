@@ -20,7 +20,7 @@ import DeliveryAppPage from "./pages/DeliveryAppPage";
 import DeliveryOrderPage from "./pages/DeliveryOrderPage";
 import DeliveryRegisterPage from "./pages/DeliveryRegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import GamePage from "./pages/GamePage";
+import GameComingSoonPage from "./pages/GameComingSoonPage";
 import HomePage from "./pages/HomePage";
 import ImageResizerPage from "./pages/ImageResizerPage";
 import JobsPage from "./pages/JobsPage";
@@ -92,7 +92,7 @@ function AppRoutes() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/game" element={<GamePage />} />
+        <Route path="/game" element={<GameComingSoonPage />} />
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/provider/:userId" element={<ProviderProfilePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />

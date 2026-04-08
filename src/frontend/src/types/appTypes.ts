@@ -381,4 +381,8 @@ export interface BackendActorMethods {
     enabled: boolean,
   ): Promise<void>;
   deleteVideo(id: number): Promise<void>;
+
+  // App Settings (canister-backed JSON blob)
+  getAppSettings(): Promise<string>;
+  updateAppSettings(json: string): Promise<void>;
 }

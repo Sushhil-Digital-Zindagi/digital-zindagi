@@ -1,3 +1,12 @@
+// ============================================================
+// AdMob Integration Placeholder
+// To activate real AdMob ads:
+// 1. Go to Admin Panel > AdMob Configuration
+// 2. Paste your AdMob App ID (ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX)
+// 3. Paste your Interstitial Ad Unit ID (ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX)
+// 4. The system will use real AdMob ads automatically.
+// ============================================================
+
 import { useEffect, useState } from "react";
 
 interface Props {
@@ -26,13 +35,14 @@ export default function InterstitialAd({
   const config = getAdMobConfig();
   const interstitialId = config.interstitialId ?? "";
 
-  // Pick a random custom ad banner if AdBlocked or no interstitial ID
+  // Show custom ad when: adBlocked OR no interstitial ID configured
   const showCustomAd = adBlocked || !interstitialId;
   const customAd =
     customAds.length > 0
       ? customAds[Math.floor(Math.random() * customAds.length)]
       : null;
 
+  // Countdown — always 5 seconds minimum; skip button NEVER appears before countdown ends
   useEffect(() => {
     const interval = setInterval(() => {
       setCountdown((c) => {
@@ -50,6 +60,8 @@ export default function InterstitialAd({
   const label = phase === "pre" ? "Video se pehle" : "Video ke baad";
 
   return (
+    // No click-outside-to-dismiss; no keyboard-escape-to-dismiss.
+    // The overlay is intentionally non-interactive — only the skip button (after countdown) can close it.
     <div
       className="fixed inset-0 z-[9997] bg-black/95 flex flex-col items-center justify-center px-4"
       aria-label="Advertisement"
@@ -60,7 +72,7 @@ export default function InterstitialAd({
       </p>
 
       {showCustomAd && customAd ? (
-        // Bypass: show custom internal banner ad
+        // AdBlock bypass: show custom internal banner
         <div className="w-full max-w-md">
           <div className="relative bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-2xl overflow-hidden shadow-2xl">
             <img
@@ -79,18 +91,21 @@ export default function InterstitialAd({
           </div>
         </div>
       ) : showCustomAd ? (
-        // No custom ad image set yet, show placeholder
+        // No custom ad image AND no AdMob ID — branded placeholder shown for full countdown
         <div className="w-full max-w-md">
-          <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-2xl p-8 text-center shadow-2xl border-2 border-yellow-400/40">
             <div className="text-5xl mb-3">📢</div>
-            <p className="text-white font-bold text-lg mb-1">Digital Zindagi</p>
-            <p className="text-white/70 text-sm">
+            <p className="text-white font-bold text-xl mb-1">Digital Zindagi</p>
+            <p className="text-yellow-300 font-semibold text-base mt-2">
+              विज्ञापन लोड हो रहा है...
+            </p>
+            <p className="text-white/60 text-sm mt-1">
               Apni local service discover karein
             </p>
           </div>
         </div>
       ) : (
-        // AdMob Interstitial slot (real AdMob would render here)
+        // AdMob Interstitial slot — real AdMob SDK would render here once configured
         <div className="w-full max-w-md">
           <div
             data-ocid="admob.interstitial"
@@ -111,12 +126,13 @@ export default function InterstitialAd({
         </div>
       )}
 
-      {/* Skip button */}
+      {/* Skip button — ONLY visible after countdown reaches 0 */}
       <div className="mt-6">
         {canSkip ? (
           <button
             type="button"
             onClick={onClose}
+            data-ocid="interstitial.skip_btn"
             className="px-8 py-3 bg-white text-gray-900 font-bold rounded-full text-sm hover:bg-gray-100 transition-colors shadow-lg"
           >
             ✕ Skip — Video Dekho
@@ -125,7 +141,7 @@ export default function InterstitialAd({
           <button
             type="button"
             disabled
-            className="px-8 py-3 bg-gray-600 text-gray-300 font-semibold rounded-full text-sm cursor-not-allowed"
+            className="px-8 py-3 bg-gray-600 text-gray-300 font-semibold rounded-full text-sm cursor-not-allowed select-none"
           >
             {countdown}s mein skip karein...
           </button>

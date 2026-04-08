@@ -203,6 +203,7 @@ export interface backendInterface {
     getAllProviders(): Promise<Array<ProviderProfile>>;
     getAllToggles(): Promise<Array<[string, boolean]>>;
     getAllUsers(): Promise<Array<User>>;
+    getAppSettings(): Promise<string>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
@@ -238,6 +239,7 @@ export interface backendInterface {
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
+    updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;

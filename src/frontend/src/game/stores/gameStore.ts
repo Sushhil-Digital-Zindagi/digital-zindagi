@@ -1,178 +1,165 @@
 import { create } from "zustand";
 
-export type GamePhase = "start" | "playing" | "paused" | "gameover";
-export type WeaponType = "rifle" | "shotgun" | "plasma";
-export type UpgradeType = "damage_boost" | "heal" | "revive_partner" | "shield";
+export type GamePhase =
+  | "start"
+  | "playing"
+  | "paused"
+  | "wave_complete"
+  | "level_complete"
+  | "gameover"
+  | "victory";
+export type WeaponType =
+  | "pistol"
+  | "rifle"
+  | "shotgun"
+  | "plasma"
+  | "flamethrower";
 
-export interface Enemy {
-  id: string;
-  type: "hound" | "demon" | "triHound" | "alienDemon";
-  position: [number, number, number];
-  hp: number;
-  maxHp: number;
-  state: "idle" | "chase" | "attack" | "retreat" | "dead";
+export interface WeaponData {
+  id: WeaponType;
+  name: string;
+  cost: number;
+  damage: number;
+  fireRate: number; // shots per second
+  ammoMax: number; // -1 = infinite
+  spread: number; // 0-1
+  aoe: number; // 0 = none, >0 = radius
+  color: string;
 }
 
-export interface Coin {
-  id: string;
-  position: [number, number, number];
-  type: "normal" | "mega";
-  collected: boolean;
-}
+export const WEAPONS: Record<WeaponType, WeaponData> = {
+  pistol: {
+    id: "pistol",
+    name: "Pistol",
+    cost: 0,
+    damage: 15,
+    fireRate: 2,
+    ammoMax: -1,
+    spread: 0,
+    aoe: 0,
+    color: "#aaa",
+  },
+  rifle: {
+    id: "rifle",
+    name: "Assault Rifle",
+    cost: 100,
+    damage: 20,
+    fireRate: 8,
+    ammoMax: 200,
+    spread: 0.05,
+    aoe: 0,
+    color: "#4af",
+  },
+  shotgun: {
+    id: "shotgun",
+    name: "Shotgun",
+    cost: 150,
+    damage: 35,
+    fireRate: 1.5,
+    ammoMax: 60,
+    spread: 0.3,
+    aoe: 0,
+    color: "#fa4",
+  },
+  plasma: {
+    id: "plasma",
+    name: "Plasma Gun",
+    cost: 200,
+    damage: 80,
+    fireRate: 1,
+    ammoMax: 30,
+    spread: 0,
+    aoe: 60,
+    color: "#a4f",
+  },
+  flamethrower: {
+    id: "flamethrower",
+    name: "Flamethrower",
+    cost: 250,
+    damage: 12,
+    fireRate: 15,
+    ammoMax: 100,
+    spread: 0.4,
+    aoe: 0,
+    color: "#f84",
+  },
+};
 
 export interface GameState {
+  gamePhase: GamePhase;
+  score: number;
+  coins: number;
   heroHP: number;
   heroMaxHP: number;
-  partnerHP: [number, number];
-  partnerMaxHP: number;
-  score: number;
-  waveCount: number;
-  coins: number;
-  gamePhase: GamePhase;
-  heroFace: string | null;
-  volume: number;
-
-  // Combat modifiers
-  damageMultiplier: number;
-  shieldActive: boolean;
-
-  // Spawn invincibility — prevents immediate death on game start
-  spawnInvincible: boolean;
-
-  // Checkpoint system
-  checkpointWave: number;
-
-  // Weapon system
+  currentWave: number; // 1-3 within a level
+  currentLevel: number; // 1-12
+  enemiesRemaining: number;
   currentWeapon: WeaponType;
-  setWeapon: (weapon: WeaponType) => void;
-
-  // Leaderboard UI
+  ownedWeapons: WeaponType[];
+  ammo: Record<WeaponType, number>;
+  volume: number;
   leaderboardVisible: boolean;
-  setLeaderboardVisible: (visible: boolean) => void;
+  spawnInvincible: boolean;
+  armor: number; // 0-3, damage reduction
+  speedBoost: number; // 0-3
 
   // Actions
-  setHeroHP: (hp: number) => void;
-  damageHero: (dmg: number) => void;
-  healHero: (amt: number) => void;
-  setPartnerHP: (index: 0 | 1, hp: number) => void;
-  damagePartner: (index: 0 | 1, dmg: number) => void;
+  setGamePhase: (p: GamePhase) => void;
   addScore: (pts: number) => void;
   addCoins: (n: number) => void;
-  /** Deduct coins if balance sufficient. Returns true on success, false if not enough. */
-  spendCoins: (amount: number) => boolean;
-  /** Apply a store upgrade effect to the current game state. */
-  applyUpgrade: (type: UpgradeType) => void;
-  setGamePhase: (phase: GamePhase) => void;
-  setHeroFace: (face: string | null) => void;
-  setVolume: (v: number) => void;
+  spendCoins: (n: number) => boolean;
+  damageHero: (dmg: number) => void;
+  healHero: (amt: number) => void;
+  setEnemiesRemaining: (n: number) => void;
+  decrementEnemies: () => void;
   nextWave: () => void;
+  nextLevel: () => void;
+  setWeapon: (w: WeaponType) => void;
+  buyWeapon: (w: WeaponType) => boolean;
+  buyUpgrade: (type: "health" | "armor" | "speed") => boolean;
+  useAmmo: (w: WeaponType) => void;
   resetGame: () => void;
-  /** Restart from the saved checkpoint wave — does NOT reset to start screen */
-  restartFromCheckpoint: () => void;
-  /** Save current wave as checkpoint */
-  saveCheckpoint: (wave: number) => void;
-  setSpawnInvincible: (val: boolean) => void;
+  setVolume: (v: number) => void;
+  setLeaderboardVisible: (v: boolean) => void;
+  setSpawnInvincible: (v: boolean) => void;
 }
 
-const STORAGE_HIGH_SCORE = "dz_game_high_score";
-const STORAGE_HERO_FACE = "dz_game_hero_face";
-const STORAGE_COINS = "dz_game_coins_session";
-const STORAGE_VOLUME = "dz_game_volume";
-const STORAGE_WEAPON = "dz_game_weapon";
-const STORAGE_CHECKPOINT = "dz_game_checkpoint_wave";
+const STORAGE_HIGH_SCORE = "dz_ws_high_score";
+const STORAGE_VOLUME = "dz_ws_volume";
+const STORAGE_COINS = "dz_ws_coins";
 
-function loadInitial(): Omit<
-  GameState,
-  | "setWeapon"
-  | "setLeaderboardVisible"
-  | "setHeroHP"
-  | "damageHero"
-  | "healHero"
-  | "setPartnerHP"
-  | "damagePartner"
-  | "addScore"
-  | "addCoins"
-  | "spendCoins"
-  | "applyUpgrade"
-  | "setGamePhase"
-  | "setHeroFace"
-  | "setVolume"
-  | "nextWave"
-  | "resetGame"
-  | "restartFromCheckpoint"
-  | "saveCheckpoint"
-  | "setSpawnInvincible"
-> {
-  return {
-    heroHP: 100,
-    heroMaxHP: 100,
-    partnerHP: [80, 80],
-    partnerMaxHP: 80,
-    score: 0,
-    waveCount: 1,
-    coins: Number(localStorage.getItem(STORAGE_COINS) || "0"),
-    gamePhase: "start" as GamePhase,
-    heroFace: localStorage.getItem(STORAGE_HERO_FACE),
-    volume: Number(localStorage.getItem(STORAGE_VOLUME) || "0.7"),
-    currentWeapon:
-      (localStorage.getItem(STORAGE_WEAPON) as WeaponType) || "rifle",
-    leaderboardVisible: false,
-    damageMultiplier: 1,
-    shieldActive: false,
-    spawnInvincible: false,
-    checkpointWave: Number(localStorage.getItem(STORAGE_CHECKPOINT) || "1"),
-  };
+function initialAmmo(): Record<WeaponType, number> {
+  return { pistol: -1, rifle: 200, shotgun: 60, plasma: 30, flamethrower: 100 };
+}
+
+export function getHighScore(): number {
+  return Number(localStorage.getItem(STORAGE_HIGH_SCORE) || "0");
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  ...loadInitial(),
+  gamePhase: "start",
+  score: 0,
+  coins: Number(localStorage.getItem(STORAGE_COINS) || "0"),
+  heroHP: 100,
+  heroMaxHP: 100,
+  currentWave: 1,
+  currentLevel: 1,
+  enemiesRemaining: 0,
+  currentWeapon: "pistol",
+  ownedWeapons: ["pistol"],
+  ammo: initialAmmo(),
+  volume: Number(localStorage.getItem(STORAGE_VOLUME) || "0.7"),
+  leaderboardVisible: false,
+  spawnInvincible: false,
+  armor: 0,
+  speedBoost: 0,
 
-  setWeapon: (weapon) => {
-    localStorage.setItem(STORAGE_WEAPON, weapon);
-    set({ currentWeapon: weapon });
-  },
-
-  setLeaderboardVisible: (leaderboardVisible) => set({ leaderboardVisible }),
-
-  setHeroHP: (hp) => set({ heroHP: Math.max(0, Math.min(100, hp)) }),
-
-  damageHero: (dmg) =>
-    set((s) => {
-      // FIX 2: Spawn invincibility — skip damage in first 2 seconds
-      if (s.spawnInvincible) return {};
-      // Shield absorbs damage completely
-      if (s.shieldActive) return { shieldActive: false };
-      const heroHP = Math.max(0, s.heroHP - dmg);
-      if (heroHP === 0 && s.gamePhase === "playing") {
-        const best = Number(localStorage.getItem(STORAGE_HIGH_SCORE) || "0");
-        if (s.score > best)
-          localStorage.setItem(STORAGE_HIGH_SCORE, String(s.score));
-        return { heroHP, gamePhase: "gameover" };
-      }
-      return { heroHP };
-    }),
-
-  healHero: (amt) =>
-    set((s) => ({ heroHP: Math.min(s.heroMaxHP, s.heroHP + amt) })),
-
-  setPartnerHP: (index, hp) =>
-    set((s) => {
-      const ph: [number, number] = [...s.partnerHP] as [number, number];
-      ph[index] = Math.max(0, Math.min(s.partnerMaxHP, hp));
-      return { partnerHP: ph };
-    }),
-
-  damagePartner: (index, dmg) =>
-    set((s) => {
-      const ph: [number, number] = [...s.partnerHP] as [number, number];
-      ph[index] = Math.max(0, ph[index] - dmg);
-      return { partnerHP: ph };
-    }),
+  setGamePhase: (gamePhase) => set({ gamePhase }),
 
   addScore: (pts) =>
     set((s) => {
       const score = s.score + pts;
-      const best = Number(localStorage.getItem(STORAGE_HIGH_SCORE) || "0");
+      const best = getHighScore();
       if (score > best) localStorage.setItem(STORAGE_HIGH_SCORE, String(score));
       return { score };
     }),
@@ -184,95 +171,128 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { coins };
     }),
 
-  spendCoins: (amount) => {
+  spendCoins: (n) => {
     const { coins } = get();
-    if (coins < amount) return false;
-    const updated = coins - amount;
+    if (coins < n) return false;
+    const updated = coins - n;
     localStorage.setItem(STORAGE_COINS, String(updated));
     set({ coins: updated });
     return true;
   },
 
-  applyUpgrade: (type) =>
+  damageHero: (dmg) =>
     set((s) => {
-      switch (type) {
-        case "damage_boost":
-          return { damageMultiplier: Math.min(s.damageMultiplier + 0.5, 3) };
-        case "heal":
-          return { heroHP: Math.min(s.heroMaxHP, s.heroHP + 40) };
-        case "revive_partner": {
-          const ph: [number, number] = [...s.partnerHP] as [number, number];
-          ph[0] = ph[0] <= 0 ? s.partnerMaxHP : ph[0];
-          ph[1] = ph[1] <= 0 ? s.partnerMaxHP : ph[1];
-          return { partnerHP: ph };
-        }
-        case "shield":
-          return { shieldActive: true };
-        default:
-          return {};
+      if (s.spawnInvincible) return {};
+      const reduced = Math.max(0, dmg - s.armor * 3);
+      const heroHP = Math.max(0, s.heroHP - reduced);
+      if (heroHP === 0 && s.gamePhase === "playing") {
+        const best = getHighScore();
+        if (s.score > best)
+          localStorage.setItem(STORAGE_HIGH_SCORE, String(s.score));
+        return { heroHP, gamePhase: "gameover" };
       }
+      return { heroHP };
     }),
 
-  setGamePhase: (gamePhase) => set({ gamePhase }),
+  healHero: (amt) =>
+    set((s) => ({ heroHP: Math.min(s.heroMaxHP, s.heroHP + amt) })),
 
-  setHeroFace: (heroFace) => {
-    if (heroFace) localStorage.setItem(STORAGE_HERO_FACE, heroFace);
-    else localStorage.removeItem(STORAGE_HERO_FACE);
-    set({ heroFace });
+  setEnemiesRemaining: (n) => set({ enemiesRemaining: n }),
+
+  decrementEnemies: () =>
+    set((s) => ({ enemiesRemaining: Math.max(0, s.enemiesRemaining - 1) })),
+
+  nextWave: () =>
+    set((s) => {
+      const nextWave = s.currentWave + 1;
+      if (nextWave > 3) {
+        // Level complete
+        const nextLevel = s.currentLevel + 1;
+        if (nextLevel > 12) return { gamePhase: "victory" };
+        return {
+          currentWave: 1,
+          currentLevel: nextLevel,
+          gamePhase: "level_complete",
+          heroHP: Math.min(s.heroMaxHP, s.heroHP + 20),
+        };
+      }
+      return { currentWave: nextWave, gamePhase: "wave_complete" };
+    }),
+
+  nextLevel: () =>
+    set((s) => ({
+      gamePhase: "playing",
+      currentWave: 1,
+      heroHP: Math.min(s.heroMaxHP, s.heroHP + 30),
+    })),
+
+  setWeapon: (w) =>
+    set((s) => {
+      if (!s.ownedWeapons.includes(w)) return {};
+      return { currentWeapon: w };
+    }),
+
+  buyWeapon: (w) => {
+    const s = get();
+    if (s.ownedWeapons.includes(w)) return false;
+    const cost = WEAPONS[w].cost;
+    if (!s.spendCoins(cost)) return false;
+    set((prev) => ({
+      ownedWeapons: [...prev.ownedWeapons, w],
+      currentWeapon: w,
+    }));
+    return true;
   },
+
+  buyUpgrade: (type) => {
+    const s = get();
+    let cost = 0;
+    if (type === "health") cost = 75;
+    if (type === "armor") cost = 100;
+    if (type === "speed") cost = 150;
+    if (!s.spendCoins(cost)) return false;
+    if (type === "health")
+      set((prev) => ({ heroHP: Math.min(prev.heroMaxHP, prev.heroHP + 50) }));
+    if (type === "armor")
+      set((prev) => ({ armor: Math.min(3, prev.armor + 1) }));
+    if (type === "speed")
+      set((prev) => ({ speedBoost: Math.min(3, prev.speedBoost + 1) }));
+    return true;
+  },
+
+  useAmmo: (w) =>
+    set((s) => {
+      const ammo = { ...s.ammo };
+      if (ammo[w] === -1) return {};
+      ammo[w] = Math.max(0, ammo[w] - 1);
+      if (ammo[w] === 0 && w !== "pistol") {
+        return { ammo, currentWeapon: "pistol" };
+      }
+      return { ammo };
+    }),
+
+  resetGame: () =>
+    set({
+      gamePhase: "playing",
+      score: 0,
+      heroHP: 100,
+      heroMaxHP: 100,
+      currentWave: 1,
+      currentLevel: 1,
+      enemiesRemaining: 0,
+      currentWeapon: "pistol",
+      ownedWeapons: ["pistol"],
+      ammo: initialAmmo(),
+      spawnInvincible: true,
+      armor: 0,
+      speedBoost: 0,
+    }),
 
   setVolume: (volume) => {
     localStorage.setItem(STORAGE_VOLUME, String(volume));
     set({ volume });
   },
 
-  nextWave: () =>
-    set((s) => {
-      const nextWave = s.waveCount + 1;
-      // Auto-save checkpoint every wave
-      localStorage.setItem(STORAGE_CHECKPOINT, String(nextWave));
-      return {
-        waveCount: nextWave,
-        heroHP: Math.min(s.heroMaxHP, s.heroHP + 30),
-        shieldActive: false,
-        checkpointWave: nextWave,
-      };
-    }),
-
-  saveCheckpoint: (wave) => {
-    localStorage.setItem(STORAGE_CHECKPOINT, String(wave));
-    set({ checkpointWave: wave });
-  },
-
-  setSpawnInvincible: (val) => set({ spawnInvincible: val }),
-
-  /** Full reset — goes back to wave 1, used only on fresh new game */
-  resetGame: () =>
-    set({
-      heroHP: 100,
-      partnerHP: [80, 80],
-      score: 0,
-      waveCount: 1,
-      gamePhase: "playing",
-      damageMultiplier: 1,
-      shieldActive: false,
-      spawnInvincible: true, // 2-second invincibility on spawn
-    }),
-
-  /** FIX 3: Checkpoint restart — resumes from saved wave, not wave 1 */
-  restartFromCheckpoint: () =>
-    set((s) => ({
-      heroHP: 100,
-      partnerHP: [80, 80],
-      gamePhase: "playing",
-      damageMultiplier: 1,
-      shieldActive: false,
-      spawnInvincible: true, // 2-second invincibility on respawn
-      waveCount: Math.max(1, s.checkpointWave),
-      // Preserve score so the session continues
-    })),
+  setLeaderboardVisible: (leaderboardVisible) => set({ leaderboardVisible }),
+  setSpawnInvincible: (spawnInvincible) => set({ spawnInvincible }),
 }));
-
-export function getHighScore(): number {
-  return Number(localStorage.getItem(STORAGE_HIGH_SCORE) || "0");
-}

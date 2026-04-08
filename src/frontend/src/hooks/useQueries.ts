@@ -16,7 +16,7 @@ import type {
 } from "../types/appTypes";
 import { useActor } from "./useActor";
 
-// ---- localStorage helpers (fallback when canister unavailable) ----
+// ---- localStorage helpers (cache layer — written AFTER canister confirms) ----
 function lsRead<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -908,5 +908,222 @@ export function useDeleteVideo() {
       ).deleteVideo(id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["videos"] }),
+  });
+}
+
+// ---- App Settings (canister-backed JSON blob) ----
+
+export type AppSettings = {
+  notificationBarText?: string;
+  notificationBarEnabled?: boolean;
+  welcomeMessage?: string;
+  tagline?: string;
+  footerCopyright?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactAddress?: string;
+  showInstallBtn?: boolean;
+  splashEnabled?: boolean;
+  founderName?: string;
+  founderPhoto?: string;
+  appLogoUrl?: string;
+  splashLogoUrl?: string;
+  socialSettings?: Record<string, unknown>;
+  affiliateSettings?: Record<string, unknown>;
+  admobConfig?: Record<string, unknown>;
+  adPlacements?: Record<string, boolean>;
+  customInternalAds?: string[];
+};
+
+const APP_SETTINGS_LS_KEY = "dz_app_settings_cache";
+
+function lsReadAppSettings(): AppSettings {
+  try {
+    const raw = localStorage.getItem(APP_SETTINGS_LS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as AppSettings;
+  } catch {
+    return {};
+  }
+}
+
+export function useAppSettings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<AppSettings>({
+    queryKey: ["appSettings"],
+    queryFn: async () => {
+      if (!actor) return lsReadAppSettings();
+      try {
+        const json = await (
+          actor as unknown as { getAppSettings(): Promise<string> }
+        ).getAppSettings();
+        const parsed =
+          json && json !== "{}" ? (JSON.parse(json) as AppSettings) : {};
+        // Also load individual legacy localStorage keys as fallback if canister is empty
+        const merged: AppSettings = {
+          notificationBarText:
+            localStorage.getItem("dz_notification_bar") ?? undefined,
+          notificationBarEnabled:
+            localStorage.getItem("dz_notification_bar_enabled") === "true",
+          welcomeMessage:
+            localStorage.getItem("dz_welcome_message") ?? undefined,
+          tagline: localStorage.getItem("dz_app_tagline") ?? undefined,
+          footerCopyright:
+            localStorage.getItem("dz_footer_copyright") ?? undefined,
+          contactPhone: localStorage.getItem("dz_contact_phone") ?? undefined,
+          contactEmail: localStorage.getItem("dz_contact_email") ?? undefined,
+          contactAddress:
+            localStorage.getItem("dz_contact_address") ?? undefined,
+          showInstallBtn:
+            localStorage.getItem("dz_show_install_btn") !== "false",
+          splashEnabled: localStorage.getItem("dz_splash_enabled") !== "false",
+          founderName: (() => {
+            try {
+              return (
+                JSON.parse(localStorage.getItem("dz_founder") ?? "{}").name ??
+                ""
+              );
+            } catch {
+              return "";
+            }
+          })(),
+          founderPhoto: (() => {
+            try {
+              return (
+                JSON.parse(localStorage.getItem("dz_founder") ?? "{}").photo ??
+                ""
+              );
+            } catch {
+              return "";
+            }
+          })(),
+          appLogoUrl: localStorage.getItem("dz_app_logo") ?? undefined,
+          splashLogoUrl: localStorage.getItem("dz_splash_logo") ?? undefined,
+          ...parsed,
+        };
+        localStorage.setItem(APP_SETTINGS_LS_KEY, JSON.stringify(merged));
+        return merged;
+      } catch {
+        return lsReadAppSettings();
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 3000,
+    staleTime: 2000,
+  });
+}
+
+export function useUpdateAppSettings() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: AppSettings) => {
+      if (!actor)
+        throw new Error("Actor not available — canister not connected");
+      // Read current canister value, merge, write back
+      let current: AppSettings = {};
+      try {
+        const raw = await (
+          actor as unknown as { getAppSettings(): Promise<string> }
+        ).getAppSettings();
+        if (raw && raw !== "{}") current = JSON.parse(raw) as AppSettings;
+      } catch {
+        // ignore — we'll just overwrite
+      }
+      const merged = { ...current, ...settings };
+      const json = JSON.stringify(merged);
+      await (
+        actor as unknown as { updateAppSettings(json: string): Promise<void> }
+      ).updateAppSettings(json);
+      // Cache in localStorage after canister confirms
+      localStorage.setItem(APP_SETTINGS_LS_KEY, JSON.stringify(merged));
+      // Also update individual legacy localStorage keys for backward compat
+      if (settings.notificationBarText !== undefined)
+        localStorage.setItem(
+          "dz_notification_bar",
+          settings.notificationBarText,
+        );
+      if (settings.notificationBarEnabled !== undefined)
+        localStorage.setItem(
+          "dz_notification_bar_enabled",
+          settings.notificationBarEnabled ? "true" : "false",
+        );
+      if (settings.welcomeMessage !== undefined)
+        localStorage.setItem("dz_welcome_message", settings.welcomeMessage);
+      if (settings.tagline !== undefined)
+        localStorage.setItem("dz_app_tagline", settings.tagline);
+      if (settings.footerCopyright !== undefined)
+        localStorage.setItem("dz_footer_copyright", settings.footerCopyright);
+      if (settings.contactPhone !== undefined)
+        localStorage.setItem("dz_contact_phone", settings.contactPhone);
+      if (settings.contactEmail !== undefined)
+        localStorage.setItem("dz_contact_email", settings.contactEmail);
+      if (settings.contactAddress !== undefined)
+        localStorage.setItem("dz_contact_address", settings.contactAddress);
+      if (settings.showInstallBtn !== undefined)
+        localStorage.setItem(
+          "dz_show_install_btn",
+          settings.showInstallBtn ? "true" : "false",
+        );
+      if (settings.splashEnabled !== undefined)
+        localStorage.setItem(
+          "dz_splash_enabled",
+          settings.splashEnabled ? "true" : "false",
+        );
+      if (
+        settings.founderName !== undefined ||
+        settings.founderPhoto !== undefined
+      ) {
+        const existing = (() => {
+          try {
+            return JSON.parse(localStorage.getItem("dz_founder") ?? "{}");
+          } catch {
+            return {};
+          }
+        })();
+        localStorage.setItem(
+          "dz_founder",
+          JSON.stringify({
+            ...existing,
+            ...(settings.founderName !== undefined
+              ? { name: settings.founderName }
+              : {}),
+            ...(settings.founderPhoto !== undefined
+              ? { photo: settings.founderPhoto }
+              : {}),
+          }),
+        );
+      }
+      if (settings.appLogoUrl !== undefined)
+        localStorage.setItem("dz_app_logo", settings.appLogoUrl);
+      if (settings.splashLogoUrl !== undefined)
+        localStorage.setItem("dz_splash_logo", settings.splashLogoUrl);
+      if (settings.socialSettings !== undefined)
+        localStorage.setItem(
+          "dz_social_settings",
+          JSON.stringify(settings.socialSettings),
+        );
+      if (settings.affiliateSettings !== undefined)
+        localStorage.setItem(
+          "dz_affiliate_settings",
+          JSON.stringify(settings.affiliateSettings),
+        );
+      if (settings.admobConfig !== undefined)
+        localStorage.setItem(
+          "dz_admob_config",
+          JSON.stringify(settings.admobConfig),
+        );
+      if (settings.adPlacements !== undefined)
+        localStorage.setItem(
+          "dz_ad_placements",
+          JSON.stringify(settings.adPlacements),
+        );
+      if (settings.customInternalAds !== undefined)
+        localStorage.setItem(
+          "dz_custom_internal_ads",
+          JSON.stringify(settings.customInternalAds),
+        );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["appSettings"] }),
   });
 }

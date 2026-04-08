@@ -1,7 +1,5 @@
 /**
- * Global Leaderboard — localStorage-backed, weekly reset.
- * Each entry has a weekKey; getLeaderboard() returns only current week, top 10.
- * Full history preserved (up to 50 total entries).
+ * Leaderboard — localStorage-backed, weekly reset.
  */
 
 export interface LeaderboardEntry {
@@ -9,20 +7,19 @@ export interface LeaderboardEntry {
   playerName: string;
   score: number;
   wave: number;
+  level: number;
   timestamp: number;
   weekKey: string;
 }
 
-const LEADERBOARD_KEY = "dz_game_leaderboard";
+const LEADERBOARD_KEY = "dz_ws_leaderboard";
 const MAX_WEEKLY = 10;
 const MAX_TOTAL = 50;
 
-/** Returns ISO week key "YYYY-WW" for a given timestamp (default: now) */
 export function getWeekKey(ts?: number): string {
   const d = ts ? new Date(ts) : new Date();
-  // ISO week: Monday-based
   const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = tmp.getUTCDay() || 7; // 1=Mon ... 7=Sun
+  const dayNum = tmp.getUTCDay() || 7;
   tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
   const week = Math.ceil(
@@ -31,10 +28,9 @@ export function getWeekKey(ts?: number): string {
   return `${tmp.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-/** { start, end } date strings for the current ISO week (Mon–Sun) */
 export function getWeekRange(): { start: string; end: string } {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun
+  const day = now.getDay();
   const diffToMon = day === 0 ? -6 : 1 - day;
   const mon = new Date(now);
   mon.setDate(now.getDate() + diffToMon);
@@ -45,7 +41,6 @@ export function getWeekRange(): { start: string; end: string } {
   return { start: fmt(mon), end: fmt(sun) };
 }
 
-/** Alias kept for legacy callers */
 export const getCurrentWeekRange = getWeekRange;
 
 function genId(): string {
@@ -53,8 +48,7 @@ function genId(): string {
 }
 
 function genPlayerName(): string {
-  const suffix = String(Math.floor(Math.random() * 9000) + 1000);
-  return `DZ_Player_${suffix}`;
+  return `DZ_${Math.floor(Math.random() * 9000) + 1000}`;
 }
 
 function readAll(): LeaderboardEntry[] {
@@ -67,26 +61,18 @@ function readAll(): LeaderboardEntry[] {
   }
 }
 
-/** Read leaderboard — only current week, sorted by score desc, top 10 */
 export function getLeaderboard(): LeaderboardEntry[] {
   const currentWeek = getWeekKey();
-  const all = readAll();
-  return all
+  return readAll()
     .filter((e) => e.weekKey === currentWeek)
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_WEEKLY);
 }
 
-/**
- * Add a score to the leaderboard.
- * @param score     Final score value
- * @param wave      Wave reached
- * @param playerName Optional display name (auto-generated if not provided)
- * @returns The new LeaderboardEntry
- */
 export function addScore(
   score: number,
   wave: number,
+  level = 1,
   playerName?: string,
 ): LeaderboardEntry {
   const entry: LeaderboardEntry = {
@@ -94,34 +80,28 @@ export function addScore(
     playerName: playerName ?? genPlayerName(),
     score,
     wave,
+    level,
     timestamp: Date.now(),
     weekKey: getWeekKey(),
   };
-
   const all = readAll();
   all.push(entry);
-
-  // Keep only the latest MAX_TOTAL entries across all weeks
   const trimmed =
     all.length > MAX_TOTAL
       ? all.sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_TOTAL)
       : all;
-
   try {
     localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(trimmed));
   } catch {}
-
   return entry;
 }
 
-/** Clear all leaderboard entries */
 export function clearLeaderboard(): void {
   try {
     localStorage.removeItem(LEADERBOARD_KEY);
   } catch {}
 }
 
-/** Returns true if score qualifies for current week's top 10 */
 export function isHighScore(score: number): boolean {
   if (score <= 0) return false;
   const board = getLeaderboard();
@@ -129,7 +109,6 @@ export function isHighScore(score: number): boolean {
   return score > board[board.length - 1].score;
 }
 
-/** Rank medal emoji for position (1-based) */
 export function rankMedal(position: number): string {
   if (position === 1) return "🥇";
   if (position === 2) return "🥈";

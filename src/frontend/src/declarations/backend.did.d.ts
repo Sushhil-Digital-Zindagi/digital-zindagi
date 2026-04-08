@@ -227,6 +227,7 @@ export interface _SERVICE {
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   'getAllToggles' : ActorMethod<[], Array<[string, boolean]>>,
   'getAllUsers' : ActorMethod<[], Array<User>>,
+  'getAppSettings' : ActorMethod<[], string>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCategories' : ActorMethod<[], Array<Category>>,
@@ -268,6 +269,7 @@ export interface _SERVICE {
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
+  'updateAppSettings' : ActorMethod<[string], undefined>,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
     boolean

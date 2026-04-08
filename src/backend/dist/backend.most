@@ -152,6 +152,7 @@ actor {
     };
   stable var adminConfig : ?AdminConfig__889654536;
   stable var adminPinHash : Text;
+  stable var appSettingsJson : Text;
   stable approvalState :
     {
       var approvalStatus :

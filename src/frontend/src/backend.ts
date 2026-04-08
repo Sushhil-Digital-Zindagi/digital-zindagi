@@ -296,6 +296,7 @@ export interface backendInterface {
     getAllProviders(): Promise<Array<ProviderProfile>>;
     getAllToggles(): Promise<Array<[string, boolean]>>;
     getAllUsers(): Promise<Array<User>>;
+    getAppSettings(): Promise<string>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
@@ -331,6 +332,7 @@ export interface backendInterface {
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
+    updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
@@ -841,6 +843,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getAppSettings(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAppSettings();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAppSettings();
+            return result;
+        }
+    }
     async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -1328,6 +1344,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n58(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async updateAppSettings(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateAppSettings(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateAppSettings(arg0);
             return result;
         }
     }

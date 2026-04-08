@@ -51,6 +51,7 @@ import {
   useAdminConfig,
   useAllProviders,
   useAllToggles,
+  useAppSettings,
   useApproveProvider,
   useCategories,
   useCustomCodes,
@@ -68,6 +69,7 @@ import {
   useScrapRates,
   useSearchUsers,
   useSubscriptionPricing,
+  useUpdateAppSettings,
   useUpdateCategory,
   useUpdateCustomCode,
   useUpdateJob,
@@ -1278,6 +1280,9 @@ function BannerManager() {
 
 // ---- Founder Settings Section ----
 function FounderSettingsSection() {
+  const { data: appSettings } = useAppSettings();
+  const updateAppSettingsMutation = useUpdateAppSettings();
+
   const [founderName, setFounderName] = useState<string>(() => {
     try {
       return JSON.parse(localStorage.getItem("dz_founder") ?? "{}").name ?? "";
@@ -1299,9 +1304,24 @@ function FounderSettingsSection() {
     () => localStorage.getItem("dz_splash_logo") ?? "",
   );
   const [showSaved, setShowSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const splashLogoInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync from canister when data arrives
+  useEffect(() => {
+    if (!appSettings) return;
+    if (appSettings.founderName !== undefined && appSettings.founderName !== "")
+      setFounderName(appSettings.founderName);
+    if (
+      appSettings.founderPhoto !== undefined &&
+      appSettings.founderPhoto !== ""
+    )
+      setFounderPhoto(appSettings.founderPhoto);
+    if (appSettings.appLogoUrl) setAppLogoUrl(appSettings.appLogoUrl);
+    if (appSettings.splashLogoUrl) setSplashLogoUrl(appSettings.splashLogoUrl);
+  }, [appSettings]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1357,17 +1377,25 @@ function FounderSettingsSection() {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    localStorage.setItem(
-      "dz_founder",
-      JSON.stringify({ name: founderName, photo: founderPhoto }),
-    );
-    if (appLogoUrl) localStorage.setItem("dz_app_logo", appLogoUrl);
-    if (splashLogoUrl) localStorage.setItem("dz_splash_logo", splashLogoUrl);
-    broadcastSettingsChange();
-    setShowSaved(true);
-    toast.success("Founder settings save ho gayi!");
-    setTimeout(() => setShowSaved(false), 3000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateAppSettingsMutation.mutateAsync({
+        founderName,
+        founderPhoto,
+        appLogoUrl: appLogoUrl || undefined,
+        splashLogoUrl: splashLogoUrl || undefined,
+      });
+      broadcastSettingsChange();
+      setShowSaved(true);
+      toast.success("Founder settings save ho gayi!");
+      setTimeout(() => setShowSaved(false), 3000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -1578,9 +1606,14 @@ function FounderSettingsSection() {
         type="button"
         data-ocid="admin.save_button"
         onClick={handleSave}
-        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-2.5 rounded-xl transition-colors"
+        disabled={saving}
+        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-60"
       >
-        <CheckCircle size={16} />
+        {saving ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <CheckCircle size={16} />
+        )}
         Founder Settings Save Karein
       </button>
     </div>
@@ -3734,6 +3767,7 @@ function AdsManager() {
 
 // ---- Social Media Section ----
 function SocialMediaSection() {
+  const updateAppSettingsMutation = useUpdateAppSettings();
   const [settings, setSettings] = useState<Record<string, unknown>>(() => {
     try {
       return JSON.parse(localStorage.getItem("dz_social_settings") ?? "{}");
@@ -3742,6 +3776,7 @@ function SocialMediaSection() {
     }
   });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [newPlatformEmoji, setNewPlatformEmoji] = useState("🔗");
 
@@ -3797,12 +3832,20 @@ function SocialMediaSection() {
     });
   };
 
-  const handleSave = () => {
-    localStorage.setItem("dz_social_settings", JSON.stringify(settings));
-    broadcastSettingsChange();
-    setSaved(true);
-    toast.success("Social Media settings save ho gayi!");
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateAppSettingsMutation.mutateAsync({ socialSettings: settings });
+      broadcastSettingsChange();
+      setSaved(true);
+      toast.success("Social Media settings save ho gayi!");
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -3897,8 +3940,10 @@ function SocialMediaSection() {
           type="button"
           data-ocid="admin.primary_button"
           onClick={handleSave}
-          className={`w-full py-3 rounded-xl font-bold text-sm transition-colors ${saved ? "bg-green-500 text-white" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+          disabled={saving}
+          className={`w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${saved ? "bg-green-500 text-white" : "bg-primary text-primary-foreground hover:opacity-90"}`}
         >
+          {saving ? <Loader2 size={15} className="animate-spin" /> : null}
           {saved ? "✓ Saved!" : "Save Social Media Settings"}
         </button>
       </div>
@@ -3915,6 +3960,7 @@ interface AffiliateLink {
 }
 
 function AffiliateMarketingSection() {
+  const updateAppSettingsMutation = useUpdateAppSettings();
   const [settings, setSettings] = useState<{
     enabled: boolean;
     title: string;
@@ -3946,16 +3992,27 @@ function AffiliateMarketingSection() {
     }
   });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newLinkTitle, setNewLinkTitle] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [newLinkEmoji, setNewLinkEmoji] = useState("🛒");
 
-  const handleSave = () => {
-    localStorage.setItem("dz_affiliate_settings", JSON.stringify(settings));
-    broadcastSettingsChange();
-    setSaved(true);
-    toast.success("Affiliate Marketing settings save ho gayi!");
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateAppSettingsMutation.mutateAsync({
+        affiliateSettings: settings as unknown as Record<string, unknown>,
+      });
+      broadcastSettingsChange();
+      setSaved(true);
+      toast.success("Affiliate Marketing settings save ho gayi!");
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddLink = () => {
@@ -4166,8 +4223,10 @@ function AffiliateMarketingSection() {
           type="button"
           data-ocid="admin.primary_button"
           onClick={handleSave}
-          className={`w-full py-3 rounded-xl font-bold text-sm transition-colors ${saved ? "bg-green-500 text-white" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+          disabled={saving}
+          className={`w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${saved ? "bg-green-500 text-white" : "bg-primary text-primary-foreground hover:opacity-90"}`}
         >
+          {saving ? <Loader2 size={15} className="animate-spin" /> : null}
           {saved ? "✓ Saved!" : "Save Affiliate Settings"}
         </button>
       </div>
@@ -4861,6 +4920,9 @@ function EbookManagerSection() {
 
 // ---- App Settings Section ----
 function AppSettingsSection() {
+  const { data: appSettings } = useAppSettings();
+  const updateAppSettingsMutation = useUpdateAppSettings();
+
   const [welcomeMessage, setWelcomeMessage] = useState(
     () =>
       localStorage.getItem("dz_welcome_message") ??
@@ -4891,19 +4953,61 @@ function AppSettingsSection() {
     () => localStorage.getItem("dz_splash_enabled") !== "false",
   );
   const [savedField, setSavedField] = useState<string | null>(null);
+  const [savingField, setSavingField] = useState<string | null>(null);
 
-  const saveField = (key: string, value: string, label: string) => {
-    localStorage.setItem(key, value);
-    broadcastSettingsChange();
-    setSavedField(label);
-    toast.success(`${label} save ho gaya!`);
-    setTimeout(() => setSavedField(null), 2000);
+  // Sync from canister when data arrives
+  useEffect(() => {
+    if (!appSettings) return;
+    if (appSettings.welcomeMessage)
+      setWelcomeMessage(appSettings.welcomeMessage);
+    if (appSettings.tagline) setTagline(appSettings.tagline);
+    if (appSettings.footerCopyright !== undefined)
+      setFooterCopyright(appSettings.footerCopyright);
+    if (appSettings.contactPhone) setContactPhone(appSettings.contactPhone);
+    if (appSettings.contactEmail) setContactEmail(appSettings.contactEmail);
+    if (appSettings.contactAddress)
+      setContactAddress(appSettings.contactAddress);
+    if (appSettings.showInstallBtn !== undefined)
+      setShowInstallBtn(appSettings.showInstallBtn);
+    if (appSettings.splashEnabled !== undefined)
+      setSplashEnabled(appSettings.splashEnabled);
+  }, [appSettings]);
+
+  const saveField = async (
+    partialSettings: Record<string, string | boolean>,
+    label: string,
+  ) => {
+    setSavingField(label);
+    try {
+      await updateAppSettingsMutation.mutateAsync(partialSettings);
+      broadcastSettingsChange();
+      setSavedField(label);
+      toast.success(`${label} save ho gaya!`);
+      setTimeout(() => setSavedField(null), 2000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
+      toast.error(msg);
+    } finally {
+      setSavingField(null);
+    }
   };
 
-  const saveToggle = (key: string, value: boolean, label: string) => {
-    localStorage.setItem(key, value ? "true" : "false");
-    broadcastSettingsChange();
-    toast.success(`${label} ${value ? "ON" : "OFF"} ho gaya!`);
+  const saveToggle = async (
+    partialSettings: Record<string, boolean>,
+    label: string,
+    value: boolean,
+  ) => {
+    setSavingField(label);
+    try {
+      await updateAppSettingsMutation.mutateAsync(partialSettings);
+      broadcastSettingsChange();
+      toast.success(`${label} ${value ? "ON" : "OFF"} ho gaya!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
+      toast.error(msg);
+    } finally {
+      setSavingField(null);
+    }
   };
 
   return (
@@ -4926,11 +5030,13 @@ function AppSettingsSection() {
         <button
           type="button"
           data-ocid="admin.save_button"
-          onClick={() =>
-            saveField("dz_welcome_message", welcomeMessage, "Welcome Message")
-          }
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm"
+          onClick={() => saveField({ welcomeMessage }, "Welcome Message")}
+          disabled={savingField === "Welcome Message"}
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm disabled:opacity-60"
         >
+          {savingField === "Welcome Message" ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : null}
           {savedField === "Welcome Message" ? "✅ Saved!" : "Save"}
         </button>
       </div>
@@ -4953,9 +5059,13 @@ function AppSettingsSection() {
         <button
           type="button"
           data-ocid="admin.save_button"
-          onClick={() => saveField("dz_app_tagline", tagline, "App Tagline")}
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm"
+          onClick={() => saveField({ tagline }, "App Tagline")}
+          disabled={savingField === "App Tagline"}
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm disabled:opacity-60"
         >
+          {savingField === "App Tagline" ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : null}
           {savedField === "App Tagline" ? "✅ Saved!" : "Save"}
         </button>
       </div>
@@ -4980,15 +5090,13 @@ function AppSettingsSection() {
         <button
           type="button"
           data-ocid="admin.save_button"
-          onClick={() =>
-            saveField(
-              "dz_footer_copyright",
-              footerCopyright,
-              "Footer Copyright",
-            )
-          }
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm"
+          onClick={() => saveField({ footerCopyright }, "Footer Copyright")}
+          disabled={savingField === "Footer Copyright"}
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm disabled:opacity-60"
         >
+          {savingField === "Footer Copyright" ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : null}
           {savedField === "Footer Copyright" ? "✅ Saved!" : "Save"}
         </button>
       </div>
@@ -5018,12 +5126,17 @@ function AppSettingsSection() {
               <button
                 type="button"
                 data-ocid="admin.save_button"
-                onClick={() =>
-                  saveField("dz_contact_phone", contactPhone, "Phone")
-                }
-                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap"
+                onClick={() => saveField({ contactPhone }, "Phone")}
+                disabled={savingField === "Phone"}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap disabled:opacity-60"
               >
-                {savedField === "Phone" ? "✅" : "Save"}
+                {savingField === "Phone" ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : savedField === "Phone" ? (
+                  "✅"
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
@@ -5046,12 +5159,17 @@ function AppSettingsSection() {
               <button
                 type="button"
                 data-ocid="admin.save_button"
-                onClick={() =>
-                  saveField("dz_contact_email", contactEmail, "Email")
-                }
-                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap"
+                onClick={() => saveField({ contactEmail }, "Email")}
+                disabled={savingField === "Email"}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap disabled:opacity-60"
               >
-                {savedField === "Email" ? "✅" : "Save"}
+                {savingField === "Email" ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : savedField === "Email" ? (
+                  "✅"
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
@@ -5074,12 +5192,17 @@ function AppSettingsSection() {
               <button
                 type="button"
                 data-ocid="admin.save_button"
-                onClick={() =>
-                  saveField("dz_contact_address", contactAddress, "Address")
-                }
-                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap"
+                onClick={() => saveField({ contactAddress }, "Address")}
+                disabled={savingField === "Address"}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm whitespace-nowrap disabled:opacity-60"
               >
-                {savedField === "Address" ? "✅" : "Save"}
+                {savingField === "Address" ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : savedField === "Address" ? (
+                  "✅"
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>
@@ -5095,18 +5218,18 @@ function AppSettingsSection() {
           {
             label: "Install Button (Browser में दिखाएं)",
             value: showInstallBtn,
-            key: "dz_show_install_btn",
+            settingsKey: "showInstallBtn",
             set: setShowInstallBtn,
           },
           {
             label: "Splash Screen (Pehli baar dikhe)",
             value: splashEnabled,
-            key: "dz_splash_enabled",
+            settingsKey: "splashEnabled",
             set: setSplashEnabled,
           },
-        ].map(({ label, value, key, set }) => (
+        ].map(({ label, value, settingsKey, set }) => (
           <div
-            key={key}
+            key={label}
             className="flex items-center justify-between py-2 border-b border-border last:border-0"
           >
             <p className="font-medium text-foreground text-sm">{label}</p>
@@ -5116,7 +5239,7 @@ function AppSettingsSection() {
               onClick={() => {
                 const next = !value;
                 set(next);
-                saveToggle(key, next, label);
+                saveToggle({ [settingsKey]: next }, label, next);
               }}
               className={`relative w-12 h-6 rounded-full transition-colors ${value ? "bg-primary" : "bg-gray-300"}`}
             >
@@ -5880,6 +6003,9 @@ function GoogleSheetsSection() {
 
 // ---- Notification Bar Section ----
 function NotificationBarSection() {
+  const { data: appSettings } = useAppSettings();
+  const updateAppSettingsMutation = useUpdateAppSettings();
+
   const [text, setText] = useState(
     () => localStorage.getItem("dz_notification_bar") ?? "",
   );
@@ -5887,15 +6013,33 @@ function NotificationBarSection() {
     const val = localStorage.getItem("dz_notification_bar_enabled");
     return val === null ? false : val === "true";
   });
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    localStorage.setItem("dz_notification_bar", text);
-    localStorage.setItem(
-      "dz_notification_bar_enabled",
-      enabled ? "true" : "false",
-    );
-    broadcastSettingsChange();
-    toast.success("Notification bar update ho gaya!");
+  // Sync from canister when data arrives
+  useEffect(() => {
+    if (appSettings?.notificationBarText !== undefined) {
+      setText(appSettings.notificationBarText);
+    }
+    if (appSettings?.notificationBarEnabled !== undefined) {
+      setEnabled(appSettings.notificationBarEnabled);
+    }
+  }, [appSettings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateAppSettingsMutation.mutateAsync({
+        notificationBarText: text,
+        notificationBarEnabled: enabled,
+      });
+      broadcastSettingsChange();
+      toast.success("Notification bar update ho gaya!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -5969,8 +6113,10 @@ function NotificationBarSection() {
         <button
           type="button"
           onClick={handleSave}
-          className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+          disabled={saving}
+          className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
         >
+          {saving ? <Loader2 size={16} className="animate-spin" /> : null}
           Save Karein
         </button>
       </div>
@@ -6643,7 +6789,7 @@ const SECTION_TOGGLE_KEYS_LIST = [
   },
   {
     key: "dz_game_visible",
-    label: "🎮 Real Human Game Section",
+    label: "🎮 Show Game in Menu",
     defaultOn: true,
   },
 ];
