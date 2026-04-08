@@ -1,0 +1,211 @@
+type _ImmutableObjectStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _ImmutableObjectStorageRefillInformation = record {
+                                                  proposed_top_up_amount:
+                                                   opt nat;};
+type _ImmutableObjectStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type UserRole__1 = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserRole = 
+ variant {
+   admin;
+   customer;
+   provider;
+ };
+type UserProfile = 
+ record {
+   mobile: MobileNumber;
+   name: text;
+   role: UserRole;
+   userId: nat;
+ };
+type UserApprovalInfo = 
+ record {
+   "principal": principal;
+   status: ApprovalStatus;
+ };
+type User = 
+ record {
+   createdAt: int;
+   id: nat;
+   mobile: MobileNumber;
+   name: text;
+   passwordHash: text;
+   role: UserRole;
+   securityAnswer: text;
+   securityQuestion: text;
+ };
+type SubscriptionStatus = 
+ variant {
+   active;
+   expired;
+   pending;
+   rejected;
+ };
+type SubscriptionPricing = 
+ record {
+   oneMonthPrice: nat;
+   threeMonthPrice: nat;
+   twelveMonthPrice: nat;
+ };
+type SubscriptionPlan = 
+ variant {
+   oneMonth;
+   threeMonths;
+   twelveMonths;
+ };
+type ServiceRate = 
+ record {
+   description: text;
+   name: text;
+   price: nat;
+ };
+type ProviderProfile = 
+ record {
+   address: text;
+   approvalStatus: ApprovalStatus;
+   category: text;
+   description: text;
+   paymentScreenshotBlobId: opt text;
+   photos: vec text;
+   planType: PlanType;
+   qrCodeBlobId: opt text;
+   serviceRates: vec ServiceRate;
+   shopName: text;
+   subscriptionExpiry: opt int;
+   subscriptionPlan: SubscriptionPlan;
+   subscriptionStatus: SubscriptionStatus;
+   upiId: text;
+   userId: nat;
+ };
+type PlanType = 
+ variant {
+   free;
+   pending;
+   premium;
+ };
+type Order = 
+ record {
+   createdAt: int;
+   customerId: nat;
+   customerName: text;
+   description: text;
+   id: nat;
+   imageUrl: opt text;
+   orderType: text;
+   providerId: nat;
+   status: text;
+ };
+type MobileNumber = text;
+type ExternalBlob = blob;
+type Banner = 
+ record {
+   active: bool;
+   displayOrder: nat;
+   id: nat;
+   imageUrl: text;
+   linkUrl: text;
+   subtitle: text;
+   title: text;
+ };
+type ApprovalStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type AdminConfig = 
+ record {
+   adminName: text;
+   email: text;
+   mobile: MobileNumber;
+   qrCodeBlobId: ExternalBlob;
+   upiId: text;
+ };
+service : {
+  _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
+  _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
+  _immutableObjectStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _immutableObjectStorageCreateCertificate: (blobHash: text) ->
+   (_ImmutableObjectStorageCreateCertificateResult);
+  _immutableObjectStorageRefillCashier: (refillInformation:
+   opt _ImmutableObjectStorageRefillInformation) ->
+   (_ImmutableObjectStorageRefillResult);
+  _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControl: () -> ();
+  addBanner: (title: text, subtitle: text, imageUrl: text, linkUrl: text,
+   displayOrder: nat) -> (nat);
+  addServiceRate: (userId: nat, newRate: ServiceRate) -> ();
+  addShopPhoto: (userId: nat, blobId: text) -> ();
+  approveProvider: (userId: nat, plan: SubscriptionPlan) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
+  changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
+  deleteBanner: (bannerId: nat) -> ();
+  deleteServiceRate: (userId: nat, rateName: text) -> ();
+  editBanner: (bannerId: nat, title: text, subtitle: text, imageUrl: 
+   text, linkUrl: text, active: bool, displayOrder: nat) -> ();
+  forgotPassword: (mobile: MobileNumber, securityAnswer: text,
+   newPasswordHash: text) -> ();
+  getActiveBanners: () -> (vec Banner) query;
+  getActiveProviders: () -> (vec ProviderProfile) query;
+  getAdminConfig: () -> (opt AdminConfig) query;
+  getAllProviders: () -> (vec ProviderProfile) query;
+  getAllToggles: () -> (vec record {
+                              text;
+                              bool;
+                            }) query;
+  getAllUsers: () -> (vec User) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole__1) query;
+  getCustomerOrders: (userId: nat) -> (vec Order) query;
+  getOrderById: (orderId: nat) -> (opt Order) query;
+  getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
+  getProviderOrders: (userId: nat) -> (vec Order) query;
+  getProviderProfile: (userId: nat) -> (opt ProviderProfile) query;
+  getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
+  getProvidersPendingApproval: () -> (vec ProviderProfile) query;
+  getRecentUsers: () -> (vec User) query;
+  getSubscriptionPricing: () -> (opt SubscriptionPricing) query;
+  getUserById: (userId: nat) -> (opt User) query;
+  getUserByMobile: (mobile: MobileNumber) -> (opt User) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  getUsersByRole: (role: UserRole) -> (vec User) query;
+  isCallerAdmin: () -> (bool) query;
+  isCallerApproved: () -> (bool) query;
+  listApprovals: () -> (vec UserApprovalInfo) query;
+  login: (mobile: MobileNumber, passwordHash: text) -> (User);
+  placeOrder: (providerId: nat, customerName: text, description: text,
+   orderType: text, imageUrl: opt text) -> (nat);
+  registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
+   UserRole, securityQuestion: text, securityAnswer: text) -> ();
+  rejectProvider: (userId: nat) -> ();
+  removeShopPhoto: (userId: nat, blobId: text) -> ();
+  requestApproval: () -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  searchUsers: (searchText: text) -> (vec User) query;
+  setApproval: (user: principal, status: ApprovalStatus) -> ();
+  setPlanType: (userId: nat, planType: PlanType) -> ();
+  updateAdminConfig: (newConfig: AdminConfig) -> ();
+  updateOrderStatus: (orderId: nat, status: text) -> ();
+  updateProviderProfile: (userId: nat, shopName: text, description: text,
+   address: text, category: text) -> ();
+  /// Extended updateProviderProfile to include upiId and qrCodeBlobId
+  updateProviderProfileFull: (userId: nat, shopName: text, description: 
+   text, address: text, category: text, upiId: text, qrCodeBlobId:
+   opt text) -> ();
+  updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
+  updateToggle: (toggleName: text, value: bool) -> ();
+  uploadPaymentScreenshot: (userId: nat, blobId: text) -> ();
+  verifyAdminPin: (pinHash: text) -> (bool) query;
+}

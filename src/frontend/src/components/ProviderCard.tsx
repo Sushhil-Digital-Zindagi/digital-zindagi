@@ -1,6 +1,6 @@
 import { MapPin, MessageCircle, Navigation, Phone, Star } from "lucide-react";
-import type { ProviderProfile, User } from "../backend";
 import { Link } from "../lib/router";
+import type { ProviderProfile, User } from "../types/appTypes";
 import { getGoogleMapsDirectionsUrl } from "../utils/locationUtils";
 
 interface Props {
@@ -39,7 +39,14 @@ export default function ProviderCard({
   shopLng,
 }: Props) {
   const emoji = CATEGORY_EMOJIS[profile.category] ?? "🏪";
-  const initials = (user?.name ?? profile.shopName).slice(0, 2).toUpperCase();
+  const initials = (
+    user?.name ??
+    profile.shopName ??
+    profile.businessName ??
+    "DZ"
+  )
+    .slice(0, 2)
+    .toUpperCase();
   const mobile = user?.mobile ?? "";
 
   // Also try to get lat/lng from localStorage provider data

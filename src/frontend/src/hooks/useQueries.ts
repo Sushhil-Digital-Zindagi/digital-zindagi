@@ -4,10 +4,10 @@ import type {
   Banner,
   Order,
   ProviderProfile,
+  SubscriptionPlan,
   SubscriptionPricing,
   User,
-} from "../backend";
-import type { SubscriptionPlan } from "../backend";
+} from "../types/appTypes";
 import { useActor } from "./useActor";
 
 export function useActiveBanners() {
@@ -124,7 +124,7 @@ export function useUsersByRole(role: string) {
     queryKey: ["usersByRole", role],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getUsersByRole(role as any);
+      return actor.getUsersByRole(role);
     },
     enabled: !!actor && !isFetching,
   });

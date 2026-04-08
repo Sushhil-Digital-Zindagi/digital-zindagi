@@ -2,10 +2,10 @@ import { CheckCircle, Crown, Loader2, Tv2, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { PlanType, SubscriptionPlan } from "../backend";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { Link, useNavigate } from "../lib/router";
+import { PlanType, SubscriptionPlan } from "../types/appTypes";
 
 const PREMIUM_FEATURES = [
   "Full profile listing",

@@ -88,6 +88,10 @@ interface AdminCategory {
 
 function readAdminCategories(): AdminCategory[] {
   try {
+    // Prefer dz_categories_list (admin-managed list with add/edit/remove support)
+    const list = localStorage.getItem("dz_categories_list");
+    if (list) return JSON.parse(list);
+    // Fallback to legacy dz_categories key
     return JSON.parse(localStorage.getItem("dz_categories") ?? "[]");
   } catch {
     return [];
@@ -117,11 +121,15 @@ export default function CategoryGrid({ toggles, loading }: Props) {
   const [adminCats, setAdminCats] =
     useState<AdminCategory[]>(readAdminCategories);
 
-  // Re-read admin categories when the window regains focus
+  // Re-read admin categories when the window regains focus or settings broadcast fires
   useEffect(() => {
-    const onFocus = () => setAdminCats(readAdminCategories());
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    const onRefresh = () => setAdminCats(readAdminCategories());
+    window.addEventListener("focus", onRefresh);
+    window.addEventListener("dz-settings-changed", onRefresh);
+    return () => {
+      window.removeEventListener("focus", onRefresh);
+      window.removeEventListener("dz-settings-changed", onRefresh);
+    };
   }, []);
 
   const merged = mergeCategories(adminCats);

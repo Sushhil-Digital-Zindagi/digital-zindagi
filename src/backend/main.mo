@@ -1,8 +1,8 @@
-import AccessControl "authorization/access-control";
-import MixinAuthorization "authorization/MixinAuthorization";
-import MixinStorage "blob-storage/Mixin";
-import UserApproval "user-approval/approval";
-import Storage "blob-storage/Storage";
+import AccessControl "mo:caffeineai-authorization/access-control";
+import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
+import UserApproval "mo:caffeineai-user-approval/approval";
+import Storage "mo:caffeineai-object-storage/Storage";
 import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
@@ -41,7 +41,7 @@ persistent actor {
   var adminPinHash : Text = "1234";
 
   // Include prefabricated components
-  include MixinStorage();
+    include MixinObjectStorage();
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 

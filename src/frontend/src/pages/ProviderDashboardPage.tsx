@@ -14,13 +14,14 @@ import {
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ApprovalStatus, ExternalBlob } from "../backend";
-import type { Order, ServiceRate } from "../backend";
+import { ExternalBlob } from "../backend";
 import Header from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { useProviderOrders, useProviderProfile } from "../hooks/useQueries";
 import { Link } from "../lib/router";
+import { ApprovalStatus } from "../types/appTypes";
+import type { Order, ServiceRate } from "../types/appTypes";
 
 const CATEGORIES = [
   "Scrap",

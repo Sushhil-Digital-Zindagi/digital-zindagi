@@ -1,16 +1,16 @@
 import { Search } from "lucide-react";
 import { motion } from "motion/react";
-import {
-  ApprovalStatus,
-  PlanType,
-  SubscriptionPlan,
-  SubscriptionStatus,
-} from "../backend";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import ProviderCard from "../components/ProviderCard";
 import { useSearchUsers } from "../hooks/useQueries";
 import { useSearchParams } from "../lib/router";
+import {
+  ApprovalStatus,
+  PlanType,
+  SubscriptionPlan,
+  SubscriptionStatus,
+} from "../types/appTypes";
 
 export default function SearchPage() {
   const [params] = useSearchParams();
@@ -63,7 +63,10 @@ export default function SearchPage() {
                     approvalStatus: ApprovalStatus.approved,
                     photos: [],
                     upiId: "",
-                    planType: PlanType.pending,
+                    planType: PlanType.free,
+                    rating: 0,
+                    reviewCount: 0,
+                    isActive: true,
                   }}
                   user={u}
                   index={i + 1}

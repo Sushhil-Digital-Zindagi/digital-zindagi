@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
         toast.error("Yeh mobile number registered nahi hai");
         return;
       }
-      setQuestion(user.securityQuestion);
+      setQuestion(user.securityQuestion ?? "");
       setStep("question");
     } catch (err: any) {
       toast.error(err?.message ?? "Kuch problem ho gayi");

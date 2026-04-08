@@ -1,12 +1,12 @@
 import { Toaster } from "@/components/ui/sonner";
 import type React from "react";
 import { useEffect } from "react";
-import { UserRole } from "./backend";
 import NotificationBar from "./components/NotificationBar";
 import SplashScreen from "./components/SplashScreen";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { BrowserRouter, Navigate, Route, Routes } from "./lib/router";
+import { UserRole } from "./types/appTypes";
 import { runAutoCleanup } from "./utils/autoCleanup";
 
 import AIEnhancerPage from "./pages/AIEnhancerPage";
@@ -20,6 +20,7 @@ import DeliveryAppPage from "./pages/DeliveryAppPage";
 import DeliveryOrderPage from "./pages/DeliveryOrderPage";
 import DeliveryRegisterPage from "./pages/DeliveryRegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import GamePage from "./pages/GamePage";
 import HomePage from "./pages/HomePage";
 import ImageResizerPage from "./pages/ImageResizerPage";
 import JobsPage from "./pages/JobsPage";
@@ -91,6 +92,7 @@ function AppRoutes() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/game" element={<GamePage />} />
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/provider/:userId" element={<ProviderProfilePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />

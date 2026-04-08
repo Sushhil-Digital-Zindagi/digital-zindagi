@@ -9,7 +9,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import CategoryGrid, { ALL_CATEGORIES } from "../components/CategoryGrid";
 import Footer from "../components/Footer";
@@ -287,7 +287,7 @@ function EbookBuyModal({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
         transition={{ duration: 0.25 }}
-        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md overflow-hidden"
+        className="bg-card rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md overflow-hidden"
       >
         {/* Header */}
         <div className="bg-emerald-header text-white px-5 py-4 flex items-start justify-between gap-3">
@@ -428,6 +428,111 @@ function EbookBuyModal({
   );
 }
 
+interface CustomCodeEntry {
+  id: string;
+  label: string;
+  code: string;
+  placement: "top" | "middle" | "bottom";
+  enabled: boolean;
+  createdAt: number;
+}
+
+interface AdPlacementsSettings {
+  header: boolean;
+  middle: boolean;
+  footer: boolean;
+}
+
+function readCustomCodes(): CustomCodeEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem("dz_custom_codes") ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function readAdPlacements(): AdPlacementsSettings {
+  try {
+    return JSON.parse(
+      localStorage.getItem("dz_ad_placements") ??
+        '{"header":false,"middle":true,"footer":false}',
+    );
+  } catch {
+    return { header: false, middle: true, footer: false };
+  }
+}
+
+function CustomCodeBlock({ entry }: { entry: CustomCodeEntry }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!ref.current) return;
+    // Extract and execute any <script> tags inside custom code
+    const scripts = ref.current.querySelectorAll("script");
+    for (const oldScript of Array.from(scripts)) {
+      const newScript = document.createElement("script");
+      if ((oldScript as HTMLScriptElement).src)
+        newScript.src = (oldScript as HTMLScriptElement).src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
+      oldScript.remove();
+    }
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className="custom-code-block w-full"
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: admin-controlled code
+      dangerouslySetInnerHTML={{ __html: entry.code }}
+    />
+  );
+}
+
+function AdBanners({ position }: { position: "header" | "middle" | "footer" }) {
+  const adsEnabled =
+    localStorage.getItem("dz_admob_config") !== null
+      ? (() => {
+          try {
+            return (
+              JSON.parse(localStorage.getItem("dz_admob_config") ?? "{}")
+                .masterEnabled !== false
+            );
+          } catch {
+            return true;
+          }
+        })()
+      : true;
+  if (!adsEnabled) return null;
+
+  const placements = readAdPlacements();
+  if (!placements[position]) return null;
+
+  const customAds: string[] = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("dz_custom_internal_ads") ?? "[]");
+    } catch {
+      return [];
+    }
+  })();
+
+  if (customAds.length === 0) return null;
+
+  // Show a random custom ad
+  const ad = customAds[Math.floor(Math.random() * customAds.length)];
+  return (
+    <div className="w-full px-4 py-2 max-w-7xl mx-auto">
+      <img
+        src={ad}
+        alt="Advertisement"
+        className="w-full rounded-xl object-cover max-h-24"
+        loading="lazy"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+    </div>
+  );
+}
+
 // WhatsApp icon as SVG since lucide doesn't have it
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -442,6 +547,144 @@ function WhatsAppIcon({ size = 22 }: { size?: number }) {
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.14.564 4.148 1.55 5.88L0 24l6.335-1.524A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.092-1.424l-.364-.217-3.768.906.952-3.673-.237-.377A9.779 9.779 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
     </svg>
+  );
+}
+
+// ─── Game Featured Section ─────────────────────────────────────────────────────
+
+function GameFeaturedSection() {
+  const navigate = useNavigate();
+  const gameVisible = localStorage.getItem("dz_game_visible") !== "false";
+  if (!gameVisible) return null;
+
+  return (
+    <section
+      className="px-4 pt-6 pb-2 max-w-7xl mx-auto"
+      data-ocid="game-featured-section"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative rounded-2xl overflow-hidden cursor-pointer group"
+        style={{
+          background:
+            "linear-gradient(135deg, #020a04 0%, #061208 40%, #0a1e10 100%)",
+          border: "1px solid rgba(240,192,64,0.3)",
+          boxShadow:
+            "0 0 40px rgba(0,100,40,0.2), inset 0 1px 0 rgba(240,192,64,0.1)",
+        }}
+        onClick={() => navigate("/game")}
+      >
+        {/* Animated fire particles (CSS) */}
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              "radial-gradient(ellipse at 70% 50%, rgba(255,100,0,0.3) 0%, transparent 60%), radial-gradient(ellipse at 30% 80%, rgba(0,255,100,0.15) 0%, transparent 50%)",
+            animation: "pulse 3s ease-in-out infinite alternate",
+          }}
+        />
+
+        {/* Background scene image (non-blocking — loads async) */}
+        <div
+          className="absolute inset-0 opacity-40 transition-opacity duration-500 group-hover:opacity-55"
+          style={{
+            backgroundImage:
+              "url(/assets/generated/game-scene-bg.dim_1920x1080.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(2,5,3,0.94) 0%, rgba(2,5,3,0.72) 60%, rgba(2,5,3,0.5) 100%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-5">
+          <div className="flex-1 min-w-0">
+            {/* Badge */}
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3 text-xs font-bold"
+              style={{
+                background: "rgba(240,192,64,0.15)",
+                border: "1px solid rgba(240,192,64,0.35)",
+                color: "#f0c040",
+              }}
+            >
+              🎮 Exclusive Game
+            </div>
+
+            <div
+              className="text-3xl sm:text-4xl font-black mb-1 tracking-wide"
+              style={{
+                color: "#00ff88",
+                textShadow: "0 0 24px rgba(0,255,136,0.6), 0 0 6px #ff6600",
+              }}
+            >
+              🔥 Real Human
+            </div>
+            <div
+              className="text-sm font-semibold mb-3"
+              style={{ color: "#f0c040", textShadow: "0 0 10px #f0c040" }}
+            >
+              Digital Zindagi ka exclusive combat game
+            </div>
+            <p
+              className="text-sm mb-4 leading-relaxed"
+              style={{ color: "rgba(255,255,255,0.72)" }}
+            >
+              Post-apocalyptic arena mein mutant hounds aur alien demons se
+              ladho! Apna photo laga hero ke chehre par, coins collect karo aur
+              high score banao. 3D HD visuals.
+            </p>
+
+            {/* Feature tags */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                "⚔ Squad of 3",
+                "👾 AI Enemies",
+                "🪙 Coin System",
+                "🏆 Weekly Leaderboard",
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2.5 py-1 rounded-full"
+                  style={{
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "rgba(255,255,255,0.6)",
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="flex-shrink-0 w-full md:w-auto">
+            <button
+              type="button"
+              data-ocid="game-cta-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/game");
+              }}
+              className="game-cta-gold w-full md:w-auto px-8 py-4 rounded-2xl text-xl font-black flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95"
+              style={{ minWidth: 180 }}
+            >
+              <span>▶</span>
+              Khelo Abhi! →
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </section>
   );
 }
 
@@ -464,6 +707,8 @@ export default function HomePage() {
     useState(readHomepageSettings);
 
   const [sectionToggles, setSectionToggles] = useState(readHomeSectionToggles);
+  const [customCodes, setCustomCodes] =
+    useState<CustomCodeEntry[]>(readCustomCodes);
 
   const reloadSettings = useCallback(() => {
     setSocialSettings(readSocialSettings());
@@ -471,6 +716,7 @@ export default function HomePage() {
     setEbooks(readEbooksHome());
     setHomepageSettings(readHomepageSettings());
     setSectionToggles(readHomeSectionToggles());
+    setCustomCodes(readCustomCodes());
   }, []);
 
   // Re-read settings on focus (in case admin changed them)
@@ -487,10 +733,8 @@ export default function HomePage() {
     if (!providers || providers.length === 0)
       return { list: [], radiusUsed: 0, hasLocation: false };
     if (!userLocation) {
-      // No GPS — show first 6
       return { list: providers.slice(0, 6), radiusUsed: 0, hasLocation: false };
     }
-    // Read lat/lng from localStorage providers to enrich backend profiles
     type LsProvider = { mobile?: string; lat?: number; lng?: number };
     type EnrichedProvider = (typeof providers)[0] & {
       lat?: number;
@@ -533,7 +777,6 @@ export default function HomePage() {
         return { list: nearby, radiusUsed: radius, hasLocation: true };
       }
     }
-    // No providers with location — show all (unfiltered)
     return { list: providers.slice(0, 6), radiusUsed: 0, hasLocation: true };
   };
 
@@ -543,7 +786,6 @@ export default function HomePage() {
     hasLocation: locationUsed,
   } = getLocalProviders();
 
-  // Read lowest 1-month price from category localStorage settings
   const lowestPrice = useMemo(() => {
     const prices = ALL_CATEGORIES.flatMap((cat) => {
       try {
@@ -601,7 +843,7 @@ export default function HomePage() {
       url:
         (socialSettings[`${p.key}Url` as keyof SocialSettings] as string) ?? "",
       icon: <span style={{ fontSize: "22px" }}>{p.icon}</span>,
-      color: "bg-gray-600",
+      color: "bg-muted-foreground",
       label: p.label,
     }));
 
@@ -610,7 +852,6 @@ export default function HomePage() {
     ...customSocialPlatforms,
   ];
 
-  // Whether any top-section button is visible
   const hasTopSection =
     sectionToggles.dz_section_news ||
     sectionToggles.dz_section_jobs ||
@@ -624,6 +865,16 @@ export default function HomePage() {
       <Header />
 
       <main className="flex-1">
+        {/* Custom Code — TOP placement (before hero) */}
+        {customCodes
+          .filter((c) => c.enabled && c.placement === "top")
+          .map((entry) => (
+            <CustomCodeBlock key={entry.id} entry={entry} />
+          ))}
+
+        {/* Ad Banner — Header position */}
+        <AdBanners position="header" />
+
         {/* Hero Section */}
         {homepageSettings.showHeroCarousel && (
           <section className="bg-emerald-hero px-4 py-4 overflow-hidden w-full">
@@ -652,7 +903,8 @@ export default function HomePage() {
             </div>
           )}
 
-        <section className="bg-white border-b border-border px-4 py-4">
+        {/* Search Bar */}
+        <section className="bg-card border-b border-border px-4 py-4">
           <div className="max-w-2xl mx-auto">
             <form
               onSubmit={(e) => {
@@ -670,7 +922,7 @@ export default function HomePage() {
                 data-ocid="home.search_input"
                 type="text"
                 placeholder={t("search")}
-                className="flex-1 border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                className="flex-1 border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
                 aria-label="Search"
               />
               <button
@@ -683,6 +935,9 @@ export default function HomePage() {
             </form>
           </div>
         </section>
+
+        {/* === REAL HUMAN GAME FEATURED SECTION — No canvas, just a styled button === */}
+        <GameFeaturedSection />
 
         {/* Rate Calculator + Delivery side-by-side (Rate Calculator = 50% width) */}
         {homepageSettings.showRateCalculator && (
@@ -820,7 +1075,6 @@ export default function HomePage() {
                   </div>
                 </button>
               )}
-              {/* New: Age Calculator */}
               {sectionToggles.dz_section_age_calculator && (
                 <button
                   type="button"
@@ -838,7 +1092,6 @@ export default function HomePage() {
                   </div>
                 </button>
               )}
-              {/* New: Percentage Calculator */}
               {sectionToggles.dz_section_percentage_calculator && (
                 <button
                   type="button"
@@ -890,7 +1143,7 @@ export default function HomePage() {
                     <div
                       key={book.id}
                       data-ocid="ebook.card"
-                      className="bg-white rounded-2xl border border-border shadow-card overflow-hidden flex flex-col"
+                      className="bg-card rounded-2xl border border-border shadow-card overflow-hidden flex flex-col"
                     >
                       {book.coverUrl ? (
                         <img
@@ -976,6 +1229,16 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Custom Code — MIDDLE placement (after CategoryGrid, before providers) */}
+        {customCodes
+          .filter((c) => c.enabled && c.placement === "middle")
+          .map((entry) => (
+            <CustomCodeBlock key={entry.id} entry={entry} />
+          ))}
+
+        {/* Ad Banner — Middle position */}
+        <AdBanners position="middle" />
+
         {homepageSettings.showProviders && (
           <section className="max-w-7xl mx-auto px-4 py-8 border-t border-border">
             <motion.div
@@ -1026,7 +1289,7 @@ export default function HomePage() {
                     (sk) => (
                       <div
                         key={sk}
-                        className="h-40 bg-gray-100 animate-pulse rounded-2xl"
+                        className="h-40 bg-muted animate-pulse rounded-2xl"
                       />
                     ),
                   )}
@@ -1095,7 +1358,7 @@ export default function HomePage() {
                 <Link
                   to="/signup"
                   data-ocid="home.primary_button"
-                  className="bg-white text-emerald-800 font-bold px-8 py-3 rounded-full hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                  className="bg-card text-emerald-800 font-bold px-8 py-3 rounded-full hover:bg-emerald-50 transition-colors whitespace-nowrap"
                 >
                   {t("registerNow")}
                 </Link>
@@ -1134,7 +1397,7 @@ export default function HomePage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         data-ocid="home.primary_button"
-                        className="flex-shrink-0 bg-white text-emerald-700 font-bold px-4 py-2 rounded-full hover:bg-emerald-50 transition-colors text-sm shadow-md"
+                        className="flex-shrink-0 bg-card text-emerald-700 font-bold px-4 py-2 rounded-full hover:bg-emerald-50 transition-colors text-sm shadow-md"
                       >
                         {link.emoji} {link.title}
                       </a>
@@ -1146,7 +1409,7 @@ export default function HomePage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-ocid="home.primary_button"
-                    className="flex-shrink-0 bg-white text-emerald-700 font-bold px-7 py-2.5 rounded-full hover:bg-emerald-50 transition-colors text-sm shadow-md"
+                    className="flex-shrink-0 bg-card text-emerald-700 font-bold px-7 py-2.5 rounded-full hover:bg-emerald-50 transition-colors text-sm shadow-md"
                   >
                     Join Now &rarr;
                   </a>
@@ -1163,7 +1426,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="bg-white border border-border rounded-2xl p-5 shadow-card"
+              className="bg-card border border-border rounded-2xl p-5 shadow-card"
             >
               <p className="text-center text-sm font-semibold text-muted-foreground mb-4">
                 Hamare Social Media par Follow Karein
@@ -1187,6 +1450,16 @@ export default function HomePage() {
           </section>
         )}
       </main>
+
+      {/* Custom Code — BOTTOM placement (before Footer) */}
+      {customCodes
+        .filter((c) => c.enabled && c.placement === "bottom")
+        .map((entry) => (
+          <CustomCodeBlock key={entry.id} entry={entry} />
+        ))}
+
+      {/* Ad Banner — Footer position */}
+      <AdBanners position="footer" />
 
       <Footer />
     </div>

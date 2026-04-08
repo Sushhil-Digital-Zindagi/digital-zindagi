@@ -86,95 +86,98 @@ export default function Header() {
   const langRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // PWA Install state — read from global capture in index.html
-  const [installPrompt, setInstallPrompt] =
-    useState<BeforeInstallPromptEvent | null>(
-      () => (window.__dzInstallPrompt as BeforeInstallPromptEvent) ?? null,
-    );
-  const [isInstalled, setIsInstalled] = useState(() => {
-    return (
+  // PWA Install — use a ref so the prompt is never lost across re-renders
+  const installPromptRef = useRef<BeforeInstallPromptEvent | null>(
+    (window.__dzInstallPrompt as BeforeInstallPromptEvent) ?? null,
+  );
+  const [showInstallBtn, setShowInstallBtn] = useState(() => {
+    const alreadyInstalled =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone ===
         true ||
-      document.referrer.includes("android-app://")
-    );
+      document.referrer.includes("android-app://");
+    return !alreadyInstalled && !!installPromptRef.current;
   });
-
+  // Capture beforeinstallprompt as early as possible (runs once on mount)
   useEffect(() => {
-    if (window.__dzInstallPrompt && !installPrompt) {
-      setInstallPrompt(window.__dzInstallPrompt as BeforeInstallPromptEvent);
-    }
+    const capturePrompt = (e: Event) => {
+      e.preventDefault();
+      installPromptRef.current = e as BeforeInstallPromptEvent;
+      window.__dzInstallPrompt = e as BeforeInstallPromptEvent;
+      setShowInstallBtn(true);
+    };
+    window.addEventListener("beforeinstallprompt", capturePrompt);
 
-    const promptHandler = () => {
-      if (window.__dzInstallPrompt) {
-        setInstallPrompt(window.__dzInstallPrompt as BeforeInstallPromptEvent);
+    // Also pick up any already-captured prompt from global variable
+    const checkGlobal = () => {
+      if (window.__dzInstallPrompt && !installPromptRef.current) {
+        installPromptRef.current =
+          window.__dzInstallPrompt as BeforeInstallPromptEvent;
+        setShowInstallBtn(true);
       }
     };
-    window.addEventListener("dz_installprompt_ready", promptHandler);
+    checkGlobal();
+    window.addEventListener("dz_installprompt_ready", checkGlobal);
 
     const installedHandler = () => {
-      setIsInstalled(true);
-      setInstallPrompt(null);
+      setShowInstallBtn(false);
+      installPromptRef.current = null;
       window.__dzInstallPrompt = undefined;
     };
     window.addEventListener("appinstalled", installedHandler);
     window.addEventListener("dz_app_installed", installedHandler);
 
     const mqHandler = (e: MediaQueryListEvent) => {
-      if (e.matches) setIsInstalled(true);
+      if (e.matches) setShowInstallBtn(false);
     };
     const mq = window.matchMedia("(display-mode: standalone)");
     mq.addEventListener("change", mqHandler);
 
     return () => {
-      window.removeEventListener("dz_installprompt_ready", promptHandler);
+      window.removeEventListener("beforeinstallprompt", capturePrompt);
+      window.removeEventListener("dz_installprompt_ready", checkGlobal);
       window.removeEventListener("appinstalled", installedHandler);
       window.removeEventListener("dz_app_installed", installedHandler);
       mq.removeEventListener("change", mqHandler);
     };
-  }, [installPrompt]);
+  }, []);
 
-  async function handleInstall() {
-    // Try to get prompt from state or global variable
-    const prompt =
-      installPrompt ??
-      (window.__dzInstallPrompt as BeforeInstallPromptEvent | undefined) ??
-      null;
+  // Called synchronously from click handler — MUST NOT be async wrapper
+  function handleInstall() {
+    const prompt = installPromptRef.current;
 
     if (prompt) {
-      try {
-        // Must be called from user gesture (click handler) — this is correct
-        await prompt.prompt();
-        const { outcome } = await prompt.userChoice;
-        if (outcome === "accepted") {
-          toast.success(
-            "Digital Zindagi install ho gaya! App List mein dikh raha hai.",
-            { duration: 4000 },
-          );
-          setInstallPrompt(null);
-          setIsInstalled(true);
+      // prompt() must be called synchronously within the click event
+      prompt.prompt();
+      prompt.userChoice
+        .then(({ outcome }) => {
+          if (outcome === "accepted") {
+            toast.success(
+              "📲 Digital Zindagi install ho gaya! App List mein dikh raha hai.",
+              { duration: 4000 },
+            );
+            setShowInstallBtn(false);
+            installPromptRef.current = null;
+            window.__dzInstallPrompt = undefined;
+          } else {
+            toast.info(
+              "Install cancel kar diya. Baad mein phir try kar sakte hain.",
+              { duration: 4000 },
+            );
+          }
+        })
+        .catch(() => {
+          installPromptRef.current = null;
           window.__dzInstallPrompt = undefined;
-        } else {
-          toast.info(
-            "Install cancel kar diya. Baad mein phir try kar sakte hain.",
-            { duration: 4000 },
-          );
-          // Keep prompt for next attempt
-        }
-      } catch (err) {
-        console.warn("[DZ Install] prompt() failed:", err);
-        // Prompt may have already been used — clear and show manual instructions
-        window.__dzInstallPrompt = undefined;
-        setInstallPrompt(null);
-        showManualInstructions();
-      }
+          setShowInstallBtn(false);
+          showManualInstructions();
+        });
     } else {
-      // No prompt available — check if already in standalone mode
       if (
         window.matchMedia("(display-mode: standalone)").matches ||
         (window.navigator as Navigator & { standalone?: boolean }).standalone
       ) {
-        setIsInstalled(true);
+        setShowInstallBtn(false);
         return;
       }
       showManualInstructions();
@@ -323,7 +326,7 @@ export default function Header() {
           </button>
 
           {/* Install Button — visible when not installed, shows native Android install prompt */}
-          {!isInstalled && (
+          {showInstallBtn && (
             <button
               type="button"
               data-ocid="header.install_button"

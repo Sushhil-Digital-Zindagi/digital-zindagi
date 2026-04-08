@@ -1,110 +1,72 @@
+<!DOCTYPE html>
 <html lang="hi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Digital Zindagi</title>
+    <meta name="description" content="Digital Zindagi — India ka Professional Marketplace. Apni local dukaan dhundho, services lelo aur apne area mein connect karo." />
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#064420" />
-    <meta name="description" content="Digital Zindagi - Apka Local Digital Marketplace" />
-    <meta name="application-name" content="Digital Zindagi" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Digital Zindagi" />
-    <!-- Open Graph / WhatsApp / Facebook Sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Digital Zindagi" />
-    <meta property="og:site_name" content="Digital Zindagi" />
-    <meta property="og:description" content="Digital Zindagi - Apka Local Digital Marketplace" />
-    <meta property="og:image" content="/icon-512.png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta property="og:image:alt" content="Digital Zindagi Logo" />
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Digital Zindagi" />
-    <meta name="twitter:description" content="Apka Local Digital Marketplace" />
-    <meta name="twitter:image" content="/icon-512.png" />
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    <!-- Apple Touch Icons -->
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-    <link rel="shortcut icon" href="/icon-192.png" />
-    <title>Digital Zindagi</title>
+
+    <!-- OG / Social -->
+    <meta property="og:title" content="Digital Zindagi" />
+    <meta property="og:description" content="Digital Zindagi — India ka Professional Marketplace. Apni local dukaan dhundho, services lelo aur apne area mein connect karo." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <style>
-      html, body {
-        background-color: #064420;
-        margin: 0;
-        padding: 0;
-      }
-      html, body, #root {
-        overflow-x: hidden;
-        max-width: 100vw;
-      }
-      /* Hide any external platform branding if it ever appears */
-      [data-caffeine],
-      .caffeine-brand,
-      .powered-by-caffeine,
-      [class*="caffeine"],
-      [id*="caffeine"] {
-        display: none !important;
-        visibility: hidden !important;
-      }
+      /* Splash screen background color before React loads */
+      html, body { background-color: #064420; margin: 0; padding: 0; }
+      /* Hide any third-party branding elements */
+      [data-caffeine], .caffeine-brand, [class*="caffeine"] { display: none !important; }
     </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- Capture PWA install prompt as early as possible -->
+
     <script>
-      // Store the install prompt globally — capture it as early as possible
+      // Capture beforeinstallprompt ASAP — before React loads
       window.__dzInstallPrompt = null;
-      window.__dzInstallReady = false;
-
       window.addEventListener('beforeinstallprompt', function(e) {
-        // CRITICAL: prevent Chrome mini-infobar from appearing
         e.preventDefault();
-        // Save the event for later use when user clicks install button
         window.__dzInstallPrompt = e;
-        window.__dzInstallReady = true;
-        // Notify any React components that are already mounted
-        window.dispatchEvent(new CustomEvent('dz_installprompt_ready', { detail: e }));
-        console.log('[DZ PWA] Install prompt captured and ready');
+        window.dispatchEvent(new Event('dz_installprompt_ready'));
       });
-
       window.addEventListener('appinstalled', function() {
         window.__dzInstallPrompt = null;
-        window.__dzInstallReady = false;
         window.dispatchEvent(new Event('dz_app_installed'));
-        console.log('[DZ PWA] App installed successfully');
       });
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
-    <!-- Register Service Worker -->
-    <script>
+
+      // Register service worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(function(reg) {
-              console.log('[DZ SW] Registered:', reg.scope);
-              reg.addEventListener('updatefound', function() {
-                var newWorker = reg.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', function() {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    }
-                  });
-                }
-              });
-            })
-            .catch(function(err) {
-              console.warn('[DZ SW] Registration failed:', err);
+          navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            reg.addEventListener('updatefound', function() {
+              var newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              }
             });
+          }).catch(function() {});
         });
       }
     </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>

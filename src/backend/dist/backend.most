@@ -1,0 +1,141 @@
+// Version: 1.0.0
+type AdminConfig__889654536 =
+  {
+    adminName : Text;
+    email : Text;
+    mobile : MobileNumber__283646848;
+    qrCodeBlobId : ExternalBlob__246066408;
+    upiId : Text
+  };
+type ApprovalStatus__1072888826 = {#approved; #pending; #rejected};
+type ApprovalStatus__575141016 = {#approved; #pending; #rejected};
+type Banner__198884728 =
+  {
+    active : Bool;
+    displayOrder : Nat;
+    id : Nat;
+    imageUrl : Text;
+    linkUrl : Text;
+    subtitle : Text;
+    title : Text
+  };
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type ExternalBlob__246066408 = Blob;
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type MobileNumber__283646848 = Text;
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Order__762448211 =
+  {
+    createdAt : Int;
+    customerId : Nat;
+    customerName : Text;
+    description : Text;
+    id : Nat;
+    imageUrl : ?Text;
+    orderType : Text;
+    providerId : Nat;
+    status : Text
+  };
+type PlanType__945487099 = {#free; #pending; #premium};
+type ProviderProfile__706122890 =
+  {
+    address : Text;
+    approvalStatus : ApprovalStatus__1072888826;
+    category : Text;
+    description : Text;
+    paymentScreenshotBlobId : ?Text;
+    photos : [Text];
+    planType : PlanType__945487099;
+    qrCodeBlobId : ?Text;
+    serviceRates : [ServiceRate__575692853];
+    shopName : Text;
+    subscriptionExpiry : ?Int;
+    subscriptionPlan : SubscriptionPlan__552945260;
+    subscriptionStatus : SubscriptionStatus__278950313;
+    upiId : Text;
+    userId : Nat
+  };
+type ServiceRate__575692853 = {description : Text; name : Text; price : Nat};
+type SubscriptionPlan__552945260 = {#oneMonth; #threeMonths; #twelveMonths};
+type SubscriptionPricing__787813395 =
+  {oneMonthPrice : Nat; threeMonthPrice : Nat; twelveMonthPrice : Nat};
+type SubscriptionStatus__278950313 = {#active; #expired; #pending; #rejected};
+type UserProfile__491224006 =
+  {
+    mobile : MobileNumber__283646848;
+    name : Text;
+    role : UserRole__599675725;
+    userId : Nat
+  };
+type UserRole__1054455867 = {#admin; #guest; #user};
+type UserRole__599675725 = {#admin; #customer; #provider};
+type User__831686142 =
+  {
+    createdAt : Int;
+    id : Nat;
+    mobile : MobileNumber__283646848;
+    name : Text;
+    passwordHash : Text;
+    role : UserRole__599675725;
+    securityAnswer : Text;
+    securityQuestion : Text
+  };
+actor {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable var adminConfig : ?AdminConfig__889654536;
+  stable var adminPinHash : Text;
+  stable approvalState :
+    {
+      var approvalStatus :
+        Map__605269027<Principal, ApprovalStatus__575141016>
+    };
+  stable var banners :
+    {
+      var root : Node__46230540<Nat, Banner__198884728>;
+      var size : Nat__490723111
+    };
+  stable var nextBannerId : Nat;
+  stable var nextOrderId : Nat;
+  stable var nextUserId : Nat;
+  stable var orders :
+    {
+      var root : Node__46230540<Nat, Order__762448211>;
+      var size : Nat__490723111
+    };
+  stable var principalToUserId :
+    {var root : Node__46230540<Principal, Nat>; var size : Nat__490723111};
+  stable var providerProfiles :
+    {
+      var root : Node__46230540<Nat, ProviderProfile__706122890>;
+      var size : Nat__490723111
+    };
+  stable var subscriptionPricing : ?SubscriptionPricing__787813395;
+  stable var toggles :
+    {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
+  stable var userIdToPrincipal :
+    {var root : Node__46230540<Nat, Principal>; var size : Nat__490723111};
+  stable var userProfiles :
+    {
+      var root : Node__46230540<Principal, UserProfile__491224006>;
+      var size : Nat__490723111
+    };
+  stable var users :
+    {
+      var root : Node__46230540<MobileNumber__283646848, User__831686142>;
+      var size : Nat__490723111
+    }
+};

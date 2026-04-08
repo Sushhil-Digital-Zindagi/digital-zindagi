@@ -2,13 +2,13 @@
   "name": "Digital Zindagi",
   "short_name": "Digital Zindagi",
   "id": "/",
-  "description": "Apka Local Digital Marketplace - डिजिटल जिंदगी से जुड़ो",
+  "description": "डिजिटल जिंदगी में आपका स्वागत है",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#064420",
   "theme_color": "#064420",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "lang": "hi-IN",
   "dir": "auto",
   "prefer_related_applications": false,
@@ -18,25 +18,13 @@
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }

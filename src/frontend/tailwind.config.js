@@ -103,6 +103,14 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 8px oklch(0.70 0.15 80 / 0.3)" },
+          "50%": { boxShadow: "0 0 16px oklch(0.70 0.15 80 / 0.6)" },
+        },
+        "fire-flicker": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.85" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +118,8 @@ export default {
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "slide-out-left": "slide-out-left 0.3s ease-in",
         "fade-in": "fade-in 0.4s ease-out",
+        "glow-pulse": "glow-pulse 2.5s ease-in-out infinite",
+        "fire-flicker": "fire-flicker 0.15s ease-in-out infinite",
       },
     },
   },

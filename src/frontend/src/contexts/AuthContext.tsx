@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { UserRole } from "../backend";
+import type { UserRole } from "../types/appTypes";
 
 export const SUPER_ADMIN_EMAIL = "sushhilkumar651@gmail.com";
 

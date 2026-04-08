@@ -2,12 +2,13 @@ import { CheckCircle, Crown, Loader2, Upload } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ExternalBlob, SubscriptionPlan } from "../backend";
+import { ExternalBlob } from "../backend";
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { useAdminConfig, useSubscriptionPricing } from "../hooks/useQueries";
 import { Link, useParams } from "../lib/router";
+import { SubscriptionPlan } from "../types/appTypes";
 
 const PLAN_LABELS: Record<string, string> = {
   oneMonth: "1 Maah",

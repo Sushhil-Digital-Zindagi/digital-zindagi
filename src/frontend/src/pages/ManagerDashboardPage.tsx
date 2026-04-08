@@ -16,7 +16,6 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ApprovalStatus, type SubscriptionPlan } from "../backend";
 import VideoPlayer from "../components/VideoPlayer";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -26,6 +25,7 @@ import {
   useRejectProvider,
 } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
+import { ApprovalStatus, type SubscriptionPlan } from "../types/appTypes";
 import {
   type SheetRow,
   getSheetData,
@@ -313,7 +313,12 @@ export default function ManagerDashboardPage() {
                         <button
                           type="button"
                           disabled={approving === p.userId.toString()}
-                          onClick={() => handleApprove(p.userId, p.shopName)}
+                          onClick={() =>
+                            handleApprove(
+                              p.userId,
+                              p.shopName ?? p.businessName ?? "",
+                            )
+                          }
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-60"
                         >
                           {approving === p.userId.toString() ? (
@@ -326,7 +331,12 @@ export default function ManagerDashboardPage() {
                         <button
                           type="button"
                           disabled={approving === p.userId.toString()}
-                          onClick={() => handleReject(p.userId, p.shopName)}
+                          onClick={() =>
+                            handleReject(
+                              p.userId,
+                              p.shopName ?? p.businessName ?? "",
+                            )
+                          }
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-xl transition-colors disabled:opacity-60"
                         >
                           <XCircle size={13} />

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
-import type { Banner } from "../backend";
+import type { Banner } from "../types/appTypes";
 
 const FALLBACK_BANNERS: Banner[] = [
   {

@@ -34,8 +34,7 @@ import {
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ExternalBlob, type SubscriptionPlan } from "../backend";
-import type { Banner, ProviderProfile, User } from "../backend";
+import { ExternalBlob } from "../backend";
 import DeliveryAdminPanel from "../components/DeliveryAdminPanel";
 import EarningDashboardComponent from "../components/EarningDashboard";
 import VideoPlayer from "../components/VideoPlayer";
@@ -56,6 +55,12 @@ import {
   useUsersByRole,
 } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
+import type {
+  Banner,
+  ProviderProfile,
+  SubscriptionPlan,
+  User,
+} from "../types/appTypes";
 import {
   type SheetRow,
   addManualRow,
@@ -91,7 +96,8 @@ type AdminSection =
   | "newsManager"
   | "jobsManager"
   | "masterToggles"
-  | "earningDashboard";
+  | "earningDashboard"
+  | "customCode";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -332,7 +338,7 @@ function UserManagement() {
     ? baseUsers.filter(
         (u) =>
           u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          u.mobile.toLowerCase().includes(searchQuery.toLowerCase()),
+          (u.mobile ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : baseUsers;
 
@@ -1722,6 +1728,7 @@ function CategoryManagerSection() {
     setCategories((prev) => {
       const updated = prev.filter((c) => c.name !== catName);
       persistCategories(updated);
+      broadcastSettingsChange();
       return updated;
     });
     toast.success(`"${catName}" category remove ho gayi!`);
@@ -1739,6 +1746,7 @@ function CategoryManagerSection() {
           : c,
       );
       persistCategories(updated);
+      broadcastSettingsChange();
       return updated;
     });
     toast.success("Category update ho gayi!");
@@ -1800,6 +1808,7 @@ function CategoryManagerSection() {
       };
       const updated = [...prev, newCat];
       persistCategories(updated);
+      broadcastSettingsChange();
       return updated;
     });
     setShowSaved(true);
@@ -3058,21 +3067,18 @@ function SubscriptionPricingSection() {
     setSaving(true);
     try {
       await actor.updateSubscriptionPricing({
-        oneMonthPrice: BigInt(
+        oneMonthPrice:
           Number.parseInt(oneMonth) ||
-            Number.parseInt(pricing?.oneMonthPrice.toString() ?? "199") ||
-            199,
-        ),
-        threeMonthPrice: BigInt(
+          Number.parseInt((pricing?.oneMonthPrice ?? 199).toString()) ||
+          199,
+        threeMonthPrice:
           Number.parseInt(threeMonths) ||
-            Number.parseInt(pricing?.threeMonthPrice.toString() ?? "499") ||
-            499,
-        ),
-        twelveMonthPrice: BigInt(
+          Number.parseInt((pricing?.threeMonthPrice ?? 499).toString()) ||
+          499,
+        twelveMonthPrice:
           Number.parseInt(twelveMonths) ||
-            Number.parseInt(pricing?.twelveMonthPrice.toString() ?? "1499") ||
-            1499,
-        ),
+          Number.parseInt((pricing?.twelveMonthPrice ?? 1499).toString()) ||
+          1499,
       });
       toast.success("Pricing update ho gayi!");
     } catch (err: any) {
@@ -3359,12 +3365,36 @@ function AdsManager() {
       return [];
     }
   });
+  const [adPlacements, setAdPlacements] = useState<{
+    header: boolean;
+    middle: boolean;
+    footer: boolean;
+  }>(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("dz_ad_placements") ??
+          '{"header":false,"middle":true,"footer":false}',
+      );
+    } catch {
+      return { header: false, middle: true, footer: false };
+    }
+  });
   const [newAdUrl, setNewAdUrl] = useState("");
 
   const save = (key: string, val: string | boolean) => {
     const updated = { ...config, [key]: val };
     setConfig(updated);
     localStorage.setItem("dz_admob_config", JSON.stringify(updated));
+    broadcastSettingsChange();
+  };
+
+  const savePlacements = (updated: {
+    header: boolean;
+    middle: boolean;
+    footer: boolean;
+  }) => {
+    setAdPlacements(updated);
+    localStorage.setItem("dz_ad_placements", JSON.stringify(updated));
     broadcastSettingsChange();
   };
 
@@ -3575,6 +3605,48 @@ function AdsManager() {
           actual ad units create karein aur IDs yahan daalo. Ads status app mein
           reflect hoga.
         </p>
+      </div>
+
+      {/* Ad Placement Controls */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground">
+          📍 Ad Placement — Kahan Dikhein Ads
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Custom internal ads / banners Homepage par kahan dikhenge — choose
+          karein.
+        </p>
+        {(["header", "middle", "footer"] as const).map((pos) => {
+          const labels = {
+            header: "Header (Top) — Notification bar ke neeche",
+            middle: "Middle (Content) — Category aur Provider ke beech",
+            footer: "Footer (Bottom) — Page ke bilkul end mein",
+          };
+          return (
+            <div
+              key={pos}
+              className="flex items-center justify-between py-3 border-b border-border last:border-0"
+            >
+              <div>
+                <p className="font-medium text-foreground text-sm">
+                  {labels[pos]}
+                </p>
+              </div>
+              <button
+                type="button"
+                data-ocid="admin.toggle_button"
+                onClick={() =>
+                  savePlacements({ ...adPlacements, [pos]: !adPlacements[pos] })
+                }
+                className={`relative w-12 h-6 rounded-full transition-colors ${adPlacements[pos] ? "bg-primary" : "bg-gray-300"}`}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${adPlacements[pos] ? "translate-x-7" : "translate-x-1"}`}
+                />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -6320,6 +6392,11 @@ const SECTION_TOGGLE_KEYS_LIST = [
     label: "📸 Instagram Videos",
     defaultOn: true,
   },
+  {
+    key: "dz_game_visible",
+    label: "🎮 Real Human Game Section",
+    defaultOn: true,
+  },
 ];
 
 export function readSectionToggles(): Record<string, boolean> {
@@ -6474,6 +6551,282 @@ function EarningDashboardSection() {
   return <EarningDashboardComponent />;
 }
 
+// ============================================================
+// CUSTOM CODE MANAGER SECTION
+// ============================================================
+interface CustomCodeEntry {
+  id: string;
+  label: string;
+  code: string;
+  placement: "top" | "middle" | "bottom";
+  enabled: boolean;
+  createdAt: number;
+}
+
+function CustomCodeManagerSection() {
+  const [entries, setEntries] = useState<CustomCodeEntry[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("dz_custom_codes") ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [label, setLabel] = useState("");
+  const [code, setCode] = useState("");
+  const [placement, setPlacement] = useState<"top" | "middle" | "bottom">(
+    "middle",
+  );
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const saveEntries = (updated: CustomCodeEntry[]) => {
+    setEntries(updated);
+    localStorage.setItem("dz_custom_codes", JSON.stringify(updated));
+    broadcastSettingsChange();
+  };
+
+  const handleSave = () => {
+    if (!label.trim()) {
+      toast.error("Label/naam dena zaroori hai");
+      return;
+    }
+    if (!code.trim()) {
+      toast.error("Code dena zaroori hai");
+      return;
+    }
+    if (editingId) {
+      saveEntries(
+        entries.map((e) =>
+          e.id === editingId
+            ? { ...e, label: label.trim(), code: code.trim(), placement }
+            : e,
+        ),
+      );
+      toast.success("Code update ho gaya!");
+      setEditingId(null);
+    } else {
+      const newEntry: CustomCodeEntry = {
+        id: Date.now().toString(),
+        label: label.trim(),
+        code: code.trim(),
+        placement,
+        enabled: true,
+        createdAt: Date.now(),
+      };
+      saveEntries([...entries, newEntry]);
+      toast.success("Custom code add ho gaya! Homepage par dikh raha hai.");
+    }
+    setLabel("");
+    setCode("");
+    setPlacement("middle");
+  };
+
+  const handleEdit = (entry: CustomCodeEntry) => {
+    setEditingId(entry.id);
+    setLabel(entry.label);
+    setCode(entry.code);
+    setPlacement(entry.placement);
+  };
+
+  const handleDelete = (id: string) => {
+    saveEntries(entries.filter((e) => e.id !== id));
+    toast.success("Code delete ho gaya.");
+  };
+
+  const handleToggle = (id: string) => {
+    saveEntries(
+      entries.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e)),
+    );
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setLabel("");
+    setCode("");
+    setPlacement("middle");
+  };
+
+  const placementLabels = {
+    top: "Top (Hero ke upar)",
+    middle: "Middle (Category ke baad)",
+    bottom: "Bottom (Footer ke pehle)",
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Add / Edit Form */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-bold text-foreground text-base">
+          {editingId ? "✏️ Code Edit Karein" : "➕ Naya Custom Code Add Karein"}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Koi bhi HTML, JS, ya CSS code paste karein — Homepage par
+          automatically button ban jaayega.
+        </p>
+        <div>
+          <label
+            htmlFor="cc-label"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Label / Button Naam *
+          </label>
+          <input
+            id="cc-label"
+            data-ocid="admin.input"
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="jaise: WhatsApp Float Button"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="cc-placement"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Placement — Kahan Dikhega *
+          </label>
+          <select
+            id="cc-placement"
+            data-ocid="admin.input"
+            value={placement}
+            onChange={(e) =>
+              setPlacement(e.target.value as "top" | "middle" | "bottom")
+            }
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+          >
+            <option value="top">Top — Hero Carousel ke pehle</option>
+            <option value="middle">Middle — Category Grid ke baad</option>
+            <option value="bottom">Bottom — Footer ke pehle</option>
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="cc-code"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            HTML / JS / CSS Code *
+          </label>
+          <textarea
+            id="cc-code"
+            data-ocid="admin.input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={
+              "<a href='https://wa.me/...' style='position:fixed;bottom:20px;right:20px;z-index:9999'>💬 WhatsApp</a>"
+            }
+            rows={6}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono resize-y"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-ocid="admin.button"
+            onClick={handleSave}
+            className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:opacity-90 transition-opacity"
+          >
+            {editingId ? "✅ Update Code" : "💾 Save & Add to Homepage"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-5 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Saved Entries */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-3">
+        <h3 className="font-heading font-bold text-foreground text-base">
+          📋 Saved Custom Codes ({entries.length})
+        </h3>
+        {entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            Abhi koi custom code nahi hai. Upar form se add karein.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {entries.map((entry) => (
+              <div
+                key={entry.id}
+                data-ocid="admin.list_item"
+                className={`rounded-xl border p-4 space-y-2 ${entry.enabled ? "border-emerald-200 bg-emerald-50/30" : "border-gray-200 bg-gray-50 opacity-60"}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">
+                      {entry.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      📍 {placementLabels[entry.placement]} &nbsp;|&nbsp;{" "}
+                      {entry.enabled ? "✅ ON" : "⛔ OFF"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      type="button"
+                      data-ocid="admin.toggle_button"
+                      onClick={() => handleToggle(entry.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${entry.enabled ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
+                    >
+                      {entry.enabled ? "OFF" : "ON"}
+                    </button>
+                    <button
+                      type="button"
+                      data-ocid="admin.button"
+                      onClick={() => handleEdit(entry)}
+                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                      aria-label="Edit"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      data-ocid="admin.button"
+                      onClick={() => handleDelete(entry.id)}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                      aria-label="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+                <pre className="text-xs text-muted-foreground bg-white border border-border rounded-lg px-3 py-2 overflow-x-auto max-h-20 whitespace-pre-wrap break-all">
+                  {entry.code.slice(0, 200)}
+                  {entry.code.length > 200 ? "..." : ""}
+                </pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info card */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+        <p className="text-sm font-medium text-blue-800">
+          💡 Custom Code Kaise Kaam Karta Hai
+        </p>
+        <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+          <li>
+            Koi bhi HTML tag (button, link, image, etc.) yahan paste karein
+          </li>
+          <li>
+            JS code bhi kaam karta hai — popup, floating button, timer, sab kuch
+          </li>
+          <li>CSS inject karna ho to &lt;style&gt; tag mein wrap karein</li>
+          <li>Placement choose karein — top, middle, ya bottom</li>
+          <li>ON/OFF toggle se turant Homepage par show/hide hoga</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
@@ -6621,6 +6974,11 @@ export default function AdminDashboardPage() {
       label: "📊 Earning Dashboard",
       icon: <span>📊</span>,
     },
+    {
+      key: "customCode" as AdminSection,
+      label: "⚡ Custom Code",
+      icon: <span>⚡</span>,
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -6697,6 +7055,8 @@ export default function AdminDashboardPage() {
         return <MasterSectionTogglesSection />;
       case "earningDashboard" as AdminSection:
         return <EarningDashboardSection />;
+      case "customCode" as AdminSection:
+        return <CustomCodeManagerSection />;
       default:
         return <UserManagement />;
     }

@@ -88,8 +88,11 @@ export default function ProviderProfilePage() {
 
   const emoji = CATEGORY_EMOJIS[profile.category] ?? "🏪";
   const mobile = user?.mobile ?? "";
-  const initials = profile.shopName.slice(0, 2).toUpperCase();
-  const profilePhoto = profile.photos.length > 0 ? profile.photos[0] : null;
+  const initials = (profile.shopName ?? profile.businessName ?? "DZ")
+    .slice(0, 2)
+    .toUpperCase();
+  const profilePhoto =
+    (profile.photos ?? []).length > 0 ? (profile.photos ?? [])[0] : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -220,13 +223,13 @@ export default function ProviderProfilePage() {
             </div>
           )}
 
-          {profile.photos.length > 0 && (
+          {(profile.photos ?? []).length > 0 && (
             <div className="bg-white rounded-2xl border border-border shadow-card p-5">
               <h3 className="font-semibold text-foreground mb-3">
                 Shop Photos
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {profile.photos.map((url, i) => (
+                {(profile.photos ?? []).map((url, i) => (
                   <button
                     key={`photo-${url}`}
                     type="button"
@@ -249,13 +252,13 @@ export default function ProviderProfilePage() {
             </div>
           )}
 
-          {profile.serviceRates.length > 0 && (
+          {(profile.serviceRates ?? []).length > 0 && (
             <div className="bg-white rounded-2xl border border-border shadow-card p-5">
               <h3 className="font-semibold text-foreground mb-3">
                 Service Rates
               </h3>
               <div className="space-y-2">
-                {profile.serviceRates.map((rate, i) => (
+                {(profile.serviceRates ?? []).map((rate, i) => (
                   <div
                     key={rate.name}
                     data-ocid={`profile.item.${i + 1}`}

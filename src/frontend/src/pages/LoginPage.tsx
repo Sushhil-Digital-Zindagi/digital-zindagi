@@ -6,7 +6,6 @@ import { Eye, EyeOff, Loader2, Lock, Mail, Phone, Star } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { UserRole } from "../backend";
 import {
   SUPER_ADMIN_EMAIL,
   hashPassword,
@@ -14,6 +13,7 @@ import {
 } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { Link, useNavigate } from "../lib/router";
+import { UserRole } from "../types/appTypes";
 
 type LoginMode = "mobile" | "email";
 
@@ -166,7 +166,7 @@ export default function LoginPage() {
         userId: user.id,
         name: user.name,
         role: user.role,
-        mobile: user.mobile,
+        mobile: user.mobile ?? "",
         email: undefined,
         isSuperAdmin: false,
       });
