@@ -42,15 +42,37 @@ import { hashPassword, useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import {
   useActiveBanners,
+  useAddCategory,
+  useAddCustomCode,
+  useAddJob,
+  useAddNews,
+  useAddScrapRate,
+  useAddVideo,
   useAdminConfig,
   useAllProviders,
   useAllToggles,
   useApproveProvider,
+  useCategories,
+  useCustomCodes,
+  useDeleteCategory,
+  useDeleteCustomCode,
+  useDeleteJob,
+  useDeleteNews,
+  useDeleteScrapRate,
+  useDeleteVideo,
+  useJobs,
+  useNews,
   useProvidersPendingApproval,
   useRecentUsers,
   useRejectProvider,
+  useScrapRates,
   useSearchUsers,
   useSubscriptionPricing,
+  useUpdateCategory,
+  useUpdateCustomCode,
+  useUpdateJob,
+  useUpdateNews,
+  useUpdateScrapRate,
   useUpdateToggle,
   useUsersByRole,
 } from "../hooks/useQueries";
@@ -71,6 +93,7 @@ import {
   setSheetCsvUrl,
   syncFromSheet,
 } from "../utils/googleSheetsSync";
+import { useRegisterQueryClient } from "../utils/settingsSync";
 import { broadcastSettingsChange } from "../utils/settingsSync";
 
 type AdminSection =
@@ -1678,6 +1701,12 @@ function CategoryManagerSection() {
   const [showSaved, setShowSaved] = useState(false);
   const [triggerSaveAll, setTriggerSaveAll] = useState(0);
 
+  // Canister hooks
+  const { data: canisterCategories } = useCategories();
+  const addCategoryMutation = useAddCategory();
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
+
   // Build merged category list: defaults + user-added (state-driven for edit/remove)
   const buildInitialCategories = () => {
     // Try loading from dz_categories_list first (persisted list with edits/removes)
@@ -1718,37 +1747,87 @@ function CategoryManagerSection() {
     { name: string; hinglish: string; emoji: string }[]
   >(buildInitialCategories);
 
+  // Sync canister categories into local state when they arrive
+  useEffect(() => {
+    if (canisterCategories && canisterCategories.length > 0) {
+      const mapped = canisterCategories.map((c) => ({
+        name: c.name,
+        hinglish: c.name,
+        emoji: c.emoji,
+      }));
+      setCategories(mapped);
+      persistCategories(mapped);
+    }
+  }, [canisterCategories]);
+
   const persistCategories = (
     cats: { name: string; hinglish: string; emoji: string }[],
   ) => {
     localStorage.setItem("dz_categories_list", JSON.stringify(cats));
   };
 
-  const handleRemoveCategory = (catName: string) => {
-    setCategories((prev) => {
-      const updated = prev.filter((c) => c.name !== catName);
-      persistCategories(updated);
-      broadcastSettingsChange();
-      return updated;
-    });
+  const handleRemoveCategory = async (catName: string) => {
+    const found = canisterCategories?.find((c) => c.name === catName);
+    if (found) {
+      try {
+        await deleteCategoryMutation.mutateAsync(found.id);
+      } catch {
+        // fallback: remove from local state
+        setCategories((prev) => {
+          const updated = prev.filter((c) => c.name !== catName);
+          persistCategories(updated);
+          return updated;
+        });
+      }
+    } else {
+      setCategories((prev) => {
+        const updated = prev.filter((c) => c.name !== catName);
+        persistCategories(updated);
+        return updated;
+      });
+    }
+    broadcastSettingsChange();
     toast.success(`"${catName}" category remove ho gayi!`);
   };
 
-  const handleEditCategory = (
+  const handleEditCategory = async (
     oldName: string,
     newName: string,
     newEmoji: string,
   ) => {
-    setCategories((prev) => {
-      const updated = prev.map((c) =>
-        c.name === oldName
-          ? { ...c, name: newName, hinglish: newName, emoji: newEmoji }
-          : c,
-      );
-      persistCategories(updated);
-      broadcastSettingsChange();
-      return updated;
-    });
+    const found = canisterCategories?.find((c) => c.name === oldName);
+    if (found) {
+      try {
+        await updateCategoryMutation.mutateAsync({
+          id: found.id,
+          name: newName,
+          emoji: newEmoji,
+          color: found.color,
+          enabled: found.enabled,
+        });
+      } catch {
+        setCategories((prev) => {
+          const updated = prev.map((c) =>
+            c.name === oldName
+              ? { ...c, name: newName, hinglish: newName, emoji: newEmoji }
+              : c,
+          );
+          persistCategories(updated);
+          return updated;
+        });
+      }
+    } else {
+      setCategories((prev) => {
+        const updated = prev.map((c) =>
+          c.name === oldName
+            ? { ...c, name: newName, hinglish: newName, emoji: newEmoji }
+            : c,
+        );
+        persistCategories(updated);
+        return updated;
+      });
+    }
+    broadcastSettingsChange();
     toast.success("Category update ho gayi!");
   };
 
@@ -1779,40 +1858,41 @@ function CategoryManagerSection() {
   const [newCatName, setNewCatName] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("🏪");
 
-  const handleAdminAddCategory = () => {
+  const handleAdminAddCategory = async () => {
     if (!newCatName.trim()) {
       toast.error("Category naam likhein");
       return;
     }
-    const cats: { name: string; icon: string; status: string }[] = (() => {
-      try {
-        return JSON.parse(
-          localStorage.getItem("dz_approved_categories") ?? "[]",
-        );
-      } catch {
-        return [];
-      }
-    })();
-    cats.push({
-      name: newCatName.trim(),
-      icon: newCatIcon,
-      status: "approved",
-    });
-    localStorage.setItem("dz_approved_categories", JSON.stringify(cats));
-    // Also update the categories state
-    setCategories((prev) => {
-      const newCat = {
-        name: newCatName.trim(),
-        hinglish: newCatName.trim(),
+    const name = newCatName.trim();
+    // Try canister first, fall back to localStorage
+    try {
+      await addCategoryMutation.mutateAsync({
+        name,
         emoji: newCatIcon,
-      };
-      const updated = [...prev, newCat];
-      persistCategories(updated);
-      broadcastSettingsChange();
-      return updated;
-    });
+        color: DEFAULT_EMERALD,
+      });
+    } catch {
+      const cats: { name: string; icon: string; status: string }[] = (() => {
+        try {
+          return JSON.parse(
+            localStorage.getItem("dz_approved_categories") ?? "[]",
+          );
+        } catch {
+          return [];
+        }
+      })();
+      cats.push({ name, icon: newCatIcon, status: "approved" });
+      localStorage.setItem("dz_approved_categories", JSON.stringify(cats));
+      setCategories((prev) => {
+        const newCat = { name, hinglish: name, emoji: newCatIcon };
+        const updated = [...prev, newCat];
+        persistCategories(updated);
+        return updated;
+      });
+    }
+    broadcastSettingsChange();
     setShowSaved(true);
-    toast.success(`Category "${newCatName}" add ho gayi!`);
+    toast.success(`Category "${name}" add ho gayi!`);
     setTimeout(() => setShowSaved(false), 3000);
     setNewCatName("");
     setNewCatIcon("🏪");
@@ -5064,13 +5144,48 @@ function ScrapRatesSection() {
   const [rates, setRates] = useState<Record<string, string>>(readRates);
   const [saved, setSaved] = useState(false);
 
+  // Canister hooks
+  const { data: canisterRates } = useScrapRates();
+  const addScrapRateMutation = useAddScrapRate();
+  const updateScrapRateMutation = useUpdateScrapRate();
+  const deleteScrapRateMutation = useDeleteScrapRate();
+
+  // Suppress unused lint — hooks are called for canister wiring; mutations used in handleSave
+  void deleteScrapRateMutation;
+
   const DEFAULT_ITEMS = [
     { key: "lohaa", label: "लोहा (Iron)", placeholder: "₹/kg rate" },
     { key: "kaagaz", label: "कागज (Paper)", placeholder: "₹/kg rate" },
     { key: "taamba", label: "तांबा (Copper)", placeholder: "₹/kg rate" },
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Try canister upsert for each default item
+    for (const item of DEFAULT_ITEMS) {
+      const rateVal = Number(rates[item.key] ?? 0);
+      if (rateVal > 0) {
+        const existing = canisterRates?.find((r) => r.itemName === item.key);
+        try {
+          if (existing) {
+            await updateScrapRateMutation.mutateAsync({
+              id: existing.id,
+              itemName: item.key,
+              ratePerKg: rateVal,
+              ratePerGram: rateVal / 1000,
+              enabled: true,
+            });
+          } else {
+            await addScrapRateMutation.mutateAsync({
+              itemName: item.key,
+              ratePerKg: rateVal,
+              ratePerGram: rateVal / 1000,
+            });
+          }
+        } catch {
+          // canister not available — fall through to localStorage
+        }
+      }
+    }
     localStorage.setItem("dz_scrap_rates", JSON.stringify(rates));
     broadcastSettingsChange();
     setSaved(true);
@@ -5360,6 +5475,10 @@ function GoogleSheetsSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
+  // Canister video hooks
+  const addVideoMutation = useAddVideo();
+  const deleteVideoMutation = useDeleteVideo();
+
   const [formData, setFormData] = useState({
     platform: "",
     category: "",
@@ -5388,10 +5507,24 @@ function GoogleSheetsSection() {
     }
   };
 
-  const handleAddManual = () => {
+  const handleAddManual = async () => {
     if (!formData.platform && !formData.category) {
       toast.error("Platform ya Category bharna zaroori hai");
       return;
+    }
+    // Also save to canister if video link provided
+    if (formData.videoLink.trim()) {
+      try {
+        await addVideoMutation.mutateAsync({
+          title: formData.category || formData.platform,
+          videoUrl: formData.videoLink.trim(),
+          thumbnailUrl: "",
+          platform: formData.platform,
+          category: formData.category,
+        });
+      } catch {
+        // Canister not available — continue with localStorage
+      }
     }
     addManualRow(formData);
     setRows(getSheetData());
@@ -5404,12 +5537,19 @@ function GoogleSheetsSection() {
       affiliateLink: "",
     });
     setShowAddForm(false);
+    broadcastSettingsChange();
     toast.success("Row manually add ho gayi!");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteVideoMutation.mutateAsync(Number(id));
+    } catch {
+      // Canister not available — continue
+    }
     deleteSheetRow(id);
     setRows(getSheetData());
+    broadcastSettingsChange();
     toast.success("Row delete ho gayi");
   };
 
@@ -5842,7 +5982,7 @@ function NotificationBarSection() {
 // NEWS MANAGER SECTION
 // ============================================================
 function NewsManagerSection() {
-  type NewsItem = {
+  type LocalNewsItem = {
     id: string;
     title: string;
     summary: string;
@@ -5851,21 +5991,28 @@ function NewsManagerSection() {
     category: string;
     createdAt: string;
   };
-  function readNewsLocal(): NewsItem[] {
+  function readNewsLocal(): LocalNewsItem[] {
     try {
       return JSON.parse(localStorage.getItem("dz_news") ?? "[]");
     } catch {
       return [];
     }
   }
-  function saveNewsLocal(items: NewsItem[]) {
+  function saveNewsLocal(items: LocalNewsItem[]) {
     localStorage.setItem("dz_news", JSON.stringify(items));
   }
 
-  const [items, setItems] = useState<NewsItem[]>(readNewsLocal);
-  const [editing, setEditing] = useState<NewsItem | null>(null);
+  // Canister hooks — used when canister has the method; graceful fallback otherwise
+  const { data: canisterNews } = useNews();
+  const addNewsMutation = useAddNews();
+  const updateNewsMutation = useUpdateNews();
+  const deleteNewsMutation = useDeleteNews();
+
+  // Local state as fast cache / fallback
+  const [items, setItems] = useState<LocalNewsItem[]>(readNewsLocal);
+  const [editing, setEditing] = useState<LocalNewsItem | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const emptyItem = (): NewsItem => ({
+  const emptyItem = (): LocalNewsItem => ({
     id: Date.now().toString(),
     title: "",
     summary: "",
@@ -5874,9 +6021,27 @@ function NewsManagerSection() {
     category: "",
     createdAt: new Date().toISOString(),
   });
-  const [form, setForm] = useState<NewsItem>(emptyItem());
+  const [form, setForm] = useState<LocalNewsItem>(emptyItem());
 
-  const handleEdit = (item: NewsItem) => {
+  // Sync canister data into local state when it arrives
+  // biome-ignore lint/correctness/useExhaustiveDependencies: saveNewsLocal is stable
+  useEffect(() => {
+    if (canisterNews && canisterNews.length > 0) {
+      const mapped: LocalNewsItem[] = canisterNews.map((n) => ({
+        id: String(n.id),
+        title: n.title,
+        summary: n.summary,
+        imageUrl: n.imageUrl,
+        link: n.link,
+        category: n.category,
+        createdAt: new Date(n.createdAt).toISOString(),
+      }));
+      setItems(mapped);
+      saveNewsLocal(mapped);
+    }
+  }, [canisterNews]);
+
+  const handleEdit = (item: LocalNewsItem) => {
     setForm({ ...item });
     setEditing(item);
     setShowForm(true);
@@ -5886,31 +6051,60 @@ function NewsManagerSection() {
     setEditing(null);
     setShowForm(true);
   };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error("Title zaroori hai");
       return;
     }
-    const updated = editing
-      ? items.map((i) => (i.id === editing.id ? { ...form } : i))
-      : [
-          {
-            ...form,
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString(),
-          },
-          ...items,
-        ];
-    setItems(updated);
-    saveNewsLocal(updated);
+    // Try canister first, fall back to localStorage
+    try {
+      if (editing) {
+        await updateNewsMutation.mutateAsync({
+          id: Number(editing.id),
+          title: form.title,
+          summary: form.summary,
+          imageUrl: form.imageUrl,
+          link: form.link,
+          category: form.category,
+          enabled: true,
+        });
+      } else {
+        await addNewsMutation.mutateAsync({
+          title: form.title,
+          summary: form.summary,
+          imageUrl: form.imageUrl,
+          link: form.link,
+          category: form.category,
+        });
+      }
+    } catch {
+      // Canister method not available yet — use localStorage only
+      const updated = editing
+        ? items.map((i) => (i.id === editing.id ? { ...form } : i))
+        : [
+            {
+              ...form,
+              id: Date.now().toString(),
+              createdAt: new Date().toISOString(),
+            },
+            ...items,
+          ];
+      setItems(updated);
+      saveNewsLocal(updated);
+    }
     broadcastSettingsChange();
     setShowForm(false);
     toast.success("News save ho gayi!");
   };
-  const handleDelete = (id: string) => {
-    const updated = items.filter((i) => i.id !== id);
-    setItems(updated);
-    saveNewsLocal(updated);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteNewsMutation.mutateAsync(Number(id));
+    } catch {
+      // Canister method not available yet — use localStorage only
+      const updated = items.filter((i) => i.id !== id);
+      setItems(updated);
+      saveNewsLocal(updated);
+    }
     broadcastSettingsChange();
     toast.success("News delete ho gayi");
   };
@@ -6093,7 +6287,7 @@ function NewsManagerSection() {
 // JOBS MANAGER SECTION
 // ============================================================
 function JobsManagerSection() {
-  type JobItem = {
+  type LocalJobItem = {
     id: string;
     title: string;
     department: string;
@@ -6104,21 +6298,27 @@ function JobsManagerSection() {
     description: string;
     createdAt: string;
   };
-  function readJobsLocal(): JobItem[] {
+  function readJobsLocal(): LocalJobItem[] {
     try {
       return JSON.parse(localStorage.getItem("dz_jobs") ?? "[]");
     } catch {
       return [];
     }
   }
-  function saveJobsLocal(items: JobItem[]) {
+  function saveJobsLocal(items: LocalJobItem[]) {
     localStorage.setItem("dz_jobs", JSON.stringify(items));
   }
 
-  const [items, setItems] = useState<JobItem[]>(readJobsLocal);
-  const [editing, setEditing] = useState<JobItem | null>(null);
+  // Canister hooks
+  const { data: canisterJobs } = useJobs();
+  const addJobMutation = useAddJob();
+  const updateJobMutation = useUpdateJob();
+  const deleteJobMutation = useDeleteJob();
+
+  const [items, setItems] = useState<LocalJobItem[]>(readJobsLocal);
+  const [editing, setEditing] = useState<LocalJobItem | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const emptyItem = (): JobItem => ({
+  const emptyItem = (): LocalJobItem => ({
     id: Date.now().toString(),
     title: "",
     department: "",
@@ -6129,9 +6329,29 @@ function JobsManagerSection() {
     description: "",
     createdAt: new Date().toISOString(),
   });
-  const [form, setForm] = useState<JobItem>(emptyItem());
+  const [form, setForm] = useState<LocalJobItem>(emptyItem());
 
-  const handleEdit = (item: JobItem) => {
+  // Sync canister data into local state when it arrives
+  // biome-ignore lint/correctness/useExhaustiveDependencies: saveJobsLocal is stable
+  useEffect(() => {
+    if (canisterJobs && canisterJobs.length > 0) {
+      const mapped: LocalJobItem[] = canisterJobs.map((j) => ({
+        id: String(j.id),
+        title: j.title,
+        department: j.department,
+        location: j.location,
+        imageUrl: "",
+        link: j.applyLink,
+        lastDate: j.lastDate,
+        description: "",
+        createdAt: new Date(j.createdAt).toISOString(),
+      }));
+      setItems(mapped);
+      saveJobsLocal(mapped);
+    }
+  }, [canisterJobs]);
+
+  const handleEdit = (item: LocalJobItem) => {
     setForm({ ...item });
     setEditing(item);
     setShowForm(true);
@@ -6141,31 +6361,60 @@ function JobsManagerSection() {
     setEditing(null);
     setShowForm(true);
   };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error("Title zaroori hai");
       return;
     }
-    const updated = editing
-      ? items.map((i) => (i.id === editing.id ? { ...form } : i))
-      : [
-          {
-            ...form,
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString(),
-          },
-          ...items,
-        ];
-    setItems(updated);
-    saveJobsLocal(updated);
+    try {
+      if (editing) {
+        await updateJobMutation.mutateAsync({
+          id: Number(editing.id),
+          title: form.title,
+          department: form.department,
+          location: form.location,
+          lastDate: form.lastDate,
+          applyLink: form.link,
+          category: form.department,
+          enabled: true,
+        });
+      } else {
+        await addJobMutation.mutateAsync({
+          title: form.title,
+          department: form.department,
+          location: form.location,
+          lastDate: form.lastDate,
+          applyLink: form.link,
+          category: form.department,
+        });
+      }
+    } catch {
+      // Canister method not available yet — use localStorage only
+      const updated = editing
+        ? items.map((i) => (i.id === editing.id ? { ...form } : i))
+        : [
+            {
+              ...form,
+              id: Date.now().toString(),
+              createdAt: new Date().toISOString(),
+            },
+            ...items,
+          ];
+      setItems(updated);
+      saveJobsLocal(updated);
+    }
     broadcastSettingsChange();
     setShowForm(false);
     toast.success("Job save ho gayi!");
   };
-  const handleDelete = (id: string) => {
-    const updated = items.filter((i) => i.id !== id);
-    setItems(updated);
-    saveJobsLocal(updated);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteJobMutation.mutateAsync(Number(id));
+    } catch {
+      const updated = items.filter((i) => i.id !== id);
+      setItems(updated);
+      saveJobsLocal(updated);
+    }
     broadcastSettingsChange();
     toast.success("Job delete ho gayi");
   };
@@ -6556,7 +6805,7 @@ function EarningDashboardSection() {
 // ============================================================
 interface CustomCodeEntry {
   id: string;
-  label: string;
+  btnLabel: string;
   code: string;
   placement: "top" | "middle" | "bottom";
   enabled: boolean;
@@ -6564,19 +6813,42 @@ interface CustomCodeEntry {
 }
 
 function CustomCodeManagerSection() {
-  const [entries, setEntries] = useState<CustomCodeEntry[]>(() => {
+  const { data: canisterCodes } = useCustomCodes();
+  const addCustomCodeMutation = useAddCustomCode();
+  const updateCustomCodeMutation = useUpdateCustomCode();
+  const deleteCustomCodeMutation = useDeleteCustomCode();
+
+  const readLocal = (): CustomCodeEntry[] => {
     try {
       return JSON.parse(localStorage.getItem("dz_custom_codes") ?? "[]");
     } catch {
       return [];
     }
-  });
-  const [label, setLabel] = useState("");
+  };
+
+  const [entries, setEntries] = useState<CustomCodeEntry[]>(readLocal);
+  const [btnLabel, setBtnLabel] = useState("");
   const [code, setCode] = useState("");
   const [placement, setPlacement] = useState<"top" | "middle" | "bottom">(
     "middle",
   );
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Sync canister data into local state when it arrives
+  useEffect(() => {
+    if (canisterCodes && canisterCodes.length > 0) {
+      const mapped: CustomCodeEntry[] = canisterCodes.map((c) => ({
+        id: String(c.id),
+        btnLabel: c.btnLabel,
+        code: c.code,
+        placement: (c.placement as "top" | "middle" | "bottom") ?? "middle",
+        enabled: c.enabled,
+        createdAt: c.id,
+      }));
+      setEntries(mapped);
+      localStorage.setItem("dz_custom_codes", JSON.stringify(mapped));
+    }
+  }, [canisterCodes]);
 
   const saveEntries = (updated: CustomCodeEntry[]) => {
     setEntries(updated);
@@ -6584,8 +6856,8 @@ function CustomCodeManagerSection() {
     broadcastSettingsChange();
   };
 
-  const handleSave = () => {
-    if (!label.trim()) {
+  const handleSave = async () => {
+    if (!btnLabel.trim()) {
       toast.error("Label/naam dena zaroori hai");
       return;
     }
@@ -6593,54 +6865,117 @@ function CustomCodeManagerSection() {
       toast.error("Code dena zaroori hai");
       return;
     }
-    if (editingId) {
-      saveEntries(
-        entries.map((e) =>
-          e.id === editingId
-            ? { ...e, label: label.trim(), code: code.trim(), placement }
-            : e,
-        ),
-      );
-      toast.success("Code update ho gaya!");
-      setEditingId(null);
-    } else {
-      const newEntry: CustomCodeEntry = {
-        id: Date.now().toString(),
-        label: label.trim(),
-        code: code.trim(),
-        placement,
-        enabled: true,
-        createdAt: Date.now(),
-      };
-      saveEntries([...entries, newEntry]);
-      toast.success("Custom code add ho gaya! Homepage par dikh raha hai.");
+    try {
+      if (editingId) {
+        await updateCustomCodeMutation.mutateAsync({
+          id: Number(editingId),
+          name: btnLabel.trim(),
+          code: code.trim(),
+          btnLabel: btnLabel.trim(),
+          icon: "⚡",
+          placement,
+          enabled: true,
+        });
+        saveEntries(
+          entries.map((e) =>
+            e.id === editingId
+              ? {
+                  ...e,
+                  btnLabel: btnLabel.trim(),
+                  code: code.trim(),
+                  placement,
+                }
+              : e,
+          ),
+        );
+        toast.success("Code update ho gaya!");
+        setEditingId(null);
+      } else {
+        await addCustomCodeMutation.mutateAsync({
+          name: btnLabel.trim(),
+          code: code.trim(),
+          btnLabel: btnLabel.trim(),
+          icon: "⚡",
+          placement,
+        });
+        toast.success("Custom code add ho gaya! Homepage par dikh raha hai.");
+      }
+    } catch {
+      // Canister not available — localStorage only
+      if (editingId) {
+        saveEntries(
+          entries.map((e) =>
+            e.id === editingId
+              ? {
+                  ...e,
+                  btnLabel: btnLabel.trim(),
+                  code: code.trim(),
+                  placement,
+                }
+              : e,
+          ),
+        );
+        toast.success("Code update ho gaya!");
+        setEditingId(null);
+      } else {
+        const newEntry: CustomCodeEntry = {
+          id: Date.now().toString(),
+          btnLabel: btnLabel.trim(),
+          code: code.trim(),
+          placement,
+          enabled: true,
+          createdAt: Date.now(),
+        };
+        saveEntries([...entries, newEntry]);
+        toast.success("Custom code add ho gaya! Homepage par dikh raha hai.");
+      }
     }
-    setLabel("");
+    setBtnLabel("");
     setCode("");
     setPlacement("middle");
   };
 
   const handleEdit = (entry: CustomCodeEntry) => {
     setEditingId(entry.id);
-    setLabel(entry.label);
+    setBtnLabel(entry.btnLabel);
     setCode(entry.code);
     setPlacement(entry.placement);
   };
 
-  const handleDelete = (id: string) => {
-    saveEntries(entries.filter((e) => e.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCustomCodeMutation.mutateAsync(Number(id));
+    } catch {
+      saveEntries(entries.filter((e) => e.id !== id));
+    }
+    broadcastSettingsChange();
     toast.success("Code delete ho gaya.");
   };
 
-  const handleToggle = (id: string) => {
-    saveEntries(
-      entries.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e)),
-    );
+  const handleToggle = async (id: string) => {
+    const entry = entries.find((e) => e.id === id);
+    if (!entry) return;
+    try {
+      await updateCustomCodeMutation.mutateAsync({
+        id: Number(id),
+        name: entry.btnLabel,
+        code: entry.code,
+        btnLabel: entry.btnLabel,
+        icon: "⚡",
+        placement: entry.placement,
+        enabled: !entry.enabled,
+      });
+    } catch {
+      saveEntries(
+        entries.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e)),
+      );
+    }
+    broadcastSettingsChange();
   };
 
   const handleCancel = () => {
     setEditingId(null);
-    setLabel("");
+    setBtnLabel("");
     setCode("");
     setPlacement("middle");
   };
@@ -6673,8 +7008,8 @@ function CustomCodeManagerSection() {
             id="cc-label"
             data-ocid="admin.input"
             type="text"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
+            value={btnLabel}
+            onChange={(e) => setBtnLabel(e.target.value)}
             placeholder="jaise: WhatsApp Float Button"
             className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
@@ -6760,7 +7095,7 @@ function CustomCodeManagerSection() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground truncate">
-                      {entry.label}
+                      {entry.btnLabel}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       📍 {placementLabels[entry.placement]} &nbsp;|&nbsp;{" "}
@@ -6830,6 +7165,8 @@ function CustomCodeManagerSection() {
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
+  // Register queryClient so broadcastSettingsChange can invalidate React Query caches
+  useRegisterQueryClient();
 
   // Manager sees only approvals & chat
   const ALL_NAV_ITEMS: {

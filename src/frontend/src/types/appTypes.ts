@@ -136,6 +136,68 @@ export interface AdminConfig {
   qrCodeBlobId?: BlobRef | null;
 }
 
+// ---- New canister-backed content types ----
+
+export interface Category {
+  id: number;
+  name: string;
+  emoji: string;
+  color: string;
+  enabled: boolean;
+}
+
+export interface NewsItem {
+  id: number;
+  title: string;
+  summary: string;
+  imageUrl: string;
+  link: string;
+  category: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
+export interface JobItem {
+  id: number;
+  title: string;
+  department: string;
+  location: string;
+  lastDate: string;
+  applyLink: string;
+  category: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
+export interface CustomCode {
+  id: number;
+  name: string;
+  code: string;
+  btnLabel: string;
+  icon: string;
+  placement: string;
+  enabled: boolean;
+}
+
+export interface ScrapRate {
+  id: number;
+  itemName: string;
+  ratePerKg: number;
+  ratePerGram: number;
+  enabled: boolean;
+}
+
+export interface VideoItem {
+  id: number;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  platform: string;
+  category: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
 /** Extended actor interface covering all methods called directly by pages. */
 export interface BackendActorMethods {
   // Auth
@@ -209,4 +271,114 @@ export interface BackendActorMethods {
     threeMonthPrice: number;
     twelveMonthPrice: number;
   }): Promise<void>;
+
+  // Categories (canister-backed)
+  getCategories(): Promise<Category[]>;
+  addCategory(name: string, emoji: string, color: string): Promise<void>;
+  updateCategory(
+    id: number,
+    name: string,
+    emoji: string,
+    color: string,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteCategory(id: number): Promise<void>;
+
+  // News (canister-backed)
+  getNews(): Promise<NewsItem[]>;
+  addNews(
+    title: string,
+    summary: string,
+    imageUrl: string,
+    link: string,
+    category: string,
+  ): Promise<void>;
+  updateNews(
+    id: number,
+    title: string,
+    summary: string,
+    imageUrl: string,
+    link: string,
+    category: string,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteNews(id: number): Promise<void>;
+
+  // Jobs (canister-backed)
+  getJobs(): Promise<JobItem[]>;
+  addJob(
+    title: string,
+    department: string,
+    location: string,
+    lastDate: string,
+    applyLink: string,
+    category: string,
+  ): Promise<void>;
+  updateJob(
+    id: number,
+    title: string,
+    department: string,
+    location: string,
+    lastDate: string,
+    applyLink: string,
+    category: string,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteJob(id: number): Promise<void>;
+
+  // Custom Codes (canister-backed)
+  getCustomCodes(): Promise<CustomCode[]>;
+  addCustomCode(
+    name: string,
+    code: string,
+    label: string,
+    icon: string,
+    placement: string,
+  ): Promise<void>;
+  updateCustomCode(
+    id: number,
+    name: string,
+    code: string,
+    label: string,
+    icon: string,
+    placement: string,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteCustomCode(id: number): Promise<void>;
+
+  // Scrap Rates (canister-backed)
+  getScrapRates(): Promise<ScrapRate[]>;
+  addScrapRate(
+    itemName: string,
+    ratePerKg: number,
+    ratePerGram: number,
+  ): Promise<void>;
+  updateScrapRate(
+    id: number,
+    itemName: string,
+    ratePerKg: number,
+    ratePerGram: number,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteScrapRate(id: number): Promise<void>;
+
+  // Videos (canister-backed)
+  getVideos(): Promise<VideoItem[]>;
+  addVideo(
+    title: string,
+    videoUrl: string,
+    thumbnailUrl: string,
+    platform: string,
+    category: string,
+  ): Promise<void>;
+  updateVideo(
+    id: number,
+    title: string,
+    videoUrl: string,
+    thumbnailUrl: string,
+    platform: string,
+    category: string,
+    enabled: boolean,
+  ): Promise<void>;
+  deleteVideo(id: number): Promise<void>;
 }

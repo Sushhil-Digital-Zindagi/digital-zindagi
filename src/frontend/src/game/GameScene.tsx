@@ -4,52 +4,50 @@ import * as THREE from "three";
 import { CoinManager } from "./entities/CoinManager";
 import { EnemyManager, type EnemyRef } from "./entities/EnemyManager";
 import {
-  BuildingWall,
-  BurningVehicles,
-  CityRuins,
-  Debris,
-  GiantDZLogo,
   Ground,
+  IndustrialDebris,
+  IndustrialWalls,
+  NeonDZLogo,
   SceneLighting,
-  Skeletons,
 } from "./entities/Environment";
 import { Hero } from "./entities/Hero";
-import { Partners } from "./entities/Partners";
-import { useGameStore } from "./stores/gameStore";
 
 interface GameSceneProps {
   keys: React.MutableRefObject<Set<string>>;
   joystick: React.MutableRefObject<{ x: number; y: number }>;
 }
 
-function CameraFollow({
+/**
+ * Isometric camera — smoothly pans to keep hero centered.
+ */
+function IsometricCameraFollow({
   target,
 }: { target: React.MutableRefObject<THREE.Vector3> }) {
-  const camPos = useRef(new THREE.Vector3(0, 8, 14));
-  const camTarget = useRef(new THREE.Vector3(0, 0, 0));
+  const OFFSET = new THREE.Vector3(0, 15, 12);
+  const smoothPos = useRef(new THREE.Vector3(0, 15, 12));
+  const smoothLook = useRef(new THREE.Vector3(0, 0, 0));
 
   useFrame((state, delta) => {
-    const hero = target.current;
-    const desired = new THREE.Vector3(hero.x, hero.y + 8, hero.z + 14);
-    camPos.current.lerp(desired, 8 * delta);
-    camTarget.current.lerp(
-      new THREE.Vector3(hero.x, hero.y + 1, hero.z),
-      10 * delta,
+    const heroPos = target.current;
+    const desired = heroPos.clone().add(OFFSET);
+    smoothPos.current.lerp(desired, Math.min(1, 6 * delta));
+    smoothLook.current.lerp(
+      heroPos.clone().add(new THREE.Vector3(0, 0.5, 0)),
+      Math.min(1, 6 * delta),
     );
-    state.camera.position.copy(camPos.current);
-    state.camera.lookAt(camTarget.current);
+    state.camera.position.copy(smoothPos.current);
+    state.camera.lookAt(smoothLook.current);
   });
 
   return null;
 }
 
 /**
- * GameScene is ALWAYS mounted (never conditionally unmounted).
- * Entities check gamePhase themselves via useGameStore.getState().
- * This prevents the crash loop caused by Canvas/Scene re-initialization.
+ * GameScene — Isometric Alien Shooter
+ * Always mounted. Entities check gamePhase internally.
  */
 export function GameScene({ keys, joystick }: GameSceneProps) {
-  const heroPosition = useRef(new THREE.Vector3(0, 0, 3));
+  const heroPosition = useRef(new THREE.Vector3(0, 0, 0));
   const enemyRefs = useRef<EnemyRef[]>([]);
 
   const handleHeroPositionChange = useCallback((pos: THREE.Vector3) => {
@@ -63,25 +61,21 @@ export function GameScene({ keys, joystick }: GameSceneProps) {
   return (
     <>
       <SceneLighting />
-      <CameraFollow target={heroPosition} />
+      <IsometricCameraFollow target={heroPosition} />
 
-      {/* Environment — always visible (atmospheric background) */}
+      {/* Environment — industrial dark lab */}
       <Ground />
-      <Debris />
-      <Skeletons />
-      <BurningVehicles />
-      <BuildingWall />
-      <CityRuins />
-      <GiantDZLogo />
+      <IndustrialWalls />
+      <IndustrialDebris />
+      <NeonDZLogo />
 
-      {/* Gameplay entities */}
+      {/* Gameplay */}
       <Hero
         onPositionChange={handleHeroPositionChange}
         keys={keys}
         joystick={joystick}
+        enemyRefs={enemyRefs}
       />
-
-      <Partners heroPosition={heroPosition} enemyPositions={enemyRefs} />
 
       <EnemyManager
         heroPosition={heroPosition}

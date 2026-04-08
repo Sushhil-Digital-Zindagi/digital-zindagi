@@ -106,6 +106,22 @@ export const UserProfile = IDL.Record({
   'role' : UserRole,
   'mobile' : MobileNumber,
 });
+export const Category = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'color' : IDL.Text,
+  'emoji' : IDL.Text,
+  'enabled' : IDL.Bool,
+});
+export const CustomCode = IDL.Record({
+  'id' : IDL.Nat,
+  'placement' : IDL.Text,
+  'code' : IDL.Text,
+  'icon' : IDL.Text,
+  'name' : IDL.Text,
+  'enabled' : IDL.Bool,
+  'btnLabel' : IDL.Text,
+});
 export const Order = IDL.Record({
   'id' : IDL.Nat,
   'customerName' : IDL.Text,
@@ -117,10 +133,48 @@ export const Order = IDL.Record({
   'customerId' : IDL.Nat,
   'providerId' : IDL.Nat,
 });
+export const JobItem = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'applyLink' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'enabled' : IDL.Bool,
+  'category' : IDL.Text,
+  'department' : IDL.Text,
+  'lastDate' : IDL.Text,
+  'location' : IDL.Text,
+});
+export const NewsItem = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'link' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'enabled' : IDL.Bool,
+  'summary' : IDL.Text,
+  'imageUrl' : IDL.Text,
+  'category' : IDL.Text,
+});
+export const ScrapRate = IDL.Record({
+  'id' : IDL.Nat,
+  'ratePerKg' : IDL.Float64,
+  'enabled' : IDL.Bool,
+  'ratePerGram' : IDL.Float64,
+  'itemName' : IDL.Text,
+});
 export const SubscriptionPricing = IDL.Record({
   'threeMonthPrice' : IDL.Nat,
   'twelveMonthPrice' : IDL.Nat,
   'oneMonthPrice' : IDL.Nat,
+});
+export const VideoItem = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'thumbnailUrl' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'platform' : IDL.Text,
+  'enabled' : IDL.Bool,
+  'category' : IDL.Text,
+  'videoUrl' : IDL.Text,
 });
 export const UserApprovalInfo = IDL.Record({
   'status' : ApprovalStatus,
@@ -160,13 +214,45 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'addCustomCode' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'addJob' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'addNews' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'addScrapRate' : IDL.Func(
+      [IDL.Text, IDL.Float64, IDL.Float64],
+      [IDL.Nat],
+      [],
+    ),
   'addServiceRate' : IDL.Func([IDL.Nat, ServiceRate], [], []),
   'addShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'addVideo' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteBanner' : IDL.Func([IDL.Nat], [], []),
+  'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'deleteVideo' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'editBanner' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
       [],
@@ -185,7 +271,11 @@ export const idlService = IDL.Service({
   'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+  'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
+  'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+  'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
   'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
   'getOrdersByStatus' : IDL.Func(
       [IDL.Nat, IDL.Text],
@@ -209,6 +299,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+  'getScrapRates' : IDL.Func([], [IDL.Vec(ScrapRate)], ['query']),
   'getSubscriptionPricing' : IDL.Func(
       [],
       [IDL.Opt(SubscriptionPricing)],
@@ -222,6 +313,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
+  'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
@@ -244,6 +336,35 @@ export const idlService = IDL.Service({
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+  'updateCategory' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
+  'updateCustomCode' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
+  'updateJob' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+      ],
+      [IDL.Bool],
+      [],
+    ),
+  'updateNews' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
   'updateOrderStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'updateProviderProfile' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -263,8 +384,18 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'updateScrapRate' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Float64, IDL.Float64, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
   'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
   'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+  'updateVideo' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
   'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
 });
@@ -370,6 +501,22 @@ export const idlFactory = ({ IDL }) => {
     'role' : UserRole,
     'mobile' : MobileNumber,
   });
+  const Category = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'color' : IDL.Text,
+    'emoji' : IDL.Text,
+    'enabled' : IDL.Bool,
+  });
+  const CustomCode = IDL.Record({
+    'id' : IDL.Nat,
+    'placement' : IDL.Text,
+    'code' : IDL.Text,
+    'icon' : IDL.Text,
+    'name' : IDL.Text,
+    'enabled' : IDL.Bool,
+    'btnLabel' : IDL.Text,
+  });
   const Order = IDL.Record({
     'id' : IDL.Nat,
     'customerName' : IDL.Text,
@@ -381,10 +528,48 @@ export const idlFactory = ({ IDL }) => {
     'customerId' : IDL.Nat,
     'providerId' : IDL.Nat,
   });
+  const JobItem = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'applyLink' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'enabled' : IDL.Bool,
+    'category' : IDL.Text,
+    'department' : IDL.Text,
+    'lastDate' : IDL.Text,
+    'location' : IDL.Text,
+  });
+  const NewsItem = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'link' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'enabled' : IDL.Bool,
+    'summary' : IDL.Text,
+    'imageUrl' : IDL.Text,
+    'category' : IDL.Text,
+  });
+  const ScrapRate = IDL.Record({
+    'id' : IDL.Nat,
+    'ratePerKg' : IDL.Float64,
+    'enabled' : IDL.Bool,
+    'ratePerGram' : IDL.Float64,
+    'itemName' : IDL.Text,
+  });
   const SubscriptionPricing = IDL.Record({
     'threeMonthPrice' : IDL.Nat,
     'twelveMonthPrice' : IDL.Nat,
     'oneMonthPrice' : IDL.Nat,
+  });
+  const VideoItem = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'thumbnailUrl' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'platform' : IDL.Text,
+    'enabled' : IDL.Bool,
+    'category' : IDL.Text,
+    'videoUrl' : IDL.Text,
   });
   const UserApprovalInfo = IDL.Record({
     'status' : ApprovalStatus,
@@ -424,13 +609,45 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'addCustomCode' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'addJob' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'addNews' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'addScrapRate' : IDL.Func(
+        [IDL.Text, IDL.Float64, IDL.Float64],
+        [IDL.Nat],
+        [],
+      ),
     'addServiceRate' : IDL.Func([IDL.Nat, ServiceRate], [], []),
     'addShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'addVideo' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'deleteBanner' : IDL.Func([IDL.Nat], [], []),
+    'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'deleteVideo' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'editBanner' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
         [],
@@ -449,7 +666,11 @@ export const idlFactory = ({ IDL }) => {
     'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+    'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
+    'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+    'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
     'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
     'getOrdersByStatus' : IDL.Func(
         [IDL.Nat, IDL.Text],
@@ -473,6 +694,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+    'getScrapRates' : IDL.Func([], [IDL.Vec(ScrapRate)], ['query']),
     'getSubscriptionPricing' : IDL.Func(
         [],
         [IDL.Opt(SubscriptionPricing)],
@@ -486,6 +708,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
+    'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
@@ -508,6 +731,35 @@ export const idlFactory = ({ IDL }) => {
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+    'updateCategory' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
+    'updateCustomCode' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
+    'updateJob' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+        ],
+        [IDL.Bool],
+        [],
+      ),
+    'updateNews' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
     'updateOrderStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'updateProviderProfile' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -527,8 +779,18 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'updateScrapRate' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Float64, IDL.Float64, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
     'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
     'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+    'updateVideo' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
     'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });

@@ -11,6 +11,17 @@ type _ImmutableObjectStorageCreateCertificateResult =
    blob_hash: text;
    method: text;
  };
+type VideoItem = 
+ record {
+   category: text;
+   createdAt: int;
+   enabled: bool;
+   id: nat;
+   platform: text;
+   thumbnailUrl: text;
+   title: text;
+   videoUrl: text;
+ };
 type UserRole__1 = 
  variant {
    admin;
@@ -71,6 +82,14 @@ type ServiceRate =
    name: text;
    price: nat;
  };
+type ScrapRate = 
+ record {
+   enabled: bool;
+   id: nat;
+   itemName: text;
+   ratePerGram: float64;
+   ratePerKg: float64;
+ };
 type ProviderProfile = 
  record {
    address: text;
@@ -107,8 +126,49 @@ type Order =
    providerId: nat;
    status: text;
  };
+type NewsItem = 
+ record {
+   category: text;
+   createdAt: int;
+   enabled: bool;
+   id: nat;
+   imageUrl: text;
+   link: text;
+   summary: text;
+   title: text;
+ };
 type MobileNumber = text;
+type JobItem = 
+ record {
+   applyLink: text;
+   category: text;
+   createdAt: int;
+   department: text;
+   enabled: bool;
+   id: nat;
+   lastDate: text;
+   location: text;
+   title: text;
+ };
 type ExternalBlob = blob;
+type CustomCode = 
+ record {
+   btnLabel: text;
+   code: text;
+   enabled: bool;
+   icon: text;
+   id: nat;
+   name: text;
+   placement: text;
+ };
+type Category = 
+ record {
+   color: text;
+   emoji: text;
+   enabled: bool;
+   id: nat;
+   name: text;
+ };
 type Banner = 
  record {
    active: bool;
@@ -146,13 +206,30 @@ service : {
   _initializeAccessControl: () -> ();
   addBanner: (title: text, subtitle: text, imageUrl: text, linkUrl: text,
    displayOrder: nat) -> (nat);
+  addCategory: (name: text, emoji: text, color: text) -> (nat);
+  addCustomCode: (name: text, code: text, btnLabel: text, icon: text,
+   placement: text) -> (nat);
+  addJob: (title: text, department: text, location: text, lastDate: text,
+   applyLink: text, category: text) -> (nat);
+  addNews: (title: text, summary: text, imageUrl: text, link: text, category:
+   text) -> (nat);
+  addScrapRate: (itemName: text, ratePerKg: float64, ratePerGram: float64) ->
+   (nat);
   addServiceRate: (userId: nat, newRate: ServiceRate) -> ();
   addShopPhoto: (userId: nat, blobId: text) -> ();
+  addVideo: (title: text, videoUrl: text, thumbnailUrl: text, platform: 
+   text, category: text) -> (nat);
   approveProvider: (userId: nat, plan: SubscriptionPlan) -> ();
   assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
   changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
   deleteBanner: (bannerId: nat) -> ();
+  deleteCategory: (id: nat) -> (bool);
+  deleteCustomCode: (id: nat) -> (bool);
+  deleteJob: (id: nat) -> (bool);
+  deleteNews: (id: nat) -> (bool);
+  deleteScrapRate: (id: nat) -> (bool);
   deleteServiceRate: (userId: nat, rateName: text) -> ();
+  deleteVideo: (id: nat) -> (bool);
   editBanner: (bannerId: nat, title: text, subtitle: text, imageUrl: 
    text, linkUrl: text, active: bool, displayOrder: nat) -> ();
   forgotPassword: (mobile: MobileNumber, securityAnswer: text,
@@ -168,7 +245,11 @@ service : {
   getAllUsers: () -> (vec User) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole__1) query;
+  getCategories: () -> (vec Category) query;
+  getCustomCodes: () -> (vec CustomCode) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
+  getJobs: () -> (vec JobItem) query;
+  getNews: () -> (vec NewsItem) query;
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
@@ -176,11 +257,13 @@ service : {
   getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
   getProvidersPendingApproval: () -> (vec ProviderProfile) query;
   getRecentUsers: () -> (vec User) query;
+  getScrapRates: () -> (vec ScrapRate) query;
   getSubscriptionPricing: () -> (opt SubscriptionPricing) query;
   getUserById: (userId: nat) -> (opt User) query;
   getUserByMobile: (mobile: MobileNumber) -> (opt User) query;
   getUserProfile: (user: principal) -> (opt UserProfile) query;
   getUsersByRole: (role: UserRole) -> (vec User) query;
+  getVideos: () -> (vec VideoItem) query;
   isCallerAdmin: () -> (bool) query;
   isCallerApproved: () -> (bool) query;
   listApprovals: () -> (vec UserApprovalInfo) query;
@@ -197,6 +280,15 @@ service : {
   setApproval: (user: principal, status: ApprovalStatus) -> ();
   setPlanType: (userId: nat, planType: PlanType) -> ();
   updateAdminConfig: (newConfig: AdminConfig) -> ();
+  updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
+   bool) -> (bool);
+  updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
+   text, placement: text, enabled: bool) -> (bool);
+  updateJob: (id: nat, title: text, department: text, location: text,
+   lastDate: text, applyLink: text, category: text, enabled: bool) -> (
+   bool);
+  updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
+   text, category: text, enabled: bool) -> (bool);
   updateOrderStatus: (orderId: nat, status: text) -> ();
   updateProviderProfile: (userId: nat, shopName: text, description: text,
    address: text, category: text) -> ();
@@ -204,8 +296,12 @@ service : {
   updateProviderProfileFull: (userId: nat, shopName: text, description: 
    text, address: text, category: text, upiId: text, qrCodeBlobId:
    opt text) -> ();
+  updateScrapRate: (id: nat, itemName: text, ratePerKg: float64, ratePerGram:
+   float64, enabled: bool) -> (bool);
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
   updateToggle: (toggleName: text, value: bool) -> ();
+  updateVideo: (id: nat, title: text, videoUrl: text, thumbnailUrl: text,
+   platform: text, category: text, enabled: bool) -> (bool);
   uploadPaymentScreenshot: (userId: nat, blobId: text) -> ();
   verifyAdminPin: (pinHash: text) -> (bool) query;
 }

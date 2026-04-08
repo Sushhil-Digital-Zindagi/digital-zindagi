@@ -95,6 +95,24 @@ export interface ServiceRate {
     price: bigint;
 }
 export type MobileNumber = string;
+export interface JobItem {
+    id: bigint;
+    title: string;
+    applyLink: string;
+    createdAt: bigint;
+    enabled: boolean;
+    category: string;
+    department: string;
+    lastDate: string;
+    location: string;
+}
+export interface Category {
+    id: bigint;
+    name: string;
+    color: string;
+    emoji: string;
+    enabled: boolean;
+}
 export interface User {
     id: bigint;
     name: string;
@@ -108,9 +126,28 @@ export interface User {
 export interface _ImmutableObjectStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
+export interface VideoItem {
+    id: bigint;
+    title: string;
+    thumbnailUrl: string;
+    createdAt: bigint;
+    platform: string;
+    enabled: boolean;
+    category: string;
+    videoUrl: string;
+}
 export interface _ImmutableObjectStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
+}
+export interface CustomCode {
+    id: bigint;
+    placement: string;
+    code: string;
+    icon: string;
+    name: string;
+    enabled: boolean;
+    btnLabel: string;
 }
 export interface Order {
     id: bigint;
@@ -122,6 +159,16 @@ export interface Order {
     imageUrl?: string;
     customerId: bigint;
     providerId: bigint;
+}
+export interface NewsItem {
+    id: bigint;
+    title: string;
+    link: string;
+    createdAt: bigint;
+    enabled: boolean;
+    summary: string;
+    imageUrl: string;
+    category: string;
 }
 export interface _ImmutableObjectStorageRefillResult {
     success?: boolean;
@@ -140,6 +187,13 @@ export interface Banner {
     imageUrl: string;
     subtitle: string;
 }
+export interface ScrapRate {
+    id: bigint;
+    ratePerKg: number;
+    enabled: boolean;
+    ratePerGram: number;
+    itemName: string;
+}
 export interface AdminConfig {
     email: string;
     adminName: string;
@@ -151,6 +205,12 @@ export interface SubscriptionPricing {
     threeMonthPrice: bigint;
     twelveMonthPrice: bigint;
     oneMonthPrice: bigint;
+}
+export interface UserProfile {
+    userId: bigint;
+    name: string;
+    role: UserRole;
+    mobile: MobileNumber;
 }
 export interface ProviderProfile {
     userId: bigint;
@@ -168,12 +228,6 @@ export interface ProviderProfile {
     qrCodeBlobId?: string;
     planType: PlanType;
     photos: Array<string>;
-}
-export interface UserProfile {
-    userId: bigint;
-    name: string;
-    role: UserRole;
-    mobile: MobileNumber;
 }
 export enum ApprovalStatus {
     pending = "pending",
@@ -215,13 +269,25 @@ export interface backendInterface {
     _immutableObjectStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControl(): Promise<void>;
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
+    addCategory(name: string, emoji: string, color: string): Promise<bigint>;
+    addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string): Promise<bigint>;
+    addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
+    addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
+    addScrapRate(itemName: string, ratePerKg: number, ratePerGram: number): Promise<bigint>;
     addServiceRate(userId: bigint, newRate: ServiceRate): Promise<void>;
     addShopPhoto(userId: bigint, blobId: string): Promise<void>;
+    addVideo(title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string): Promise<bigint>;
     approveProvider(userId: bigint, plan: SubscriptionPlan): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     changeAdminPin(currentPinHash: string, newPinHash: string): Promise<void>;
     deleteBanner(bannerId: bigint): Promise<void>;
+    deleteCategory(id: bigint): Promise<boolean>;
+    deleteCustomCode(id: bigint): Promise<boolean>;
+    deleteJob(id: bigint): Promise<boolean>;
+    deleteNews(id: bigint): Promise<boolean>;
+    deleteScrapRate(id: bigint): Promise<boolean>;
     deleteServiceRate(userId: bigint, rateName: string): Promise<void>;
+    deleteVideo(id: bigint): Promise<boolean>;
     editBanner(bannerId: bigint, title: string, subtitle: string, imageUrl: string, linkUrl: string, active: boolean, displayOrder: bigint): Promise<void>;
     forgotPassword(mobile: MobileNumber, securityAnswer: string, newPasswordHash: string): Promise<void>;
     getActiveBanners(): Promise<Array<Banner>>;
@@ -232,7 +298,11 @@ export interface backendInterface {
     getAllUsers(): Promise<Array<User>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
+    getCategories(): Promise<Array<Category>>;
+    getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
+    getJobs(): Promise<Array<JobItem>>;
+    getNews(): Promise<Array<NewsItem>>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
@@ -240,11 +310,13 @@ export interface backendInterface {
     getProvidersByCategory(category: string): Promise<Array<ProviderProfile>>;
     getProvidersPendingApproval(): Promise<Array<ProviderProfile>>;
     getRecentUsers(): Promise<Array<User>>;
+    getScrapRates(): Promise<Array<ScrapRate>>;
     getSubscriptionPricing(): Promise<SubscriptionPricing | null>;
     getUserById(userId: bigint): Promise<User | null>;
     getUserByMobile(mobile: MobileNumber): Promise<User | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUsersByRole(role: UserRole): Promise<Array<User>>;
+    getVideos(): Promise<Array<VideoItem>>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
@@ -259,14 +331,20 @@ export interface backendInterface {
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
+    updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
+    updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
+    updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
+    updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;
     updateProviderProfile(userId: bigint, shopName: string, description: string, address: string, category: string): Promise<void>;
     /**
      * / Extended updateProviderProfile to include upiId and qrCodeBlobId
      */
     updateProviderProfileFull(userId: bigint, shopName: string, description: string, address: string, category: string, upiId: string, qrCodeBlobId: string | null): Promise<void>;
+    updateScrapRate(id: bigint, itemName: string, ratePerKg: number, ratePerGram: number, enabled: boolean): Promise<boolean>;
     updateSubscriptionPricing(newPricing: SubscriptionPricing): Promise<void>;
     updateToggle(toggleName: string, value: boolean): Promise<void>;
+    updateVideo(id: bigint, title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string, enabled: boolean): Promise<boolean>;
     uploadPaymentScreenshot(userId: bigint, blobId: string): Promise<void>;
     verifyAdminPin(pinHash: string): Promise<boolean>;
 }
@@ -385,6 +463,76 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async addCategory(arg0: string, arg1: string, arg2: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addCategory(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addCategory(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async addCustomCode(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addCustomCode(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addCustomCode(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async addJob(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addJob(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addJob(arg0, arg1, arg2, arg3, arg4, arg5);
+            return result;
+        }
+    }
+    async addNews(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addNews(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addNews(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async addScrapRate(arg0: string, arg1: number, arg2: number): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addScrapRate(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addScrapRate(arg0, arg1, arg2);
+            return result;
+        }
+    }
     async addServiceRate(arg0: bigint, arg1: ServiceRate): Promise<void> {
         if (this.processError) {
             try {
@@ -410,6 +558,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addShopPhoto(arg0, arg1);
+            return result;
+        }
+    }
+    async addVideo(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addVideo(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addVideo(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -469,6 +631,76 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteCategory(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCategory(arg0);
+            return result;
+        }
+    }
+    async deleteCustomCode(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCustomCode(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCustomCode(arg0);
+            return result;
+        }
+    }
+    async deleteJob(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteJob(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteJob(arg0);
+            return result;
+        }
+    }
+    async deleteNews(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteNews(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteNews(arg0);
+            return result;
+        }
+    }
+    async deleteScrapRate(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteScrapRate(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteScrapRate(arg0);
+            return result;
+        }
+    }
     async deleteServiceRate(arg0: bigint, arg1: string): Promise<void> {
         if (this.processError) {
             try {
@@ -480,6 +712,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteServiceRate(arg0, arg1);
+            return result;
+        }
+    }
+    async deleteVideo(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteVideo(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteVideo(arg0);
             return result;
         }
     }
@@ -623,6 +869,34 @@ export class Backend implements backendInterface {
             return from_candid_UserRole__1_n37(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getCategories(): Promise<Array<Category>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCategories();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCategories();
+            return result;
+        }
+    }
+    async getCustomCodes(): Promise<Array<CustomCode>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCustomCodes();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCustomCodes();
+            return result;
+        }
+    }
     async getCustomerOrders(arg0: bigint): Promise<Array<Order>> {
         if (this.processError) {
             try {
@@ -635,6 +909,34 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getCustomerOrders(arg0);
             return from_candid_vec_n39(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getJobs(): Promise<Array<JobItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getJobs();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getJobs();
+            return result;
+        }
+    }
+    async getNews(): Promise<Array<NewsItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getNews();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getNews();
+            return result;
         }
     }
     async getOrderById(arg0: bigint): Promise<Order | null> {
@@ -735,6 +1037,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getScrapRates(): Promise<Array<ScrapRate>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getScrapRates();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getScrapRates();
+            return result;
+        }
+    }
     async getSubscriptionPricing(): Promise<SubscriptionPricing | null> {
         if (this.processError) {
             try {
@@ -803,6 +1119,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUsersByRole(to_candid_UserRole_n46(this._uploadFile, this._downloadFile, arg0));
             return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getVideos(): Promise<Array<VideoItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getVideos();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getVideos();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -1001,6 +1331,62 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateCategory(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCategory(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCategory(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async updateCustomCode(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCustomCode(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCustomCode(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async updateJob(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateJob(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateJob(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            return result;
+        }
+    }
+    async updateNews(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateNews(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateNews(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
     async updateOrderStatus(arg0: bigint, arg1: string): Promise<void> {
         if (this.processError) {
             try {
@@ -1043,6 +1429,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateScrapRate(arg0: bigint, arg1: string, arg2: number, arg3: number, arg4: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateScrapRate(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateScrapRate(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
     async updateSubscriptionPricing(arg0: SubscriptionPricing): Promise<void> {
         if (this.processError) {
             try {
@@ -1068,6 +1468,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateToggle(arg0, arg1);
+            return result;
+        }
+    }
+    async updateVideo(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateVideo(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateVideo(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
             return result;
         }
     }

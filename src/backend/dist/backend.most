@@ -19,11 +19,35 @@ type Banner__198884728 =
     subtitle : Text;
     title : Text
   };
+type Category__164941945 =
+  {color : Text; emoji : Text; enabled : Bool; id : Nat; name : Text};
+type CustomCode__248340264 =
+  {
+    btnLabel : Text;
+    code : Text;
+    enabled : Bool;
+    icon : Text;
+    id : Nat;
+    name : Text;
+    placement : Text
+  };
 type Data__791452850<K, V> =
   {var count : Nat__490723111; kvs : [var ?(K, V)]};
 type ExternalBlob__246066408 = Blob;
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type JobItem__343982965 =
+  {
+    applyLink : Text;
+    category : Text;
+    createdAt : Int;
+    department : Text;
+    enabled : Bool;
+    id : Nat;
+    lastDate : Text;
+    location : Text;
+    title : Text
+  };
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
 type Map__158565046<K, V> = Map__297112838<K, V>;
 type Map__297112838<K, V> =
@@ -32,6 +56,17 @@ type Map__605269027<K, V> = Map__158565046<K, V>;
 type MobileNumber__283646848 = Text;
 type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
+type NewsItem__791051751 =
+  {
+    category : Text;
+    createdAt : Int;
+    enabled : Bool;
+    id : Nat;
+    imageUrl : Text;
+    link : Text;
+    summary : Text;
+    title : Text
+  };
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
 type Order__762448211 =
@@ -65,6 +100,14 @@ type ProviderProfile__706122890 =
     upiId : Text;
     userId : Nat
   };
+type ScrapRate__369663379 =
+  {
+    enabled : Bool;
+    id : Nat;
+    itemName : Text;
+    ratePerGram : Float;
+    ratePerKg : Float
+  };
 type ServiceRate__575692853 = {description : Text; name : Text; price : Nat};
 type SubscriptionPlan__552945260 = {#oneMonth; #threeMonths; #twelveMonths};
 type SubscriptionPricing__787813395 =
@@ -90,6 +133,17 @@ type User__831686142 =
     securityAnswer : Text;
     securityQuestion : Text
   };
+type VideoItem__865818871 =
+  {
+    category : Text;
+    createdAt : Int;
+    enabled : Bool;
+    id : Nat;
+    platform : Text;
+    thumbnailUrl : Text;
+    title : Text;
+    videoUrl : Text
+  };
 actor {
   stable accessControlState :
     {
@@ -108,9 +162,35 @@ actor {
       var root : Node__46230540<Nat, Banner__198884728>;
       var size : Nat__490723111
     };
+  stable var categories :
+    {
+      var root : Node__46230540<Nat, Category__164941945>;
+      var size : Nat__490723111
+    };
+  stable var customCodes :
+    {
+      var root : Node__46230540<Nat, CustomCode__248340264>;
+      var size : Nat__490723111
+    };
+  stable var jobItems :
+    {
+      var root : Node__46230540<Nat, JobItem__343982965>;
+      var size : Nat__490723111
+    };
+  stable var newsItems :
+    {
+      var root : Node__46230540<Nat, NewsItem__791051751>;
+      var size : Nat__490723111
+    };
   stable var nextBannerId : Nat;
+  stable var nextCategoryId : Nat;
+  stable var nextCustomCodeId : Nat;
+  stable var nextJobId : Nat;
+  stable var nextNewsId : Nat;
   stable var nextOrderId : Nat;
+  stable var nextScrapRateId : Nat;
   stable var nextUserId : Nat;
+  stable var nextVideoId : Nat;
   stable var orders :
     {
       var root : Node__46230540<Nat, Order__762448211>;
@@ -123,6 +203,12 @@ actor {
       var root : Node__46230540<Nat, ProviderProfile__706122890>;
       var size : Nat__490723111
     };
+  stable var scrapRates :
+    {
+      var root : Node__46230540<Nat, ScrapRate__369663379>;
+      var size : Nat__490723111
+    };
+  stable var scrapRatesSeeded : Bool;
   stable var subscriptionPricing : ?SubscriptionPricing__787813395;
   stable var toggles :
     {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
@@ -136,6 +222,11 @@ actor {
   stable var users :
     {
       var root : Node__46230540<MobileNumber__283646848, User__831686142>;
+      var size : Nat__490723111
+    };
+  stable var videos :
+    {
+      var root : Node__46230540<Nat, VideoItem__865818871>;
       var size : Nat__490723111
     }
 };

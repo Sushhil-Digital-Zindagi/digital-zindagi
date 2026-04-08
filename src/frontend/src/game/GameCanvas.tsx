@@ -9,18 +9,10 @@ interface GameCanvasProps {
 }
 
 /**
- * GameCanvas — renders the Three.js scene.
- *
- * IMPORTANT: This component must NEVER conditionally unmount/remount the <Canvas>.
- * Conditionally removing <Canvas> causes the crash loop.
- * Instead, the GameScene is always mounted and responds to gamePhase internally.
- *
- * FIX 5 — Visual clarity:
- * - dpr={[1, window.devicePixelRatio]} for High-DPI / Retina sharpness
- * - onCreated: explicitly calls gl.setPixelRatio(window.devicePixelRatio)
- *   and gl.setSize() as requested
- * - gl: antialias + high-performance powerPreference
- * - Canvas style: width/height 100%, display block (no gaps)
+ * GameCanvas — Isometric Alien Shooter
+ * Camera: PerspectiveCamera at [0, 15, 12], looking toward [0, 0, 0]
+ * This gives the classic top-down 60-degree isometric feel.
+ * Canvas is NEVER conditionally unmounted — avoids crash loops.
  */
 export function GameCanvas({ keys, joystick }: GameCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -40,6 +32,12 @@ export function GameCanvas({ keys, joystick }: GameCanvasProps) {
         frameloop="always"
         dpr={[1, typeof window !== "undefined" ? window.devicePixelRatio : 2]}
         performance={{ min: 0.5 }}
+        camera={{
+          position: [0, 15, 12],
+          fov: 55,
+          near: 0.1,
+          far: 300,
+        }}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
@@ -47,7 +45,6 @@ export function GameCanvas({ keys, joystick }: GameCanvasProps) {
           preserveDrawingBuffer: false,
         }}
         onCreated={({ gl }) => {
-          // FIX 5: Explicitly set pixel ratio and size for maximum visual clarity
           gl.setPixelRatio(
             typeof window !== "undefined" ? window.devicePixelRatio : 2,
           );
@@ -59,12 +56,11 @@ export function GameCanvas({ keys, joystick }: GameCanvasProps) {
           width: "100%",
           height: "100%",
           display: "block",
-          background: "#020503",
+          background: "#030a05",
         }}
         onPointerDown={() => resumeAudio()}
       >
         <Suspense fallback={null}>
-          {/* GameScene is ALWAYS mounted — it checks gamePhase internally */}
           <GameScene keys={keys} joystick={joystick} />
         </Suspense>
       </Canvas>

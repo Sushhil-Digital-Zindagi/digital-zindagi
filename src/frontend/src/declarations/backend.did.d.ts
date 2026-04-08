@@ -29,8 +29,45 @@ export interface Banner {
   'imageUrl' : string,
   'subtitle' : string,
 }
+export interface Category {
+  'id' : bigint,
+  'name' : string,
+  'color' : string,
+  'emoji' : string,
+  'enabled' : boolean,
+}
+export interface CustomCode {
+  'id' : bigint,
+  'placement' : string,
+  'code' : string,
+  'icon' : string,
+  'name' : string,
+  'enabled' : boolean,
+  'btnLabel' : string,
+}
 export type ExternalBlob = Uint8Array;
+export interface JobItem {
+  'id' : bigint,
+  'title' : string,
+  'applyLink' : string,
+  'createdAt' : bigint,
+  'enabled' : boolean,
+  'category' : string,
+  'department' : string,
+  'lastDate' : string,
+  'location' : string,
+}
 export type MobileNumber = string;
+export interface NewsItem {
+  'id' : bigint,
+  'title' : string,
+  'link' : string,
+  'createdAt' : bigint,
+  'enabled' : boolean,
+  'summary' : string,
+  'imageUrl' : string,
+  'category' : string,
+}
 export interface Order {
   'id' : bigint,
   'customerName' : string,
@@ -61,6 +98,13 @@ export interface ProviderProfile {
   'qrCodeBlobId' : [] | [string],
   'planType' : PlanType,
   'photos' : Array<string>,
+}
+export interface ScrapRate {
+  'id' : bigint,
+  'ratePerKg' : number,
+  'enabled' : boolean,
+  'ratePerGram' : number,
+  'itemName' : string,
 }
 export interface ServiceRate {
   'name' : string,
@@ -105,6 +149,16 @@ export type UserRole = { 'admin' : null } |
 export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface VideoItem {
+  'id' : bigint,
+  'title' : string,
+  'thumbnailUrl' : string,
+  'createdAt' : bigint,
+  'platform' : string,
+  'enabled' : boolean,
+  'category' : string,
+  'videoUrl' : string,
+}
 export interface _ImmutableObjectStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -137,13 +191,31 @@ export interface _SERVICE {
   '_immutableObjectStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'addBanner' : ActorMethod<[string, string, string, string, bigint], bigint>,
+  'addCategory' : ActorMethod<[string, string, string], bigint>,
+  'addCustomCode' : ActorMethod<
+    [string, string, string, string, string],
+    bigint
+  >,
+  'addJob' : ActorMethod<
+    [string, string, string, string, string, string],
+    bigint
+  >,
+  'addNews' : ActorMethod<[string, string, string, string, string], bigint>,
+  'addScrapRate' : ActorMethod<[string, number, number], bigint>,
   'addServiceRate' : ActorMethod<[bigint, ServiceRate], undefined>,
   'addShopPhoto' : ActorMethod<[bigint, string], undefined>,
+  'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
   'approveProvider' : ActorMethod<[bigint, SubscriptionPlan], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'changeAdminPin' : ActorMethod<[string, string], undefined>,
   'deleteBanner' : ActorMethod<[bigint], undefined>,
+  'deleteCategory' : ActorMethod<[bigint], boolean>,
+  'deleteCustomCode' : ActorMethod<[bigint], boolean>,
+  'deleteJob' : ActorMethod<[bigint], boolean>,
+  'deleteNews' : ActorMethod<[bigint], boolean>,
+  'deleteScrapRate' : ActorMethod<[bigint], boolean>,
   'deleteServiceRate' : ActorMethod<[bigint, string], undefined>,
+  'deleteVideo' : ActorMethod<[bigint], boolean>,
   'editBanner' : ActorMethod<
     [bigint, string, string, string, string, boolean, bigint],
     undefined
@@ -157,7 +229,11 @@ export interface _SERVICE {
   'getAllUsers' : ActorMethod<[], Array<User>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
+  'getCategories' : ActorMethod<[], Array<Category>>,
+  'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
+  'getJobs' : ActorMethod<[], Array<JobItem>>,
+  'getNews' : ActorMethod<[], Array<NewsItem>>,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
@@ -165,11 +241,13 @@ export interface _SERVICE {
   'getProvidersByCategory' : ActorMethod<[string], Array<ProviderProfile>>,
   'getProvidersPendingApproval' : ActorMethod<[], Array<ProviderProfile>>,
   'getRecentUsers' : ActorMethod<[], Array<User>>,
+  'getScrapRates' : ActorMethod<[], Array<ScrapRate>>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
   'getUserById' : ActorMethod<[bigint], [] | [User]>,
   'getUserByMobile' : ActorMethod<[MobileNumber], [] | [User]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUsersByRole' : ActorMethod<[UserRole], Array<User>>,
+  'getVideos' : ActorMethod<[], Array<VideoItem>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
@@ -190,6 +268,22 @@ export interface _SERVICE {
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
+  'updateCategory' : ActorMethod<
+    [bigint, string, string, string, boolean],
+    boolean
+  >,
+  'updateCustomCode' : ActorMethod<
+    [bigint, string, string, string, string, string, boolean],
+    boolean
+  >,
+  'updateJob' : ActorMethod<
+    [bigint, string, string, string, string, string, string, boolean],
+    boolean
+  >,
+  'updateNews' : ActorMethod<
+    [bigint, string, string, string, string, string, boolean],
+    boolean
+  >,
   'updateOrderStatus' : ActorMethod<[bigint, string], undefined>,
   'updateProviderProfile' : ActorMethod<
     [bigint, string, string, string, string],
@@ -202,8 +296,16 @@ export interface _SERVICE {
     [bigint, string, string, string, string, string, [] | [string]],
     undefined
   >,
+  'updateScrapRate' : ActorMethod<
+    [bigint, string, number, number, boolean],
+    boolean
+  >,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
   'updateToggle' : ActorMethod<[string, boolean], undefined>,
+  'updateVideo' : ActorMethod<
+    [bigint, string, string, string, string, string, boolean],
+    boolean
+  >,
   'uploadPaymentScreenshot' : ActorMethod<[bigint, string], undefined>,
   'verifyAdminPin' : ActorMethod<[string], boolean>,
 }

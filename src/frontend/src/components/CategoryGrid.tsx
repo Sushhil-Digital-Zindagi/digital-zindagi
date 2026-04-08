@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useCategories } from "../hooks/useQueries";
 import { Link } from "../lib/router";
 
 export const ALL_CATEGORIES = [
@@ -121,6 +122,9 @@ export default function CategoryGrid({ toggles, loading }: Props) {
   const [adminCats, setAdminCats] =
     useState<AdminCategory[]>(readAdminCategories);
 
+  // Poll canister for categories every 2 seconds
+  const { data: canisterCats } = useCategories();
+
   // Re-read admin categories when the window regains focus or settings broadcast fires
   useEffect(() => {
     const onRefresh = () => setAdminCats(readAdminCategories());
@@ -132,7 +136,20 @@ export default function CategoryGrid({ toggles, loading }: Props) {
     };
   }, []);
 
-  const merged = mergeCategories(adminCats);
+  // Merge canister categories (if any) with local admin categories
+  const effectiveCats: AdminCategory[] =
+    canisterCats && canisterCats.length > 0
+      ? canisterCats.map((c) => ({
+          id: c.id,
+          name: c.name,
+          emoji: c.emoji,
+          color: c.color,
+          enabled: c.enabled,
+          hinglish: c.name,
+        }))
+      : adminCats;
+
+  const merged = mergeCategories(effectiveCats);
 
   const enabledNames = toggles
     ? new Set(toggles.filter(([, v]) => v).map(([k]) => k))
@@ -149,7 +166,7 @@ export default function CategoryGrid({ toggles, loading }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {Array.from({ length: 8 }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
-          <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-2xl" />
+          <div key={i} className="h-20 bg-muted animate-pulse rounded-2xl" />
         ))}
       </div>
     );

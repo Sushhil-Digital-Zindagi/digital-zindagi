@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  Gamepad2,
   Globe,
   Home,
   LogIn,
@@ -72,6 +73,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const navLinks = [
     { to: "/", label: t("home"), icon: <Home size={18} /> },
+    { to: "/game", label: "🎮 Game", icon: <Gamepad2 size={18} /> },
     ...(user
       ? [
           user.role === "provider"

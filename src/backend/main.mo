@@ -12,6 +12,8 @@ import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
+import Int "mo:core/Int";
+import Float "mo:core/Float";
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
@@ -39,6 +41,28 @@ persistent actor {
   var adminConfig : ?AdminConfig = null;
   var subscriptionPricing : ?SubscriptionPricing = null;
   var adminPinHash : Text = "1234";
+
+  // New domain state
+  var categories = Map.empty<Nat, Category>();
+  var nextCategoryId = 1;
+
+  var newsItems = Map.empty<Nat, NewsItem>();
+  var nextNewsId = 1;
+
+  var jobItems = Map.empty<Nat, JobItem>();
+  var nextJobId = 1;
+
+  var customCodes = Map.empty<Nat, CustomCode>();
+  var nextCustomCodeId = 1;
+
+  var scrapRates = Map.empty<Nat, ScrapRate>();
+  var nextScrapRateId = 4; // starts at 4 — 1..3 seeded below
+
+  var videos = Map.empty<Nat, VideoItem>();
+  var nextVideoId = 1;
+
+  // Seed default scrap rates (Iron, Paper, Copper)
+  var scrapRatesSeeded = false;
 
   // Include prefabricated components
     include MixinObjectStorage();
@@ -163,6 +187,81 @@ persistent actor {
     mobile : MobileNumber;
     role : UserRole;
   };
+
+  // ── New domain types ──────────────────────────────────────────────────────
+
+  type Category = {
+    id : Nat;
+    name : Text;
+    emoji : Text;
+    color : Text;
+    enabled : Bool;
+  };
+
+  type NewsItem = {
+    id : Nat;
+    title : Text;
+    summary : Text;
+    imageUrl : Text;
+    link : Text;
+    category : Text;
+    enabled : Bool;
+    createdAt : Int;
+  };
+
+  type JobItem = {
+    id : Nat;
+    title : Text;
+    department : Text;
+    location : Text;
+    lastDate : Text;
+    applyLink : Text;
+    category : Text;
+    enabled : Bool;
+    createdAt : Int;
+  };
+
+  type CustomCode = {
+    id : Nat;
+    name : Text;
+    code : Text;
+    btnLabel : Text;
+    icon : Text;
+    placement : Text;
+    enabled : Bool;
+  };
+
+  type ScrapRate = {
+    id : Nat;
+    itemName : Text;
+    ratePerKg : Float;
+    ratePerGram : Float;
+    enabled : Bool;
+  };
+
+  type VideoItem = {
+    id : Nat;
+    title : Text;
+    videoUrl : Text;
+    thumbnailUrl : Text;
+    platform : Text;
+    category : Text;
+    enabled : Bool;
+    createdAt : Int;
+  };
+
+  // ── Seed helper ──────────────────────────────────────────────────────────
+
+  func ensureScrapRatesSeeded() {
+    if (not scrapRatesSeeded) {
+      scrapRates.add(1, { id = 1; itemName = "Lohaa (Iron)";    ratePerKg = 25.0;  ratePerGram = 0.025;  enabled = true });
+      scrapRates.add(2, { id = 2; itemName = "Kaagaz (Paper)";  ratePerKg = 8.0;   ratePerGram = 0.008;  enabled = true });
+      scrapRates.add(3, { id = 3; itemName = "Taamba (Copper)"; ratePerKg = 450.0; ratePerGram = 0.45;   enabled = true });
+      scrapRatesSeeded := true;
+    };
+  };
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   func getUserByIdInternal(userId : Nat) : ?User {
     for ((mobile, user) in users.entries()) {
@@ -968,5 +1067,234 @@ persistent actor {
         order.providerId == userId and order.status == status
       }
     );
+  };
+
+  // ── CATEGORIES CRUD ───────────────────────────────────────────────────────
+
+  public query func getCategories() : async [Category] {
+    categories.values().toArray();
+  };
+
+  public shared ({ caller }) func addCategory(name : Text, emoji : Text, color : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add categories");
+    };
+    let id = nextCategoryId;
+    categories.add(id, { id; name; emoji; color; enabled = true });
+    nextCategoryId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateCategory(id : Nat, name : Text, emoji : Text, color : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update categories");
+    };
+    switch (categories.get(id)) {
+      case null { false };
+      case (?_) {
+        categories.add(id, { id; name; emoji; color; enabled });
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteCategory(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete categories");
+    };
+    if (categories.containsKey(id)) {
+      categories.remove(id);
+      true;
+    } else { false };
+  };
+
+  // ── NEWS CRUD ─────────────────────────────────────────────────────────────
+
+  public query func getNews() : async [NewsItem] {
+    newsItems.values().toArray();
+  };
+
+  public shared ({ caller }) func addNews(title : Text, summary : Text, imageUrl : Text, link : Text, category : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add news");
+    };
+    let id = nextNewsId;
+    newsItems.add(id, { id; title; summary; imageUrl; link; category; enabled = true; createdAt = Time.now() });
+    nextNewsId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateNews(id : Nat, title : Text, summary : Text, imageUrl : Text, link : Text, category : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update news");
+    };
+    switch (newsItems.get(id)) {
+      case null { false };
+      case (?existing) {
+        newsItems.add(id, { id; title; summary; imageUrl; link; category; enabled; createdAt = existing.createdAt });
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteNews(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete news");
+    };
+    if (newsItems.containsKey(id)) {
+      newsItems.remove(id);
+      true;
+    } else { false };
+  };
+
+  // ── JOBS CRUD ─────────────────────────────────────────────────────────────
+
+  public query func getJobs() : async [JobItem] {
+    jobItems.values().toArray();
+  };
+
+  public shared ({ caller }) func addJob(title : Text, department : Text, location : Text, lastDate : Text, applyLink : Text, category : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add jobs");
+    };
+    let id = nextJobId;
+    jobItems.add(id, { id; title; department; location; lastDate; applyLink; category; enabled = true; createdAt = Time.now() });
+    nextJobId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateJob(id : Nat, title : Text, department : Text, location : Text, lastDate : Text, applyLink : Text, category : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update jobs");
+    };
+    switch (jobItems.get(id)) {
+      case null { false };
+      case (?existing) {
+        jobItems.add(id, { id; title; department; location; lastDate; applyLink; category; enabled; createdAt = existing.createdAt });
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteJob(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete jobs");
+    };
+    if (jobItems.containsKey(id)) {
+      jobItems.remove(id);
+      true;
+    } else { false };
+  };
+
+  // ── CUSTOM CODES CRUD ─────────────────────────────────────────────────────
+
+  public query func getCustomCodes() : async [CustomCode] {
+    customCodes.values().toArray();
+  };
+
+  public shared ({ caller }) func addCustomCode(name : Text, code : Text, btnLabel : Text, icon : Text, placement : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add custom codes");
+    };
+    let id = nextCustomCodeId;
+    customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled = true });
+    nextCustomCodeId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateCustomCode(id : Nat, name : Text, code : Text, btnLabel : Text, icon : Text, placement : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update custom codes");
+    };
+    if (customCodes.containsKey(id)) {
+      customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled });
+      true;
+    } else { false };
+  };
+
+  public shared ({ caller }) func deleteCustomCode(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete custom codes");
+    };
+    if (customCodes.containsKey(id)) {
+      customCodes.remove(id);
+      true;
+    } else { false };
+  };
+
+  // ── SCRAP RATES CRUD ──────────────────────────────────────────────────────
+
+  public query func getScrapRates() : async [ScrapRate] {
+    scrapRates.values().toArray();
+  };
+
+  public shared ({ caller }) func addScrapRate(itemName : Text, ratePerKg : Float, ratePerGram : Float) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add scrap rates");
+    };
+    ensureScrapRatesSeeded();
+    let id = nextScrapRateId;
+    scrapRates.add(id, { id; itemName; ratePerKg; ratePerGram; enabled = true });
+    nextScrapRateId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateScrapRate(id : Nat, itemName : Text, ratePerKg : Float, ratePerGram : Float, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update scrap rates");
+    };
+    if (scrapRates.containsKey(id)) {
+      scrapRates.add(id, { id; itemName; ratePerKg; ratePerGram; enabled });
+      true;
+    } else { false };
+  };
+
+  public shared ({ caller }) func deleteScrapRate(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete scrap rates");
+    };
+    if (scrapRates.containsKey(id)) {
+      scrapRates.remove(id);
+      true;
+    } else { false };
+  };
+
+  // ── VIDEOS CRUD ───────────────────────────────────────────────────────────
+
+  public query func getVideos() : async [VideoItem] {
+    videos.values().toArray();
+  };
+
+  public shared ({ caller }) func addVideo(title : Text, videoUrl : Text, thumbnailUrl : Text, platform : Text, category : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add videos");
+    };
+    let id = nextVideoId;
+    videos.add(id, { id; title; videoUrl; thumbnailUrl; platform; category; enabled = true; createdAt = Time.now() });
+    nextVideoId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateVideo(id : Nat, title : Text, videoUrl : Text, thumbnailUrl : Text, platform : Text, category : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update videos");
+    };
+    switch (videos.get(id)) {
+      case null { false };
+      case (?existing) {
+        videos.add(id, { id; title; videoUrl; thumbnailUrl; platform; category; enabled; createdAt = existing.createdAt });
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteVideo(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete videos");
+    };
+    if (videos.containsKey(id)) {
+      videos.remove(id);
+      true;
+    } else { false };
   };
 };

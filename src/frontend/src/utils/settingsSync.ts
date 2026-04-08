@@ -1,4 +1,23 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+
+// Module-level queryClient ref that gets set by the provider
+let _queryClient: ReturnType<typeof useQueryClient> | null = null;
+
+/** Call this inside a component that has QueryClient access to register it */
+export function useRegisterQueryClient() {
+  const qc = useQueryClient();
+  _queryClient = qc;
+}
+
+const CONTENT_QUERY_KEYS = [
+  ["categories"],
+  ["news"],
+  ["jobs"],
+  ["custom-codes"],
+  ["scrap-rates"],
+  ["videos"],
+];
 
 export function broadcastSettingsChange() {
   // Notify all listeners on current page
@@ -8,6 +27,12 @@ export function broadcastSettingsChange() {
     localStorage.setItem("dz_sync_ts", Date.now().toString());
   } catch {
     // ignore
+  }
+  // Invalidate React Query caches so 2-second pollers refetch immediately
+  if (_queryClient) {
+    for (const queryKey of CONTENT_QUERY_KEYS) {
+      _queryClient.invalidateQueries({ queryKey });
+    }
   }
 }
 

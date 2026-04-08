@@ -18,8 +18,8 @@ let coinId = 0;
 
 function randomCoinPosition(): THREE.Vector3 {
   const angle = Math.random() * Math.PI * 2;
-  const r = 2 + Math.random() * 14;
-  return new THREE.Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r - 3);
+  const r = 3 + Math.random() * 16;
+  return new THREE.Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r);
 }
 
 export function CoinManager({
