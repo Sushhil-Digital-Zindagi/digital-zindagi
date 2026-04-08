@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>डिजिटल ज़िंदगी - स्मार्ट डायरी</title>
+    <style>
+        :root { --primary: #d32f2f; --secondary: #25D366; --dark: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 10px; margin: 0; }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; border-radius: 0 0 15px 15px; font-weight: bold; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 10px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        
+        .entry-card { background: white; padding: 15px; border-radius: 10px; margin-top: 12px; border-left: 6px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .paid-no { border-left-color: var(--primary); }
+        .paid-yes { border-left-color: var(--secondary); background: #fafffa; }
+        
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .name { font-weight: bold; font-size: 18px; color: var(--dark); }
+        .amount { color: var(--primary); font-weight: bold; font-size: 18px; }
+        .btn-msg { background: #25D366; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-del { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+        
+        .ad-space { width: 100%; height: 50px; background: #eee; margin: 15px 0; text-align: center; line-height: 50px; border: 1px dashed #ccc; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="header">डिजिटल ज़िंदगी - स्मार्ट डायरी 📓</div>
+
+<div class="ad-space">विज्ञापन यहाँ दिखेगा</div>
+
+<div class="input-box">
+    <input type="text" id="shopName" placeholder="दुकान का नाम (उदा: सचिन स्टोर)" style="border: 2px solid #25D366;">
+    <hr>
+    <input type="text" id="cName" placeholder="ग्राहक का नाम">
+    <input type="number" id="cPhone" placeholder="मोबाइल नंबर (10 अंक)">
+    <input type="number" id="cAmt" placeholder="उधार रकम (₹)">
+    <select id="cStatus">
+        <option value="no">पेमेंट बाकी है ⚠️</option>
+        <option value="yes">पेमेंट मिल गई ✅</option>
+    </select>
+    <button class="btn-save" onclick="saveData()">हिसाब सुरक्षित करें</button>
+</div>
+
+<div id="displayArea"></div>
+
+<script>
+    // नोट: अगर ऐप Play Store पर नहीं है, तो यहाँ अपना Drive या Website लिंक डालें
+    const appLink = "https://play.google.com/store/apps/details?id=com.digital.zindagi"; 
+
+    let entries = JSON.parse(localStorage.getItem('dzUdhar')) || [];
+
+    function showData() {
+        const area = document.getElementById('displayArea');
+        area.innerHTML = '';
+        entries.forEach((data, i) => {
+            const isPaid = data.status === 'yes';
+            area.innerHTML += `
+                <div class="entry-card ${isPaid ? 'paid-yes' : 'paid-no'}">
+                    <div class="row">
+                        <span class="name">${data.name}</span>
+                        <span class="amount">₹${data.amount}</span>
+                    </div>
+                    <div class="row">
+                        <small>${data.phone}</small>
+                        <small>${isPaid ? 'सफल ✅' : 'बाकी ⚠️'}</small>
+                    </div>
+                    <button class="btn-msg" onclick="sendWhatsApp(${i})">WhatsApp रिमाइंडर भेजें</button>
+                    <button class="btn-del" onclick="removeData(${i})">रिकॉर्ड डिलीट करें</button>
+                </div>
+            `;
+        });
+        localStorage.setItem('dzUdhar', JSON.stringify(entries));
+    }
+
+    function saveData() {
+        const name = document.getElementById('cName').value;
+        const phone = document.getElementById('cPhone').value;
+        const amount = document.getElementById('cAmt').value;
+        const status = document.getElementById('cStatus').value;
+        if(!name || !phone || !amount) return alert("कृपया पूरी जानकारी भरें!");
+        entries.push({name, phone, amount, status});
+        document.getElementById('cName').value = '';
+        document.getElementById('cPhone').value = '';
+        document.getElementById('cAmt').value = '';
+        showData();
+    }
+
+    function removeData(i) {
+        if(confirm("क्या आप इस रिकॉर्ड को हटाना चाहते हैं?")) {
+            entries.splice(i, 1);
+            showData();
+        }
+    }
+
+    function sendWhatsApp(i) {
+        const d = entries[i];
+        const sName = document.getElementById('shopName').value || "डिजिटल ज़िंदगी स्टोर";
+        
+        const text = `*हिसाब अपडेट: ${sName}*%0A%0Aनमस्ते *${d.name}*, आपका हिसाब अपडेट हुआ है।%0A%0A*राशि:* ₹${d.amount}%0A*स्टेटस:* ${d.status === 'yes' ? 'भुगतान सफल ✅' : 'पेमेंट बाकी है ⚠️'}%0A%0A━━━━━━━━━━━━━━━━━━━%0A📲 *अपना हिसाब देखें या ऐप डाउनलोड करें:*%0A${appLink}%0A━━━━━━━━━━━━━━━━━━━`;
+        
+        window.open(`https://wa.me/91${d.phone}?text=${text}`, '_blank');
+    }
+
+    showData();
+</script>
+
+</body>
+</html>
