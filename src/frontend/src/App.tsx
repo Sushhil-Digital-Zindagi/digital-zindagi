@@ -34,6 +34,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
 import ProviderProfilePage from "./pages/ProviderProfilePage";
 import ProviderSubscribePage from "./pages/ProviderSubscribePage";
+import RewardsWalletPage from "./pages/RewardsWalletPage";
 import ScrapCalculatorPage from "./pages/ScrapCalculatorPage";
 import SearchPage from "./pages/SearchPage";
 import SignupPage from "./pages/SignupPage";
@@ -134,6 +135,7 @@ function AppRoutes() {
           path="/percentage-calculator"
           element={<PercentageCalculatorPage />}
         />
+        <Route path="/rewards-wallet" element={<RewardsWalletPage />} />
         <Route path="/manager-login" element={<ManagerLoginPage />} />
         {/* Delivery Module */}
         <Route path="/delivery-register" element={<DeliveryRegisterPage />} />

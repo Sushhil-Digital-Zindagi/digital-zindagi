@@ -61,6 +61,8 @@ import {
   useDeleteNews,
   useDeleteScrapRate,
   useDeleteVideo,
+  useGetAllLudoRedemptionRequests,
+  useGetFirebaseConfigLink,
   useJobs,
   useNews,
   useProvidersPendingApproval,
@@ -68,11 +70,13 @@ import {
   useRejectProvider,
   useScrapRates,
   useSearchUsers,
+  useSetFirebaseConfigLink,
   useSubscriptionPricing,
   useUpdateAppSettings,
   useUpdateCategory,
   useUpdateCustomCode,
   useUpdateJob,
+  useUpdateLudoRedemptionStatus,
   useUpdateNews,
   useUpdateScrapRate,
   useUpdateToggle,
@@ -81,6 +85,7 @@ import {
 import { useNavigate } from "../lib/router";
 import type {
   Banner,
+  LudoRedemptionRequest,
   ProviderProfile,
   SubscriptionPlan,
   User,
@@ -123,7 +128,8 @@ type AdminSection =
   | "masterToggles"
   | "earningDashboard"
   | "customCode"
-  | "udhaarBook";
+  | "udhaarBook"
+  | "ludoSettings";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -7501,6 +7507,490 @@ function CustomCodeManagerSection() {
   );
 }
 
+// ---- Ludo & Game Settings Section ----
+function LudoSettingsSection() {
+  const [ludoEnabled, setLudoEnabled] = useState<boolean>(
+    () => localStorage.getItem("dz_ludo_enabled") !== "false",
+  );
+  const [rewardsEnabled, setRewardsEnabled] = useState<boolean>(
+    () => localStorage.getItem("dz_ludo_rewards_enabled") !== "false",
+  );
+  const [firebaseUrl, setFirebaseUrl] = useState<string>(
+    () => localStorage.getItem("dz_firebase_config_url") ?? "",
+  );
+  const [admobConfig, setAdmobConfig] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("dz_admob_config") ?? "{}",
+      ) as Record<string, string>;
+    } catch {
+      return {};
+    }
+  });
+  const [fbSaving, setFbSaving] = useState(false);
+
+  // Dynamic Reward Controls
+  const [pointsPerAd, setPointsPerAd] = useState<string>(
+    () => localStorage.getItem("dz_ludo_points_per_ad") ?? "10",
+  );
+  const [redemptionRate, setRedemptionRate] = useState<string>(
+    () => localStorage.getItem("dz_ludo_redemption_rate") ?? "100",
+  );
+  const [minWithdrawal, setMinWithdrawal] = useState<string>(
+    () => localStorage.getItem("dz_ludo_min_withdrawal") ?? "100",
+  );
+  const [rewardCtrlSaving, setRewardCtrlSaving] = useState(false);
+
+  const { data: allRequests, isLoading: reqLoading } =
+    useGetAllLudoRedemptionRequests();
+  const { data: firebaseLinkData } = useGetFirebaseConfigLink();
+  const setFirebaseLink = useSetFirebaseConfigLink();
+  const updateStatus = useUpdateLudoRedemptionStatus();
+
+  useEffect(() => {
+    if (firebaseLinkData) setFirebaseUrl(firebaseLinkData);
+  }, [firebaseLinkData]);
+
+  const handleLudoToggle = (val: boolean) => {
+    setLudoEnabled(val);
+    localStorage.setItem("dz_ludo_enabled", val ? "true" : "false");
+    broadcastSettingsChange();
+    toast.success(`Ludo Game ${val ? "ON" : "OFF"} ho gaya!`);
+  };
+
+  const handleRewardsToggle = (val: boolean) => {
+    setRewardsEnabled(val);
+    localStorage.setItem("dz_ludo_rewards_enabled", val ? "true" : "false");
+    broadcastSettingsChange();
+    toast.success(`Reward System ${val ? "ON" : "OFF"} ho gaya!`);
+  };
+
+  const handleAdmobSave = (key: string, val: string) => {
+    const updated = { ...admobConfig, [key]: val };
+    setAdmobConfig(updated);
+    localStorage.setItem("dz_admob_config", JSON.stringify(updated));
+    broadcastSettingsChange();
+  };
+
+  const handleRewardCtrlSave = () => {
+    setRewardCtrlSaving(true);
+    const ppe = Number.parseInt(pointsPerAd, 10);
+    const rr = Number.parseInt(redemptionRate, 10);
+    const mw = Number.parseInt(minWithdrawal, 10);
+    if (Number.isNaN(ppe) || ppe < 1) {
+      toast.error("Points Per Ad valid number hona chahiye (min 1)");
+      setRewardCtrlSaving(false);
+      return;
+    }
+    if (Number.isNaN(rr) || rr < 1) {
+      toast.error("Redemption Rate valid number hona chahiye (min 1)");
+      setRewardCtrlSaving(false);
+      return;
+    }
+    if (Number.isNaN(mw) || mw < 1) {
+      toast.error("Minimum Withdrawal valid number hona chahiye (min 1)");
+      setRewardCtrlSaving(false);
+      return;
+    }
+    localStorage.setItem("dz_ludo_points_per_ad", String(ppe));
+    localStorage.setItem("dz_ludo_redemption_rate", String(rr));
+    localStorage.setItem("dz_ludo_min_withdrawal", String(mw));
+    broadcastSettingsChange();
+    setTimeout(() => {
+      setRewardCtrlSaving(false);
+      toast.success("Dynamic Reward Controls save ho gaye!");
+    }, 300);
+  };
+
+  const handleFirebaseSave = async () => {
+    setFbSaving(true);
+    try {
+      await setFirebaseLink.mutateAsync(firebaseUrl);
+      toast.success("Firebase Config Link save ho gaya!");
+      broadcastSettingsChange();
+    } catch {
+      localStorage.setItem("dz_firebase_config_url", firebaseUrl);
+      toast.success("Firebase Config Link save ho gaya (local)!");
+    } finally {
+      setFbSaving(false);
+    }
+  };
+
+  const handleApprove = async (req: LudoRedemptionRequest) => {
+    try {
+      await updateStatus.mutateAsync({ requestId: req.id, status: "approved" });
+      toast.success(`${req.userName} ki request approve ho gayi!`);
+    } catch {
+      toast.error("Status update nahi ho saca");
+    }
+  };
+
+  const handleReject = async (req: LudoRedemptionRequest) => {
+    try {
+      await updateStatus.mutateAsync({ requestId: req.id, status: "rejected" });
+      toast.success("Request reject ho gayi.");
+    } catch {
+      toast.error("Status update nahi ho saca");
+    }
+  };
+
+  const statusBadge = (status: LudoRedemptionRequest["status"]) => {
+    if (status === "approved")
+      return (
+        <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
+          ✅ Approved
+        </span>
+      );
+    if (status === "rejected")
+      return (
+        <span className="text-xs bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full">
+          ❌ Rejected
+        </span>
+      );
+    return (
+      <span className="text-xs bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">
+        🕐 Pending
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Toggle 1: Enable/Disable Ludo Game */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-bold text-foreground text-base">
+              🎲 Ludo Game Enable/Disable
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {ludoEnabled
+                ? "Ludo Game ON hai — Sidebar mein dikh raha hai"
+                : "Ludo Game OFF hai — Sidebar mein nahi dikhega"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.ludo_toggle"
+            onClick={() => handleLudoToggle(!ludoEnabled)}
+            className={`relative w-14 h-7 rounded-full transition-colors focus:outline-none ${
+              ludoEnabled ? "bg-emerald-500" : "bg-gray-300"
+            }`}
+            aria-label="Ludo game toggle"
+          >
+            <span
+              className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                ludoEnabled ? "translate-x-7" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Toggle 2: Enable/Disable Reward System */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-bold text-foreground text-base">
+              🎁 Reward System Enable/Disable
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {rewardsEnabled
+                ? "Rewards ON hain — Points earn aur redeem ho sakte hain"
+                : "Rewards OFF hain — Wallet aur points band hain"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.rewards_toggle"
+            onClick={() => handleRewardsToggle(!rewardsEnabled)}
+            className={`relative w-14 h-7 rounded-full transition-colors focus:outline-none ${
+              rewardsEnabled ? "bg-emerald-500" : "bg-gray-300"
+            }`}
+            aria-label="Reward system toggle"
+          >
+            <span
+              className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                rewardsEnabled ? "translate-x-7" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Dynamic Reward Controls */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <div>
+          <h3 className="font-heading font-bold text-foreground text-base flex items-center gap-2">
+            🎯 Dynamic Reward Controls
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Yahan se rewards ke values control karein — users ke app mein 1-2
+            seconds mein update ho jaayenge.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label
+              htmlFor="ppa-input"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Points Per Ad (Har rewarded ad par kitne points milenge)
+            </label>
+            <input
+              id="ppa-input"
+              data-ocid="admin.points_per_ad_input"
+              type="number"
+              min={1}
+              value={pointsPerAd}
+              onChange={(e) => setPointsPerAd(e.target.value)}
+              placeholder="10"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Default: 10 — User ko har ad dekhne par itne points milenge
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor="rr-input"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Redemption Rate (Kitne Points = ₹1)
+            </label>
+            <input
+              id="rr-input"
+              data-ocid="admin.redemption_rate_input"
+              type="number"
+              min={1}
+              value={redemptionRate}
+              onChange={(e) => setRedemptionRate(e.target.value)}
+              placeholder="100"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Default: 100 — Matlab 100 points = ₹1 milenge
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor="mw-input"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Minimum Withdrawal (Redeem karne ke liye minimum points)
+            </label>
+            <input
+              id="mw-input"
+              data-ocid="admin.min_withdrawal_input"
+              type="number"
+              min={1}
+              value={minWithdrawal}
+              onChange={(e) => setMinWithdrawal(e.target.value)}
+              placeholder="100"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Default: 100 — Users ko kam se kam itne points chahiye redeem
+              karne ke liye
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          data-ocid="admin.reward_ctrl_save_btn"
+          onClick={handleRewardCtrlSave}
+          disabled={rewardCtrlSaving}
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm disabled:opacity-60 transition-colors"
+        >
+          {rewardCtrlSaving ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <CheckCircle size={14} />
+          )}
+          Reward Controls Save Karein
+        </button>
+      </div>
+
+      {/* Firebase Config Link */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          🔥 Firebase Config Link
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Apna Firebase config URL yahan paste karein. Isse app ko database se
+          connect kiya jaayega bina code change kiye.
+        </p>
+        <div>
+          <label
+            htmlFor="fb-config-url"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Firebase Config URL
+          </label>
+          <input
+            id="fb-config-url"
+            data-ocid="admin.firebase_config_input"
+            type="url"
+            value={firebaseUrl}
+            onChange={(e) => setFirebaseUrl(e.target.value)}
+            placeholder="https://your-project.firebaseio.com/..."
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <button
+          type="button"
+          data-ocid="admin.firebase_save_btn"
+          onClick={handleFirebaseSave}
+          disabled={fbSaving}
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm disabled:opacity-60"
+        >
+          {fbSaving ? <Loader2 size={14} className="animate-spin" /> : null}🔥
+          Firebase Config Save Karein
+        </button>
+      </div>
+
+      {/* Ludo AdMob IDs */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground">
+          📱 Ludo AdMob Configuration
+        </h3>
+        <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="ludo-banner-id"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Ludo Banner Ad Unit ID
+            </label>
+            <input
+              id="ludo-banner-id"
+              data-ocid="admin.ludo_banner_id_input"
+              type="text"
+              value={admobConfig.ludoBannerId ?? ""}
+              onChange={(e) => handleAdmobSave("ludoBannerId", e.target.value)}
+              placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Game screen ke bottom mein banner ad ke liye
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor="ludo-interstitial-id"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Ludo Interstitial Ad Unit ID
+            </label>
+            <input
+              id="ludo-interstitial-id"
+              data-ocid="admin.ludo_interstitial_id_input"
+              type="text"
+              value={admobConfig.ludoInterstitialId ?? ""}
+              onChange={(e) =>
+                handleAdmobSave("ludoInterstitialId", e.target.value)
+              }
+              placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Match khatam hone ke baad interstitial ad ke liye
+            </p>
+          </div>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <p className="text-xs text-amber-700 font-medium">
+            💡 IDs save hote hi automatically apply ho jaati hain. Baad mein
+            real Google AdMob account se actual IDs replace karein.
+          </p>
+        </div>
+      </div>
+
+      {/* Payout Requests */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          💸 Payout Requests (UPI Withdrawal)
+          {allRequests &&
+            allRequests.filter((r) => r.status === "pending").length > 0 && (
+              <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                {allRequests.filter((r) => r.status === "pending").length}{" "}
+                Pending
+              </span>
+            )}
+        </h3>
+
+        {reqLoading ? (
+          <div
+            data-ocid="admin.loading_state"
+            className="flex justify-center py-6"
+          >
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        ) : !allRequests || allRequests.length === 0 ? (
+          <div
+            data-ocid="admin.empty_state"
+            className="text-center py-10 text-muted-foreground"
+          >
+            <p className="text-3xl mb-2">💸</p>
+            <p className="font-medium">Koi payout request nahi hai abhi</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {allRequests.map((req, i) => (
+              <div
+                key={req.id}
+                data-ocid={`admin.payout_item.${i + 1}`}
+                className="border border-border rounded-xl p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground text-sm">
+                      {req.userName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      UPI:{" "}
+                      <span className="font-mono font-medium">{req.upiId}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {req.pointsRequested} pts → ₹{req.amountInr}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(req.createdAt).toLocaleDateString("hi-IN")}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">{statusBadge(req.status)}</div>
+                </div>
+                {req.status === "pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      data-ocid={`admin.approve_payout.${i + 1}`}
+                      onClick={() => handleApprove(req)}
+                      disabled={updateStatus.isPending}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-xl disabled:opacity-60"
+                    >
+                      <CheckCircle size={13} /> Approve &amp; Pay
+                    </button>
+                    <button
+                      type="button"
+                      data-ocid={`admin.reject_payout.${i + 1}`}
+                      onClick={() => handleReject(req)}
+                      disabled={updateStatus.isPending}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 text-red-600 border border-red-200 text-xs font-bold px-3 py-2 rounded-xl hover:bg-red-100 disabled:opacity-60"
+                    >
+                      <XCircle size={13} /> Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
@@ -7660,6 +8150,11 @@ export default function AdminDashboardPage() {
       label: "⚡ Custom Code",
       icon: <span>⚡</span>,
     },
+    {
+      key: "ludoSettings" as AdminSection,
+      label: "🎲 Ludo & Game Settings",
+      icon: <span>🎲</span>,
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -7740,6 +8235,8 @@ export default function AdminDashboardPage() {
         return <EarningDashboardSection />;
       case "customCode" as AdminSection:
         return <CustomCodeManagerSection />;
+      case "ludoSettings" as AdminSection:
+        return <LudoSettingsSection />;
       default:
         return <UserManagement />;
     }

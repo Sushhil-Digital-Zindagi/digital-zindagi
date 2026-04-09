@@ -1432,3 +1432,270 @@ export function useAllUdhaarTransactions(shopId: string) {
     refetchInterval: 3000,
   });
 }
+
+// =====================================================================
+// LUDO & REWARDS HOOKS
+// =====================================================================
+
+import type { LudoRedemptionRequest } from "../types/appTypes";
+
+type LudoActor = {
+  getLudoPoints: (userId: string) => Promise<bigint>;
+  addLudoPoints: (userId: string, points: bigint) => Promise<void>;
+  setLudoPoints: (userId: string, points: bigint) => Promise<void>;
+  addLudoRedemptionRequest: (
+    userId: string,
+    userName: string,
+    upiId: string,
+    pointsRequested: bigint,
+    amountInr: bigint,
+  ) => Promise<bigint>;
+  getLudoRedemptionRequests: () => Promise<LudoRedemptionRequest[]>;
+  getUserLudoRedemptionRequests: (
+    userId: string,
+  ) => Promise<LudoRedemptionRequest[]>;
+  updateLudoRedemptionStatus: (
+    requestId: bigint,
+    status: string,
+  ) => Promise<boolean>;
+  getFirebaseConfigLink: () => Promise<string>;
+  setFirebaseConfigLink: (url: string) => Promise<void>;
+};
+
+function asLudoActor(actor: unknown): LudoActor {
+  return actor as LudoActor;
+}
+
+export function useLudoPoints(userId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<number>({
+    queryKey: ["ludoPoints", userId],
+    queryFn: async () => {
+      const lsKey = `dz_ludo_points_${userId}`;
+      if (!actor || !userId) {
+        const raw = localStorage.getItem(lsKey);
+        return raw ? Number.parseInt(raw, 10) || 0 : 0;
+      }
+      try {
+        const pts = await asLudoActor(actor).getLudoPoints(userId);
+        const val = Number(pts);
+        localStorage.setItem(lsKey, String(val));
+        return val;
+      } catch {
+        const raw = localStorage.getItem(lsKey);
+        return raw ? Number.parseInt(raw, 10) || 0 : 0;
+      }
+    },
+    enabled: !!userId && !isFetching,
+    refetchInterval: 5000,
+    staleTime: 3000,
+  });
+}
+
+export function useAddLudoPoints() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      points,
+    }: { userId: string; points: number }) => {
+      const lsKey = `dz_ludo_points_${userId}`;
+      const cur = Number.parseInt(localStorage.getItem(lsKey) ?? "0", 10) || 0;
+      const next = Math.max(0, cur + points);
+      localStorage.setItem(lsKey, String(next));
+      if (!actor) return;
+      try {
+        await asLudoActor(actor).addLudoPoints(userId, BigInt(points));
+      } catch {
+        // localStorage already updated
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["ludoPoints", vars.userId] });
+    },
+  });
+}
+
+export function useGetUserRedemptionRequests(userId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<LudoRedemptionRequest[]>({
+    queryKey: ["userLudoRequests", userId],
+    queryFn: async () => {
+      if (!actor || !userId) {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+      try {
+        return await asLudoActor(actor).getUserLudoRedemptionRequests(userId);
+      } catch {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+    },
+    enabled: !!userId && !isFetching,
+    refetchInterval: 5000,
+  });
+}
+
+export function useAddLudoRedemptionRequest() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      userId: string;
+      userName: string;
+      upiId: string;
+      pointsRequested: number;
+      amountInr: number;
+    }) => {
+      const { userId, userName, upiId, pointsRequested, amountInr } = params;
+      if (actor) {
+        try {
+          const id = await asLudoActor(actor).addLudoRedemptionRequest(
+            userId,
+            userName,
+            upiId,
+            BigInt(pointsRequested),
+            BigInt(amountInr),
+          );
+          return Number(id);
+        } catch {
+          // fall through to localStorage
+        }
+      }
+      const req: LudoRedemptionRequest = {
+        id: Date.now(),
+        userId,
+        userName,
+        upiId,
+        pointsRequested,
+        amountInr,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+      const all: LudoRedemptionRequest[] = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      })();
+      all.unshift(req);
+      localStorage.setItem("dz_ludo_requests", JSON.stringify(all));
+      return req.id;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["userLudoRequests", vars.userId] });
+      qc.invalidateQueries({ queryKey: ["allLudoRequests"] });
+    },
+  });
+}
+
+export function useGetAllLudoRedemptionRequests() {
+  const { actor, isFetching } = useActor();
+  return useQuery<LudoRedemptionRequest[]>({
+    queryKey: ["allLudoRequests"],
+    queryFn: async () => {
+      if (!actor) {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+      try {
+        return await asLudoActor(actor).getLudoRedemptionRequests();
+      } catch {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+  });
+}
+
+export function useUpdateLudoRedemptionStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      status,
+    }: { requestId: number; status: string }) => {
+      if (actor) {
+        try {
+          return await asLudoActor(actor).updateLudoRedemptionStatus(
+            BigInt(requestId),
+            status,
+          );
+        } catch {
+          // fall through to localStorage
+        }
+      }
+      const all: LudoRedemptionRequest[] = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("dz_ludo_requests") ?? "[]");
+        } catch {
+          return [];
+        }
+      })();
+      const updated = all.map((r) =>
+        r.id === requestId
+          ? { ...r, status: status as LudoRedemptionRequest["status"] }
+          : r,
+      );
+      localStorage.setItem("dz_ludo_requests", JSON.stringify(updated));
+      return true;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allLudoRequests"] });
+      qc.invalidateQueries({ queryKey: ["userLudoRequests"] });
+    },
+  });
+}
+
+export function useGetFirebaseConfigLink() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string>({
+    queryKey: ["firebaseConfigLink"],
+    queryFn: async () => {
+      if (!actor) return localStorage.getItem("dz_firebase_config_url") ?? "";
+      try {
+        const url = await asLudoActor(actor).getFirebaseConfigLink();
+        localStorage.setItem("dz_firebase_config_url", url);
+        return url;
+      } catch {
+        return localStorage.getItem("dz_firebase_config_url") ?? "";
+      }
+    },
+    enabled: !isFetching,
+  });
+}
+
+export function useSetFirebaseConfigLink() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (url: string) => {
+      localStorage.setItem("dz_firebase_config_url", url);
+      if (!actor) return;
+      try {
+        await asLudoActor(actor).setFirebaseConfigLink(url);
+      } catch {
+        // localStorage already saved
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["firebaseConfigLink"] }),
+  });
+}

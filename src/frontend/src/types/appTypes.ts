@@ -220,6 +220,43 @@ export interface UdhaarTransaction {
   createdAt: number;
 }
 
+// ---- Ludo Game types ----
+
+export interface LudoToken {
+  id: number;
+  playerId: number;
+  position: number;
+  isHome: boolean;
+  isFinished: boolean;
+}
+
+export interface LudoPlayer {
+  id: number;
+  name: string;
+  color: "red" | "blue" | "green" | "yellow";
+  tokens: LudoToken[];
+}
+
+export interface LudoGameState {
+  players: LudoPlayer[];
+  currentPlayerIndex: number;
+  diceValue: number;
+  phase: "setup" | "disclaimer" | "playing" | "finished";
+  winner: LudoPlayer | null;
+  gameId: string;
+}
+
+export interface LudoRedemptionRequest {
+  id: number;
+  userId: string;
+  userName: string;
+  upiId: string;
+  pointsRequested: number;
+  amountInr: number;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
 /** Extended actor interface covering all methods called directly by pages. */
 export interface BackendActorMethods {
   // Auth

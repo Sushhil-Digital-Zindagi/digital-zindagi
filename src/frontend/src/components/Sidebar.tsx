@@ -29,16 +29,23 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
 
-  // Game visibility — controlled by Admin toggle (dz_game_visible)
+  // Game visibility — controlled by Admin toggle (dz_game_visible) AND dz_ludo_enabled
   const [showGame, setShowGame] = useState<boolean>(() => {
-    const val = localStorage.getItem("dz_game_visible");
-    return val === null || val === "true";
+    const gameVisible = localStorage.getItem("dz_game_visible");
+    const ludoEnabled = localStorage.getItem("dz_ludo_enabled");
+    return (
+      (gameVisible === null || gameVisible === "true") &&
+      ludoEnabled !== "false"
+    );
   });
 
   useEffect(() => {
     const syncVisibility = () => {
       const gameVal = localStorage.getItem("dz_game_visible");
-      setShowGame(gameVal === null || gameVal === "true");
+      const ludoVal = localStorage.getItem("dz_ludo_enabled");
+      setShowGame(
+        (gameVal === null || gameVal === "true") && ludoVal !== "false",
+      );
     };
 
     // Listen to real-time broadcast from Admin Panel
