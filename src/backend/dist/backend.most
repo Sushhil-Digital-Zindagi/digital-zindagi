@@ -113,6 +113,27 @@ type SubscriptionPlan__552945260 = {#oneMonth; #threeMonths; #twelveMonths};
 type SubscriptionPricing__787813395 =
   {oneMonthPrice : Nat; threeMonthPrice : Nat; twelveMonthPrice : Nat};
 type SubscriptionStatus__278950313 = {#active; #expired; #pending; #rejected};
+type UdhaarCustomer__381297801 =
+  {
+    address : Text;
+    createdAt : Int;
+    id : Text;
+    mobile : Text;
+    name : Text;
+    shopId : Text
+  };
+type UdhaarTransaction__696619663 =
+  {
+    amount : Float;
+    createdAt : Int;
+    customerId : Text;
+    date : Text;
+    id : Text;
+    note : Text;
+    shopId : Text;
+    status : Text;
+    transactionType : Text
+  };
 type UserProfile__491224006 =
   {
     mobile : MobileNumber__283646848;
@@ -213,6 +234,16 @@ actor {
   stable var subscriptionPricing : ?SubscriptionPricing__787813395;
   stable var toggles :
     {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
+  stable var udhaarCustomers :
+    {
+      var root : Node__46230540<Text, UdhaarCustomer__381297801>;
+      var size : Nat__490723111
+    };
+  stable var udhaarTransactions :
+    {
+      var root : Node__46230540<Text, UdhaarTransaction__696619663>;
+      var size : Nat__490723111
+    };
   stable var userIdToPrincipal :
     {var root : Node__46230540<Nat, Principal>; var size : Nat__490723111};
   stable var userProfiles :

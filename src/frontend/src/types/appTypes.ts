@@ -198,6 +198,28 @@ export interface VideoItem {
   createdAt: number;
 }
 
+// ---- Udhaar Book types ----
+
+export interface UdhaarCustomer {
+  id: string;
+  providerId: string;
+  name: string;
+  mobile: string;
+  address: string;
+  createdAt: number;
+}
+
+export interface UdhaarTransaction {
+  id: string;
+  customerId: string;
+  amount: number;
+  txType: "give" | "take";
+  date: string;
+  note: string;
+  status: "pending" | "paid";
+  createdAt: number;
+}
+
 /** Extended actor interface covering all methods called directly by pages. */
 export interface BackendActorMethods {
   // Auth

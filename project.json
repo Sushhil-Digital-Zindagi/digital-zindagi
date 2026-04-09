@@ -1,27 +1,28 @@
 {
-  "overview": "Digital Zindagi is a premium multi-vendor marketplace PWA for the Indian market. It features real-time admin control, provider discovery with GPS filtering, a delivery module with OTP verification, student tools, video gallery with AdMob, and an isometric alien shooter game — all manageable from a single Admin Panel.",
+  "overview": "Digital Zindagi is a premium multi-vendor marketplace PWA for India — emerald green branded, mobile-first, fully installable. Supports providers, customers, admins, managers, and delivery boys with real-time sync, GPS-based discovery, and comprehensive admin control.",
   "features": [
-    "Real-time Admin Panel with 1-2 second sync to all users",
-    "Category, News, Jobs, Custom Code full CRUD from admin",
-    "Isometric Alien Shooter game accessible from sidebar menu",
-    "GPS-based provider discovery with 2/5/10 KM radius",
-    "Delivery module with OTP verification and wallet system",
-    "Video Gallery with AdMob interstitials and anti-AdBlock fallback",
-    "Student tools: Image Resizer, AI Enhancer, Age Calculator, Percentage Calculator",
-    "PWA install as standalone app with custom Digital Zindagi branding",
-    "Multi-role access: Super Admin, Manager, Provider, Customer, Delivery Boy",
-    "30-day session persistence with safe in-app WebView"
+    "Udhaar Khata on Homepage next to Rate Calculator",
+    "AdMob Banner ads on Udhaar and Rate Calculator pages",
+    "Interstitial ads after transaction save and WhatsApp share",
+    "Admin toggle for Udhaar Khata feature with Unit ID fields",
+    "Provider data isolation via secure principal-based storage",
+    "Real-time admin sync for all settings",
+    "Multi-role access: Provider, Customer, Admin, Manager",
+    "GPS-based provider discovery",
+    "Video Gallery with platform and category filters",
+    "News, Jobs, Student Tools, Custom Code Manager"
   ],
   "category": "marketplace",
   "tags": [
     "marketplace",
-    "pwa",
-    "hindi",
-    "admin-panel",
-    "delivery",
-    "game",
     "india",
+    "pwa",
+    "udhaar",
+    "admob",
+    "provider",
+    "scrap-calculator",
+    "hindi",
     "multi-vendor"
   ],
-  "last_updated": "2026-04-08T12:07:10.547Z"
+  "last_updated": "2026-04-09T09:29:16.526Z"
 }

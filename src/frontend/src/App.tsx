@@ -38,6 +38,7 @@ import ScrapCalculatorPage from "./pages/ScrapCalculatorPage";
 import SearchPage from "./pages/SearchPage";
 import SignupPage from "./pages/SignupPage";
 import TermsPage from "./pages/TermsPage";
+import UdhaarBookPage from "./pages/UdhaarBookPage";
 
 function ProviderRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -71,6 +72,21 @@ function ManagerRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Udhaar Book is only for providers, admins, and super-admins. */
+function UdhaarRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isFullAdmin } = useAuth();
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-primary">Load Ho Raha Hai...</span>
+      </div>
+    );
+  const isProvider = user?.role === UserRole.provider;
+  if (!user || (!isProvider && !isFullAdmin))
+    return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   useEffect(() => {
     // Apply saved theme color
@@ -100,6 +116,14 @@ function AppRoutes() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/scrap-calculator" element={<ScrapCalculatorPage />} />
+        <Route
+          path="/udhaar-book"
+          element={
+            <UdhaarRoute>
+              <UdhaarBookPage />
+            </UdhaarRoute>
+          }
+        />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/image-resizer" element={<ImageResizerPage />} />

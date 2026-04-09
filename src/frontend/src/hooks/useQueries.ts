@@ -11,6 +11,8 @@ import type {
   ScrapRate,
   SubscriptionPlan,
   SubscriptionPricing,
+  UdhaarCustomer,
+  UdhaarTransaction,
   User,
   VideoItem,
 } from "../types/appTypes";
@@ -1125,5 +1127,308 @@ export function useUpdateAppSettings() {
         );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appSettings"] }),
+  });
+}
+
+// =====================================================================
+// UDHAAR BOOK HOOKS — canister-backed, provider-scoped
+// shopId = String(provider.userId) — used as the isolation key in the canister
+// =====================================================================
+
+import type { backendInterface } from "../backend.d.ts";
+
+/** Typed accessor for actor that exposes all Udhaar backend methods */
+type UdhaarActor = Pick<
+  backendInterface,
+  | "getUdhaarCustomers"
+  | "getUdhaarTransactions"
+  | "addUdhaarCustomer"
+  | "updateUdhaarCustomer"
+  | "deleteUdhaarCustomer"
+  | "addUdhaarTransaction"
+  | "markUdhaarTransactionPaid"
+  | "deleteUdhaarTransaction"
+>;
+
+function asUdhaarActor(actor: unknown): UdhaarActor {
+  return actor as UdhaarActor;
+}
+
+/** Map backend UdhaarCustomer (uses shopId) → frontend UdhaarCustomer (uses providerId) */
+function mapBackendCustomer(
+  c: import("../backend.d.ts").UdhaarCustomer,
+): UdhaarCustomer {
+  return {
+    id: c.id,
+    providerId: c.shopId,
+    name: c.name,
+    mobile: c.mobile,
+    address: c.address,
+    createdAt: Number(c.createdAt),
+  };
+}
+
+/** Map backend UdhaarTransaction (uses transactionType) → frontend UdhaarTransaction (uses txType) */
+function mapBackendTransaction(
+  t: import("../backend.d.ts").UdhaarTransaction,
+): UdhaarTransaction {
+  return {
+    id: t.id,
+    customerId: t.customerId,
+    amount: t.amount,
+    txType: (t.transactionType === "give" ? "give" : "take") as "give" | "take",
+    date: t.date,
+    note: t.note,
+    status: (t.status === "paid" ? "paid" : "pending") as "pending" | "paid",
+    createdAt: Number(t.createdAt),
+  };
+}
+
+/** localStorage cache keys for optimistic reads while canister fetches */
+function udhaarCustomersCacheKey(shopId: string) {
+  return `dz_udhaar_customers_${shopId}`;
+}
+function udhaarTransactionsCacheKey(shopId: string) {
+  return `dz_udhaar_txns_${shopId}`;
+}
+
+export function useUdhaarCustomers(shopId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UdhaarCustomer[]>({
+    queryKey: ["udhaarCustomers", shopId],
+    queryFn: async () => {
+      if (!actor)
+        return lsRead<UdhaarCustomer[]>(udhaarCustomersCacheKey(shopId), []);
+      try {
+        const raw = await asUdhaarActor(actor).getUdhaarCustomers();
+        const mapped = raw.map(mapBackendCustomer);
+        lsWrite(udhaarCustomersCacheKey(shopId), mapped);
+        return mapped;
+      } catch {
+        return lsRead<UdhaarCustomer[]>(udhaarCustomersCacheKey(shopId), []);
+      }
+    },
+    enabled: !!shopId && !isFetching,
+    staleTime: 0,
+    refetchInterval: 3000,
+  });
+}
+
+export function useUdhaarTransactions(customerId: string, shopId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UdhaarTransaction[]>({
+    queryKey: ["udhaarTransactions", customerId, shopId],
+    queryFn: async () => {
+      if (!actor) {
+        const cached = lsRead<UdhaarTransaction[]>(
+          udhaarTransactionsCacheKey(shopId),
+          [],
+        );
+        return cached.filter((t) => t.customerId === customerId);
+      }
+      try {
+        const raw =
+          await asUdhaarActor(actor).getUdhaarTransactions(customerId);
+        const mapped = (raw.__kind__ === "ok" ? raw.ok : []).map(
+          mapBackendTransaction,
+        );
+        // Merge into cache keyed by shopId so allUdhaarTransactions benefits too
+        const existing = lsRead<UdhaarTransaction[]>(
+          udhaarTransactionsCacheKey(shopId),
+          [],
+        );
+        const otherCust = existing.filter((t) => t.customerId !== customerId);
+        lsWrite(udhaarTransactionsCacheKey(shopId), [...otherCust, ...mapped]);
+        return mapped;
+      } catch {
+        const cached = lsRead<UdhaarTransaction[]>(
+          udhaarTransactionsCacheKey(shopId),
+          [],
+        );
+        return cached.filter((t) => t.customerId === customerId);
+      }
+    },
+    enabled: !!customerId && !!shopId && !isFetching,
+    staleTime: 0,
+    refetchInterval: 3000,
+  });
+}
+
+export function useAddUdhaarCustomer(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      data: Omit<UdhaarCustomer, "id" | "providerId" | "createdAt">,
+    ) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asUdhaarActor(actor).addUdhaarCustomer(
+        data.name,
+        data.mobile,
+        data.address,
+      );
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return mapBackendCustomer(result.ok);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] });
+      qc.invalidateQueries({ queryKey: ["allUdhaarTransactions", shopId] });
+    },
+  });
+}
+
+export function useUpdateUdhaarCustomer(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      data: Pick<UdhaarCustomer, "id" | "name" | "mobile" | "address">,
+    ) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asUdhaarActor(actor).updateUdhaarCustomer(
+        data.id,
+        data.name,
+        data.mobile,
+        data.address,
+      );
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return mapBackendCustomer(result.ok);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] }),
+  });
+}
+
+export function useDeleteUdhaarCustomer(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      const result =
+        await asUdhaarActor(actor).deleteUdhaarCustomer(customerId);
+      if (result.__kind__ === "err") throw new Error(result.err);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] });
+      qc.invalidateQueries({ queryKey: ["udhaarTransactions"] });
+      qc.invalidateQueries({ queryKey: ["allUdhaarTransactions", shopId] });
+    },
+  });
+}
+
+export function useAddUdhaarTransaction(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      data: Omit<UdhaarTransaction, "id" | "status" | "createdAt">,
+    ) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asUdhaarActor(actor).addUdhaarTransaction(
+        data.customerId,
+        data.amount,
+        data.txType, // "give" | "take"
+        data.date,
+        data.note,
+      );
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return mapBackendTransaction(result.ok);
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({
+        queryKey: ["udhaarTransactions", vars.customerId, shopId],
+      });
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] });
+      qc.invalidateQueries({ queryKey: ["allUdhaarTransactions", shopId] });
+    },
+  });
+}
+
+export function useMarkUdhaarTransactionPaid(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      txId,
+      customerId,
+    }: { txId: string; customerId: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asUdhaarActor(actor).markUdhaarTransactionPaid(txId);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return { txId, customerId };
+    },
+    onSuccess: (_data) => {
+      qc.invalidateQueries({
+        queryKey: ["udhaarTransactions", _data.customerId, shopId],
+      });
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] });
+      qc.invalidateQueries({ queryKey: ["allUdhaarTransactions", shopId] });
+    },
+  });
+}
+
+export function useDeleteUdhaarTransaction(shopId: string) {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      txId,
+      customerId,
+    }: { txId: string; customerId: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asUdhaarActor(actor).deleteUdhaarTransaction(txId);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return { txId, customerId };
+    },
+    onSuccess: (_data) => {
+      qc.invalidateQueries({
+        queryKey: ["udhaarTransactions", _data.customerId, shopId],
+      });
+      qc.invalidateQueries({ queryKey: ["udhaarCustomers", shopId] });
+      qc.invalidateQueries({ queryKey: ["allUdhaarTransactions", shopId] });
+    },
+  });
+}
+
+/**
+ * Aggregates all transactions across all of this provider's customers.
+ * Used for the dashboard stats (pending count, total balance).
+ * Polls every 3 seconds for real-time sync.
+ */
+export function useAllUdhaarTransactions(shopId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UdhaarTransaction[]>({
+    queryKey: ["allUdhaarTransactions", shopId],
+    queryFn: async () => {
+      // Use the customers list to fetch transactions per customer
+      if (!actor) {
+        return lsRead<UdhaarTransaction[]>(
+          udhaarTransactionsCacheKey(shopId),
+          [],
+        );
+      }
+      try {
+        const ua = asUdhaarActor(actor);
+        const customers = await ua.getUdhaarCustomers();
+        if (customers.length === 0) return [];
+        const txnArrays = await Promise.all(
+          customers.map((c) => ua.getUdhaarTransactions(c.id)),
+        );
+        const allMapped = txnArrays
+          .flatMap((r) => (r.__kind__ === "ok" ? r.ok : []))
+          .map(mapBackendTransaction);
+        lsWrite(udhaarTransactionsCacheKey(shopId), allMapped);
+        return allMapped;
+      } catch {
+        return lsRead<UdhaarTransaction[]>(
+          udhaarTransactionsCacheKey(shopId),
+          [],
+        );
+      }
+    },
+    enabled: !!shopId && !isFetching,
+    staleTime: 0,
+    refetchInterval: 3000,
   });
 }

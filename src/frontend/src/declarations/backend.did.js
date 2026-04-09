@@ -24,6 +24,25 @@ export const ServiceRate = IDL.Record({
   'description' : IDL.Text,
   'price' : IDL.Nat,
 });
+export const UdhaarCustomer = IDL.Record({
+  'id' : IDL.Text,
+  'shopId' : IDL.Text,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'address' : IDL.Text,
+  'mobile' : IDL.Text,
+});
+export const UdhaarTransaction = IDL.Record({
+  'id' : IDL.Text,
+  'status' : IDL.Text,
+  'transactionType' : IDL.Text,
+  'shopId' : IDL.Text,
+  'date' : IDL.Text,
+  'note' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'customerId' : IDL.Text,
+  'amount' : IDL.Float64,
+});
 export const SubscriptionPlan = IDL.Variant({
   'twelveMonths' : IDL.Null,
   'threeMonths' : IDL.Null,
@@ -237,6 +256,16 @@ export const idlService = IDL.Service({
     ),
   'addServiceRate' : IDL.Func([IDL.Nat, ServiceRate], [], []),
   'addShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'addUdhaarCustomer' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
+      [],
+    ),
+  'addUdhaarTransaction' : IDL.Func(
+      [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'addVideo' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -252,6 +281,16 @@ export const idlService = IDL.Service({
   'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'deleteUdhaarCustomer' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'deleteUdhaarTransaction' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteVideo' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'editBanner' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
@@ -306,6 +345,17 @@ export const idlService = IDL.Service({
       [IDL.Opt(SubscriptionPricing)],
       ['query'],
     ),
+  'getUdhaarBalance' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
+      ['query'],
+    ),
+  'getUdhaarCustomers' : IDL.Func([], [IDL.Vec(UdhaarCustomer)], ['query']),
+  'getUdhaarTransactions' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Vec(UdhaarTransaction), 'err' : IDL.Text })],
+      ['query'],
+    ),
   'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
   'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -319,6 +369,11 @@ export const idlService = IDL.Service({
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
+  'markUdhaarTransactionPaid' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'placeOrder' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Nat],
@@ -393,6 +448,16 @@ export const idlService = IDL.Service({
     ),
   'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
   'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+  'updateUdhaarCustomer' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
+      [],
+    ),
+  'updateUdhaarTransaction' : IDL.Func(
+      [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'updateVideo' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
       [IDL.Bool],
@@ -420,6 +485,25 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'description' : IDL.Text,
     'price' : IDL.Nat,
+  });
+  const UdhaarCustomer = IDL.Record({
+    'id' : IDL.Text,
+    'shopId' : IDL.Text,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'address' : IDL.Text,
+    'mobile' : IDL.Text,
+  });
+  const UdhaarTransaction = IDL.Record({
+    'id' : IDL.Text,
+    'status' : IDL.Text,
+    'transactionType' : IDL.Text,
+    'shopId' : IDL.Text,
+    'date' : IDL.Text,
+    'note' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'customerId' : IDL.Text,
+    'amount' : IDL.Float64,
   });
   const SubscriptionPlan = IDL.Variant({
     'twelveMonths' : IDL.Null,
@@ -634,6 +718,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'addServiceRate' : IDL.Func([IDL.Nat, ServiceRate], [], []),
     'addShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'addUdhaarCustomer' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
+        [],
+      ),
+    'addUdhaarTransaction' : IDL.Func(
+        [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'addVideo' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -649,6 +743,16 @@ export const idlFactory = ({ IDL }) => {
     'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'deleteUdhaarCustomer' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'deleteUdhaarTransaction' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteVideo' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'editBanner' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
@@ -703,6 +807,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(SubscriptionPricing)],
         ['query'],
       ),
+    'getUdhaarBalance' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
+        ['query'],
+      ),
+    'getUdhaarCustomers' : IDL.Func([], [IDL.Vec(UdhaarCustomer)], ['query']),
+    'getUdhaarTransactions' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Vec(UdhaarTransaction), 'err' : IDL.Text })],
+        ['query'],
+      ),
     'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
     'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
     'getUserProfile' : IDL.Func(
@@ -716,6 +831,11 @@ export const idlFactory = ({ IDL }) => {
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
+    'markUdhaarTransactionPaid' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'placeOrder' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Nat],
@@ -790,6 +910,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
     'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+    'updateUdhaarCustomer' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
+        [],
+      ),
+    'updateUdhaarTransaction' : IDL.Func(
+        [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'updateVideo' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [IDL.Bool],

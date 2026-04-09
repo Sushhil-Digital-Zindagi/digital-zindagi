@@ -122,7 +122,8 @@ type AdminSection =
   | "jobsManager"
   | "masterToggles"
   | "earningDashboard"
-  | "customCode";
+  | "customCode"
+  | "udhaarBook";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -6940,6 +6941,198 @@ function MasterSectionTogglesSection() {
 }
 
 // ============================================================
+// UDHAAR BOOK SETTINGS SECTION
+// ============================================================
+function UdhaarBookSettingsSection() {
+  const [udhaarEnabled, setUdhaarEnabled] = useState<boolean>(() => {
+    const val = localStorage.getItem("dz_udhaar_enabled");
+    return val === null || val === "true";
+  });
+  const [admobUdhaarBannerId, setAdmobUdhaarBannerId] = useState(() =>
+    (() => {
+      try {
+        return (
+          JSON.parse(localStorage.getItem("dz_admob_config") ?? "{}")
+            .udhaarBannerId ?? ""
+        );
+      } catch {
+        return "";
+      }
+    })(),
+  );
+  const [admobUdhaarInterstitialId, setAdmobUdhaarInterstitialId] = useState(
+    () =>
+      (() => {
+        try {
+          return (
+            JSON.parse(localStorage.getItem("dz_admob_config") ?? "{}")
+              .udhaarInterstitialId ?? ""
+          );
+        } catch {
+          return "";
+        }
+      })(),
+  );
+
+  const toggleUdhaar = () => {
+    const newVal = !udhaarEnabled;
+    localStorage.setItem("dz_udhaar_enabled", newVal ? "true" : "false");
+    setUdhaarEnabled(newVal);
+    broadcastSettingsChange();
+    toast.success(`Udhaar Book ${newVal ? "ON ✅" : "OFF 🔴"} kar diya!`);
+  };
+
+  const saveAdmobIds = () => {
+    try {
+      const existing = JSON.parse(
+        localStorage.getItem("dz_admob_config") ?? "{}",
+      );
+      const updated = {
+        ...existing,
+        udhaarBannerId: admobUdhaarBannerId.trim(),
+        udhaarInterstitialId: admobUdhaarInterstitialId.trim(),
+      };
+      localStorage.setItem("dz_admob_config", JSON.stringify(updated));
+    } catch {
+      localStorage.setItem(
+        "dz_admob_config",
+        JSON.stringify({
+          udhaarBannerId: admobUdhaarBannerId.trim(),
+          udhaarInterstitialId: admobUdhaarInterstitialId.trim(),
+        }),
+      );
+    }
+    broadcastSettingsChange();
+    toast.success("Udhaar AdMob IDs save ho gayi!");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Enable/Disable Toggle */}
+      <div
+        className={`bg-white rounded-2xl border-2 p-5 space-y-4 ${udhaarEnabled ? "border-emerald-300" : "border-slate-200"}`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-bold text-base">📒 Udhaar Book</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Homepage par "उधार खाता" card aur /udhaar-book page dikhana ya
+              chhupaana. Providers apne customers ka ledger manage kar sakte
+              hain.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.udhaar_toggle"
+            onClick={toggleUdhaar}
+            className="flex items-center gap-2 flex-shrink-0"
+          >
+            {udhaarEnabled ? (
+              <>
+                <ToggleRight size={32} className="text-emerald-600" />
+                <span className="text-emerald-600 text-xs font-bold">ON</span>
+              </>
+            ) : (
+              <>
+                <ToggleLeft size={32} className="text-muted-foreground" />
+                <span className="text-muted-foreground text-xs font-bold">
+                  OFF
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+        <div
+          className={`text-xs font-semibold px-3 py-2 rounded-xl ${udhaarEnabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-500"}`}
+        >
+          {udhaarEnabled
+            ? "✅ Udhaar Book homepage par dikh raha hai"
+            : "🔴 Udhaar Book homepage se chhupi hui hai"}
+        </div>
+      </div>
+
+      {/* AdMob Unit IDs for Udhaar */}
+      <div className="bg-white rounded-2xl border border-border p-5 space-y-4">
+        <h3 className="font-heading font-bold text-base">
+          💰 AdMob — Udhaar Book
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Udhaar Book page ke liye alag AdMob Unit IDs set karein. Agar khaali
+          chhodein to global Banner/Interstitial ID use hogi.
+        </p>
+        <div>
+          <label
+            htmlFor="admob-udhaar-banner"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Udhaar Banner Unit ID{" "}
+            <span className="text-xs text-muted-foreground font-normal">
+              (udhaarBannerId)
+            </span>
+          </label>
+          <input
+            id="admob-udhaar-banner"
+            type="text"
+            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+            value={admobUdhaarBannerId}
+            onChange={(e) => setAdmobUdhaarBannerId(e.target.value)}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            data-ocid="admin.udhaar_admob_banner_input"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="admob-udhaar-interstitial"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Udhaar Interstitial Unit ID{" "}
+            <span className="text-xs text-muted-foreground font-normal">
+              (udhaarInterstitialId)
+            </span>
+          </label>
+          <input
+            id="admob-udhaar-interstitial"
+            type="text"
+            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+            value={admobUdhaarInterstitialId}
+            onChange={(e) => setAdmobUdhaarInterstitialId(e.target.value)}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            data-ocid="admin.udhaar_admob_interstitial_input"
+          />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            यह Interstitial Ad transaction save hone ke baad aur WhatsApp share
+            ke baad show hogi.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={saveAdmobIds}
+          className="bg-primary text-primary-foreground font-bold px-5 py-3 rounded-xl text-sm hover:opacity-90 transition-opacity"
+          data-ocid="admin.udhaar_admob_save"
+        >
+          Udhaar AdMob IDs Save Karein
+        </button>
+        {(admobUdhaarBannerId || admobUdhaarInterstitialId) && (
+          <div className="text-xs text-muted-foreground break-all bg-muted rounded-lg px-3 py-2 space-y-1">
+            {admobUdhaarBannerId && (
+              <p>
+                Banner: <span className="font-mono">{admobUdhaarBannerId}</span>
+              </p>
+            )}
+            {admobUdhaarInterstitialId && (
+              <p>
+                Interstitial:{" "}
+                <span className="font-mono">{admobUdhaarInterstitialId}</span>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // EARNING DASHBOARD SECTION WRAPPER
 // ============================================================
 function EarningDashboardSection() {
@@ -7453,6 +7646,11 @@ export default function AdminDashboardPage() {
       icon: <span>🎛️</span>,
     },
     {
+      key: "udhaarBook" as AdminSection,
+      label: "📔 Udhaar Book Settings",
+      icon: <span>📔</span>,
+    },
+    {
       key: "earningDashboard" as AdminSection,
       label: "📊 Earning Dashboard",
       icon: <span>📊</span>,
@@ -7536,6 +7734,8 @@ export default function AdminDashboardPage() {
         return <JobsManagerSection />;
       case "masterToggles" as AdminSection:
         return <MasterSectionTogglesSection />;
+      case "udhaarBook" as AdminSection:
+        return <UdhaarBookSettingsSection />;
       case "earningDashboard" as AdminSection:
         return <EarningDashboardSection />;
       case "customCode" as AdminSection:

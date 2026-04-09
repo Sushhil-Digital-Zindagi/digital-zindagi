@@ -61,6 +61,10 @@ persistent actor {
   var videos = Map.empty<Nat, VideoItem>();
   var nextVideoId = 1;
 
+  // Udhaar Book state
+  var udhaarCustomers = Map.empty<Text, UdhaarCustomer>();
+  var udhaarTransactions = Map.empty<Text, UdhaarTransaction>();
+
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
 
@@ -250,6 +254,29 @@ persistent actor {
     platform : Text;
     category : Text;
     enabled : Bool;
+    createdAt : Int;
+  };
+
+  // ── Udhaar Book types ─────────────────────────────────────────────────────
+
+  type UdhaarCustomer = {
+    id : Text;
+    shopId : Text;
+    name : Text;
+    mobile : Text;
+    address : Text;
+    createdAt : Int;
+  };
+
+  type UdhaarTransaction = {
+    id : Text;
+    customerId : Text;
+    shopId : Text;
+    amount : Float;
+    transactionType : Text;   // "Give" | "Take"
+    date : Text;
+    note : Text;
+    status : Text;            // "Pending" | "Paid"
     createdAt : Int;
   };
 
@@ -1312,5 +1339,203 @@ persistent actor {
       Runtime.trap("Unauthorized: Only admins can update app settings");
     };
     appSettingsJson := json;
+  };
+
+  // ── UDHAAR BOOK ───────────────────────────────────────────────────────────
+  // Toggle key: 'dz_udhaar_enabled' — use existing updateToggle/getAllToggles
+  //
+  // Security model:
+  //   - shopId is ALWAYS derived from caller principal — never user-supplied.
+  //   - All mutations verify caller owns the record before proceeding.
+  //   - Cross-provider reads are blocked at every query boundary.
+
+  // Helper: generate a simple unique text ID from time + a suffix
+  func makeId(prefix : Text) : Text {
+    prefix # Time.now().toText();
+  };
+
+  // Helper: derive shopId from caller principal (single source of truth).
+  func callerShopId(caller : Principal) : Text {
+    caller.toText();
+  };
+
+  // ── Udhaar Customers ──────────────────────────────────────────────────────
+
+  /// Add a customer under the calling provider's shop.
+  /// shopId is derived from msg.caller — never accepted from the client.
+  public shared ({ caller }) func addUdhaarCustomer(name : Text, mobile : Text, address : Text) : async { #ok : UdhaarCustomer; #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    let shopId = callerShopId(caller);
+    let id = makeId("uc");
+    let customer : UdhaarCustomer = { id; shopId; name; mobile; address; createdAt = Time.now() };
+    udhaarCustomers.add(id, customer);
+    #ok(customer);
+  };
+
+  /// Update a customer. Caller must own the customer (shopId check).
+  public shared ({ caller }) func updateUdhaarCustomer(customerId : Text, name : Text, mobile : Text, address : Text) : async { #ok : UdhaarCustomer; #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    switch (udhaarCustomers.get(customerId)) {
+      case null { #err("Customer not found") };
+      case (?c) {
+        if (c.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this customer");
+        };
+        let updated : UdhaarCustomer = { c with name; mobile; address };
+        udhaarCustomers.add(customerId, updated);
+        #ok(updated);
+      };
+    };
+  };
+
+  /// Delete a customer and all its transactions. Caller must own the customer.
+  public shared ({ caller }) func deleteUdhaarCustomer(customerId : Text) : async { #ok : (); #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    switch (udhaarCustomers.get(customerId)) {
+      case null { return #err("Customer not found") };
+      case (?c) {
+        if (c.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this customer");
+        };
+      };
+    };
+    udhaarCustomers.remove(customerId);
+    // Delete all associated transactions
+    let toDelete = udhaarTransactions.entries()
+      .filter(func(kv : (Text, UdhaarTransaction)) : Bool { kv.1.customerId == customerId })
+      .map(func(kv : (Text, UdhaarTransaction)) : Text { kv.0 })
+      .toArray();
+    for (k in toDelete.values()) {
+      udhaarTransactions.remove(k);
+    };
+    #ok(());
+  };
+
+  /// Return only customers belonging to the calling provider.
+  /// shopId is derived from msg.caller — no user-supplied filter accepted.
+  public shared query ({ caller }) func getUdhaarCustomers() : async [UdhaarCustomer] {
+    let shopId = callerShopId(caller);
+    udhaarCustomers.values()
+      .filter(func(c : UdhaarCustomer) : Bool { c.shopId == shopId })
+      .toArray();
+  };
+
+  // ── Udhaar Transactions ───────────────────────────────────────────────────
+
+  /// Add a transaction. shopId is derived from caller; customerId must belong to caller.
+  public shared ({ caller }) func addUdhaarTransaction(customerId : Text, amount : Float, transactionType : Text, date : Text, note : Text) : async { #ok : UdhaarTransaction; #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    let shopId = callerShopId(caller);
+    // Verify caller owns this customer
+    switch (udhaarCustomers.get(customerId)) {
+      case null { return #err("Customer not found") };
+      case (?c) {
+        if (c.shopId != shopId) {
+          return #err("Unauthorized: You do not own this customer");
+        };
+      };
+    };
+    let id = makeId("ut");
+    let txn : UdhaarTransaction = { id; customerId; shopId; amount; transactionType; date; note; status = "Pending"; createdAt = Time.now() };
+    udhaarTransactions.add(id, txn);
+    #ok(txn);
+  };
+
+  /// Update a transaction. Caller must own the transaction (shopId check).
+  public shared ({ caller }) func updateUdhaarTransaction(transactionId : Text, amount : Float, transactionType : Text, date : Text, note : Text) : async { #ok : UdhaarTransaction; #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    switch (udhaarTransactions.get(transactionId)) {
+      case null { #err("Transaction not found") };
+      case (?t) {
+        if (t.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this transaction");
+        };
+        let updated : UdhaarTransaction = { t with amount; transactionType; date; note };
+        udhaarTransactions.add(transactionId, updated);
+        #ok(updated);
+      };
+    };
+  };
+
+  /// Mark a transaction as paid. Caller must own the transaction.
+  public shared ({ caller }) func markUdhaarTransactionPaid(transactionId : Text) : async { #ok : UdhaarTransaction; #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    switch (udhaarTransactions.get(transactionId)) {
+      case null { #err("Transaction not found") };
+      case (?t) {
+        if (t.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this transaction");
+        };
+        let updated : UdhaarTransaction = { t with status = "Paid" };
+        udhaarTransactions.add(transactionId, updated);
+        #ok(updated);
+      };
+    };
+  };
+
+  /// Delete a transaction. Caller must own the transaction.
+  public shared ({ caller }) func deleteUdhaarTransaction(transactionId : Text) : async { #ok : (); #err : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Login required");
+    };
+    switch (udhaarTransactions.get(transactionId)) {
+      case null { return #err("Transaction not found") };
+      case (?t) {
+        if (t.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this transaction");
+        };
+      };
+    };
+    udhaarTransactions.remove(transactionId);
+    #ok(());
+  };
+
+  /// Return transactions for a customer. Caller must own the customer.
+  public shared query ({ caller }) func getUdhaarTransactions(customerId : Text) : async { #ok : [UdhaarTransaction]; #err : Text } {
+    // Verify caller owns this customer before returning any transactions
+    switch (udhaarCustomers.get(customerId)) {
+      case null { return #err("Customer not found") };
+      case (?c) {
+        if (c.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this customer");
+        };
+      };
+    };
+    let result = udhaarTransactions.values()
+      .filter(func(t : UdhaarTransaction) : Bool { t.customerId == customerId })
+      .toArray();
+    #ok(result);
+  };
+
+  /// Return balance for a customer. Caller must own the customer.
+  public shared query ({ caller }) func getUdhaarBalance(customerId : Text) : async { #ok : Float; #err : Text } {
+    // Verify caller owns this customer before computing balance
+    switch (udhaarCustomers.get(customerId)) {
+      case null { return #err("Customer not found") };
+      case (?c) {
+        if (c.shopId != callerShopId(caller)) {
+          return #err("Unauthorized: You do not own this customer");
+        };
+      };
+    };
+    let balance = udhaarTransactions.values()
+      .filter(func(t : UdhaarTransaction) : Bool { t.customerId == customerId })
+      .foldLeft(0.0, func(acc : Float, t : UdhaarTransaction) : Float {
+        if (t.transactionType == "Give") { acc + t.amount }
+        else { acc - t.amount };
+      });
+    #ok(balance);
   };
 };

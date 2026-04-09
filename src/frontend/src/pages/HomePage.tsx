@@ -798,7 +798,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Rate Calculator + Delivery side-by-side (Rate Calculator = 50% width) */}
+        {/* Rate Calculator + Udhaar Khata + Delivery row */}
         {homepageSettings.showRateCalculator && (
           <section className="max-w-7xl mx-auto px-4 pt-6 pb-2">
             <motion.div
@@ -827,8 +827,38 @@ export default function HomePage() {
                 </div>
               </button>
 
-              {/* Delivery — 50% width, only if enabled */}
+              {/* Udhaar Khata — 50% width, shown when dz_udhaar_enabled is ON */}
               {(() => {
+                const udhaarEnabled =
+                  localStorage.getItem("dz_udhaar_enabled") !== "false";
+                if (!udhaarEnabled) return null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/udhaar-book")}
+                    data-ocid="home.udhaar_button"
+                    className="w-1/2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-4 flex flex-col items-center gap-2 shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-indigo-600 transition-all active:scale-[0.99]"
+                  >
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">📒</span>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-heading font-bold text-sm">
+                        उधार खाता
+                      </p>
+                      <p className="text-white/80 text-xs mt-0.5">
+                        ग्राहक हिसाब
+                      </p>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* Delivery — shown only if delivery enabled AND no udhaar card (avoid 3-card overflow) */}
+              {(() => {
+                const udhaarEnabled =
+                  localStorage.getItem("dz_udhaar_enabled") !== "false";
+                if (udhaarEnabled) return null; // udhaar card already occupies the second slot
                 try {
                   const ds = JSON.parse(
                     localStorage.getItem("dz_delivery_settings") || "{}",

@@ -123,6 +123,25 @@ export type SubscriptionStatus = { 'active' : null } |
   { 'expired' : null } |
   { 'pending' : null } |
   { 'rejected' : null };
+export interface UdhaarCustomer {
+  'id' : string,
+  'shopId' : string,
+  'name' : string,
+  'createdAt' : bigint,
+  'address' : string,
+  'mobile' : string,
+}
+export interface UdhaarTransaction {
+  'id' : string,
+  'status' : string,
+  'transactionType' : string,
+  'shopId' : string,
+  'date' : string,
+  'note' : string,
+  'createdAt' : bigint,
+  'customerId' : string,
+  'amount' : number,
+}
 export interface User {
   'id' : bigint,
   'name' : string,
@@ -204,6 +223,23 @@ export interface _SERVICE {
   'addScrapRate' : ActorMethod<[string, number, number], bigint>,
   'addServiceRate' : ActorMethod<[bigint, ServiceRate], undefined>,
   'addShopPhoto' : ActorMethod<[bigint, string], undefined>,
+  /**
+   * / Add a customer under the calling provider's shop.
+   * / shopId is derived from msg.caller — never accepted from the client.
+   */
+  'addUdhaarCustomer' : ActorMethod<
+    [string, string, string],
+    { 'ok' : UdhaarCustomer } |
+      { 'err' : string }
+  >,
+  /**
+   * / Add a transaction. shopId is derived from caller; customerId must belong to caller.
+   */
+  'addUdhaarTransaction' : ActorMethod<
+    [string, number, string, string, string],
+    { 'ok' : UdhaarTransaction } |
+      { 'err' : string }
+  >,
   'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
   'approveProvider' : ActorMethod<[bigint, SubscriptionPlan], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
@@ -215,6 +251,22 @@ export interface _SERVICE {
   'deleteNews' : ActorMethod<[bigint], boolean>,
   'deleteScrapRate' : ActorMethod<[bigint], boolean>,
   'deleteServiceRate' : ActorMethod<[bigint, string], undefined>,
+  /**
+   * / Delete a customer and all its transactions. Caller must own the customer.
+   */
+  'deleteUdhaarCustomer' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
+   * / Delete a transaction. Caller must own the transaction.
+   */
+  'deleteUdhaarTransaction' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'deleteVideo' : ActorMethod<[bigint], boolean>,
   'editBanner' : ActorMethod<
     [bigint, string, string, string, string, boolean, bigint],
@@ -244,6 +296,27 @@ export interface _SERVICE {
   'getRecentUsers' : ActorMethod<[], Array<User>>,
   'getScrapRates' : ActorMethod<[], Array<ScrapRate>>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
+  /**
+   * / Return balance for a customer. Caller must own the customer.
+   */
+  'getUdhaarBalance' : ActorMethod<
+    [string],
+    { 'ok' : number } |
+      { 'err' : string }
+  >,
+  /**
+   * / Return only customers belonging to the calling provider.
+   * / shopId is derived from msg.caller — no user-supplied filter accepted.
+   */
+  'getUdhaarCustomers' : ActorMethod<[], Array<UdhaarCustomer>>,
+  /**
+   * / Return transactions for a customer. Caller must own the customer.
+   */
+  'getUdhaarTransactions' : ActorMethod<
+    [string],
+    { 'ok' : Array<UdhaarTransaction> } |
+      { 'err' : string }
+  >,
   'getUserById' : ActorMethod<[bigint], [] | [User]>,
   'getUserByMobile' : ActorMethod<[MobileNumber], [] | [User]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
@@ -253,6 +326,14 @@ export interface _SERVICE {
   'isCallerApproved' : ActorMethod<[], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'login' : ActorMethod<[MobileNumber, string], User>,
+  /**
+   * / Mark a transaction as paid. Caller must own the transaction.
+   */
+  'markUdhaarTransactionPaid' : ActorMethod<
+    [string],
+    { 'ok' : UdhaarTransaction } |
+      { 'err' : string }
+  >,
   'placeOrder' : ActorMethod<
     [bigint, string, string, string, [] | [string]],
     bigint
@@ -304,6 +385,22 @@ export interface _SERVICE {
   >,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
   'updateToggle' : ActorMethod<[string, boolean], undefined>,
+  /**
+   * / Update a customer. Caller must own the customer (shopId check).
+   */
+  'updateUdhaarCustomer' : ActorMethod<
+    [string, string, string, string],
+    { 'ok' : UdhaarCustomer } |
+      { 'err' : string }
+  >,
+  /**
+   * / Update a transaction. Caller must own the transaction (shopId check).
+   */
+  'updateUdhaarTransaction' : ActorMethod<
+    [string, number, string, string, string],
+    { 'ok' : UdhaarTransaction } |
+      { 'err' : string }
+  >,
   'updateVideo' : ActorMethod<
     [bigint, string, string, string, string, string, boolean],
     boolean

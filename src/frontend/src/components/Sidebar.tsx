@@ -36,19 +36,19 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   });
 
   useEffect(() => {
-    const syncGameVisibility = () => {
-      const val = localStorage.getItem("dz_game_visible");
-      setShowGame(val === null || val === "true");
+    const syncVisibility = () => {
+      const gameVal = localStorage.getItem("dz_game_visible");
+      setShowGame(gameVal === null || gameVal === "true");
     };
 
     // Listen to real-time broadcast from Admin Panel
-    window.addEventListener("settings-sync", syncGameVisibility);
+    window.addEventListener("settings-sync", syncVisibility);
     // Fallback: listen to raw storage event (cross-tab)
-    window.addEventListener("storage", syncGameVisibility);
+    window.addEventListener("storage", syncVisibility);
 
     return () => {
-      window.removeEventListener("settings-sync", syncGameVisibility);
-      window.removeEventListener("storage", syncGameVisibility);
+      window.removeEventListener("settings-sync", syncVisibility);
+      window.removeEventListener("storage", syncVisibility);
     };
   }, []);
 
