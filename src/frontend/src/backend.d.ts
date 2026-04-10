@@ -143,6 +143,15 @@ export interface Banner {
     imageUrl: string;
     subtitle: string;
 }
+export interface CustomSection {
+    id: bigint;
+    placement: string;
+    name: string;
+    createdAt: bigint;
+    heading: string;
+    enabled: boolean;
+    buttons: string;
+}
 export interface AdminConfig {
     email: string;
     adminName: string;
@@ -197,6 +206,7 @@ export interface backendInterface {
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
     addCategory(name: string, emoji: string, color: string): Promise<bigint>;
     addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string): Promise<bigint>;
+    addCustomSection(name: string, heading: string, placement: string, buttons: string): Promise<bigint>;
     addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
     addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
     addScrapRate(itemName: string, ratePerKg: number, ratePerGram: number): Promise<bigint>;
@@ -230,6 +240,7 @@ export interface backendInterface {
     deleteBanner(bannerId: bigint): Promise<void>;
     deleteCategory(id: bigint): Promise<boolean>;
     deleteCustomCode(id: bigint): Promise<boolean>;
+    deleteCustomSection(id: bigint): Promise<boolean>;
     deleteJob(id: bigint): Promise<boolean>;
     deleteNews(id: bigint): Promise<boolean>;
     deleteScrapRate(id: bigint): Promise<boolean>;
@@ -268,6 +279,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
     getCustomCodes(): Promise<Array<CustomCode>>;
+    getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
     getJobs(): Promise<Array<JobItem>>;
     getNews(): Promise<Array<NewsItem>>;
@@ -333,10 +345,12 @@ export interface backendInterface {
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
+    toggleCustomSection(id: bigint, enabled: boolean): Promise<boolean>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
+    updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;

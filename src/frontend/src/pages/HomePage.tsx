@@ -22,9 +22,12 @@ import {
   useActiveBanners,
   useActiveProviders,
   useAllToggles,
+  useCustomCodes,
+  useCustomSections,
 } from "../hooks/useQueries";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { Link, useNavigate } from "../lib/router";
+import type { CustomSection } from "../types/appTypes";
 import { getDistanceKm } from "../utils/locationUtils";
 import { useSettingsListener } from "../utils/settingsSync";
 
@@ -429,26 +432,19 @@ function EbookBuyModal({
 }
 
 interface CustomCodeEntry {
-  id: string;
-  label: string;
+  id: string | number;
+  label?: string;
+  name?: string;
   code: string;
-  placement: "top" | "middle" | "bottom";
+  placement: "top" | "middle" | "bottom" | string;
   enabled: boolean;
-  createdAt: number;
+  createdAt?: number;
 }
 
 interface AdPlacementsSettings {
   header: boolean;
   middle: boolean;
   footer: boolean;
-}
-
-function readCustomCodes(): CustomCodeEntry[] {
-  try {
-    return JSON.parse(localStorage.getItem("dz_custom_codes") ?? "[]");
-  } catch {
-    return [];
-  }
 }
 
 function readAdPlacements(): AdPlacementsSettings {
@@ -462,27 +458,45 @@ function readAdPlacements(): AdPlacementsSettings {
   }
 }
 
+function sanitizeHtml(html: string): string {
+  // Basic XSS filter: remove javascript: in href/src, keep admin-trusted code otherwise
+  return html
+    .replace(/(<[^>]+\s+on\w+\s*=\s*["'][^"']*["'])/gi, (m) =>
+      m.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, ""),
+    )
+    .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
+    .replace(/src\s*=\s*["']javascript:[^"']*["']/gi, 'src=""');
+}
+
 function CustomCodeBlock({ entry }: { entry: CustomCodeEntry }) {
   const ref = React.useRef<HTMLDivElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when code changes
   React.useEffect(() => {
     if (!ref.current) return;
-    // Extract and execute any <script> tags inside custom code
-    const scripts = ref.current.querySelectorAll("script");
-    for (const oldScript of Array.from(scripts)) {
-      const newScript = document.createElement("script");
-      if ((oldScript as HTMLScriptElement).src)
-        newScript.src = (oldScript as HTMLScriptElement).src;
-      else newScript.textContent = oldScript.textContent;
-      document.body.appendChild(newScript);
-      oldScript.remove();
-    }
-  }, []);
+    // Delay script injection by 100ms to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (!ref.current) return;
+      const scripts = ref.current.querySelectorAll("script");
+      for (const oldScript of Array.from(scripts)) {
+        const newScript = document.createElement("script");
+        if ((oldScript as HTMLScriptElement).src) {
+          newScript.src = (oldScript as HTMLScriptElement).src;
+        } else {
+          newScript.textContent = oldScript.textContent;
+        }
+        document.body.appendChild(newScript);
+        oldScript.remove();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [entry.code]);
   return (
     <div
       ref={ref}
+      id={`dz-custom-code-${entry.id}`}
       className="custom-code-block w-full"
       // biome-ignore lint/security/noDangerouslySetInnerHtml: admin-controlled code
-      dangerouslySetInnerHTML={{ __html: entry.code }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.code) }}
     />
   );
 }
@@ -533,6 +547,57 @@ function AdBanners({ position }: { position: "header" | "middle" | "footer" }) {
   );
 }
 
+// ─── Dynamic Custom Section renderer ─────────────────────────────────────────
+
+interface SectionButton {
+  label: string;
+  url: string;
+  icon: string;
+}
+
+function CustomSectionBlock({ section }: { section: CustomSection }) {
+  let buttons: SectionButton[] = [];
+  try {
+    buttons = JSON.parse(section.buttons || "[]") as SectionButton[];
+  } catch {
+    buttons = [];
+  }
+  if (buttons.length === 0) {
+    return (
+      <div className="mx-4 my-3 p-3 border border-dashed border-emerald-300 rounded-lg">
+        <h2 className="text-lg font-bold text-emerald-700">
+          {section.heading}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          No buttons added yet. Add buttons from Admin Panel.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mx-4 my-3 max-w-7xl">
+      <h2 className="text-lg font-bold text-emerald-700 mb-2">
+        {section.heading}
+      </h2>
+      <div className="flex flex-wrap gap-2">
+        {buttons.map((btn, i) => (
+          <a
+            // biome-ignore lint/suspicious/noArrayIndexKey: static buttons from admin
+            key={i}
+            href={btn.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            {btn.icon && <span>{btn.icon}</span>}
+            {btn.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // WhatsApp icon as SVG since lucide doesn't have it
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -554,6 +619,8 @@ export default function HomePage() {
   const { data: banners, isLoading: bannersLoading } = useActiveBanners();
   const { data: providers, isLoading: providersLoading } = useActiveProviders();
   const { data: toggles, isLoading: togglesLoading } = useAllToggles();
+  const { data: canisterCustomCodes } = useCustomCodes();
+  const { data: customSections } = useCustomSections();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { location: userLocation, status: locationStatus } = useUserLocation();
@@ -569,8 +636,26 @@ export default function HomePage() {
     useState(readHomepageSettings);
 
   const [sectionToggles, setSectionToggles] = useState(readHomeSectionToggles);
-  const [customCodes, setCustomCodes] =
-    useState<CustomCodeEntry[]>(readCustomCodes);
+
+  // Merge canister custom codes with localStorage fallback
+  const customCodes: CustomCodeEntry[] = useMemo(() => {
+    if (canisterCustomCodes && canisterCustomCodes.length > 0) {
+      return canisterCustomCodes.map((c) => ({
+        id: c.id,
+        name: c.name,
+        label: c.btnLabel,
+        code: c.code,
+        placement: c.placement as "top" | "middle" | "bottom",
+        enabled: c.enabled,
+      }));
+    }
+    // Fallback to localStorage
+    try {
+      return JSON.parse(localStorage.getItem("dz_custom_codes") ?? "[]");
+    } catch {
+      return [];
+    }
+  }, [canisterCustomCodes]);
 
   const reloadSettings = useCallback(() => {
     setSocialSettings(readSocialSettings());
@@ -578,7 +663,6 @@ export default function HomePage() {
     setEbooks(readEbooksHome());
     setHomepageSettings(readHomepageSettings());
     setSectionToggles(readHomeSectionToggles());
-    setCustomCodes(readCustomCodes());
   }, []);
 
   // Re-read settings on focus (in case admin changed them)
@@ -727,12 +811,21 @@ export default function HomePage() {
       <Header />
 
       <main className="flex-1">
-        {/* Custom Code — TOP placement (before hero) */}
-        {customCodes
-          .filter((c) => c.enabled && c.placement === "top")
-          .map((entry) => (
-            <CustomCodeBlock key={entry.id} entry={entry} />
-          ))}
+        {/* ── TOP CONTAINER ─────────────────────────────────────────── */}
+        <div id="dz-container-top">
+          {/* Custom Code — TOP placement */}
+          {customCodes
+            .filter((c) => c.enabled && c.placement === "top")
+            .map((entry) => (
+              <CustomCodeBlock key={entry.id} entry={entry} />
+            ))}
+          {/* Dynamic Custom Sections — TOP placement */}
+          {(customSections ?? [])
+            .filter((s) => s.enabled && s.placement === "top")
+            .map((section) => (
+              <CustomSectionBlock key={section.id} section={section} />
+            ))}
+        </div>
 
         {/* Ad Banner — Header position */}
         <AdBanners position="header" />
@@ -1118,12 +1211,21 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Custom Code — MIDDLE placement (after CategoryGrid, before providers) */}
-        {customCodes
-          .filter((c) => c.enabled && c.placement === "middle")
-          .map((entry) => (
-            <CustomCodeBlock key={entry.id} entry={entry} />
-          ))}
+        {/* ── MIDDLE CONTAINER ──────────────────────────────────────── */}
+        <div id="dz-container-middle">
+          {/* Custom Code — MIDDLE placement (after CategoryGrid, before providers) */}
+          {customCodes
+            .filter((c) => c.enabled && c.placement === "middle")
+            .map((entry) => (
+              <CustomCodeBlock key={entry.id} entry={entry} />
+            ))}
+          {/* Dynamic Custom Sections — MIDDLE placement */}
+          {(customSections ?? [])
+            .filter((s) => s.enabled && s.placement === "middle")
+            .map((section) => (
+              <CustomSectionBlock key={section.id} section={section} />
+            ))}
+        </div>
 
         {/* Ad Banner — Middle position */}
         <AdBanners position="middle" />
@@ -1340,12 +1442,21 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Custom Code — BOTTOM placement (before Footer) */}
-      {customCodes
-        .filter((c) => c.enabled && c.placement === "bottom")
-        .map((entry) => (
-          <CustomCodeBlock key={entry.id} entry={entry} />
-        ))}
+      {/* ── BOTTOM CONTAINER ──────────────────────────────────────── */}
+      <div id="dz-container-bottom">
+        {/* Custom Code — BOTTOM placement (before Footer) */}
+        {customCodes
+          .filter((c) => c.enabled && c.placement === "bottom")
+          .map((entry) => (
+            <CustomCodeBlock key={entry.id} entry={entry} />
+          ))}
+        {/* Dynamic Custom Sections — BOTTOM placement */}
+        {(customSections ?? [])
+          .filter((s) => s.enabled && s.placement === "bottom")
+          .map((section) => (
+            <CustomSectionBlock key={section.id} section={section} />
+          ))}
+      </div>
 
       {/* Ad Banner — Footer position */}
       <AdBanners position="footer" />

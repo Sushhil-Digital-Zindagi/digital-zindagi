@@ -172,6 +172,16 @@ type JobItem =
    title: text;
  };
 type ExternalBlob = blob;
+type CustomSection = 
+ record {
+   buttons: text;
+   createdAt: int;
+   enabled: bool;
+   heading: text;
+   id: nat;
+   name: text;
+   placement: text;
+ };
 type CustomCode = 
  record {
    btnLabel: text;
@@ -230,6 +240,8 @@ service : {
   addCategory: (name: text, emoji: text, color: text) -> (nat);
   addCustomCode: (name: text, code: text, btnLabel: text, icon: text,
    placement: text) -> (nat);
+  addCustomSection: (name: text, heading: text, placement: text, buttons:
+   text) -> (nat);
   addJob: (title: text, department: text, location: text, lastDate: text,
    applyLink: text, category: text) -> (nat);
   addNews: (title: text, summary: text, imageUrl: text, link: text, category:
@@ -260,6 +272,7 @@ service : {
   deleteBanner: (bannerId: nat) -> ();
   deleteCategory: (id: nat) -> (bool);
   deleteCustomCode: (id: nat) -> (bool);
+  deleteCustomSection: (id: nat) -> (bool);
   deleteJob: (id: nat) -> (bool);
   deleteNews: (id: nat) -> (bool);
   deleteScrapRate: (id: nat) -> (bool);
@@ -293,6 +306,7 @@ service : {
   getCallerUserRole: () -> (UserRole__1) query;
   getCategories: () -> (vec Category) query;
   getCustomCodes: () -> (vec CustomCode) query;
+  getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
   getJobs: () -> (vec JobItem) query;
   getNews: () -> (vec NewsItem) query;
@@ -346,12 +360,15 @@ service : {
   searchUsers: (searchText: text) -> (vec User) query;
   setApproval: (user: principal, status: ApprovalStatus) -> ();
   setPlanType: (userId: nat, planType: PlanType) -> ();
+  toggleCustomSection: (id: nat, enabled: bool) -> (bool);
   updateAdminConfig: (newConfig: AdminConfig) -> ();
   updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool) -> (bool);
+  updateCustomSection: (id: nat, name: text, heading: text, placement: 
+   text, buttons: text, enabled: bool) -> (bool);
   updateJob: (id: nat, title: text, department: text, location: text,
    lastDate: text, applyLink: text, category: text, enabled: bool) -> (
    bool);

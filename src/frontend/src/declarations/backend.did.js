@@ -141,6 +141,15 @@ export const CustomCode = IDL.Record({
   'enabled' : IDL.Bool,
   'btnLabel' : IDL.Text,
 });
+export const CustomSection = IDL.Record({
+  'id' : IDL.Nat,
+  'placement' : IDL.Text,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'heading' : IDL.Text,
+  'enabled' : IDL.Bool,
+  'buttons' : IDL.Text,
+});
 export const Order = IDL.Record({
   'id' : IDL.Nat,
   'customerName' : IDL.Text,
@@ -239,6 +248,11 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'addCustomSection' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'addJob' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -277,6 +291,7 @@ export const idlService = IDL.Service({
   'deleteBanner' : IDL.Func([IDL.Nat], [], []),
   'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -313,6 +328,7 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
+  'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
   'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
@@ -391,6 +407,7 @@ export const idlService = IDL.Service({
   'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
+  'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
   'updateAppSettings' : IDL.Func([IDL.Text], [], []),
   'updateCategory' : IDL.Func(
@@ -400,6 +417,11 @@ export const idlService = IDL.Service({
     ),
   'updateCustomCode' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
+  'updateCustomSection' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
       [IDL.Bool],
       [],
     ),
@@ -603,6 +625,15 @@ export const idlFactory = ({ IDL }) => {
     'enabled' : IDL.Bool,
     'btnLabel' : IDL.Text,
   });
+  const CustomSection = IDL.Record({
+    'id' : IDL.Nat,
+    'placement' : IDL.Text,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'heading' : IDL.Text,
+    'enabled' : IDL.Bool,
+    'buttons' : IDL.Text,
+  });
   const Order = IDL.Record({
     'id' : IDL.Nat,
     'customerName' : IDL.Text,
@@ -701,6 +732,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'addCustomSection' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'addJob' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -739,6 +775,7 @@ export const idlFactory = ({ IDL }) => {
     'deleteBanner' : IDL.Func([IDL.Nat], [], []),
     'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -775,6 +812,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
+    'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
     'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
@@ -853,6 +891,7 @@ export const idlFactory = ({ IDL }) => {
     'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
+    'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
     'updateAppSettings' : IDL.Func([IDL.Text], [], []),
     'updateCategory' : IDL.Func(
@@ -862,6 +901,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateCustomCode' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
+    'updateCustomSection' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [IDL.Bool],
         [],
       ),

@@ -229,6 +229,15 @@ export interface Banner {
     imageUrl: string;
     subtitle: string;
 }
+export interface CustomSection {
+    id: bigint;
+    placement: string;
+    name: string;
+    createdAt: bigint;
+    heading: string;
+    enabled: boolean;
+    buttons: string;
+}
 export interface AdminConfig {
     email: string;
     adminName: string;
@@ -290,6 +299,7 @@ export interface backendInterface {
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
     addCategory(name: string, emoji: string, color: string): Promise<bigint>;
     addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string): Promise<bigint>;
+    addCustomSection(name: string, heading: string, placement: string, buttons: string): Promise<bigint>;
     addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
     addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
     addScrapRate(itemName: string, ratePerKg: number, ratePerGram: number): Promise<bigint>;
@@ -323,6 +333,7 @@ export interface backendInterface {
     deleteBanner(bannerId: bigint): Promise<void>;
     deleteCategory(id: bigint): Promise<boolean>;
     deleteCustomCode(id: bigint): Promise<boolean>;
+    deleteCustomSection(id: bigint): Promise<boolean>;
     deleteJob(id: bigint): Promise<boolean>;
     deleteNews(id: bigint): Promise<boolean>;
     deleteScrapRate(id: bigint): Promise<boolean>;
@@ -361,6 +372,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
     getCustomCodes(): Promise<Array<CustomCode>>;
+    getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
     getJobs(): Promise<Array<JobItem>>;
     getNews(): Promise<Array<NewsItem>>;
@@ -426,10 +438,12 @@ export interface backendInterface {
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
+    toggleCustomSection(id: bigint, enabled: boolean): Promise<boolean>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
+    updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;
@@ -605,6 +619,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addCustomCode(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async addCustomSection(arg0: string, arg1: string, arg2: string, arg3: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addCustomSection(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addCustomSection(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -813,6 +841,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteCustomCode(arg0);
+            return result;
+        }
+    }
+    async deleteCustomSection(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCustomSection(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCustomSection(arg0);
             return result;
         }
     }
@@ -1105,6 +1147,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getCustomCodes();
+            return result;
+        }
+    }
+    async getCustomSections(): Promise<Array<CustomSection>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCustomSections();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCustomSections();
             return result;
         }
     }
@@ -1602,6 +1658,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async toggleCustomSection(arg0: bigint, arg1: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.toggleCustomSection(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.toggleCustomSection(arg0, arg1);
+            return result;
+        }
+    }
     async updateAdminConfig(arg0: AdminConfig): Promise<void> {
         if (this.processError) {
             try {
@@ -1655,6 +1725,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateCustomCode(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async updateCustomSection(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCustomSection(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCustomSection(arg0, arg1, arg2, arg3, arg4, arg5);
             return result;
         }
     }

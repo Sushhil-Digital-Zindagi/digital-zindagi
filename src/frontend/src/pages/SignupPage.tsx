@@ -16,7 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { SUPER_ADMIN_EMAIL } from "../contexts/AuthContext";
-import { useAdminConfig } from "../hooks/useQueries";
+import { useAdminConfig, useCategories } from "../hooks/useQueries";
 import { Link, useNavigate } from "../lib/router";
 
 const SECURITY_QUESTIONS = [
@@ -27,29 +27,11 @@ const SECURITY_QUESTIONS = [
   "School Ka Naam",
 ];
 
-// Merge static + admin-created categories
-function getCategories(): { name: string; emoji: string }[] {
-  const staticCats = ALL_CATEGORIES.map((c) => ({
-    name: c.name,
-    emoji: c.emoji,
-  }));
-  try {
-    const custom = JSON.parse(
-      localStorage.getItem("dz_categories") ?? "[]",
-    ) as {
-      name: string;
-      emoji: string;
-    }[];
-    const existing = new Set(staticCats.map((c) => c.name.toLowerCase()));
-    const merged = [
-      ...staticCats,
-      ...custom.filter((c) => !existing.has(c.name.toLowerCase())),
-    ];
-    return merged;
-  } catch {
-    return staticCats;
-  }
-}
+// Default categories as fallback when canister is loading
+const DEFAULT_CATEGORY_LIST = ALL_CATEGORIES.map((c) => ({
+  name: c.name,
+  emoji: c.emoji,
+}));
 
 function saveProviderToLocalStorage(provider: {
   id: string;
@@ -130,7 +112,33 @@ export default function SignupPage() {
 
   const { data: adminConfig } = useAdminConfig();
   const navigate = useNavigate();
-  const categories = getCategories();
+
+  // ── Dynamic categories from canister (polls every 2s) ──────────────────
+  const { data: canisterCategories, isLoading: catsLoading } = useCategories();
+  const categories: { name: string; emoji: string }[] = (() => {
+    // If canister returned data, use it directly (admin-managed source of truth)
+    if (canisterCategories && canisterCategories.length > 0) {
+      return canisterCategories.map((c) => ({ name: c.name, emoji: c.emoji }));
+    }
+    // Fallback: merge defaults with any localStorage-approved categories
+    try {
+      const extra = JSON.parse(
+        localStorage.getItem("dz_approved_categories") ?? "[]",
+      ) as { name: string; icon: string }[];
+      const defaultNames = new Set(
+        DEFAULT_CATEGORY_LIST.map((c) => c.name.toLowerCase()),
+      );
+      const merged = [
+        ...DEFAULT_CATEGORY_LIST,
+        ...extra
+          .filter((c) => !defaultNames.has(c.name.toLowerCase()))
+          .map((c) => ({ name: c.name, emoji: c.icon ?? "🏪" })),
+      ];
+      return merged;
+    } catch {
+      return DEFAULT_CATEGORY_LIST;
+    }
+  })();
 
   // Welcome message from admin settings
   const welcomeMessage =
@@ -326,9 +334,12 @@ export default function SignupPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
                 required
+                disabled={catsLoading && categories.length === 0}
               >
                 <option value="" disabled>
-                  Category chunein...
+                  {catsLoading && categories.length === 0
+                    ? "Categories load ho rahi hain..."
+                    : "Category chunein..."}
                 </option>
                 {categories.map((c) => (
                   <option key={c.name} value={c.name}>

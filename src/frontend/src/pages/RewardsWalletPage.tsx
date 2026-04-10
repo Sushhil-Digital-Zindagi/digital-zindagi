@@ -36,28 +36,64 @@ function addPointsHistory(userId: string, entry: Omit<PointsEntry, "id">) {
   );
 }
 
+function readRewardConfig() {
+  return {
+    pointsPerAd:
+      Number.parseInt(
+        localStorage.getItem("dz_ludo_points_per_ad") ?? "10",
+        10,
+      ) || 10,
+    redemptionRate:
+      Number.parseInt(
+        localStorage.getItem("dz_ludo_redemption_rate") ?? "100",
+        10,
+      ) || 100,
+    minWithdrawal:
+      Number.parseInt(
+        localStorage.getItem("dz_ludo_min_withdrawal") ?? "100",
+        10,
+      ) || 100,
+  };
+}
+
 export default function RewardsWalletPage() {
   const navigate = useNavigate();
   const userId = localStorage.getItem("dz_user_id") ?? "guest";
   const rewardsEnabled =
     localStorage.getItem("dz_ludo_rewards_enabled") !== "false";
 
-  // Dynamic reward config from localStorage (set by Admin Panel)
-  const pointsPerAd =
-    Number.parseInt(
-      localStorage.getItem("dz_ludo_points_per_ad") ?? "10",
-      10,
-    ) || 10;
-  const redemptionRate =
-    Number.parseInt(
-      localStorage.getItem("dz_ludo_redemption_rate") ?? "100",
-      10,
-    ) || 100;
-  const minWithdrawal =
-    Number.parseInt(
-      localStorage.getItem("dz_ludo_min_withdrawal") ?? "100",
-      10,
-    ) || 100;
+  // Dynamic reward config — read from localStorage, updated via events
+  const [rewardConfig, setRewardConfig] = useState(readRewardConfig);
+  const { pointsPerAd, redemptionRate, minWithdrawal } = rewardConfig;
+
+  // Listen for admin real-time updates (same tab via CustomEvent, cross-tab via storage)
+  useEffect(() => {
+    const handleSettingsUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ key: string; value: unknown }>;
+      if (
+        ["pointsPerAd", "redemptionRate", "minWithdrawal"].includes(
+          ev.detail?.key,
+        )
+      ) {
+        setRewardConfig(readRewardConfig());
+      }
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (
+        e.key === "dz_ludo_points_per_ad" ||
+        e.key === "dz_ludo_redemption_rate" ||
+        e.key === "dz_ludo_min_withdrawal"
+      ) {
+        setRewardConfig(readRewardConfig());
+      }
+    };
+    window.addEventListener("dz_settings_update", handleSettingsUpdate);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("dz_settings_update", handleSettingsUpdate);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   // Backend hooks
   const { data: backendPoints, refetch: refetchPoints } = useLudoPoints(userId);

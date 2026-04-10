@@ -26,7 +26,13 @@ export default function SafeWebView({ url, title, onClose }: SafeWebViewProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div
+      className="fixed inset-0 z-[9999] flex flex-col bg-white"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
       {/* Header Bar */}
       <div className="flex items-center gap-2 px-3 py-2 bg-emerald-700 text-white flex-shrink-0">
         <button
@@ -38,9 +44,12 @@ export default function SafeWebView({ url, title, onClose }: SafeWebViewProps) {
           <X size={16} />
         </button>
 
-        <div className="flex-1 min-w-0 bg-white/15 rounded-lg px-3 py-1.5">
-          <p className="text-xs font-semibold truncate">{title || url}</p>
-          <p className="text-white/70 text-xs truncate">{url}</p>
+        <div className="flex-1 min-w-0 bg-white/15 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span className="text-sm flex-shrink-0">🔒</span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold truncate">Safe In-App Browser</p>
+            <p className="text-white/70 text-xs truncate">{title || url}</p>
+          </div>
         </div>
 
         <button
@@ -54,11 +63,11 @@ export default function SafeWebView({ url, title, onClose }: SafeWebViewProps) {
 
         <button
           type="button"
-          onClick={handleOpenExternal}
+          onClick={onClose}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors flex-shrink-0"
-          aria-label="Open in browser"
+          aria-label="Close browser"
         >
-          <ExternalLink size={14} />
+          <X size={16} />
         </button>
       </div>
 

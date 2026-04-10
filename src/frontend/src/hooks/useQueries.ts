@@ -4,6 +4,7 @@ import type {
   Banner,
   Category,
   CustomCode,
+  CustomSection,
   JobItem,
   NewsItem,
   Order,
@@ -744,6 +745,133 @@ export function useDeleteCustomCode() {
       ).deleteCustomCode(id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-codes"] }),
+  });
+}
+
+// ---- Custom Sections hooks ----
+
+export function useCustomSections() {
+  const { actor, isFetching } = useActor();
+  return useQuery<CustomSection[]>({
+    queryKey: ["custom-sections"],
+    queryFn: async () => {
+      if (!actor)
+        return lsRead<CustomSection[]>("dz_canister_custom_sections", []);
+      try {
+        const data = await (
+          actor as unknown as {
+            getCustomSections(): Promise<CustomSection[]>;
+          }
+        ).getCustomSections();
+        lsWrite("dz_canister_custom_sections", data);
+        return data;
+      } catch {
+        return lsRead<CustomSection[]>("dz_canister_custom_sections", []);
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 3000,
+    staleTime: 2000,
+  });
+}
+
+export function useAddCustomSection() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      heading,
+      placement,
+      buttons,
+    }: {
+      name: string;
+      heading: string;
+      placement: string;
+      buttons: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return (
+        actor as unknown as {
+          addCustomSection(
+            n: string,
+            h: string,
+            p: string,
+            b: string,
+          ): Promise<number>;
+        }
+      ).addCustomSection(name, heading, placement, buttons);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-sections"] }),
+  });
+}
+
+export function useUpdateCustomSection() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      heading,
+      placement,
+      buttons,
+      enabled,
+    }: {
+      id: number;
+      name: string;
+      heading: string;
+      placement: string;
+      buttons: string;
+      enabled: boolean;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return (
+        actor as unknown as {
+          updateCustomSection(
+            id: number,
+            n: string,
+            h: string,
+            p: string,
+            b: string,
+            en: boolean,
+          ): Promise<boolean>;
+        }
+      ).updateCustomSection(id, name, heading, placement, buttons, enabled);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-sections"] }),
+  });
+}
+
+export function useDeleteCustomSection() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      if (!actor) throw new Error("Actor not available");
+      return (
+        actor as unknown as {
+          deleteCustomSection(id: number): Promise<boolean>;
+        }
+      ).deleteCustomSection(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-sections"] }),
+  });
+}
+
+export function useToggleCustomSection() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, enabled }: { id: number; enabled: boolean }) => {
+      if (!actor) throw new Error("Actor not available");
+      return (
+        actor as unknown as {
+          toggleCustomSection(id: number, en: boolean): Promise<boolean>;
+        }
+      ).toggleCustomSection(id, enabled);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-sections"] }),
   });
 }
 

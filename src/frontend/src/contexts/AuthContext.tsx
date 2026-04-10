@@ -106,6 +106,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       SESSION_EXPIRY_KEY,
       String(Date.now() + SESSION_DURATION_MS),
     );
+    // Persist userId and userName so RewardsWalletPage / GamePage can read them
+    localStorage.setItem("dz_user_id", enriched.userId.toString());
+    localStorage.setItem("dz_user_name", enriched.name);
+    // Also store provider/customer data for profile access
+    const userData = {
+      id: enriched.userId.toString(),
+      name: enriched.name,
+      mobile: enriched.mobile,
+      email: enriched.email ?? "",
+      role: enriched.role,
+      isSuperAdmin: enriched.isSuperAdmin ?? false,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem("dz_user_data", JSON.stringify(userData));
     // Super Admin gets automatic admin panel access — no PIN needed
     if (isSuperAdminFlag) {
       sessionStorage.setItem("adminVerified", "true");

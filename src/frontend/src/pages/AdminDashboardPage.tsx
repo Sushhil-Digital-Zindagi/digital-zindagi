@@ -44,6 +44,7 @@ import {
   useActiveBanners,
   useAddCategory,
   useAddCustomCode,
+  useAddCustomSection,
   useAddJob,
   useAddNews,
   useAddScrapRate,
@@ -55,8 +56,10 @@ import {
   useApproveProvider,
   useCategories,
   useCustomCodes,
+  useCustomSections,
   useDeleteCategory,
   useDeleteCustomCode,
+  useDeleteCustomSection,
   useDeleteJob,
   useDeleteNews,
   useDeleteScrapRate,
@@ -72,9 +75,11 @@ import {
   useSearchUsers,
   useSetFirebaseConfigLink,
   useSubscriptionPricing,
+  useToggleCustomSection,
   useUpdateAppSettings,
   useUpdateCategory,
   useUpdateCustomCode,
+  useUpdateCustomSection,
   useUpdateJob,
   useUpdateLudoRedemptionStatus,
   useUpdateNews,
@@ -128,6 +133,7 @@ type AdminSection =
   | "masterToggles"
   | "earningDashboard"
   | "customCode"
+  | "customSections"
   | "udhaarBook"
   | "ludoSettings";
 
@@ -3727,6 +3733,56 @@ function AdsManager() {
         </p>
       </div>
 
+      {/* YouTube Player Settings */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <Youtube size={18} className="text-red-500" />
+          YouTube Player Settings
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          YouTube video player ka behaviour customize karein. Changes sab users
+          ko turant dikhengi.
+        </p>
+        {[
+          {
+            key: "youtubeNoPlaylist",
+            label: "Remove Playlist Label",
+            desc: "Video ke neeche se 'Playlist' text hata dein — cleaner look milega",
+            defaultOn: true,
+          },
+          {
+            key: "youtubeFullWidth",
+            label: "Full-Width Video Player",
+            desc: "Video screen ki poori width occupy kare — horizontal scroll nahi hogi",
+            defaultOn: true,
+          },
+        ].map(({ key, label, desc, defaultOn }) => {
+          const isOn = key in config ? !!config[key] : defaultOn;
+          return (
+            <div
+              key={key}
+              className="flex items-center justify-between py-3 border-b border-border last:border-0"
+            >
+              <div>
+                <p className="font-medium text-foreground text-sm">{label}</p>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <button
+                type="button"
+                data-ocid={`admin.${key}_toggle`}
+                onClick={() => save(key, !isOn)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary" : "bg-gray-300"}`}
+                aria-label={label}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${isOn ? "translate-x-7" : "translate-x-1"}`}
+                />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Ad Placement Controls */}
       <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
         <h3 className="font-heading font-semibold text-foreground">
@@ -6284,6 +6340,18 @@ function NewsManagerSection() {
           <Plus size={14} /> Add News
         </button>
       </div>
+
+      {/* In-App Browser note */}
+      <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+        <span className="text-lg leading-none mt-0.5">🔒</span>
+        <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+          <span className="font-bold">Secure In-App Browser:</span> Sabhi
+          news/newspaper links app ke andar hi khulengi — user YouTube ya
+          browser par redirect nahi hoga. Yeh feature automatic hai, koi extra
+          setting nahi chahiye.
+        </p>
+      </div>
+
       {showForm && (
         <div className="bg-white rounded-2xl border border-blue-200 p-5 space-y-4">
           <h4 className="font-semibold text-sm">
@@ -7507,6 +7575,557 @@ function CustomCodeManagerSection() {
   );
 }
 
+// ============================================================
+// CUSTOM SECTIONS MANAGER SECTION
+// ============================================================
+interface SectionButton {
+  label: string;
+  url: string;
+  icon: string;
+}
+
+function CustomSectionManagerSection() {
+  const { data: canisterSections } = useCustomSections();
+  const addSection = useAddCustomSection();
+  const updateSection = useUpdateCustomSection();
+  const deleteSection = useDeleteCustomSection();
+  const toggleSection = useToggleCustomSection();
+
+  // Form state for new section
+  const [newName, setNewName] = useState("");
+  const [newHeading, setNewHeading] = useState("");
+  const [newPlacement, setNewPlacement] = useState<"top" | "middle" | "bottom">(
+    "middle",
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Editing heading inline
+  const [editingHeadingId, setEditingHeadingId] = useState<number | null>(null);
+  const [editingHeadingText, setEditingHeadingText] = useState("");
+
+  // Add button sub-form per section
+  const [addBtnSectionId, setAddBtnSectionId] = useState<number | null>(null);
+  const [btnLabel, setBtnLabel] = useState("");
+  const [btnUrl, setBtnUrl] = useState("");
+  const [btnIcon, setBtnIcon] = useState("");
+
+  const parseButtons = (raw: string): SectionButton[] => {
+    try {
+      return JSON.parse(raw) as SectionButton[];
+    } catch {
+      return [];
+    }
+  };
+
+  const handleAddSection = async () => {
+    if (!newName.trim()) {
+      toast.error("Section ka naam likhein");
+      return;
+    }
+    if (!newHeading.trim()) {
+      toast.error("Heading likhein jo users ko dikhe");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await addSection.mutateAsync({
+        name: newName.trim(),
+        heading: newHeading.trim(),
+        placement: newPlacement,
+        buttons: "[]",
+      });
+      broadcastSettingsChange();
+      toast.success(`"${newName}" section add ho gaya!`);
+      setNewName("");
+      setNewHeading("");
+      setNewPlacement("middle");
+    } catch {
+      toast.error("Section add nahi ho saca — dobara try karein");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggle = async (section: {
+    id: number;
+    name: string;
+    heading: string;
+    placement: string;
+    buttons: string;
+    enabled: boolean;
+  }) => {
+    try {
+      await toggleSection.mutateAsync({
+        id: section.id,
+        enabled: !section.enabled,
+      });
+      broadcastSettingsChange();
+      toast.success(`Section ${!section.enabled ? "ON" : "OFF"} ho gaya!`);
+    } catch {
+      toast.error("Toggle nahi ho saca");
+    }
+  };
+
+  const handleSaveHeading = async (section: {
+    id: number;
+    name: string;
+    placement: string;
+    buttons: string;
+    enabled: boolean;
+  }) => {
+    if (!editingHeadingText.trim()) {
+      toast.error("Heading khaali nahi ho sakti");
+      return;
+    }
+    try {
+      await updateSection.mutateAsync({
+        id: section.id,
+        name: section.name,
+        heading: editingHeadingText.trim(),
+        placement: section.placement,
+        buttons: section.buttons,
+        enabled: section.enabled,
+      });
+      broadcastSettingsChange();
+      toast.success("Heading update ho gaya!");
+      setEditingHeadingId(null);
+    } catch {
+      toast.error("Save nahi ho saca");
+    }
+  };
+
+  const handleAddButton = async (section: {
+    id: number;
+    name: string;
+    heading: string;
+    placement: string;
+    buttons: string;
+    enabled: boolean;
+  }) => {
+    if (!btnLabel.trim()) {
+      toast.error("Button label likhein");
+      return;
+    }
+    if (!btnUrl.trim()) {
+      toast.error("URL likhein");
+      return;
+    }
+    const existing = parseButtons(section.buttons);
+    const newBtn: SectionButton = {
+      label: btnLabel.trim(),
+      url: btnUrl.trim(),
+      icon: btnIcon.trim() || "🔗",
+    };
+    const updated = [...existing, newBtn];
+    try {
+      await updateSection.mutateAsync({
+        id: section.id,
+        name: section.name,
+        heading: section.heading,
+        placement: section.placement,
+        buttons: JSON.stringify(updated),
+        enabled: section.enabled,
+      });
+      broadcastSettingsChange();
+      toast.success("Button add ho gaya!");
+      setBtnLabel("");
+      setBtnUrl("");
+      setBtnIcon("");
+      setAddBtnSectionId(null);
+    } catch {
+      toast.error("Button add nahi ho saca");
+    }
+  };
+
+  const handleDeleteButton = async (
+    section: {
+      id: number;
+      name: string;
+      heading: string;
+      placement: string;
+      buttons: string;
+      enabled: boolean;
+    },
+    btnIdx: number,
+  ) => {
+    const existing = parseButtons(section.buttons).filter(
+      (_, i) => i !== btnIdx,
+    );
+    try {
+      await updateSection.mutateAsync({
+        id: section.id,
+        name: section.name,
+        heading: section.heading,
+        placement: section.placement,
+        buttons: JSON.stringify(existing),
+        enabled: section.enabled,
+      });
+      broadcastSettingsChange();
+      toast.success("Button remove ho gaya!");
+    } catch {
+      toast.error("Delete nahi ho saca");
+    }
+  };
+
+  const handleDeleteSection = async (id: number, name: string) => {
+    if (
+      !window.confirm(`"${name}" section aur iske saare buttons delete karein?`)
+    )
+      return;
+    try {
+      await deleteSection.mutateAsync(id);
+      broadcastSettingsChange();
+      toast.success("Section delete ho gaya!");
+    } catch {
+      toast.error("Delete nahi ho saca");
+    }
+  };
+
+  const placementLabel = (p: string) =>
+    ({ top: "Top", middle: "Middle", bottom: "Bottom" })[p] ?? p;
+
+  const sections = canisterSections ?? [];
+
+  return (
+    <div className="space-y-5">
+      {/* Create New Section */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-bold text-foreground text-base">
+          ➕ Naya Custom Section Banayein
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Homepage par apna custom section add karein — jaise "Popular", "PDF
+          Books", "Videos". Har section mein unlimited buttons/links add kar
+          sakte hain.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="cs-name"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Section Name (Admin ke liye) *
+            </label>
+            <input
+              id="cs-name"
+              data-ocid="admin.custom_section_name_input"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="jaise: Popular, PDF Books, Videos"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="cs-heading"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Heading Text (Users ko dikhega) *
+            </label>
+            <input
+              id="cs-heading"
+              data-ocid="admin.custom_section_heading_input"
+              type="text"
+              value={newHeading}
+              onChange={(e) => setNewHeading(e.target.value)}
+              placeholder="jaise: 🔥 Popular Links, 📚 PDF Books"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="cs-placement"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Placement — Homepage par kahan dikhega *
+            </label>
+            <select
+              id="cs-placement"
+              data-ocid="admin.custom_section_placement_select"
+              value={newPlacement}
+              onChange={(e) =>
+                setNewPlacement(e.target.value as "top" | "middle" | "bottom")
+              }
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+            >
+              <option value="top">Top — Hero Carousel ke pehle</option>
+              <option value="middle">Middle — Category Grid ke baad</option>
+              <option value="bottom">Bottom — Footer ke pehle</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.add_custom_section_btn"
+            onClick={handleAddSection}
+            disabled={isSaving}
+            className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-5 py-3 rounded-xl text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {isSaving ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Plus size={14} />
+            )}
+            Section Add Karein
+          </button>
+        </div>
+      </div>
+
+      {/* Existing Sections */}
+      <div className="space-y-4">
+        <h3 className="font-heading font-bold text-foreground text-base px-1">
+          📋 Saved Sections ({sections.length})
+        </h3>
+
+        {sections.length === 0 ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+            <p className="text-3xl mb-2">📂</p>
+            <p className="text-sm font-medium text-amber-800">
+              Abhi koi custom section nahi hai.
+            </p>
+            <p className="text-xs text-amber-700 mt-1">
+              Upar form se apna pehla section banayein.
+            </p>
+          </div>
+        ) : (
+          sections.map((section) => {
+            const buttons = parseButtons(section.buttons);
+            const isEditingHeading = editingHeadingId === section.id;
+            const isAddingBtn = addBtnSectionId === section.id;
+            return (
+              <div
+                key={section.id}
+                data-ocid={`admin.custom_section_item.${section.id}`}
+                className={`bg-white rounded-2xl border-2 p-5 space-y-4 transition-colors ${section.enabled ? "border-emerald-300" : "border-gray-200 opacity-70"}`}
+              >
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-foreground">
+                      {section.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Heading:{" "}
+                      <span className="font-medium text-foreground">
+                        "{section.heading}"
+                      </span>
+                      &nbsp;·&nbsp;
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-xs font-semibold ${section.placement === "top" ? "bg-blue-100 text-blue-700" : section.placement === "bottom" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
+                      >
+                        {placementLabel(section.placement)}
+                      </span>
+                      &nbsp;·&nbsp;{buttons.length} button
+                      {buttons.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  {/* Controls */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* ON/OFF Toggle */}
+                    <button
+                      type="button"
+                      data-ocid={`admin.section_toggle.${section.id}`}
+                      onClick={() => handleToggle(section)}
+                      className={`relative w-12 h-6 rounded-full transition-colors focus:outline-none ${section.enabled ? "bg-emerald-500" : "bg-gray-300"}`}
+                      aria-label={`Toggle ${section.name}`}
+                    >
+                      <span
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${section.enabled ? "translate-x-7" : "translate-x-1"}`}
+                      />
+                    </button>
+                    <span
+                      className={`text-xs font-bold ${section.enabled ? "text-emerald-600" : "text-muted-foreground"}`}
+                    >
+                      {section.enabled ? "ON" : "OFF"}
+                    </span>
+                    {/* Delete section */}
+                    <button
+                      type="button"
+                      data-ocid={`admin.delete_section.${section.id}`}
+                      onClick={() =>
+                        handleDeleteSection(section.id, section.name)
+                      }
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      aria-label="Delete section"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Edit Heading */}
+                {isEditingHeading ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={editingHeadingText}
+                      onChange={(e) => setEditingHeadingText(e.target.value)}
+                      data-ocid={`admin.edit_heading_input.${section.id}`}
+                      className="flex-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      placeholder="Naya heading text..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveHeading(section)}
+                      className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingHeadingId(null)}
+                      className="px-3 py-2 bg-gray-100 text-gray-600 text-xs font-medium rounded-xl hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-ocid={`admin.edit_heading_btn.${section.id}`}
+                    onClick={() => {
+                      setEditingHeadingId(section.id);
+                      setEditingHeadingText(section.heading);
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <Pencil size={12} /> Heading Edit Karein
+                  </button>
+                )}
+
+                {/* Buttons list */}
+                {buttons.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Buttons
+                    </p>
+                    {buttons.map((btn, i) => (
+                      <div
+                        key={`${section.id}-btn-${i}`}
+                        data-ocid={`admin.section_button.${section.id}.${i}`}
+                        className="flex items-center gap-2 bg-muted/40 rounded-xl px-3 py-2"
+                      >
+                        <span className="text-base leading-none">
+                          {btn.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {btn.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {btn.url}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          data-ocid={`admin.delete_btn.${section.id}.${i}`}
+                          onClick={() => handleDeleteButton(section, i)}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg flex-shrink-0"
+                          aria-label="Remove button"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Button sub-form */}
+                {isAddingBtn ? (
+                  <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-semibold text-emerald-800">
+                      ➕ Naya Button Add Karein
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={btnIcon}
+                        onChange={(e) => setBtnIcon(e.target.value)}
+                        placeholder="Icon (emoji) e.g. ▶️"
+                        className="border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                        data-ocid="admin.btn_icon_input"
+                      />
+                      <input
+                        type="text"
+                        value={btnLabel}
+                        onChange={(e) => setBtnLabel(e.target.value)}
+                        placeholder="Label e.g. Watch Now *"
+                        className="border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                        data-ocid="admin.btn_label_input"
+                      />
+                    </div>
+                    <input
+                      type="url"
+                      value={btnUrl}
+                      onChange={(e) => setBtnUrl(e.target.value)}
+                      placeholder="URL e.g. https://youtube.com/... *"
+                      className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                      data-ocid="admin.btn_url_input"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        data-ocid={`admin.add_btn_save.${section.id}`}
+                        onClick={() => handleAddButton(section)}
+                        className="flex-1 bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-700"
+                      >
+                        <span className="flex items-center justify-center gap-1.5">
+                          <Plus size={13} /> Add Button
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAddBtnSectionId(null);
+                          setBtnLabel("");
+                          setBtnUrl("");
+                          setBtnIcon("");
+                        }}
+                        className="px-4 py-2.5 bg-white border border-border text-xs font-medium rounded-xl hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-ocid={`admin.show_add_btn.${section.id}`}
+                    onClick={() => setAddBtnSectionId(section.id)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl hover:bg-emerald-100 transition-colors w-full justify-center"
+                  >
+                    <Plus size={13} /> Button / Link Add Karein
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+        <p className="text-sm font-medium text-blue-800">
+          💡 Custom Sections Kaise Kaam Karti Hain
+        </p>
+        <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+          <li>
+            Har section ek heading aur unlimited buttons/links rakh sakta hai
+          </li>
+          <li>ON/OFF toggle se section turant Homepage par show/hide hoga</li>
+          <li>Placement — Top, Middle, ya Bottom choose karein</li>
+          <li>
+            Heading edit karne par 1-2 seconds mein sab users ko update milega
+          </li>
+          <li>
+            Button ka URL kuch bhi ho sakta hai — YouTube, PDF, website, etc.
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // ---- Ludo & Game Settings Section ----
 function LudoSettingsSection() {
   const [ludoEnabled, setLudoEnabled] = useState<boolean>(
@@ -7514,6 +8133,12 @@ function LudoSettingsSection() {
   );
   const [rewardsEnabled, setRewardsEnabled] = useState<boolean>(
     () => localStorage.getItem("dz_ludo_rewards_enabled") !== "false",
+  );
+  const [portraitLock, setPortraitLock] = useState<boolean>(
+    () => localStorage.getItem("dz_ludo_portrait_lock") !== "false",
+  );
+  const [hideStatusBar, setHideStatusBar] = useState<boolean>(
+    () => localStorage.getItem("dz_ludo_hide_status_bar") === "true",
   );
   const [firebaseUrl, setFirebaseUrl] = useState<string>(
     () => localStorage.getItem("dz_firebase_config_url") ?? "",
@@ -7554,7 +8179,14 @@ function LudoSettingsSection() {
   const handleLudoToggle = (val: boolean) => {
     setLudoEnabled(val);
     localStorage.setItem("dz_ludo_enabled", val ? "true" : "false");
+    localStorage.setItem("dz_game_visible", val ? "true" : "false");
     broadcastSettingsChange();
+    // Dispatch specific CustomEvent so GameComingSoonPage can react immediately
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "ludoEnabled", value: val },
+      }),
+    );
     toast.success(`Ludo Game ${val ? "ON" : "OFF"} ho gaya!`);
   };
 
@@ -7563,6 +8195,30 @@ function LudoSettingsSection() {
     localStorage.setItem("dz_ludo_rewards_enabled", val ? "true" : "false");
     broadcastSettingsChange();
     toast.success(`Reward System ${val ? "ON" : "OFF"} ho gaya!`);
+  };
+
+  const handlePortraitLockToggle = (val: boolean) => {
+    setPortraitLock(val);
+    localStorage.setItem("dz_ludo_portrait_lock", val ? "true" : "false");
+    broadcastSettingsChange();
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "ludoPortraitLock", value: val },
+      }),
+    );
+    toast.success(`Portrait Lock ${val ? "ON" : "OFF"} ho gaya!`);
+  };
+
+  const handleHideStatusBarToggle = (val: boolean) => {
+    setHideStatusBar(val);
+    localStorage.setItem("dz_ludo_hide_status_bar", val ? "true" : "false");
+    broadcastSettingsChange();
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "ludoHideStatusBar", value: val },
+      }),
+    );
+    toast.success(`Status Bar ${val ? "Hide" : "Visible"} ho gaya!`);
   };
 
   const handleAdmobSave = (key: string, val: string) => {
@@ -7596,6 +8252,22 @@ function LudoSettingsSection() {
     localStorage.setItem("dz_ludo_redemption_rate", String(rr));
     localStorage.setItem("dz_ludo_min_withdrawal", String(mw));
     broadcastSettingsChange();
+    // Dispatch specific CustomEvents for real-time updates in other pages
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "pointsPerAd", value: ppe },
+      }),
+    );
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "redemptionRate", value: rr },
+      }),
+    );
+    window.dispatchEvent(
+      new CustomEvent("dz_settings_update", {
+        detail: { key: "minWithdrawal", value: mw },
+      }),
+    );
     setTimeout(() => {
       setRewardCtrlSaving(false);
       toast.success("Dynamic Reward Controls save ho gaye!");
@@ -7712,6 +8384,68 @@ function LudoSettingsSection() {
             <span
               className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
                 rewardsEnabled ? "translate-x-7" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Toggle 3: Portrait Lock */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-bold text-foreground text-base">
+              📱 Portrait Lock
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {portraitLock
+                ? "Game portrait mode mein lock hai — screen rotate nahi hogi"
+                : "Portrait lock OFF hai — game kisi bhi orientation mein chalega"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.ludo_portrait_lock_toggle"
+            onClick={() => handlePortraitLockToggle(!portraitLock)}
+            className={`relative w-14 h-7 rounded-full transition-colors focus:outline-none ${
+              portraitLock ? "bg-emerald-500" : "bg-gray-300"
+            }`}
+            aria-label="Portrait lock toggle"
+          >
+            <span
+              className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                portraitLock ? "translate-x-7" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Toggle 4: Hide Status Bar */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-bold text-foreground text-base">
+              🔋 Hide Status Bar
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {hideStatusBar
+                ? "Game full-screen mode mein hai — battery/time bar chhupi hui hai"
+                : "Status bar visible hai — battery/time bar dikh raha hai"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="admin.ludo_hide_status_bar_toggle"
+            onClick={() => handleHideStatusBarToggle(!hideStatusBar)}
+            className={`relative w-14 h-7 rounded-full transition-colors focus:outline-none ${
+              hideStatusBar ? "bg-emerald-500" : "bg-gray-300"
+            }`}
+            aria-label="Hide status bar toggle"
+          >
+            <span
+              className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                hideStatusBar ? "translate-x-7" : "translate-x-0.5"
               }`}
             />
           </button>
@@ -8151,6 +8885,11 @@ export default function AdminDashboardPage() {
       icon: <span>⚡</span>,
     },
     {
+      key: "customSections" as AdminSection,
+      label: "📦 Custom Sections",
+      icon: <span>📦</span>,
+    },
+    {
       key: "ludoSettings" as AdminSection,
       label: "🎲 Ludo & Game Settings",
       icon: <span>🎲</span>,
@@ -8235,6 +8974,8 @@ export default function AdminDashboardPage() {
         return <EarningDashboardSection />;
       case "customCode" as AdminSection:
         return <CustomCodeManagerSection />;
+      case "customSections" as AdminSection:
+        return <CustomSectionManagerSection />;
       case "ludoSettings" as AdminSection:
         return <LudoSettingsSection />;
       default:

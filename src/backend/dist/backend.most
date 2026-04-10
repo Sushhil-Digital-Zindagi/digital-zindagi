@@ -31,6 +31,16 @@ type CustomCode__248340264 =
     name : Text;
     placement : Text
   };
+type CustomSection__448245083 =
+  {
+    buttons : Text;
+    createdAt : Int;
+    enabled : Bool;
+    heading : Text;
+    id : Nat;
+    name : Text;
+    placement : Text
+  };
 type Data__791452850<K, V> =
   {var count : Nat__490723111; kvs : [var ?(K, V)]};
 type ExternalBlob__246066408 = Blob;
@@ -194,6 +204,11 @@ actor {
       var root : Node__46230540<Nat, CustomCode__248340264>;
       var size : Nat__490723111
     };
+  stable var customSections :
+    {
+      var root : Node__46230540<Nat, CustomSection__448245083>;
+      var size : Nat__490723111
+    };
   stable var jobItems :
     {
       var root : Node__46230540<Nat, JobItem__343982965>;
@@ -207,6 +222,7 @@ actor {
   stable var nextBannerId : Nat;
   stable var nextCategoryId : Nat;
   stable var nextCustomCodeId : Nat;
+  stable var nextCustomSectionId : Nat;
   stable var nextJobId : Nat;
   stable var nextNewsId : Nat;
   stable var nextOrderId : Nat;

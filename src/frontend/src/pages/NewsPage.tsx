@@ -1,20 +1,12 @@
 import { ArrowLeft, Newspaper } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import SafeWebView from "../components/SafeWebView";
+import { useNews } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
-
-export interface NewsItem {
-  id: string;
-  title: string;
-  summary: string;
-  imageUrl: string;
-  link: string;
-  category: string;
-  createdAt: string;
-}
+import type { NewsItem } from "../types/appTypes";
 
 export function readNews(): NewsItem[] {
   try {
@@ -30,15 +22,10 @@ export function saveNews(items: NewsItem[]): void {
 
 export default function NewsPage() {
   const navigate = useNavigate();
-  const [news, setNews] = useState<NewsItem[]>(readNews);
+  const { data: rawNews = [] } = useNews();
+  const news = rawNews.filter((n) => n.enabled !== false);
   const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
   const [webViewTitle, setWebViewTitle] = useState<string>("");
-
-  useEffect(() => {
-    const handler = () => setNews(readNews());
-    window.addEventListener("focus", handler);
-    return () => window.removeEventListener("focus", handler);
-  }, []);
 
   const openSafeLink = (url: string, title: string) => {
     setWebViewUrl(url);

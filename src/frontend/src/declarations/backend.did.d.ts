@@ -45,6 +45,15 @@ export interface CustomCode {
   'enabled' : boolean,
   'btnLabel' : string,
 }
+export interface CustomSection {
+  'id' : bigint,
+  'placement' : string,
+  'name' : string,
+  'createdAt' : bigint,
+  'heading' : string,
+  'enabled' : boolean,
+  'buttons' : string,
+}
 export type ExternalBlob = Uint8Array;
 export interface JobItem {
   'id' : bigint,
@@ -215,6 +224,7 @@ export interface _SERVICE {
     [string, string, string, string, string],
     bigint
   >,
+  'addCustomSection' : ActorMethod<[string, string, string, string], bigint>,
   'addJob' : ActorMethod<
     [string, string, string, string, string, string],
     bigint
@@ -247,6 +257,7 @@ export interface _SERVICE {
   'deleteBanner' : ActorMethod<[bigint], undefined>,
   'deleteCategory' : ActorMethod<[bigint], boolean>,
   'deleteCustomCode' : ActorMethod<[bigint], boolean>,
+  'deleteCustomSection' : ActorMethod<[bigint], boolean>,
   'deleteJob' : ActorMethod<[bigint], boolean>,
   'deleteNews' : ActorMethod<[bigint], boolean>,
   'deleteScrapRate' : ActorMethod<[bigint], boolean>,
@@ -284,6 +295,7 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCategories' : ActorMethod<[], Array<Category>>,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
+  'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
   'getNews' : ActorMethod<[], Array<NewsItem>>,
@@ -349,6 +361,7 @@ export interface _SERVICE {
   'searchUsers' : ActorMethod<[string], Array<User>>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
+  'toggleCustomSection' : ActorMethod<[bigint, boolean], boolean>,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
   'updateAppSettings' : ActorMethod<[string], undefined>,
   'updateCategory' : ActorMethod<
@@ -357,6 +370,10 @@ export interface _SERVICE {
   >,
   'updateCustomCode' : ActorMethod<
     [bigint, string, string, string, string, string, boolean],
+    boolean
+  >,
+  'updateCustomSection' : ActorMethod<
+    [bigint, string, string, string, string, boolean],
     boolean
   >,
   'updateJob' : ActorMethod<

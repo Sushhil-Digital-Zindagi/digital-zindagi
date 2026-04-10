@@ -560,7 +560,7 @@ function usePortraitLock() {
     window.addEventListener("resize", check);
     try {
       (screen.orientation as unknown as { lock: (t: string) => Promise<void> })
-        .lock("portrait")
+        .lock("portrait-primary")
         .catch(() => {});
     } catch {}
     return () => window.removeEventListener("resize", check);
@@ -592,9 +592,11 @@ export default function GameComingSoonPage() {
   const navigate = useNavigate();
   const gameContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const ludoEnabled = localStorage.getItem("dz_ludo_enabled") !== "false";
-  const gameVisible = localStorage.getItem("dz_game_visible") !== "false";
-  const isEnabled = ludoEnabled && gameVisible;
+  const [ludoEnabled, setLudoEnabled] = useState<boolean>(
+    () =>
+      localStorage.getItem("dz_ludo_enabled") !== "false" &&
+      localStorage.getItem("dz_game_visible") !== "false",
+  );
 
   const admobConfig = (() => {
     try {
@@ -606,6 +608,33 @@ export default function GameComingSoonPage() {
     }
   })();
   const bannerUnitId = admobConfig.ludoBannerId ?? admobConfig.bannerId ?? "";
+
+  // Listen for admin real-time toggle updates
+  useEffect(() => {
+    const handleSettingsUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ key: string; value: unknown }>;
+      if (ev.detail?.key === "ludoEnabled") {
+        const val = Boolean(ev.detail.value);
+        setLudoEnabled(val);
+        if (!val) navigate("/");
+      }
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "dz_ludo_enabled" || e.key === "dz_game_visible") {
+        const enabled =
+          localStorage.getItem("dz_ludo_enabled") !== "false" &&
+          localStorage.getItem("dz_game_visible") !== "false";
+        setLudoEnabled(enabled);
+        if (!enabled) navigate("/");
+      }
+    };
+    window.addEventListener("dz_settings_update", handleSettingsUpdate);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("dz_settings_update", handleSettingsUpdate);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [navigate]);
 
   const [phase, setPhase] = useState<GamePhase>(() =>
     localStorage.getItem("dz_ludo_disclaimer_accepted") === "true"
@@ -874,7 +903,7 @@ export default function GameComingSoonPage() {
   );
 
   // ─── Disabled ────────────────────────────────────────────────────────────────
-  if (!isEnabled) {
+  if (!ludoEnabled) {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
@@ -1287,7 +1316,12 @@ export default function GameComingSoonPage() {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        paddingBottom: "70px", // space for fixed ad banner
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 70px)", // safe area + space for fixed ad banner
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+        width: "100vw",
+        height: "100vh",
       }}
     >
       <StyleInjector />

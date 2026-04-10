@@ -11,7 +11,7 @@ interface VideoPlayerProps {
 type Quality = "auto" | "720" | "1080";
 
 const YT_BASE_PARAMS =
-  "rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&fs=1";
+  "rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&fs=1&playsinline=1&iv_load_policy=3&disablekb=0";
 
 function getEmbedUrl(
   url: string,
@@ -25,7 +25,7 @@ function getEmbedUrl(
   const qualityParam = vq ? `&vq=${vq}` : "";
   const autoplayParam = autoplay ? "&autoplay=1" : "";
 
-  // YouTube
+  // YouTube — strip any playlist param to remove the playlist UI bar
   const ytMatch = url.match(
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/?)([\w-]{11})/,
   );
@@ -142,8 +142,9 @@ export default function VideoPlayer({
       <div
         ref={containerRef}
         className={`relative bg-black ${
-          isFullscreen ? "w-screen h-screen" : "w-full max-w-2xl mx-4"
+          isFullscreen ? "w-screen h-screen" : "w-full"
         }`}
+        style={!isFullscreen ? { maxWidth: "100vw" } : undefined}
       >
         {/* Top controls bar */}
         <div className="flex items-center justify-between px-2 py-2">
@@ -197,8 +198,10 @@ export default function VideoPlayer({
           <div
             className="relative w-full bg-black"
             style={{
-              paddingTop: isFullscreen ? "0" : "56.25%",
+              paddingBottom: isFullscreen ? "0" : "56.25%",
               height: isFullscreen ? "calc(100vh - 48px)" : undefined,
+              width: "100%",
+              maxWidth: "100%",
             }}
           >
             <iframe
@@ -207,6 +210,7 @@ export default function VideoPlayer({
               src={embedUrl}
               title={title ?? "Video"}
               className="absolute inset-0 w-full h-full"
+              style={{ width: "100%", maxWidth: "100%" }}
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen={true}
               referrerPolicy="strict-origin-when-cross-origin"

@@ -220,6 +220,18 @@ export interface UdhaarTransaction {
   createdAt: number;
 }
 
+// ---- Dynamic Custom Sections ----
+
+export interface CustomSection {
+  id: number;
+  name: string;
+  heading: string;
+  placement: string;
+  enabled: boolean;
+  buttons: string; // JSON stringified [{label, url, icon}]
+  createdAt: bigint;
+}
+
 // ---- Ludo Game types ----
 
 export interface LudoToken {

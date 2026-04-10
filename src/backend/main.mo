@@ -68,6 +68,10 @@ persistent actor {
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
 
+  // Dynamic Custom Sections state
+  var customSections = Map.empty<Nat, CustomSection>();
+  var nextCustomSectionId = 1;
+
   // Seed default scrap rates (Iron, Paper, Copper)
   var scrapRatesSeeded = false;
 
@@ -254,6 +258,16 @@ persistent actor {
     platform : Text;
     category : Text;
     enabled : Bool;
+    createdAt : Int;
+  };
+
+  type CustomSection = {
+    id : Nat;
+    name : Text;
+    heading : Text;
+    placement : Text;
+    enabled : Bool;
+    buttons : Text;  // JSON stringified array of {label, url, icon} objects
     createdAt : Int;
   };
 
@@ -1326,6 +1340,58 @@ persistent actor {
       videos.remove(id);
       true;
     } else { false };
+  };
+
+  // ── CUSTOM SECTIONS CRUD ──────────────────────────────────────────────────
+
+  public query func getCustomSections() : async [CustomSection] {
+    customSections.values().toArray();
+  };
+
+  public shared ({ caller }) func addCustomSection(name : Text, heading : Text, placement : Text, buttons : Text) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add custom sections");
+    };
+    let id = nextCustomSectionId;
+    customSections.add(id, { id; name; heading; placement; enabled = true; buttons; createdAt = Time.now() });
+    nextCustomSectionId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateCustomSection(id : Nat, name : Text, heading : Text, placement : Text, buttons : Text, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update custom sections");
+    };
+    switch (customSections.get(id)) {
+      case null { false };
+      case (?existing) {
+        customSections.add(id, { id; name; heading; placement; enabled; buttons; createdAt = existing.createdAt });
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteCustomSection(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete custom sections");
+    };
+    if (customSections.containsKey(id)) {
+      customSections.remove(id);
+      true;
+    } else { false };
+  };
+
+  public shared ({ caller }) func toggleCustomSection(id : Nat, enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can toggle custom sections");
+    };
+    switch (customSections.get(id)) {
+      case null { false };
+      case (?existing) {
+        customSections.add(id, { existing with enabled });
+        true;
+      };
+    };
   };
 
   // ── APP SETTINGS (JSON blob for misc settings) ───────────────────────────
