@@ -79,6 +79,39 @@ type NewsItem__791051751 =
   };
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type OfferTransaction__599458472 =
+  {
+    amount : Nat;
+    createdAt : Int;
+    description : Text;
+    id : Nat;
+    offerUserId : Nat;
+    status : {#credited; #pending; #reversed};
+    txType : {#cpalead; #manualCredit; #referralBonus}
+  };
+type OfferUser__179657268 =
+  {
+    createdAt : Int;
+    email : Text;
+    id : Nat;
+    passwordHash : Text;
+    pendingEarnings : Nat;
+    referralCode : Text;
+    referredBy : ?Text;
+    totalEarnings : Nat;
+    userId : Text
+  };
+type OfferWithdrawal__336029618 =
+  {
+    adminNote : ?Text;
+    amount : Nat;
+    id : Nat;
+    offerUserId : Nat;
+    processedAt : ?Int;
+    requestedAt : Int;
+    status : {#approved; #paid; #pending; #rejected};
+    upiId : Text
+  };
 type Order__762448211 =
   {
     createdAt : Int;
@@ -108,6 +141,33 @@ type ProviderProfile__706122890 =
     subscriptionPlan : SubscriptionPlan__552945260;
     subscriptionStatus : SubscriptionStatus__278950313;
     upiId : Text;
+    userId : Nat
+  };
+type RechargeReceipt__91945020 =
+  {
+    amount : Nat;
+    circle : Text;
+    commission : Nat;
+    generatedAt : Int;
+    id : Nat;
+    mobile : Text;
+    netCost : Nat;
+    operator : Text;
+    referenceId : Text;
+    txnId : Nat;
+    userId : Nat
+  };
+type RechargeTransaction__394578144 =
+  {
+    amount : Float;
+    circle : Text;
+    commission : Float;
+    createdAt : Int;
+    id : Nat;
+    mobile : Text;
+    netCost : Float;
+    operator : Text;
+    status : Text;
     userId : Nat
   };
 type ScrapRate__369663379 =
@@ -175,6 +235,18 @@ type VideoItem__865818871 =
     title : Text;
     videoUrl : Text
   };
+type WalletBalance__274125096 =
+  {balance : Float; lastUpdated : Int; userId : Nat};
+type WalletTopupRequest__51988012 =
+  {
+    amount : Float;
+    id : Nat;
+    note : Text;
+    requestedAt : Int;
+    resolvedAt : ?Int;
+    status : Text;
+    userId : Nat
+  };
 actor {
   stable accessControlState :
     {
@@ -198,6 +270,12 @@ actor {
     {
       var root : Node__46230540<Nat, Category__164941945>;
       var size : Nat__490723111
+    };
+  stable var commissionConfig :
+    {
+      adminSharePct : Float;
+      globalCommissionPct : Float;
+      retailerSharePct : Float
     };
   stable var customCodes :
     {
@@ -225,10 +303,38 @@ actor {
   stable var nextCustomSectionId : Nat;
   stable var nextJobId : Nat;
   stable var nextNewsId : Nat;
+  stable var nextOfferTxnId : Nat;
+  stable var nextOfferUserId : Nat;
   stable var nextOrderId : Nat;
+  stable var nextReceiptId : Nat;
+  stable var nextRechargeTxId : Nat;
   stable var nextScrapRateId : Nat;
+  stable var nextTopupId : Nat;
   stable var nextUserId : Nat;
   stable var nextVideoId : Nat;
+  stable var nextWithdrawalId : Nat;
+  stable var offerPortalConfig :
+    {
+      adminProfitPct : Nat;
+      cpaLeadWebhookSecret : Text;
+      isEnabled : Bool;
+      userProfitPct : Nat
+    };
+  stable var offerTxns :
+    {
+      var root : Node__46230540<Nat, OfferTransaction__599458472>;
+      var size : Nat__490723111
+    };
+  stable var offerUsers :
+    {
+      var root : Node__46230540<Nat, OfferUser__179657268>;
+      var size : Nat__490723111
+    };
+  stable var offerWithdrawals :
+    {
+      var root : Node__46230540<Nat, OfferWithdrawal__336029618>;
+      var size : Nat__490723111
+    };
   stable var orders :
     {
       var root : Node__46230540<Nat, Order__762448211>;
@@ -241,15 +347,41 @@ actor {
       var root : Node__46230540<Nat, ProviderProfile__706122890>;
       var size : Nat__490723111
     };
+  stable var rechargeApiConfig :
+    {
+      apiKey : Text;
+      apiUrl : Text;
+      autoRefundEnabled : Bool;
+      isActive : Bool;
+      responseParam : Text
+    };
+  stable var rechargeReceipts :
+    {
+      var root : Node__46230540<Nat, RechargeReceipt__91945020>;
+      var size : Nat__490723111
+    };
+  stable var rechargeServiceEnabled : Bool;
+  stable var rechargeTxns :
+    {
+      var root : Node__46230540<Nat, RechargeTransaction__394578144>;
+      var size : Nat__490723111
+    };
   stable var scrapRates :
     {
       var root : Node__46230540<Nat, ScrapRate__369663379>;
       var size : Nat__490723111
     };
   stable var scrapRatesSeeded : Bool;
+  stable var smsConfig :
+    {fast2smsApiKey : Text; isEnabled : Bool; senderId : Text};
   stable var subscriptionPricing : ?SubscriptionPricing__787813395;
   stable var toggles :
     {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
+  stable var topupRequests :
+    {
+      var root : Node__46230540<Nat, WalletTopupRequest__51988012>;
+      var size : Nat__490723111
+    };
   stable var udhaarCustomers :
     {
       var root : Node__46230540<Text, UdhaarCustomer__381297801>;
@@ -275,6 +407,11 @@ actor {
   stable var videos :
     {
       var root : Node__46230540<Nat, VideoItem__865818871>;
+      var size : Nat__490723111
+    };
+  stable var walletBalances :
+    {
+      var root : Node__46230540<Nat, WalletBalance__274125096>;
       var size : Nat__490723111
     }
 };

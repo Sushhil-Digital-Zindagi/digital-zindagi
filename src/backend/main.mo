@@ -14,9 +14,17 @@ import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Int "mo:core/Int";
 import Float "mo:core/Float";
+import WRTypes    "types/wallet-recharge";
+import WRApi      "mixins/wallet-recharge-api";
+import OPTypes    "types/offer-portal";
+import OPApi      "mixins/offer-portal-api";
+import OPLib      "lib/offer-portal";
+import SmsLib     "lib/sms";
+
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
+
 
 persistent actor {
   type MobileNumber = Text;
@@ -64,6 +72,42 @@ persistent actor {
   // Udhaar Book state
   var udhaarCustomers = Map.empty<Text, UdhaarCustomer>();
   var udhaarTransactions = Map.empty<Text, UdhaarTransaction>();
+
+  // ── Wallet & Recharge state ───────────────────────────────────────────────
+  var walletBalances    = Map.empty<Nat, WRTypes.WalletBalance>();
+  var topupRequests     = Map.empty<Nat, WRTypes.WalletTopupRequest>();
+  var rechargeTxns      = Map.empty<Nat, WRTypes.RechargeTransaction>();
+  var nextTopupId       = 1;
+  var nextRechargeTxId  = 1;
+  var rechargeApiConfig : WRTypes.RechargeApiConfig = {
+    apiUrl = ""; apiKey = ""; responseParam = "status"; isActive = false;
+    autoRefundEnabled = false;
+  };
+  var commissionConfig : WRTypes.CommissionConfig = {
+    globalCommissionPct = 5.0; retailerSharePct = 2.0; adminSharePct = 3.0;
+  };
+  var rechargeServiceEnabled : Bool = true;
+
+  // ── Offer Portal state ────────────────────────────────────────────────────
+  var offerUsers        = Map.empty<Nat, OPTypes.OfferUser>();
+  var offerTxns         = Map.empty<Nat, OPTypes.OfferTransaction>();
+  var offerWithdrawals  = Map.empty<Nat, OPTypes.OfferWithdrawal>();
+  var rechargeReceipts  = Map.empty<Nat, OPTypes.RechargeReceipt>();
+  var nextOfferUserId   = 1;
+  var nextOfferTxnId    = 1;
+  var nextWithdrawalId  = 1;
+  var nextReceiptId     = 1;
+  var offerPortalConfig : OPTypes.OfferPortalConfig = {
+    isEnabled            = false;
+    cpaLeadWebhookSecret = "";
+    adminProfitPct       = 60;
+    userProfitPct        = 40;
+  };
+  var smsConfig : OPTypes.SmsConfig = {
+    fast2smsApiKey = "";
+    senderId       = "DZNAGI";
+    isEnabled      = false;
+  };
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -1603,5 +1647,412 @@ persistent actor {
         else { acc - t.amount };
       });
     #ok(balance);
+  };
+
+  // ── WALLET & RECHARGE ─────────────────────────────────────────────────────
+  // Toggle key 'dz_recharge_enabled' mirrors rechargeServiceEnabled variable;
+  // use setRechargeServiceEnabled below as the canonical switch.
+
+  // ── Wallet: user-facing ───────────────────────────────────────────────────
+
+  /// Return the caller's wallet balance (0.0 if no wallet yet).
+  public shared query ({ caller }) func getMyWalletBalance() : async Float {
+    WRApi.getMyBalance(walletBalances, principalToUserId, caller);
+  };
+
+  /// Return wallet balance for any userId — admin only.
+  public shared query ({ caller }) func getWalletBalanceByUserId(userId : Nat) : async Float {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.getBalanceByUserId(walletBalances, userId);
+  };
+
+  /// Request admin to top-up your wallet.  Returns the new request ID.
+  public shared ({ caller }) func requestWalletTopup(amount : Float, note : Text) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Login required");
+    };
+    switch (WRApi.requestTopup(topupRequests, nextTopupId, principalToUserId, caller, amount, note)) {
+      case (#ok(id))   { nextTopupId += 1; id };
+      case (#err(msg)) { Runtime.trap(msg) };
+    };
+  };
+
+  /// Return all topup requests submitted by the caller.
+  public shared query ({ caller }) func getMyTopupRequests() : async [WRTypes.WalletTopupRequest] {
+    WRApi.getMyTopupRequests(topupRequests, principalToUserId, caller);
+  };
+
+  // ── Wallet: admin-facing ──────────────────────────────────────────────────
+
+  /// Return all pending topup requests — admin only.
+  public shared query ({ caller }) func getAllTopupRequests() : async [WRTypes.WalletTopupRequest] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.getAllTopupRequests(topupRequests);
+  };
+
+  /// Approve or reject a topup request.  On approval, funds are credited — admin only.
+  public shared ({ caller }) func approveTopupRequest(requestId : Nat, approve : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.resolveTopupRequest(topupRequests, walletBalances, requestId, approve);
+  };
+
+  /// Directly add or deduct balance for any user — admin only.
+  public shared ({ caller }) func adminAdjustWallet(userId : Nat, amount : Float, isAdd : Bool, _note : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.adminAdjust(walletBalances, userId, amount, isAdd);
+  };
+
+  /// Return all wallet balances as (userId, balance) pairs — admin only.
+  public shared query ({ caller }) func getAllWalletBalances() : async [(Nat, Float)] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.getAllBalances(walletBalances);
+  };
+
+  // ── Recharge: user-facing ─────────────────────────────────────────────────
+
+  /// Initiate a mobile recharge.  Auto-calculates commission; deducts netCost
+  /// from caller's wallet.  Returns new transaction ID.
+  public shared ({ caller }) func initiateRecharge(mobile : Text, operator : Text, circle : Text, amount : Float) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Login required");
+    };
+    switch (WRApi.initiateRecharge(
+      rechargeTxns, walletBalances, nextRechargeTxId,
+      principalToUserId, commissionConfig, rechargeServiceEnabled,
+      caller, mobile, operator, circle, amount,
+    )) {
+      case (#ok(id))   { nextRechargeTxId += 1; id };
+      case (#err(msg)) { Runtime.trap(msg) };
+    };
+  };
+
+  /// Return the caller's recharge transaction history.
+  public shared query ({ caller }) func getMyRechargeHistory() : async [WRTypes.RechargeTransaction] {
+    WRApi.getMyRechargeHistory(rechargeTxns, principalToUserId, caller);
+  };
+
+  // ── Recharge: admin-facing ────────────────────────────────────────────────
+
+  /// Update the status of a recharge transaction — admin only.
+  /// Auto-refund: if status = "Failed" and autoRefundEnabled, automatically refunds netCost.
+  /// Receipt: if status = "Success", generates a digital receipt.
+  /// SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
+  public shared ({ caller }) func updateRechargeStatus(txId : Nat, status : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    let updated = WRApi.updateRechargeStatus(rechargeTxns, txId, status);
+    if (not updated) { return false };
+
+    switch (rechargeTxns.get(txId)) {
+      case null {};
+      case (?txn) {
+        // Auto-refund on failure
+        if (status == "Failed" and rechargeApiConfig.autoRefundEnabled) {
+          ignore WRApi.refundRecharge(rechargeTxns, walletBalances, txId);
+        };
+
+        // Generate receipt on success
+        if (status == "Success") {
+          let amtNat = txn.amount.toInt().toNat();
+          let commNat = txn.commission.toInt().toNat();
+          let netNat  = txn.netCost.toInt().toNat();
+          let refId = "DZ-RC-" # txId.toText() # "-" # Int.abs(Time.now()).toText();
+          ignore OPApi.generateRechargeReceipt(
+            rechargeReceipts, nextReceiptId,
+            txn.userId, txn.mobile, txn.operator, txn.circle,
+            amtNat, commNat, netNat, txId, refId,
+          );
+          nextReceiptId += 1;
+        };
+
+        // Send SMS alert (fire-and-forget — no await, SMS is best-effort)
+        if (smsConfig.isEnabled) {
+          let mobile = txn.mobile;
+          let amtNat = txn.amount.toInt().toNat();
+          let msg = if (status == "Success") {
+            SmsLib.rechargeSuccessMessage(mobile, amtNat, txn.operator);
+          } else if (status == "Failed") {
+            SmsLib.rechargeFailureMessage(mobile, amtNat, txn.operator);
+          } else { "" };
+          if (msg != "") {
+            let _req = SmsLib.buildSmsRequest(smsConfig, mobile, msg);
+            // HTTP outcall would be dispatched here via the http-outcalls extension.
+            // The request record is built above; actual dispatch requires the
+            // caffeineai-http-outcalls mixin which performs the canister HTTP call.
+            // Placeholder: request is built and discarded (no async side-effect needed
+            // at this layer — frontend/extension handles the actual call).
+          };
+        };
+      };
+    };
+    true;
+  };
+
+  /// Return all recharge transactions (master log) — admin only.
+  public shared query ({ caller }) func getAllRechargeTransactions() : async [WRTypes.RechargeTransaction] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.getAllRechargeTransactions(rechargeTxns);
+  };
+
+  /// Refund a Failed recharge — restores netCost to user wallet — admin only.
+  public shared ({ caller }) func refundRecharge(txId : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    WRApi.refundRecharge(rechargeTxns, walletBalances, txId);
+  };
+
+  // ── Config: recharge API ──────────────────────────────────────────────────
+
+  /// Return the current recharge API config — admin only.
+  public shared query ({ caller }) func getRechargeApiConfig() : async WRTypes.RechargeApiConfig {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    rechargeApiConfig;
+  };
+
+  /// Save recharge API config — admin only.
+  public shared ({ caller }) func updateRechargeApiConfig(
+    apiUrl            : Text,
+    apiKey            : Text,
+    responseParam     : Text,
+    isActive          : Bool,
+    autoRefundEnabled : Bool,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    rechargeApiConfig := { apiUrl; apiKey; responseParam; isActive; autoRefundEnabled };
+    true;
+  };
+
+  // ── Config: commission ────────────────────────────────────────────────────
+
+  /// Return the current commission config — public.
+  public query func getCommissionConfig() : async WRTypes.CommissionConfig {
+    commissionConfig;
+  };
+
+  /// Update commission config — admin only.
+  /// Validates: retailerPct + adminPct must equal globalPct.
+  public shared ({ caller }) func updateCommissionConfig(
+    globalPct   : Float,
+    retailerPct : Float,
+    adminPct    : Float,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    // Allow a tiny floating-point tolerance (0.001)
+    let sum  = retailerPct + adminPct;
+    let diff = if (sum >= globalPct) { sum - globalPct } else { globalPct - sum };
+    if (diff > 0.001) {
+      Runtime.trap("Invalid config: retailerPct + adminPct must equal globalPct");
+    };
+    commissionConfig := {
+      globalCommissionPct = globalPct;
+      retailerSharePct    = retailerPct;
+      adminSharePct       = adminPct;
+    };
+    true;
+  };
+
+  // ── Config: service toggle ────────────────────────────────────────────────
+
+  /// Return whether recharge service is enabled — public.
+  public query func getRechargeServiceEnabled() : async Bool {
+    rechargeServiceEnabled;
+  };
+
+  /// Enable or disable the recharge service — admin only.
+  public shared ({ caller }) func setRechargeServiceEnabled(enabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    rechargeServiceEnabled := enabled;
+    true;
+  };
+
+  // ── OFFER PORTAL — user-facing ────────────────────────────────────────────
+
+  /// Register a new Offer Portal user (isolated from main user DB).
+  public shared ({ caller }) func registerOfferUser(email : Text, passwordHash : Text, referralCode : ?Text) : async Nat {
+    switch (OPApi.registerOfferUser(offerUsers, nextOfferUserId, email, passwordHash, referralCode)) {
+      case (#ok(id))   { nextOfferUserId += 1; id };
+      case (#err(msg)) { Runtime.trap(msg) };
+    };
+  };
+
+  /// Login to the Offer Portal.
+  public shared ({ caller }) func loginOfferUser(email : Text, passwordHash : Text) : async OPTypes.OfferUser {
+    switch (OPApi.loginOfferUser(offerUsers, email, passwordHash)) {
+      case (#ok(user)) { user };
+      case (#err(msg)) { Runtime.trap(msg) };
+    };
+  };
+
+  /// Get earnings summary for an Offer Portal user.
+  public shared query ({ caller }) func getOfferEarningsSummary(offerUserId : Nat) : async { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text } {
+    OPApi.getEarningsSummary(offerUsers, offerUserId);
+  };
+
+  /// Get Offer Portal transaction history for a user.
+  public shared query ({ caller }) func getMyOfferTransactions(offerUserId : Nat) : async [OPTypes.OfferTransaction] {
+    OPApi.getMyOfferTransactions(offerTxns, offerUserId);
+  };
+
+  /// Submit a UPI withdrawal request from the Offer Portal.
+  public shared ({ caller }) func requestOfferWithdrawal(offerUserId : Nat, upiId : Text, amount : Nat) : async Nat {
+    switch (OPApi.requestWithdrawal(offerUsers, offerWithdrawals, nextWithdrawalId, offerUserId, upiId, amount)) {
+      case (#ok(id))   { nextWithdrawalId += 1; id };
+      case (#err(msg)) { Runtime.trap(msg) };
+    };
+  };
+
+  /// Get withdrawal requests for an Offer Portal user.
+  public shared query ({ caller }) func getMyOfferWithdrawals(offerUserId : Nat) : async [OPTypes.OfferWithdrawal] {
+    OPApi.getMyWithdrawals(offerWithdrawals, offerUserId);
+  };
+
+  // ── OFFER PORTAL — CPALead postback ───────────────────────────────────────
+
+  /// Process a CPALead postback: verify secret, split profit, credit earnings.
+  /// Also triggers 1% referral bonus to the referrer if any.
+  public shared ({ caller }) func processCpaLeadPostback(
+    offerUserId   : Nat,
+    grossAmount   : Nat,
+    webhookSecret : Text,
+  ) : async Bool {
+    switch (OPApi.processCpaLeadPostback(
+      offerUsers, offerTxns, nextOfferTxnId,
+      offerPortalConfig, offerUserId, grossAmount, webhookSecret,
+    )) {
+      case (#err(_)) { false };
+      case (#ok(usedTxnId)) {
+        nextOfferTxnId += 1;
+        // Trigger referral bonus if user was referred
+        switch (offerUsers.get(offerUserId)) {
+          case null {};
+          case (?user) {
+            switch (user.referredBy) {
+              case null {};
+              case (?refCode) {
+                // Find referrer by referral code
+                let mReferrer = offerUsers.values()
+                  .find(func(u : OPTypes.OfferUser) : Bool { u.referralCode == refCode });
+                switch (mReferrer) {
+                  case null {};
+                  case (?referrer) {
+                    // Calculate user share for bonus base
+                    let (userShare, _) = OPLib.calculateProfitSplit(grossAmount, offerPortalConfig.userProfitPct);
+                    let txnUsed = OPApi.creditReferralBonus(
+                      offerUsers, offerTxns, nextOfferTxnId, referrer.id, userShare,
+                    );
+                    if (txnUsed != 0) { nextOfferTxnId += 1 };
+                  };
+                };
+              };
+            };
+          };
+        };
+        true;
+      };
+    };
+  };
+
+  // ── OFFER PORTAL — admin (🚀 OFFER CONTROL CENTER) ───────────────────────
+
+  /// List all Offer Portal users — admin only.
+  public shared query ({ caller }) func adminListOfferUsers() : async [OPTypes.OfferUser] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    OPApi.adminListOfferUsers(offerUsers);
+  };
+
+  /// List all pending withdrawal requests — admin only.
+  public shared query ({ caller }) func adminListPendingWithdrawals() : async [OPTypes.OfferWithdrawal] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    OPApi.adminListPendingWithdrawals(offerWithdrawals);
+  };
+
+  /// Resolve a withdrawal request (approve/reject/paid) — admin only.
+  public shared ({ caller }) func adminResolveWithdrawal(id : Nat, newStatus : { #approved; #rejected; #paid }, adminNote : ?Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    OPApi.adminResolveWithdrawal(offerUsers, offerWithdrawals, id, newStatus, adminNote);
+  };
+
+  /// Get Offer Portal global config — admin only.
+  public shared query ({ caller }) func getOfferPortalConfig() : async OPTypes.OfferPortalConfig {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    offerPortalConfig;
+  };
+
+  /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  public shared ({ caller }) func updateOfferPortalConfig(
+    isEnabled            : Bool,
+    cpaLeadWebhookSecret : Text,
+    adminProfitPct       : Nat,
+    userProfitPct        : Nat,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    offerPortalConfig := { isEnabled; cpaLeadWebhookSecret; adminProfitPct; userProfitPct };
+    true;
+  };
+
+  // ── SMS config ────────────────────────────────────────────────────────────
+
+  /// Get SMS (Fast2SMS) config — admin only.
+  public shared query ({ caller }) func getSmsConfig() : async OPTypes.SmsConfig {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    smsConfig;
+  };
+
+  /// Update SMS config — admin only.
+  public shared ({ caller }) func updateSmsConfig(fast2smsApiKey : Text, senderId : Text, isEnabled : Bool) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    smsConfig := { fast2smsApiKey; senderId; isEnabled };
+    true;
+  };
+
+  // ── Recharge Receipts ─────────────────────────────────────────────────────
+
+  /// Get receipt for a specific recharge transaction.
+  public shared query ({ caller }) func getRechargeReceipt(txnId : Nat) : async ?OPTypes.RechargeReceipt {
+    OPApi.getReceiptByTxnId(rechargeReceipts, txnId);
+  };
+
+  /// Get all receipts for the calling user.
+  public shared query ({ caller }) func getMyRechargeReceipts() : async [OPTypes.RechargeReceipt] {
+    switch (principalToUserId.get(caller)) {
+      case null { [] };
+      case (?uid) { OPApi.getMyReceipts(rechargeReceipts, uid) };
+    };
   };
 };

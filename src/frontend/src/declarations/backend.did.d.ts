@@ -36,6 +36,11 @@ export interface Category {
   'emoji' : string,
   'enabled' : boolean,
 }
+export interface CommissionConfig {
+  'retailerSharePct' : number,
+  'adminSharePct' : number,
+  'globalCommissionPct' : number,
+}
 export interface CustomCode {
   'id' : bigint,
   'placement' : string,
@@ -77,6 +82,49 @@ export interface NewsItem {
   'imageUrl' : string,
   'category' : string,
 }
+export interface OfferPortalConfig {
+  'cpaLeadWebhookSecret' : string,
+  'adminProfitPct' : bigint,
+  'isEnabled' : boolean,
+  'userProfitPct' : bigint,
+}
+export interface OfferTransaction {
+  'id' : bigint,
+  'status' : { 'pending' : null } |
+    { 'reversed' : null } |
+    { 'credited' : null },
+  'offerUserId' : bigint,
+  'createdAt' : bigint,
+  'description' : string,
+  'txType' : { 'manualCredit' : null } |
+    { 'referralBonus' : null } |
+    { 'cpalead' : null },
+  'amount' : bigint,
+}
+export interface OfferUser {
+  'id' : bigint,
+  'referralCode' : string,
+  'userId' : string,
+  'createdAt' : bigint,
+  'pendingEarnings' : bigint,
+  'email' : string,
+  'referredBy' : [] | [string],
+  'passwordHash' : string,
+  'totalEarnings' : bigint,
+}
+export interface OfferWithdrawal {
+  'id' : bigint,
+  'status' : { 'pending' : null } |
+    { 'paid' : null } |
+    { 'approved' : null } |
+    { 'rejected' : null },
+  'offerUserId' : bigint,
+  'processedAt' : [] | [bigint],
+  'adminNote' : [] | [string],
+  'upiId' : string,
+  'amount' : bigint,
+  'requestedAt' : bigint,
+}
 export interface Order {
   'id' : bigint,
   'customerName' : string,
@@ -108,6 +156,38 @@ export interface ProviderProfile {
   'planType' : PlanType,
   'photos' : Array<string>,
 }
+export interface RechargeApiConfig {
+  'autoRefundEnabled' : boolean,
+  'isActive' : boolean,
+  'responseParam' : string,
+  'apiKey' : string,
+  'apiUrl' : string,
+}
+export interface RechargeReceipt {
+  'id' : bigint,
+  'txnId' : bigint,
+  'netCost' : bigint,
+  'userId' : bigint,
+  'operator' : string,
+  'generatedAt' : bigint,
+  'circle' : string,
+  'referenceId' : string,
+  'commission' : bigint,
+  'mobile' : string,
+  'amount' : bigint,
+}
+export interface RechargeTransaction {
+  'id' : bigint,
+  'status' : string,
+  'netCost' : number,
+  'userId' : bigint,
+  'operator' : string,
+  'createdAt' : bigint,
+  'circle' : string,
+  'commission' : number,
+  'mobile' : string,
+  'amount' : number,
+}
 export interface ScrapRate {
   'id' : bigint,
   'ratePerKg' : number,
@@ -119,6 +199,11 @@ export interface ServiceRate {
   'name' : string,
   'description' : string,
   'price' : bigint,
+}
+export interface SmsConfig {
+  'fast2smsApiKey' : string,
+  'isEnabled' : boolean,
+  'senderId' : string,
 }
 export type SubscriptionPlan = { 'twelveMonths' : null } |
   { 'threeMonths' : null } |
@@ -187,6 +272,15 @@ export interface VideoItem {
   'category' : string,
   'videoUrl' : string,
 }
+export interface WalletTopupRequest {
+  'id' : bigint,
+  'status' : string,
+  'userId' : bigint,
+  'note' : string,
+  'amount' : number,
+  'requestedAt' : bigint,
+  'resolvedAt' : [] | [bigint],
+}
 export interface _ImmutableObjectStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -251,7 +345,36 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
+  /**
+   * / Directly add or deduct balance for any user — admin only.
+   */
+  'adminAdjustWallet' : ActorMethod<[bigint, number, boolean, string], boolean>,
+  /**
+   * / List all Offer Portal users — admin only.
+   */
+  'adminListOfferUsers' : ActorMethod<[], Array<OfferUser>>,
+  /**
+   * / List all pending withdrawal requests — admin only.
+   */
+  'adminListPendingWithdrawals' : ActorMethod<[], Array<OfferWithdrawal>>,
+  /**
+   * / Resolve a withdrawal request (approve/reject/paid) — admin only.
+   */
+  'adminResolveWithdrawal' : ActorMethod<
+    [
+      bigint,
+      { 'paid' : null } |
+        { 'approved' : null } |
+        { 'rejected' : null },
+      [] | [string],
+    ],
+    boolean
+  >,
   'approveProvider' : ActorMethod<[bigint, SubscriptionPlan], undefined>,
+  /**
+   * / Approve or reject a topup request.  On approval, funds are credited — admin only.
+   */
+  'approveTopupRequest' : ActorMethod<[bigint, boolean], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'changeAdminPin' : ActorMethod<[string, string], undefined>,
   'deleteBanner' : ActorMethod<[bigint], undefined>,
@@ -288,17 +411,72 @@ export interface _SERVICE {
   'getActiveProviders' : ActorMethod<[], Array<ProviderProfile>>,
   'getAdminConfig' : ActorMethod<[], [] | [AdminConfig]>,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
+  /**
+   * / Return all recharge transactions (master log) — admin only.
+   */
+  'getAllRechargeTransactions' : ActorMethod<[], Array<RechargeTransaction>>,
   'getAllToggles' : ActorMethod<[], Array<[string, boolean]>>,
+  /**
+   * / Return all pending topup requests — admin only.
+   */
+  'getAllTopupRequests' : ActorMethod<[], Array<WalletTopupRequest>>,
   'getAllUsers' : ActorMethod<[], Array<User>>,
+  /**
+   * / Return all wallet balances as (userId, balance) pairs — admin only.
+   */
+  'getAllWalletBalances' : ActorMethod<[], Array<[bigint, number]>>,
   'getAppSettings' : ActorMethod<[], string>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCategories' : ActorMethod<[], Array<Category>>,
+  /**
+   * / Return the current commission config — public.
+   */
+  'getCommissionConfig' : ActorMethod<[], CommissionConfig>,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
+  /**
+   * / Get Offer Portal transaction history for a user.
+   */
+  'getMyOfferTransactions' : ActorMethod<[bigint], Array<OfferTransaction>>,
+  /**
+   * / Get withdrawal requests for an Offer Portal user.
+   */
+  'getMyOfferWithdrawals' : ActorMethod<[bigint], Array<OfferWithdrawal>>,
+  /**
+   * / Return the caller's recharge transaction history.
+   */
+  'getMyRechargeHistory' : ActorMethod<[], Array<RechargeTransaction>>,
+  /**
+   * / Get all receipts for the calling user.
+   */
+  'getMyRechargeReceipts' : ActorMethod<[], Array<RechargeReceipt>>,
+  /**
+   * / Return all topup requests submitted by the caller.
+   */
+  'getMyTopupRequests' : ActorMethod<[], Array<WalletTopupRequest>>,
+  /**
+   * / Return the caller's wallet balance (0.0 if no wallet yet).
+   */
+  'getMyWalletBalance' : ActorMethod<[], number>,
   'getNews' : ActorMethod<[], Array<NewsItem>>,
+  /**
+   * / Get earnings summary for an Offer Portal user.
+   */
+  'getOfferEarningsSummary' : ActorMethod<
+    [bigint],
+    {
+      'referralCode' : string,
+      'pendingEarnings' : bigint,
+      'totalEarnings' : bigint,
+    }
+  >,
+  /**
+   * / Get Offer Portal global config — admin only.
+   */
+  'getOfferPortalConfig' : ActorMethod<[], OfferPortalConfig>,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
@@ -306,7 +484,23 @@ export interface _SERVICE {
   'getProvidersByCategory' : ActorMethod<[string], Array<ProviderProfile>>,
   'getProvidersPendingApproval' : ActorMethod<[], Array<ProviderProfile>>,
   'getRecentUsers' : ActorMethod<[], Array<User>>,
+  /**
+   * / Return the current recharge API config — admin only.
+   */
+  'getRechargeApiConfig' : ActorMethod<[], RechargeApiConfig>,
+  /**
+   * / Get receipt for a specific recharge transaction.
+   */
+  'getRechargeReceipt' : ActorMethod<[bigint], [] | [RechargeReceipt]>,
+  /**
+   * / Return whether recharge service is enabled — public.
+   */
+  'getRechargeServiceEnabled' : ActorMethod<[], boolean>,
   'getScrapRates' : ActorMethod<[], Array<ScrapRate>>,
+  /**
+   * / Get SMS (Fast2SMS) config — admin only.
+   */
+  'getSmsConfig' : ActorMethod<[], SmsConfig>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
   /**
    * / Return balance for a customer. Caller must own the customer.
@@ -334,10 +528,23 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUsersByRole' : ActorMethod<[UserRole], Array<User>>,
   'getVideos' : ActorMethod<[], Array<VideoItem>>,
+  /**
+   * / Return wallet balance for any userId — admin only.
+   */
+  'getWalletBalanceByUserId' : ActorMethod<[bigint], number>,
+  /**
+   * / Initiate a mobile recharge.  Auto-calculates commission; deducts netCost
+   * / from caller's wallet.  Returns new transaction ID.
+   */
+  'initiateRecharge' : ActorMethod<[string, string, string, number], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'login' : ActorMethod<[MobileNumber, string], User>,
+  /**
+   * / Login to the Offer Portal.
+   */
+  'loginOfferUser' : ActorMethod<[string, string], OfferUser>,
   /**
    * / Mark a transaction as paid. Caller must own the transaction.
    */
@@ -350,6 +557,19 @@ export interface _SERVICE {
     [bigint, string, string, string, [] | [string]],
     bigint
   >,
+  /**
+   * / Process a CPALead postback: verify secret, split profit, credit earnings.
+   * / Also triggers 1% referral bonus to the referrer if any.
+   */
+  'processCpaLeadPostback' : ActorMethod<[bigint, bigint, string], boolean>,
+  /**
+   * / Refund a Failed recharge — restores netCost to user wallet — admin only.
+   */
+  'refundRecharge' : ActorMethod<[bigint], boolean>,
+  /**
+   * / Register a new Offer Portal user (isolated from main user DB).
+   */
+  'registerOfferUser' : ActorMethod<[string, string, [] | [string]], bigint>,
   'registerUser' : ActorMethod<
     [string, MobileNumber, string, UserRole, string, string],
     undefined
@@ -357,10 +577,22 @@ export interface _SERVICE {
   'rejectProvider' : ActorMethod<[bigint], undefined>,
   'removeShopPhoto' : ActorMethod<[bigint, string], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
+  /**
+   * / Submit a UPI withdrawal request from the Offer Portal.
+   */
+  'requestOfferWithdrawal' : ActorMethod<[bigint, string, bigint], bigint>,
+  /**
+   * / Request admin to top-up your wallet.  Returns the new request ID.
+   */
+  'requestWalletTopup' : ActorMethod<[number, string], bigint>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchUsers' : ActorMethod<[string], Array<User>>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
+  /**
+   * / Enable or disable the recharge service — admin only.
+   */
+  'setRechargeServiceEnabled' : ActorMethod<[boolean], boolean>,
   'toggleCustomSection' : ActorMethod<[bigint, boolean], boolean>,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
   'updateAppSettings' : ActorMethod<[string], undefined>,
@@ -368,6 +600,11 @@ export interface _SERVICE {
     [bigint, string, string, string, boolean],
     boolean
   >,
+  /**
+   * / Update commission config — admin only.
+   * / Validates: retailerPct + adminPct must equal globalPct.
+   */
+  'updateCommissionConfig' : ActorMethod<[number, number, number], boolean>,
   'updateCustomCode' : ActorMethod<
     [bigint, string, string, string, string, string, boolean],
     boolean
@@ -384,6 +621,13 @@ export interface _SERVICE {
     [bigint, string, string, string, string, string, boolean],
     boolean
   >,
+  /**
+   * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+   */
+  'updateOfferPortalConfig' : ActorMethod<
+    [boolean, string, bigint, bigint],
+    boolean
+  >,
   'updateOrderStatus' : ActorMethod<[bigint, string], undefined>,
   'updateProviderProfile' : ActorMethod<
     [bigint, string, string, string, string],
@@ -396,10 +640,28 @@ export interface _SERVICE {
     [bigint, string, string, string, string, string, [] | [string]],
     undefined
   >,
+  /**
+   * / Save recharge API config — admin only.
+   */
+  'updateRechargeApiConfig' : ActorMethod<
+    [string, string, string, boolean, boolean],
+    boolean
+  >,
+  /**
+   * / Update the status of a recharge transaction — admin only.
+   * / Auto-refund: if status = "Failed" and autoRefundEnabled, automatically refunds netCost.
+   * / Receipt: if status = "Success", generates a digital receipt.
+   * / SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
+   */
+  'updateRechargeStatus' : ActorMethod<[bigint, string], boolean>,
   'updateScrapRate' : ActorMethod<
     [bigint, string, number, number, boolean],
     boolean
   >,
+  /**
+   * / Update SMS config — admin only.
+   */
+  'updateSmsConfig' : ActorMethod<[string, string, boolean], boolean>,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
   'updateToggle' : ActorMethod<[string, boolean], undefined>,
   /**

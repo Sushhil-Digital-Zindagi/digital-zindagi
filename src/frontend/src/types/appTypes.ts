@@ -269,6 +269,59 @@ export interface LudoRedemptionRequest {
   createdAt: string;
 }
 
+// ---- Mobile Recharge & Wallet types ----
+
+export interface WalletTopupRequest {
+  id: number;
+  userId: number;
+  amount: number;
+  status: string;
+  requestedAt: number;
+  resolvedAt: number | null;
+  note: string;
+}
+
+export interface RechargeTransaction {
+  id: number;
+  userId: number;
+  mobile: string;
+  operator: string;
+  circle: string;
+  amount: number;
+  commission: number;
+  netCost: number;
+  status: string;
+  createdAt: number;
+}
+
+export interface CommissionConfig {
+  globalCommissionPct: number;
+  retailerSharePct: number;
+  adminSharePct: number;
+}
+
+export interface RechargeApiConfig {
+  apiUrl: string;
+  apiKey: string;
+  responseParam: string;
+  isActive: boolean;
+}
+
+/** Digital receipt generated after a successful recharge */
+export interface RechargeReceipt {
+  id: number;
+  txnId: number;
+  userId: number;
+  mobile: string;
+  operator: string;
+  circle: string;
+  amount: number;
+  commission: number;
+  netCost: number;
+  referenceId: string;
+  generatedAt: number;
+}
+
 /** Extended actor interface covering all methods called directly by pages. */
 export interface BackendActorMethods {
   // Auth
@@ -456,4 +509,59 @@ export interface BackendActorMethods {
   // App Settings (canister-backed JSON blob)
   getAppSettings(): Promise<string>;
   updateAppSettings(json: string): Promise<void>;
+
+  // Wallet
+  getMyWalletBalance?: () => Promise<number>;
+  getWalletBalanceByUserId?: (userId: number) => Promise<number>;
+  requestWalletTopup?: (amount: number, note: string) => Promise<number>;
+  getMyTopupRequests?: () => Promise<WalletTopupRequest[]>;
+  getAllTopupRequests?: () => Promise<WalletTopupRequest[]>;
+  approveTopupRequest?: (
+    requestId: number,
+    approve: boolean,
+  ) => Promise<boolean>;
+  adminAdjustWallet?: (
+    userId: number,
+    amount: number,
+    isAdd: boolean,
+    note: string,
+  ) => Promise<boolean>;
+  getAllWalletBalances?: () => Promise<[number, number][]>;
+
+  // Recharge
+  initiateRecharge?: (
+    mobile: string,
+    operator: string,
+    circle: string,
+    amount: number,
+  ) => Promise<number>;
+  getMyRechargeHistory?: () => Promise<RechargeTransaction[]>;
+  updateRechargeStatus?: (txId: number, status: string) => Promise<boolean>;
+  getAllRechargeTransactions?: () => Promise<RechargeTransaction[]>;
+  refundRecharge?: (txId: number) => Promise<boolean>;
+
+  // Receipts
+  getRechargeReceipt?: (txnId: number) => Promise<RechargeReceipt | null>;
+  getMyRechargeReceipts?: () => Promise<RechargeReceipt[]>;
+
+  // Recharge API Config
+  getRechargeApiConfig?: () => Promise<RechargeApiConfig>;
+  updateRechargeApiConfig?: (
+    apiUrl: string,
+    apiKey: string,
+    responseParam: string,
+    isActive: boolean,
+  ) => Promise<boolean>;
+
+  // Commission Config
+  getCommissionConfig?: () => Promise<CommissionConfig>;
+  updateCommissionConfig?: (
+    globalPct: number,
+    retailerPct: number,
+    adminPct: number,
+  ) => Promise<boolean>;
+
+  // Service toggle
+  getRechargeServiceEnabled?: () => Promise<boolean>;
+  setRechargeServiceEnabled?: (enabled: boolean) => Promise<boolean>;
 }

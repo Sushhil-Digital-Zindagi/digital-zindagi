@@ -1,28 +1,22 @@
 {
-  "overview": "Digital Zindagi is a premium multi-vendor marketplace PWA for India — emerald green branded, mobile-first, fully installable. Supports providers, customers, admins, managers, and delivery boys with real-time sync, GPS-based discovery, and comprehensive admin control.",
+  "overview": "Digital Zindagi is a premium Indian super-app with mobile recharge, an earning portal, admin controls, and a multi-vendor marketplace — all manageable from a single Admin Panel.",
   "features": [
-    "Udhaar Khata on Homepage next to Rate Calculator",
-    "AdMob Banner ads on Udhaar and Rate Calculator pages",
-    "Interstitial ads after transaction save and WhatsApp share",
-    "Admin toggle for Udhaar Khata feature with Unit ID fields",
-    "Provider data isolation via secure principal-based storage",
-    "Real-time admin sync for all settings",
-    "Multi-role access: Provider, Customer, Admin, Manager",
-    "GPS-based provider discovery",
-    "Video Gallery with platform and category filters",
-    "News, Jobs, Student Tools, Custom Code Manager"
+    "Auto-refund for failed recharges",
+    "Fast2SMS alerts for recharge success/failure",
+    "Digital receipt after every recharge",
+    "Independent Digital Zindagi Offer Portal with isolated login",
+    "Earnings dashboard with 1% referral bonus",
+    "CPALead postback integration with 60/40 profit split",
+    "Admin Offer Control Center with API keys, profit margin, user list, and withdrawal management"
   ],
-  "category": "marketplace",
+  "category": "productivity",
   "tags": [
-    "marketplace",
+    "recharge",
+    "earning",
+    "admin",
     "india",
     "pwa",
-    "udhaar",
-    "admob",
-    "provider",
-    "scrap-calculator",
-    "hindi",
     "multi-vendor"
   ],
-  "last_updated": "2026-04-09T09:29:16.526Z"
+  "last_updated": "2026-04-11T04:08:28.222Z"
 }

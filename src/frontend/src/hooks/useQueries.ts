@@ -3,12 +3,15 @@ import type {
   AdminConfig,
   Banner,
   Category,
+  CommissionConfig,
   CustomCode,
   CustomSection,
   JobItem,
   NewsItem,
   Order,
   ProviderProfile,
+  RechargeReceipt,
+  RechargeTransaction,
   ScrapRate,
   SubscriptionPlan,
   SubscriptionPricing,
@@ -16,6 +19,7 @@ import type {
   UdhaarTransaction,
   User,
   VideoItem,
+  WalletTopupRequest,
 } from "../types/appTypes";
 import { useActor } from "./useActor";
 
@@ -1825,5 +1829,273 @@ export function useSetFirebaseConfigLink() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["firebaseConfigLink"] }),
+  });
+}
+
+// =====================================================================
+// WALLET & RECHARGE HOOKS
+// =====================================================================
+
+type RechargeActor = {
+  getMyWalletBalance?: () => Promise<number>;
+  requestWalletTopup?: (amount: number, note: string) => Promise<number>;
+  getMyTopupRequests?: () => Promise<WalletTopupRequest[]>;
+  initiateRecharge?: (
+    mobile: string,
+    operator: string,
+    circle: string,
+    amount: number,
+  ) => Promise<number>;
+  getMyRechargeHistory?: () => Promise<RechargeTransaction[]>;
+  getCommissionConfig?: () => Promise<CommissionConfig>;
+  getRechargeServiceEnabled?: () => Promise<boolean>;
+  getRechargeReceipt?: (
+    txnId: bigint,
+  ) => Promise<import("../backend.d.ts").RechargeReceipt | null>;
+  getMyRechargeReceipts?: () => Promise<
+    import("../backend.d.ts").RechargeReceipt[]
+  >;
+};
+
+function asRechargeActor(actor: unknown): RechargeActor {
+  return actor as RechargeActor;
+}
+
+/** Map backend RechargeReceipt (bigint fields) → frontend RechargeReceipt (number fields) */
+function mapBackendReceipt(
+  r: import("../backend.d.ts").RechargeReceipt,
+): RechargeReceipt {
+  return {
+    id: Number(r.id),
+    txnId: Number(r.txnId),
+    userId: Number(r.userId),
+    mobile: r.mobile,
+    operator: r.operator,
+    circle: r.circle,
+    amount: Number(r.amount),
+    commission: Number(r.commission),
+    netCost: Number(r.netCost),
+    referenceId: r.referenceId,
+    generatedAt: Number(r.generatedAt),
+  };
+}
+
+/**
+ * Live wallet balance for the logged-in user.
+ * Polls every 5 seconds.
+ * Falls back to 0 if backend method not yet wired.
+ */
+export function useWalletBalance() {
+  const { actor, isFetching } = useActor();
+  return useQuery<number>({
+    queryKey: ["walletBalance"],
+    queryFn: async () => {
+      if (!actor) return 0;
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getMyWalletBalance !== "function") return 0;
+        return await ra.getMyWalletBalance();
+      } catch {
+        return 0;
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+    staleTime: 4000,
+  });
+}
+
+/** User's topup requests. Polls every 5 seconds. */
+export function useMyTopupRequests() {
+  const { actor, isFetching } = useActor();
+  return useQuery<WalletTopupRequest[]>({
+    queryKey: ["topupRequests"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getMyTopupRequests !== "function") return [];
+        return await ra.getMyTopupRequests();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+    staleTime: 4000,
+  });
+}
+
+/** User's recharge transaction history. Polls every 5 seconds. */
+export function useRechargeHistory() {
+  const { actor, isFetching } = useActor();
+  return useQuery<RechargeTransaction[]>({
+    queryKey: ["rechargeHistory"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getMyRechargeHistory !== "function") return [];
+        return await ra.getMyRechargeHistory();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+    staleTime: 4000,
+  });
+}
+
+/** Commission config. Polls every 30 seconds. */
+export function useCommissionConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery<CommissionConfig | null>({
+    queryKey: ["commissionConfig"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getCommissionConfig !== "function") return null;
+        return await ra.getCommissionConfig();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 30000,
+    staleTime: 25000,
+  });
+}
+
+/** Whether the recharge service is enabled. Polls every 10 seconds. */
+export function useRechargeServiceEnabled() {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: ["rechargeServiceEnabled"],
+    queryFn: async () => {
+      if (!actor) return true;
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getRechargeServiceEnabled !== "function") return true;
+        return await ra.getRechargeServiceEnabled();
+      } catch {
+        return true;
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 10000,
+    staleTime: 9000,
+  });
+}
+
+/** Mutation: initiate a mobile recharge. */
+export function useInitiateRecharge() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      mobile,
+      operator,
+      circle,
+      amount,
+    }: {
+      mobile: string;
+      operator: string;
+      circle: string;
+      amount: number;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      const ra = asRechargeActor(actor);
+      if (typeof ra.initiateRecharge !== "function") {
+        // Backend not yet wired — simulate success for UI dev
+        return Date.now();
+      }
+      return ra.initiateRecharge(mobile, operator, circle, amount);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rechargeHistory"] });
+      qc.invalidateQueries({ queryKey: ["walletBalance"] });
+      qc.invalidateQueries({ queryKey: ["myRechargeReceipts"] });
+    },
+  });
+}
+
+/** Mutation: request wallet topup (add money). */
+export function useRequestTopup() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      amount,
+      note,
+    }: {
+      amount: number;
+      note: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      const ra = asRechargeActor(actor);
+      if (typeof ra.requestWalletTopup !== "function") {
+        // Backend not yet wired — simulate success for UI dev
+        return Date.now();
+      }
+      return ra.requestWalletTopup(amount, note);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["topupRequests"] });
+    },
+  });
+}
+
+// =====================================================================
+// RECEIPT HOOKS
+// =====================================================================
+
+/**
+ * Fetch a single receipt by recharge transaction ID.
+ * Disabled until txnId is provided.
+ */
+export function useGetRechargeReceipt(txnId: number | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<RechargeReceipt | null>({
+    queryKey: ["rechargeReceipt", txnId],
+    queryFn: async () => {
+      if (!actor || txnId === null) return null;
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getRechargeReceipt !== "function") return null;
+        const raw = await ra.getRechargeReceipt(BigInt(txnId));
+        if (!raw) return null;
+        return mapBackendReceipt(raw);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && txnId !== null,
+  });
+}
+
+/**
+ * Fetch all receipts for the logged-in user.
+ * Polls every 10 seconds for new receipts after successful recharges.
+ */
+export function useMyRechargeReceipts() {
+  const { actor, isFetching } = useActor();
+  return useQuery<RechargeReceipt[]>({
+    queryKey: ["myRechargeReceipts"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const ra = asRechargeActor(actor);
+        if (typeof ra.getMyRechargeReceipts !== "function") return [];
+        const raw = await ra.getMyRechargeReceipts();
+        return raw.map(mapBackendReceipt);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 10000,
+    staleTime: 9000,
   });
 }

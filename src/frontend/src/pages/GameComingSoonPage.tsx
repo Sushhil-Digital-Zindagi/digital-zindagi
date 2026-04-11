@@ -343,6 +343,22 @@ const LUDO_KEYFRAMES = `
   85%  { transform: scale(1.08); }
   100% { transform: scale(1.0); }
 }
+@keyframes dicePulseRed {
+  0%,100% { box-shadow: 0 0 8px 2px #ef4444, 0 4px 16px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 24px 8px #ef4444, 0 4px 24px rgba(0,0,0,0.7); }
+}
+@keyframes dicePulseBlue {
+  0%,100% { box-shadow: 0 0 8px 2px #3b82f6, 0 4px 16px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 24px 8px #3b82f6, 0 4px 24px rgba(0,0,0,0.7); }
+}
+@keyframes dicePulseGreen {
+  0%,100% { box-shadow: 0 0 8px 2px #22c55e, 0 4px 16px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 24px 8px #22c55e, 0 4px 24px rgba(0,0,0,0.7); }
+}
+@keyframes dicePulseYellow {
+  0%,100% { box-shadow: 0 0 8px 2px #eab308, 0 4px 16px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 24px 8px #eab308, 0 4px 24px rgba(0,0,0,0.7); }
+}
 @keyframes ludoWinnerGlow {
   0%,100% { text-shadow: 0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,165,0,0.5); }
   50%     { text-shadow: 0 0 20px rgba(255,215,0,1), 0 0 40px rgba(255,165,0,0.8), 0 0 60px rgba(255,100,0,0.4); }
@@ -1303,6 +1319,34 @@ export default function GameComingSoonPage() {
   const currentPlayer = players[currentPlayerIdx];
   const canRoll = !diceRolled && !rolling;
 
+  // Dice corner position per player index
+  // Players: 0=Red(bottom-left), 1=Blue(top-left), 2=Green(top-right), 3=Yellow(bottom-right)
+  const DICE_CORNERS: React.CSSProperties[] = [
+    { bottom: "8px", left: "8px", top: "auto", right: "auto" }, // 0 Red — bottom-left
+    { top: "8px", left: "8px", bottom: "auto", right: "auto" }, // 1 Blue — top-left
+    { top: "8px", right: "8px", bottom: "auto", left: "auto" }, // 2 Green — top-right
+    { bottom: "8px", right: "8px", top: "auto", left: "auto" }, // 3 Yellow — bottom-right
+  ];
+
+  const DICE_PULSE_ANIM: Record<ColorName, string> = {
+    Red: "dicePulseRed 1.4s ease-in-out infinite",
+    Blue: "dicePulseBlue 1.4s ease-in-out infinite",
+    Green: "dicePulseGreen 1.4s ease-in-out infinite",
+    Yellow: "dicePulseYellow 1.4s ease-in-out infinite",
+  };
+
+  const PLAYER_HEX: Record<ColorName, string> = {
+    Red: "#ef4444",
+    Blue: "#3b82f6",
+    Green: "#22c55e",
+    Yellow: "#eab308",
+  };
+
+  const activeDiceCorner = DICE_CORNERS[currentPlayerIdx] ?? DICE_CORNERS[0]!;
+  const activeColor = currentPlayer?.color ?? "Red";
+  const activePulse = canRoll ? DICE_PULSE_ANIM[activeColor] : "none";
+  const activeHex = PLAYER_HEX[activeColor];
+
   return (
     <div
       ref={gameContainerRef}
@@ -1447,7 +1491,7 @@ export default function GameComingSoonPage() {
         </div>
       )}
 
-      {/* ── Board ── */}
+      {/* ── Board (with absolute dice overlay) ── */}
       <div
         style={{
           flex: 1,
@@ -1456,18 +1500,17 @@ export default function GameComingSoonPage() {
           justifyContent: "center",
           padding: "4px 8px",
           overflow: "hidden",
+          position: "relative",
         }}
       >
+        {/* Board wrapper: relative container so dice overlay can position against it */}
         <div
-          data-ocid="game.board"
+          data-ocid="game.board_wrapper"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(15, 1fr)",
-            gridTemplateRows: "repeat(15, 1fr)",
-            width: "min(calc(100vw - 16px), calc(100vh - 230px))",
-            height: "min(calc(100vw - 16px), calc(100vh - 230px))",
+            position: "relative",
+            width: "min(calc(100vw - 16px), calc(100vh - 180px))",
+            height: "min(calc(100vw - 16px), calc(100vh - 180px))",
             borderRadius: "12px",
-            overflow: "hidden",
             border: "3px solid rgba(255,215,0,0.4)",
             boxShadow: [
               "0 0 40px rgba(255,215,0,0.22)",
@@ -1477,288 +1520,293 @@ export default function GameComingSoonPage() {
             ].join(", "),
           }}
         >
-          {Array.from({ length: 225 }, (_, idx) => {
-            const row = Math.floor(idx / 15);
-            const col = idx % 15;
-            const type = getCellType(row, col);
-            const tokensHere = cellTokens(row, col);
-            const isSafe = type === "safe";
-            const isCenterStar = type === "center-star";
-            const isCenter = type === "center" || isCenterStar;
-            const cellStyle = getCellStyle(type);
-
-            return (
-              <div
-                key={`cell-${row}-${col}`}
-                className="relative flex items-center justify-center select-none"
-                style={{
-                  ...cellStyle,
-                  minWidth: 0,
-                  minHeight: 0,
-                  border: "0.5px solid rgba(0,0,0,0.1)",
-                }}
-                data-ocid={`game.cell.${row}.${col}`}
-              >
-                {/* Center cell: royal frame + branding */}
-                {isCenterStar && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      zIndex: 10,
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "clamp(52px, 10vw, 90px)",
-                        height: "clamp(52px, 10vw, 90px)",
-                        borderRadius: "50%",
-                        background:
-                          "radial-gradient(circle at 35% 30%, #2d6a4f, #064e35 65%, #022c1a)",
-                        border: "4px solid #FFD700",
-                        boxShadow:
-                          "0 0 0 2px #FFA500, 0 0 0 4px rgba(255,215,0,0.3), 0 0 20px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.35)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        animation: "ludoGoldShimmer 2s ease-in-out infinite",
-                      }}
-                    >
-                      <span style={{ fontSize: "clamp(18px, 3.5vw, 32px)" }}>
-                        👤
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: "clamp(4px, 1vw, 8px)",
-                        fontWeight: 900,
-                        marginTop: 2,
-                        lineHeight: 1.2,
-                        background:
-                          "linear-gradient(135deg, #FFD700, #FFA500, #FFD700)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        backgroundClip: "text",
-                        filter: "drop-shadow(0 0 3px rgba(255,215,0,0.7))",
-                        letterSpacing: "1px",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Digital
-                      <br />
-                      Zindagi
-                    </p>
-                  </div>
-                )}
-                {/* Safe star */}
-                {isSafe && tokensHere.length === 0 && (
-                  <span
-                    style={{
-                      fontSize: "clamp(7px, 1.6vw, 11px)",
-                      color: "#FFD700",
-                      textShadow: "0 0 4px rgba(255,215,0,0.8)",
-                    }}
-                    aria-hidden="true"
-                  >
-                    ★
-                  </span>
-                )}
-                {/* Tokens */}
-                {!isCenter && tokensHere.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
-                      padding: 1,
-                    }}
-                  >
-                    {tokensHere.slice(0, 4).map(({ color, tokenIdx }) => {
-                      const movable = isMovableToken(color, tokenIdx);
-                      const tokenKey = `${color}-${tokenIdx}`;
-                      const isJumping = jumpingToken === tokenKey;
-                      const isLanding = landedToken === tokenKey;
-                      return (
-                        <button
-                          key={tokenKey}
-                          type="button"
-                          aria-label={`${color} token ${tokenIdx + 1}`}
-                          onClick={() => movable && moveToken(tokenIdx)}
-                          data-ocid={`game.token.${color}.${tokenIdx}`}
-                          style={{
-                            width: "44%",
-                            height: "44%",
-                            minWidth: 4,
-                            minHeight: 4,
-                            background: TOKEN_GRADIENTS[color],
-                            borderRadius: "50%",
-                            border: movable
-                              ? "1.5px solid rgba(255,255,255,0.95)"
-                              : "1px solid rgba(0,0,0,0.25)",
-                            boxShadow: movable
-                              ? "0 6px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2), 0 0 0 3px rgba(255,255,255,0.7)"
-                              : "0 6px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
-                            cursor: movable ? "pointer" : "default",
-                            position: "relative",
-                            overflow: "hidden",
-                            animation: isJumping
-                              ? "ludoTokenArcJump 0.5s ease-in-out"
-                              : isLanding
-                                ? "ludoLandBounce 0.4s ease-out"
-                                : movable
-                                  ? "ludoTokenPulse 1.2s ease-in-out infinite"
-                                  : "none",
-                            zIndex: movable ? 10 : 1,
-                            willChange: isJumping ? "transform" : "auto",
-                          }}
-                        >
-                          {/* 3D sphere highlight */}
-                          <span
-                            style={{
-                              position: "absolute",
-                              top: "8%",
-                              left: "8%",
-                              width: "36%",
-                              height: "28%",
-                              borderRadius: "50%",
-                              background:
-                                "radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 70%)",
-                              pointerEvents: "none",
-                            }}
-                          />
-                          {/* Bottom shadow ellipse */}
-                          <span
-                            style={{
-                              position: "absolute",
-                              bottom: "2%",
-                              left: "15%",
-                              width: "70%",
-                              height: "20%",
-                              borderRadius: "50%",
-                              background: "rgba(0,0,0,0.25)",
-                              filter: "blur(1px)",
-                              pointerEvents: "none",
-                            }}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Dice + Roll Controls ── */}
-      <div
-        data-ocid="game.controls"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 20,
-          padding: "10px 16px",
-          flexShrink: 0,
-          background: "rgba(0,0,0,0.55)",
-          borderTop: "1px solid rgba(255,215,0,0.12)",
-        }}
-      >
-        <DiceFace value={diceValue} rolling={rolling} />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          {currentPlayer && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: TOKEN_GRADIENTS[currentPlayer.color],
-                  flexShrink: 0,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                }}
-              />
-              <span
-                style={{ color: "white", fontSize: "12px", fontWeight: 700 }}
-              >
-                {currentPlayer.name} ki baari
-              </span>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={rollDice}
-            disabled={!canRoll}
-            data-ocid="game.roll_btn"
+          {/* ── Cell grid (overflow hidden for rounded corner clipping) ── */}
+          <div
+            data-ocid="game.board"
             style={{
-              padding: "13px 34px",
-              borderRadius: "50px",
-              fontWeight: 900,
-              fontSize: "15px",
-              letterSpacing: "0.5px",
-              border: "none",
-              cursor: canRoll ? "pointer" : "not-allowed",
-              color: canRoll ? "#1a0a00" : "rgba(255,255,255,0.5)",
-              background: canRoll
-                ? "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)"
-                : "rgba(60,60,70,0.7)",
-              boxShadow: canRoll
-                ? "0 8px 24px rgba(255,165,0,0.55), inset 0 2px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.2)"
-                : "none",
-              animation: canRoll
-                ? "ludoRollPulse 1.8s ease-in-out infinite"
-                : "none",
-              textShadow: canRoll ? "0 1px 2px rgba(255,255,255,0.3)" : "none",
-              transition: "background 0.2s, filter 0.2s",
-              opacity: canRoll ? 1 : 0.5,
-              willChange: canRoll ? "box-shadow" : "auto",
-            }}
-            onMouseDown={(e) => {
-              if (canRoll) {
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(2px) scale(0.98)";
-              }
-            }}
-            onMouseUp={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.transform = "";
-            }}
-            onTouchStart={(e) => {
-              if (canRoll)
-                (e.currentTarget as HTMLButtonElement).style.transform =
-                  "translateY(2px) scale(0.98)";
-            }}
-            onTouchEnd={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.transform = "";
+              display: "grid",
+              gridTemplateColumns: "repeat(15, 1fr)",
+              gridTemplateRows: "repeat(15, 1fr)",
+              width: "100%",
+              height: "100%",
+              borderRadius: "10px",
+              overflow: "hidden",
             }}
           >
-            {rolling
-              ? "⏳ Rolling…"
-              : diceRolled
-                ? `${diceValue} aaya! ✅`
-                : "🎲 Roll Karein"}
-          </button>
+            {Array.from({ length: 225 }, (_, idx) => {
+              const row = Math.floor(idx / 15);
+              const col = idx % 15;
+              const type = getCellType(row, col);
+              const tokensHere = cellTokens(row, col);
+              const isSafe = type === "safe";
+              const isCenterStar = type === "center-star";
+              const isCenter = type === "center" || isCenterStar;
+              const cellStyle = getCellStyle(type);
+
+              return (
+                <div
+                  key={`cell-${row}-${col}`}
+                  className="relative flex items-center justify-center select-none"
+                  style={{
+                    ...cellStyle,
+                    minWidth: 0,
+                    minHeight: 0,
+                    border: "0.5px solid rgba(0,0,0,0.1)",
+                  }}
+                  data-ocid={`game.cell.${row}.${col}`}
+                >
+                  {/* Center cell: royal frame + branding */}
+                  {isCenterStar && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 10,
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "clamp(52px, 10vw, 90px)",
+                          height: "clamp(52px, 10vw, 90px)",
+                          borderRadius: "50%",
+                          background:
+                            "radial-gradient(circle at 35% 30%, #2d6a4f, #064e35 65%, #022c1a)",
+                          border: "4px solid #FFD700",
+                          boxShadow:
+                            "0 0 0 2px #FFA500, 0 0 0 4px rgba(255,215,0,0.3), 0 0 20px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.35)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          animation: "ludoGoldShimmer 2s ease-in-out infinite",
+                        }}
+                      >
+                        <span style={{ fontSize: "clamp(18px, 3.5vw, 32px)" }}>
+                          👤
+                        </span>
+                      </div>
+                      <p
+                        style={{
+                          fontSize: "clamp(4px, 1vw, 8px)",
+                          fontWeight: 900,
+                          marginTop: 2,
+                          lineHeight: 1.2,
+                          background:
+                            "linear-gradient(135deg, #FFD700, #FFA500, #FFD700)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                          filter: "drop-shadow(0 0 3px rgba(255,215,0,0.7))",
+                          letterSpacing: "1px",
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Digital
+                        <br />
+                        Zindagi
+                      </p>
+                    </div>
+                  )}
+                  {/* Safe star */}
+                  {isSafe && tokensHere.length === 0 && (
+                    <span
+                      style={{
+                        fontSize: "clamp(7px, 1.6vw, 11px)",
+                        color: "#FFD700",
+                        textShadow: "0 0 4px rgba(255,215,0,0.8)",
+                      }}
+                      aria-hidden="true"
+                    >
+                      ★
+                    </span>
+                  )}
+                  {/* Tokens */}
+                  {!isCenter && tokensHere.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                        padding: 1,
+                      }}
+                    >
+                      {tokensHere.slice(0, 4).map(({ color, tokenIdx }) => {
+                        const movable = isMovableToken(color, tokenIdx);
+                        const tokenKey = `${color}-${tokenIdx}`;
+                        const isJumping = jumpingToken === tokenKey;
+                        const isLanding = landedToken === tokenKey;
+                        return (
+                          <button
+                            key={tokenKey}
+                            type="button"
+                            aria-label={`${color} token ${tokenIdx + 1}`}
+                            onClick={() => movable && moveToken(tokenIdx)}
+                            data-ocid={`game.token.${color}.${tokenIdx}`}
+                            style={{
+                              width: "44%",
+                              height: "44%",
+                              minWidth: 4,
+                              minHeight: 4,
+                              background: TOKEN_GRADIENTS[color],
+                              borderRadius: "50%",
+                              border: movable
+                                ? "1.5px solid rgba(255,255,255,0.95)"
+                                : "1px solid rgba(0,0,0,0.25)",
+                              boxShadow: movable
+                                ? "0 6px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2), 0 0 0 3px rgba(255,255,255,0.7)"
+                                : "0 6px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
+                              cursor: movable ? "pointer" : "default",
+                              position: "relative",
+                              overflow: "hidden",
+                              animation: isJumping
+                                ? "ludoTokenArcJump 0.5s ease-in-out"
+                                : isLanding
+                                  ? "ludoLandBounce 0.4s ease-out"
+                                  : movable
+                                    ? "ludoTokenPulse 1.2s ease-in-out infinite"
+                                    : "none",
+                              zIndex: movable ? 10 : 1,
+                              willChange: isJumping ? "transform" : "auto",
+                            }}
+                          >
+                            {/* 3D sphere highlight */}
+                            <span
+                              style={{
+                                position: "absolute",
+                                top: "8%",
+                                left: "8%",
+                                width: "36%",
+                                height: "28%",
+                                borderRadius: "50%",
+                                background:
+                                  "radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 70%)",
+                                pointerEvents: "none",
+                              }}
+                            />
+                            {/* Bottom shadow ellipse */}
+                            <span
+                              style={{
+                                position: "absolute",
+                                bottom: "2%",
+                                left: "15%",
+                                width: "70%",
+                                height: "20%",
+                                borderRadius: "50%",
+                                background: "rgba(0,0,0,0.25)",
+                                filter: "blur(1px)",
+                                pointerEvents: "none",
+                              }}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* end inner grid */}
+
+          {/* ── Absolute Dice Overlay — moves to active player's corner ── */}
+          <div
+            data-ocid="game.dice_overlay"
+            style={{
+              position: "absolute",
+              ...activeDiceCorner,
+              zIndex: 50,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 10px",
+              borderRadius: 16,
+              background: "rgba(5,5,15,0.88)",
+              backdropFilter: "blur(8px)",
+              border: `1.5px solid ${activeHex}55`,
+              transition:
+                "top 0.5s cubic-bezier(0.34,1.56,0.64,1), right 0.5s cubic-bezier(0.34,1.56,0.64,1), bottom 0.5s cubic-bezier(0.34,1.56,0.64,1), left 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.4s ease",
+              animation: activePulse,
+              minWidth: 82,
+            }}
+          >
+            {currentPlayer && (
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  color: activeHex,
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                  textShadow: `0 0 6px ${activeHex}99`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {currentPlayer.name.slice(0, 8)}'s Turn
+              </span>
+            )}
+            <DiceFace value={diceValue} rolling={rolling} />
+            <button
+              type="button"
+              onClick={rollDice}
+              disabled={!canRoll}
+              data-ocid="game.roll_btn"
+              style={{
+                padding: "8px 14px",
+                borderRadius: "50px",
+                fontWeight: 900,
+                fontSize: "12px",
+                letterSpacing: "0.5px",
+                border: canRoll ? `1.5px solid ${activeHex}88` : "none",
+                cursor: canRoll ? "pointer" : "not-allowed",
+                color: canRoll ? "#fff" : "rgba(255,255,255,0.4)",
+                background: canRoll
+                  ? `linear-gradient(135deg, ${activeHex}dd 0%, ${activeHex} 100%)`
+                  : "rgba(60,60,70,0.7)",
+                boxShadow: canRoll
+                  ? `0 4px 14px ${activeHex}66, inset 0 1px 0 rgba(255,255,255,0.2)`
+                  : "none",
+                animation: canRoll
+                  ? "ludoRollPulse 1.8s ease-in-out infinite"
+                  : "none",
+                transition: "background 0.25s, border-color 0.4s",
+                opacity: canRoll ? 1 : 0.5,
+                whiteSpace: "nowrap",
+              }}
+              onMouseDown={(e) => {
+                if (canRoll)
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(1px) scale(0.97)";
+              }}
+              onMouseUp={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.transform = "";
+              }}
+              onTouchStart={(e) => {
+                if (canRoll)
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(1px) scale(0.97)";
+              }}
+              onTouchEnd={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.transform = "";
+              }}
+            >
+              {rolling ? "⏳…" : diceRolled ? `${diceValue} ✅` : "🎲 Roll"}
+            </button>
+          </div>
         </div>
+        {/* end board_wrapper */}
       </div>
 
-      {/* ── Fixed AdMob Banner (absolute bottom, never overlaps controls) ── */}
+      {/* ── Fixed AdMob Banner (absolute bottom, never overlaps board) ── */}
       <div
         data-ocid="game.banner_ad"
         style={{

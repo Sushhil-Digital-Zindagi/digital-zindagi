@@ -8,8 +8,10 @@ import {
   Settings,
   Share2,
   ShoppingBag,
+  Smartphone,
   Store,
   User,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -17,6 +19,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useRechargeServiceEnabled } from "../hooks/useQueries";
 import { Link, useNavigate } from "../lib/router";
 
 interface SidebarProps {
@@ -100,6 +103,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   };
 
   const isManager = user?.role === "manager";
+  const { data: rechargeEnabled = true } = useRechargeServiceEnabled();
 
   const navLinks = [
     { to: "/", label: t("home"), icon: <Home size={18} /> },
@@ -119,6 +123,22 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             to: "/orders",
             label: t("myOrders"),
             icon: <ShoppingBag size={18} />,
+          },
+          // Mobile Recharge — visible for all logged-in users, hidden if service is OFF
+          ...(rechargeEnabled
+            ? [
+                {
+                  to: "/recharge",
+                  label: "📱 Mobile Recharge",
+                  icon: <Smartphone size={18} />,
+                },
+              ]
+            : []),
+          // Wallet Transactions — always visible for logged-in users
+          {
+            to: "/wallet-transactions",
+            label: "💰 Wallet Transactions",
+            icon: <Wallet size={18} />,
           },
           // Admin Panel link for admin AND manager roles
           ...(user.role === "admin" || isManager

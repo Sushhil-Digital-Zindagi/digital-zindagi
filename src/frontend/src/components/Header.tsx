@@ -1,7 +1,9 @@
 import { Download, Globe, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useWalletBalance } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
 import Sidebar from "./Sidebar";
 
@@ -76,6 +78,33 @@ function LogoImage() {
         setFailed(true);
       }}
     />
+  );
+}
+
+function WalletBadge() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: balance } = useWalletBalance();
+
+  if (!user) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate("/wallet-transactions")}
+      data-ocid="header.wallet_badge"
+      className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95"
+      style={{
+        background: "rgba(255,255,255,0.15)",
+        color: "#ffffff",
+        border: "1px solid rgba(255,255,255,0.25)",
+        whiteSpace: "nowrap",
+      }}
+      title="Wallet Balance — tap to view"
+    >
+      <span style={{ fontSize: "10px" }}>₹</span>
+      <span>{balance !== undefined ? balance.toFixed(0) : "—"}</span>
+    </button>
   );
 }
 
@@ -324,6 +353,9 @@ export default function Header() {
               </span>
             </div>
           </button>
+
+          {/* Wallet Balance Badge — only for logged-in users */}
+          <WalletBadge />
 
           {/* Install Button — visible when not installed, shows native Android install prompt */}
           {showInstallBtn && (

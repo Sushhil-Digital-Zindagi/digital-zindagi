@@ -11,6 +11,16 @@ type _ImmutableObjectStorageCreateCertificateResult =
    blob_hash: text;
    method: text;
  };
+type WalletTopupRequest = 
+ record {
+   amount: float64;
+   id: nat;
+   note: text;
+   requestedAt: int;
+   resolvedAt: opt int;
+   status: text;
+   userId: nat;
+ };
 type VideoItem = 
  record {
    category: text;
@@ -97,6 +107,12 @@ type SubscriptionPlan =
    threeMonths;
    twelveMonths;
  };
+type SmsConfig = 
+ record {
+   fast2smsApiKey: text;
+   isEnabled: bool;
+   senderId: text;
+ };
 type ServiceRate = 
  record {
    description: text;
@@ -110,6 +126,41 @@ type ScrapRate =
    itemName: text;
    ratePerGram: float64;
    ratePerKg: float64;
+ };
+type RechargeTransaction = 
+ record {
+   amount: float64;
+   circle: text;
+   commission: float64;
+   createdAt: int;
+   id: nat;
+   mobile: text;
+   netCost: float64;
+   operator: text;
+   status: text;
+   userId: nat;
+ };
+type RechargeReceipt = 
+ record {
+   amount: nat;
+   circle: text;
+   commission: nat;
+   generatedAt: int;
+   id: nat;
+   mobile: text;
+   netCost: nat;
+   operator: text;
+   referenceId: text;
+   txnId: nat;
+   userId: nat;
+ };
+type RechargeApiConfig = 
+ record {
+   apiKey: text;
+   apiUrl: text;
+   autoRefundEnabled: bool;
+   isActive: bool;
+   responseParam: text;
  };
 type ProviderProfile = 
  record {
@@ -146,6 +197,59 @@ type Order =
    orderType: text;
    providerId: nat;
    status: text;
+ };
+type OfferWithdrawal = 
+ record {
+   adminNote: opt text;
+   amount: nat;
+   id: nat;
+   offerUserId: nat;
+   processedAt: opt int;
+   requestedAt: int;
+   status: variant {
+             approved;
+             paid;
+             pending;
+             rejected;
+           };
+   upiId: text;
+ };
+type OfferUser = 
+ record {
+   createdAt: int;
+   email: text;
+   id: nat;
+   passwordHash: text;
+   pendingEarnings: nat;
+   referralCode: text;
+   referredBy: opt text;
+   totalEarnings: nat;
+   userId: text;
+ };
+type OfferTransaction = 
+ record {
+   amount: nat;
+   createdAt: int;
+   description: text;
+   id: nat;
+   offerUserId: nat;
+   status: variant {
+             credited;
+             pending;
+             reversed;
+           };
+   txType: variant {
+             cpalead;
+             manualCredit;
+             referralBonus;
+           };
+ };
+type OfferPortalConfig = 
+ record {
+   adminProfitPct: nat;
+   cpaLeadWebhookSecret: text;
+   isEnabled: bool;
+   userProfitPct: nat;
  };
 type NewsItem = 
  record {
@@ -191,6 +295,12 @@ type CustomCode =
    id: nat;
    name: text;
    placement: text;
+ };
+type CommissionConfig = 
+ record {
+   adminSharePct: float64;
+   globalCommissionPct: float64;
+   retailerSharePct: float64;
  };
 type Category = 
  record {
@@ -266,7 +376,23 @@ service : {
     });
   addVideo: (title: text, videoUrl: text, thumbnailUrl: text, platform: 
    text, category: text) -> (nat);
+  /// Directly add or deduct balance for any user — admin only.
+  adminAdjustWallet: (userId: nat, amount: float64, isAdd: bool, _note:
+   text) -> (bool);
+  /// List all Offer Portal users — admin only.
+  adminListOfferUsers: () -> (vec OfferUser) query;
+  /// List all pending withdrawal requests — admin only.
+  adminListPendingWithdrawals: () -> (vec OfferWithdrawal) query;
+  /// Resolve a withdrawal request (approve/reject/paid) — admin only.
+  adminResolveWithdrawal: (id: nat, newStatus:
+   variant {
+     approved;
+     paid;
+     rejected;
+   }, adminNote: opt text) -> (bool);
   approveProvider: (userId: nat, plan: SubscriptionPlan) -> ();
+  /// Approve or reject a topup request.  On approval, funds are credited — admin only.
+  approveTopupRequest: (requestId: nat, approve: bool) -> (bool);
   assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
   changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
   deleteBanner: (bannerId: nat) -> ();
@@ -296,20 +422,52 @@ service : {
   getActiveProviders: () -> (vec ProviderProfile) query;
   getAdminConfig: () -> (opt AdminConfig) query;
   getAllProviders: () -> (vec ProviderProfile) query;
+  /// Return all recharge transactions (master log) — admin only.
+  getAllRechargeTransactions: () -> (vec RechargeTransaction) query;
   getAllToggles: () -> (vec record {
                               text;
                               bool;
                             }) query;
+  /// Return all pending topup requests — admin only.
+  getAllTopupRequests: () -> (vec WalletTopupRequest) query;
   getAllUsers: () -> (vec User) query;
+  /// Return all wallet balances as (userId, balance) pairs — admin only.
+  getAllWalletBalances: () -> (vec record {
+                                     nat;
+                                     float64;
+                                   }) query;
   getAppSettings: () -> (text) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole__1) query;
   getCategories: () -> (vec Category) query;
+  /// Return the current commission config — public.
+  getCommissionConfig: () -> (CommissionConfig) query;
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
   getJobs: () -> (vec JobItem) query;
+  /// Get Offer Portal transaction history for a user.
+  getMyOfferTransactions: (offerUserId: nat) -> (vec OfferTransaction) query;
+  /// Get withdrawal requests for an Offer Portal user.
+  getMyOfferWithdrawals: (offerUserId: nat) -> (vec OfferWithdrawal) query;
+  /// Return the caller's recharge transaction history.
+  getMyRechargeHistory: () -> (vec RechargeTransaction) query;
+  /// Get all receipts for the calling user.
+  getMyRechargeReceipts: () -> (vec RechargeReceipt) query;
+  /// Return all topup requests submitted by the caller.
+  getMyTopupRequests: () -> (vec WalletTopupRequest) query;
+  /// Return the caller's wallet balance (0.0 if no wallet yet).
+  getMyWalletBalance: () -> (float64) query;
   getNews: () -> (vec NewsItem) query;
+  /// Get earnings summary for an Offer Portal user.
+  getOfferEarningsSummary: (offerUserId: nat) ->
+   (record {
+      pendingEarnings: nat;
+      referralCode: text;
+      totalEarnings: nat;
+    }) query;
+  /// Get Offer Portal global config — admin only.
+  getOfferPortalConfig: () -> (OfferPortalConfig) query;
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
@@ -317,7 +475,15 @@ service : {
   getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
   getProvidersPendingApproval: () -> (vec ProviderProfile) query;
   getRecentUsers: () -> (vec User) query;
+  /// Return the current recharge API config — admin only.
+  getRechargeApiConfig: () -> (RechargeApiConfig) query;
+  /// Get receipt for a specific recharge transaction.
+  getRechargeReceipt: (txnId: nat) -> (opt RechargeReceipt) query;
+  /// Return whether recharge service is enabled — public.
+  getRechargeServiceEnabled: () -> (bool) query;
   getScrapRates: () -> (vec ScrapRate) query;
+  /// Get SMS (Fast2SMS) config — admin only.
+  getSmsConfig: () -> (SmsConfig) query;
   getSubscriptionPricing: () -> (opt SubscriptionPricing) query;
   /// Return balance for a customer. Caller must own the customer.
   getUdhaarBalance: (customerId: text) ->
@@ -339,10 +505,18 @@ service : {
   getUserProfile: (user: principal) -> (opt UserProfile) query;
   getUsersByRole: (role: UserRole) -> (vec User) query;
   getVideos: () -> (vec VideoItem) query;
+  /// Return wallet balance for any userId — admin only.
+  getWalletBalanceByUserId: (userId: nat) -> (float64) query;
+  /// Initiate a mobile recharge.  Auto-calculates commission; deducts netCost
+  /// from caller's wallet.  Returns new transaction ID.
+  initiateRecharge: (mobile: text, operator: text, circle: text, amount:
+   float64) -> (nat);
   isCallerAdmin: () -> (bool) query;
   isCallerApproved: () -> (bool) query;
   listApprovals: () -> (vec UserApprovalInfo) query;
   login: (mobile: MobileNumber, passwordHash: text) -> (User);
+  /// Login to the Offer Portal.
+  loginOfferUser: (email: text, passwordHash: text) -> (OfferUser);
   /// Mark a transaction as paid. Caller must own the transaction.
   markUdhaarTransactionPaid: (transactionId: text) ->
    (variant {
@@ -351,20 +525,40 @@ service : {
     });
   placeOrder: (providerId: nat, customerName: text, description: text,
    orderType: text, imageUrl: opt text) -> (nat);
+  /// Process a CPALead postback: verify secret, split profit, credit earnings.
+  /// Also triggers 1% referral bonus to the referrer if any.
+  processCpaLeadPostback: (offerUserId: nat, grossAmount: nat, webhookSecret:
+   text) -> (bool);
+  /// Refund a Failed recharge — restores netCost to user wallet — admin only.
+  refundRecharge: (txId: nat) -> (bool);
+  /// Register a new Offer Portal user (isolated from main user DB).
+  registerOfferUser: (email: text, passwordHash: text, referralCode:
+   opt text) -> (nat);
   registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
    UserRole, securityQuestion: text, securityAnswer: text) -> ();
   rejectProvider: (userId: nat) -> ();
   removeShopPhoto: (userId: nat, blobId: text) -> ();
   requestApproval: () -> ();
+  /// Submit a UPI withdrawal request from the Offer Portal.
+  requestOfferWithdrawal: (offerUserId: nat, upiId: text, amount: nat) ->
+   (nat);
+  /// Request admin to top-up your wallet.  Returns the new request ID.
+  requestWalletTopup: (amount: float64, note: text) -> (nat);
   saveCallerUserProfile: (profile: UserProfile) -> ();
   searchUsers: (searchText: text) -> (vec User) query;
   setApproval: (user: principal, status: ApprovalStatus) -> ();
   setPlanType: (userId: nat, planType: PlanType) -> ();
+  /// Enable or disable the recharge service — admin only.
+  setRechargeServiceEnabled: (enabled: bool) -> (bool);
   toggleCustomSection: (id: nat, enabled: bool) -> (bool);
   updateAdminConfig: (newConfig: AdminConfig) -> ();
   updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
+  /// Update commission config — admin only.
+  /// Validates: retailerPct + adminPct must equal globalPct.
+  updateCommissionConfig: (globalPct: float64, retailerPct: float64,
+   adminPct: float64) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool) -> (bool);
   updateCustomSection: (id: nat, name: text, heading: text, placement: 
@@ -374,6 +568,9 @@ service : {
    bool);
   updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
    text, category: text, enabled: bool) -> (bool);
+  /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  updateOfferPortalConfig: (isEnabled: bool, cpaLeadWebhookSecret: text,
+   adminProfitPct: nat, userProfitPct: nat) -> (bool);
   updateOrderStatus: (orderId: nat, status: text) -> ();
   updateProviderProfile: (userId: nat, shopName: text, description: text,
    address: text, category: text) -> ();
@@ -381,8 +578,19 @@ service : {
   updateProviderProfileFull: (userId: nat, shopName: text, description: 
    text, address: text, category: text, upiId: text, qrCodeBlobId:
    opt text) -> ();
+  /// Save recharge API config — admin only.
+  updateRechargeApiConfig: (apiUrl: text, apiKey: text, responseParam: 
+   text, isActive: bool, autoRefundEnabled: bool) -> (bool);
+  /// Update the status of a recharge transaction — admin only.
+  /// Auto-refund: if status = "Failed" and autoRefundEnabled, automatically refunds netCost.
+  /// Receipt: if status = "Success", generates a digital receipt.
+  /// SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
+  updateRechargeStatus: (txId: nat, status: text) -> (bool);
   updateScrapRate: (id: nat, itemName: text, ratePerKg: float64, ratePerGram:
    float64, enabled: bool) -> (bool);
+  /// Update SMS config — admin only.
+  updateSmsConfig: (fast2smsApiKey: text, senderId: text, isEnabled: 
+   bool) -> (bool);
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
   updateToggle: (toggleName: text, value: bool) -> ();
   /// Update a customer. Caller must own the customer (shopId check).

@@ -19,22 +19,28 @@ export interface ServiceRate {
     description: string;
     price: bigint;
 }
-export interface ProviderProfile {
-    userId: bigint;
-    subscriptionExpiry?: bigint;
-    subscriptionPlan: SubscriptionPlan;
-    description: string;
-    approvalStatus: ApprovalStatus;
-    subscriptionStatus: SubscriptionStatus;
-    paymentScreenshotBlobId?: string;
-    address: string;
-    serviceRates: Array<ServiceRate>;
+export type MobileNumber = string;
+export interface SmsConfig {
+    fast2smsApiKey: string;
+    isEnabled: boolean;
+    senderId: string;
+}
+export interface RechargeApiConfig {
+    autoRefundEnabled: boolean;
+    isActive: boolean;
+    responseParam: string;
+    apiKey: string;
+    apiUrl: string;
+}
+export interface OfferWithdrawal {
+    id: bigint;
+    status: Variant_pending_paid_approved_rejected;
+    offerUserId: bigint;
+    processedAt?: bigint;
+    adminNote?: string;
     upiId: string;
-    shopName: string;
-    category: string;
-    qrCodeBlobId?: string;
-    planType: PlanType;
-    photos: Array<string>;
+    amount: bigint;
+    requestedAt: bigint;
 }
 export interface CustomCode {
     id: bigint;
@@ -44,6 +50,12 @@ export interface CustomCode {
     name: string;
     enabled: boolean;
     btnLabel: string;
+}
+export interface OfferPortalConfig {
+    cpaLeadWebhookSecret: string;
+    adminProfitPct: bigint;
+    isEnabled: boolean;
+    userProfitPct: bigint;
 }
 export interface NewsItem {
     id: bigint;
@@ -80,16 +92,27 @@ export interface JobItem {
     lastDate: string;
     location: string;
 }
-export interface UdhaarTransaction {
-    id: string;
+export interface RechargeReceipt {
+    id: bigint;
+    txnId: bigint;
+    netCost: bigint;
+    userId: bigint;
+    operator: string;
+    generatedAt: bigint;
+    circle: string;
+    referenceId: string;
+    commission: bigint;
+    mobile: string;
+    amount: bigint;
+}
+export interface WalletTopupRequest {
+    id: bigint;
     status: string;
-    transactionType: string;
-    shopId: string;
-    date: string;
+    userId: bigint;
     note: string;
-    createdAt: bigint;
-    customerId: string;
     amount: number;
+    requestedAt: bigint;
+    resolvedAt?: bigint;
 }
 export interface User {
     id: bigint;
@@ -111,6 +134,17 @@ export interface VideoItem {
     category: string;
     videoUrl: string;
 }
+export interface UdhaarTransaction {
+    id: string;
+    status: string;
+    transactionType: string;
+    shopId: string;
+    date: string;
+    note: string;
+    createdAt: bigint;
+    customerId: string;
+    amount: number;
+}
 export interface UdhaarCustomer {
     id: string;
     shopId: string;
@@ -130,9 +164,30 @@ export interface Order {
     customerId: bigint;
     providerId: bigint;
 }
+export interface OfferTransaction {
+    id: bigint;
+    status: Variant_pending_reversed_credited;
+    offerUserId: bigint;
+    createdAt: bigint;
+    description: string;
+    txType: Variant_manualCredit_referralBonus_cpalead;
+    amount: bigint;
+}
 export interface UserApprovalInfo {
     status: ApprovalStatus;
     principal: Principal;
+}
+export interface RechargeTransaction {
+    id: bigint;
+    status: string;
+    netCost: number;
+    userId: bigint;
+    operator: string;
+    createdAt: bigint;
+    circle: string;
+    commission: number;
+    mobile: string;
+    amount: number;
 }
 export interface Banner {
     id: bigint;
@@ -143,6 +198,17 @@ export interface Banner {
     imageUrl: string;
     subtitle: string;
 }
+export interface OfferUser {
+    id: bigint;
+    referralCode: string;
+    userId: string;
+    createdAt: bigint;
+    pendingEarnings: bigint;
+    email: string;
+    referredBy?: string;
+    passwordHash: string;
+    totalEarnings: bigint;
+}
 export interface CustomSection {
     id: bigint;
     placement: string;
@@ -151,6 +217,11 @@ export interface CustomSection {
     heading: string;
     enabled: boolean;
     buttons: string;
+}
+export interface CommissionConfig {
+    retailerSharePct: number;
+    adminSharePct: number;
+    globalCommissionPct: number;
 }
 export interface AdminConfig {
     email: string;
@@ -164,12 +235,28 @@ export interface SubscriptionPricing {
     twelveMonthPrice: bigint;
     oneMonthPrice: bigint;
 }
-export type MobileNumber = string;
 export interface UserProfile {
     userId: bigint;
     name: string;
     role: UserRole;
     mobile: MobileNumber;
+}
+export interface ProviderProfile {
+    userId: bigint;
+    subscriptionExpiry?: bigint;
+    subscriptionPlan: SubscriptionPlan;
+    description: string;
+    approvalStatus: ApprovalStatus;
+    subscriptionStatus: SubscriptionStatus;
+    paymentScreenshotBlobId?: string;
+    address: string;
+    serviceRates: Array<ServiceRate>;
+    upiId: string;
+    shopName: string;
+    category: string;
+    qrCodeBlobId?: string;
+    planType: PlanType;
+    photos: Array<string>;
 }
 export enum ApprovalStatus {
     pending = "pending",
@@ -201,6 +288,27 @@ export enum UserRole__1 {
     admin = "admin",
     user = "user",
     guest = "guest"
+}
+export enum Variant_manualCredit_referralBonus_cpalead {
+    manualCredit = "manualCredit",
+    referralBonus = "referralBonus",
+    cpalead = "cpalead"
+}
+export enum Variant_paid_approved_rejected {
+    paid = "paid",
+    approved = "approved",
+    rejected = "rejected"
+}
+export enum Variant_pending_paid_approved_rejected {
+    pending = "pending",
+    paid = "paid",
+    approved = "approved",
+    rejected = "rejected"
+}
+export enum Variant_pending_reversed_credited {
+    pending = "pending",
+    reversed = "reversed",
+    credited = "credited"
 }
 export interface backendInterface {
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
@@ -234,7 +342,27 @@ export interface backendInterface {
         err: string;
     }>;
     addVideo(title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string): Promise<bigint>;
+    /**
+     * / Directly add or deduct balance for any user — admin only.
+     */
+    adminAdjustWallet(userId: bigint, amount: number, isAdd: boolean, _note: string): Promise<boolean>;
+    /**
+     * / List all Offer Portal users — admin only.
+     */
+    adminListOfferUsers(): Promise<Array<OfferUser>>;
+    /**
+     * / List all pending withdrawal requests — admin only.
+     */
+    adminListPendingWithdrawals(): Promise<Array<OfferWithdrawal>>;
+    /**
+     * / Resolve a withdrawal request (approve/reject/paid) — admin only.
+     */
+    adminResolveWithdrawal(id: bigint, newStatus: Variant_paid_approved_rejected, adminNote: string | null): Promise<boolean>;
     approveProvider(userId: bigint, plan: SubscriptionPlan): Promise<void>;
+    /**
+     * / Approve or reject a topup request.  On approval, funds are credited — admin only.
+     */
+    approveTopupRequest(requestId: bigint, approve: boolean): Promise<boolean>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     changeAdminPin(currentPinHash: string, newPinHash: string): Promise<void>;
     deleteBanner(bannerId: bigint): Promise<void>;
@@ -272,17 +400,69 @@ export interface backendInterface {
     getActiveProviders(): Promise<Array<ProviderProfile>>;
     getAdminConfig(): Promise<AdminConfig | null>;
     getAllProviders(): Promise<Array<ProviderProfile>>;
+    /**
+     * / Return all recharge transactions (master log) — admin only.
+     */
+    getAllRechargeTransactions(): Promise<Array<RechargeTransaction>>;
     getAllToggles(): Promise<Array<[string, boolean]>>;
+    /**
+     * / Return all pending topup requests — admin only.
+     */
+    getAllTopupRequests(): Promise<Array<WalletTopupRequest>>;
     getAllUsers(): Promise<Array<User>>;
+    /**
+     * / Return all wallet balances as (userId, balance) pairs — admin only.
+     */
+    getAllWalletBalances(): Promise<Array<[bigint, number]>>;
     getAppSettings(): Promise<string>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
+    /**
+     * / Return the current commission config — public.
+     */
+    getCommissionConfig(): Promise<CommissionConfig>;
     getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
     getJobs(): Promise<Array<JobItem>>;
+    /**
+     * / Get Offer Portal transaction history for a user.
+     */
+    getMyOfferTransactions(offerUserId: bigint): Promise<Array<OfferTransaction>>;
+    /**
+     * / Get withdrawal requests for an Offer Portal user.
+     */
+    getMyOfferWithdrawals(offerUserId: bigint): Promise<Array<OfferWithdrawal>>;
+    /**
+     * / Return the caller's recharge transaction history.
+     */
+    getMyRechargeHistory(): Promise<Array<RechargeTransaction>>;
+    /**
+     * / Get all receipts for the calling user.
+     */
+    getMyRechargeReceipts(): Promise<Array<RechargeReceipt>>;
+    /**
+     * / Return all topup requests submitted by the caller.
+     */
+    getMyTopupRequests(): Promise<Array<WalletTopupRequest>>;
+    /**
+     * / Return the caller's wallet balance (0.0 if no wallet yet).
+     */
+    getMyWalletBalance(): Promise<number>;
     getNews(): Promise<Array<NewsItem>>;
+    /**
+     * / Get earnings summary for an Offer Portal user.
+     */
+    getOfferEarningsSummary(offerUserId: bigint): Promise<{
+        referralCode: string;
+        pendingEarnings: bigint;
+        totalEarnings: bigint;
+    }>;
+    /**
+     * / Get Offer Portal global config — admin only.
+     */
+    getOfferPortalConfig(): Promise<OfferPortalConfig>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
@@ -290,7 +470,23 @@ export interface backendInterface {
     getProvidersByCategory(category: string): Promise<Array<ProviderProfile>>;
     getProvidersPendingApproval(): Promise<Array<ProviderProfile>>;
     getRecentUsers(): Promise<Array<User>>;
+    /**
+     * / Return the current recharge API config — admin only.
+     */
+    getRechargeApiConfig(): Promise<RechargeApiConfig>;
+    /**
+     * / Get receipt for a specific recharge transaction.
+     */
+    getRechargeReceipt(txnId: bigint): Promise<RechargeReceipt | null>;
+    /**
+     * / Return whether recharge service is enabled — public.
+     */
+    getRechargeServiceEnabled(): Promise<boolean>;
     getScrapRates(): Promise<Array<ScrapRate>>;
+    /**
+     * / Get SMS (Fast2SMS) config — admin only.
+     */
+    getSmsConfig(): Promise<SmsConfig>;
     getSubscriptionPricing(): Promise<SubscriptionPricing | null>;
     /**
      * / Return balance for a customer. Caller must own the customer.
@@ -322,10 +518,23 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getUsersByRole(role: UserRole): Promise<Array<User>>;
     getVideos(): Promise<Array<VideoItem>>;
+    /**
+     * / Return wallet balance for any userId — admin only.
+     */
+    getWalletBalanceByUserId(userId: bigint): Promise<number>;
+    /**
+     * / Initiate a mobile recharge.  Auto-calculates commission; deducts netCost
+     * / from caller's wallet.  Returns new transaction ID.
+     */
+    initiateRecharge(mobile: string, operator: string, circle: string, amount: number): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     login(mobile: MobileNumber, passwordHash: string): Promise<User>;
+    /**
+     * / Login to the Offer Portal.
+     */
+    loginOfferUser(email: string, passwordHash: string): Promise<OfferUser>;
     /**
      * / Mark a transaction as paid. Caller must own the transaction.
      */
@@ -337,29 +546,78 @@ export interface backendInterface {
         err: string;
     }>;
     placeOrder(providerId: bigint, customerName: string, description: string, orderType: string, imageUrl: string | null): Promise<bigint>;
+    /**
+     * / Process a CPALead postback: verify secret, split profit, credit earnings.
+     * / Also triggers 1% referral bonus to the referrer if any.
+     */
+    processCpaLeadPostback(offerUserId: bigint, grossAmount: bigint, webhookSecret: string): Promise<boolean>;
+    /**
+     * / Refund a Failed recharge — restores netCost to user wallet — admin only.
+     */
+    refundRecharge(txId: bigint): Promise<boolean>;
+    /**
+     * / Register a new Offer Portal user (isolated from main user DB).
+     */
+    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<bigint>;
     registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
     rejectProvider(userId: bigint): Promise<void>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
     requestApproval(): Promise<void>;
+    /**
+     * / Submit a UPI withdrawal request from the Offer Portal.
+     */
+    requestOfferWithdrawal(offerUserId: bigint, upiId: string, amount: bigint): Promise<bigint>;
+    /**
+     * / Request admin to top-up your wallet.  Returns the new request ID.
+     */
+    requestWalletTopup(amount: number, note: string): Promise<bigint>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
+    /**
+     * / Enable or disable the recharge service — admin only.
+     */
+    setRechargeServiceEnabled(enabled: boolean): Promise<boolean>;
     toggleCustomSection(id: bigint, enabled: boolean): Promise<boolean>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
+    /**
+     * / Update commission config — admin only.
+     * / Validates: retailerPct + adminPct must equal globalPct.
+     */
+    updateCommissionConfig(globalPct: number, retailerPct: number, adminPct: number): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
+    /**
+     * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+     */
+    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<boolean>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;
     updateProviderProfile(userId: bigint, shopName: string, description: string, address: string, category: string): Promise<void>;
     /**
      * / Extended updateProviderProfile to include upiId and qrCodeBlobId
      */
     updateProviderProfileFull(userId: bigint, shopName: string, description: string, address: string, category: string, upiId: string, qrCodeBlobId: string | null): Promise<void>;
+    /**
+     * / Save recharge API config — admin only.
+     */
+    updateRechargeApiConfig(apiUrl: string, apiKey: string, responseParam: string, isActive: boolean, autoRefundEnabled: boolean): Promise<boolean>;
+    /**
+     * / Update the status of a recharge transaction — admin only.
+     * / Auto-refund: if status = "Failed" and autoRefundEnabled, automatically refunds netCost.
+     * / Receipt: if status = "Success", generates a digital receipt.
+     * / SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
+     */
+    updateRechargeStatus(txId: bigint, status: string): Promise<boolean>;
     updateScrapRate(id: bigint, itemName: string, ratePerKg: number, ratePerGram: number, enabled: boolean): Promise<boolean>;
+    /**
+     * / Update SMS config — admin only.
+     */
+    updateSmsConfig(fast2smsApiKey: string, senderId: string, isEnabled: boolean): Promise<boolean>;
     updateSubscriptionPricing(newPricing: SubscriptionPricing): Promise<void>;
     updateToggle(toggleName: string, value: boolean): Promise<void>;
     /**

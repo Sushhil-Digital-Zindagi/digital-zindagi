@@ -806,13 +806,82 @@ export default function HomePage() {
     sectionToggles.dz_section_age_calculator ||
     sectionToggles.dz_section_percentage_calculator;
 
+  // Mirror dz-container-* content to legacy alias IDs so external scripts targeting
+  // home-top-container / home-middle-container / home-bottom-container still work.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-mirror whenever codes/sections change
+  useEffect(() => {
+    const pairs: [string, string][] = [
+      ["dz-container-top", "home-top-container"],
+      ["dz-container-middle", "home-middle-container"],
+      ["dz-container-bottom", "home-bottom-container"],
+    ];
+    for (const [srcId, aliasId] of pairs) {
+      const src = document.getElementById(srcId);
+      const alias = document.getElementById(aliasId);
+      if (src && alias && alias !== src) {
+        alias.innerHTML = src.innerHTML;
+      }
+    }
+  }, [customCodes, customSections]);
+
+  // Direct DOM injection fallback: ensures custom codes appear even if React
+  // rendering is delayed or missed (e.g. async data load after first paint).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-inject when codes change
+  useEffect(() => {
+    if (!customCodes || customCodes.length === 0) return;
+    const timer = setTimeout(() => {
+      for (const placement of ["top", "middle", "bottom"] as const) {
+        const containerId =
+          placement === "top"
+            ? "dz-container-top"
+            : placement === "middle"
+              ? "dz-container-middle"
+              : "dz-container-bottom";
+        const el = document.getElementById(containerId);
+        if (!el) continue;
+        const codes = customCodes.filter(
+          (c) => c.enabled && c.placement === placement,
+        );
+        for (const entry of codes) {
+          if (el.querySelector(`#dz-custom-code-${entry.id}`)) continue;
+          const wrapper = document.createElement("div");
+          wrapper.id = `dz-custom-code-${entry.id}`;
+          wrapper.className = "custom-code-block w-full";
+          wrapper.innerHTML = sanitizeHtml(entry.code);
+          const scripts = wrapper.querySelectorAll("script");
+          for (const oldScript of Array.from(scripts)) {
+            const newScript = document.createElement("script");
+            if ((oldScript as HTMLScriptElement).src) {
+              newScript.src = (oldScript as HTMLScriptElement).src;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+            oldScript.remove();
+          }
+          el.appendChild(wrapper);
+        }
+        // Mirror to alias after injection
+        const aliasId =
+          placement === "top"
+            ? "home-top-container"
+            : placement === "middle"
+              ? "home-middle-container"
+              : "home-bottom-container";
+        const alias = document.getElementById(aliasId);
+        if (alias) alias.innerHTML = el.innerHTML;
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [customCodes]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-1">
         {/* ── TOP CONTAINER ─────────────────────────────────────────── */}
-        <div id="dz-container-top">
+        <div id="dz-container-top" style={{ minHeight: 1 }}>
           {/* Custom Code — TOP placement */}
           {customCodes
             .filter((c) => c.enabled && c.placement === "top")
@@ -826,6 +895,12 @@ export default function HomePage() {
               <CustomSectionBlock key={section.id} section={section} />
             ))}
         </div>
+        {/* Legacy alias for external scripts targeting home-top-container */}
+        <div
+          id="home-top-container"
+          style={{ display: "none" }}
+          aria-hidden="true"
+        />
 
         {/* Ad Banner — Header position */}
         <AdBanners position="header" />
@@ -1212,7 +1287,7 @@ export default function HomePage() {
         )}
 
         {/* ── MIDDLE CONTAINER ──────────────────────────────────────── */}
-        <div id="dz-container-middle">
+        <div id="dz-container-middle" style={{ minHeight: 1 }}>
           {/* Custom Code — MIDDLE placement (after CategoryGrid, before providers) */}
           {customCodes
             .filter((c) => c.enabled && c.placement === "middle")
@@ -1226,6 +1301,12 @@ export default function HomePage() {
               <CustomSectionBlock key={section.id} section={section} />
             ))}
         </div>
+        {/* Legacy alias for external scripts targeting home-middle-container */}
+        <div
+          id="home-middle-container"
+          style={{ display: "none" }}
+          aria-hidden="true"
+        />
 
         {/* Ad Banner — Middle position */}
         <AdBanners position="middle" />
@@ -1443,7 +1524,7 @@ export default function HomePage() {
       </main>
 
       {/* ── BOTTOM CONTAINER ──────────────────────────────────────── */}
-      <div id="dz-container-bottom">
+      <div id="dz-container-bottom" style={{ minHeight: 1 }}>
         {/* Custom Code — BOTTOM placement (before Footer) */}
         {customCodes
           .filter((c) => c.enabled && c.placement === "bottom")
@@ -1457,9 +1538,120 @@ export default function HomePage() {
             <CustomSectionBlock key={section.id} section={section} />
           ))}
       </div>
+      {/* Legacy alias for external scripts targeting home-bottom-container */}
+      <div
+        id="home-bottom-container"
+        style={{ display: "none" }}
+        aria-hidden="true"
+      />
 
       {/* Ad Banner — Footer position */}
       <AdBanners position="footer" />
+
+      {/* ── OFFER PORTAL SECTION ─────────────────────────────────── */}
+      {(() => {
+        const offerEnabled =
+          localStorage.getItem("dz_section_offer_portal") !== "false" &&
+          localStorage.getItem("dz_offer_enabled") !== "false";
+        if (!offerEnabled) return null;
+        return (
+          <section
+            className="px-4 pb-6 max-w-7xl mx-auto"
+            data-ocid="offer_portal.section"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="relative overflow-hidden rounded-2xl border-2 border-amber-400/60 shadow-xl"
+              style={{
+                background:
+                  "linear-gradient(135deg, #064e3b 0%, #065f46 40%, #1a1a2e 100%)",
+              }}
+            >
+              {/* Decorative glow */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at top right, rgba(251,191,36,0.18) 0%, transparent 60%)",
+                }}
+              />
+              {/* Gold shimmer top border */}
+              <div
+                className="absolute top-0 left-0 right-0 h-0.5"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)",
+                }}
+              />
+
+              <div className="relative px-6 py-7 flex flex-col sm:flex-row items-center justify-between gap-5">
+                {/* Left — text */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-3xl leading-none" aria-hidden>
+                      🚀
+                    </span>
+                    <h3 className="font-heading font-extrabold text-white text-xl tracking-tight">
+                      Digital Zindagi Offer
+                    </h3>
+                    <span className="inline-flex items-center bg-amber-400/20 border border-amber-400/50 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                      LIVE
+                    </span>
+                  </div>
+                  <p className="text-white/75 text-sm leading-snug max-w-xs">
+                    Kamaao ghar se!{" "}
+                    <span className="text-amber-300 font-semibold">60%</span> to
+                    you on every conversion — 1% referral bonus bhi milega!
+                  </p>
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse" />
+                      CPALead Powered
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <span>💸</span>
+                      UPI Withdrawal
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <span>👥</span>
+                      Refer &amp; Earn 1%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right — CTA */}
+                <button
+                  type="button"
+                  data-ocid="offer_portal.cta_button"
+                  onClick={() => navigate("/offer-portal")}
+                  className="flex-shrink-0 relative group overflow-hidden bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-emerald-900 font-extrabold px-7 py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.97] text-sm whitespace-nowrap"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Join &amp; Earn
+                    <span aria-hidden>→</span>
+                  </span>
+                  {/* Shine sweep */}
+                  <span
+                    className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    aria-hidden
+                  />
+                </button>
+              </div>
+
+              {/* Bottom decorative border */}
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)",
+                }}
+              />
+            </motion.div>
+          </section>
+        );
+      })()}
 
       <Footer />
     </div>

@@ -135,7 +135,14 @@ type AdminSection =
   | "customCode"
   | "customSections"
   | "udhaarBook"
-  | "ludoSettings";
+  | "ludoSettings"
+  | "rechargeToggle"
+  | "rechargeApiManager"
+  | "commissionSettings"
+  | "walletManager"
+  | "rechargeLogs"
+  | "rechargeAnalytics"
+  | "offerControlCenter";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -8725,6 +8732,2807 @@ function LudoSettingsSection() {
   );
 }
 
+// ============================================================
+// ---- RECHARGE SYSTEM TABS (6 new sections) ----
+// ============================================================
+
+// Shared types for Recharge System
+interface CommissionConfig {
+  globalCommissionPct: number;
+  retailerSharePct: number;
+  adminSharePct: number;
+}
+
+interface RechargeApiConfig {
+  apiUrl: string;
+  apiKey: string;
+  responseParam: string;
+  isActive: boolean;
+  autoRefundEnabled: boolean;
+}
+
+interface WalletTopupRequest {
+  id: number;
+  userId: number;
+  amount: number;
+  status: string;
+  requestedAt: number;
+  resolvedAt: number | null;
+  note: string;
+}
+
+interface RechargeTransaction {
+  id: number;
+  userId: number;
+  mobile: string;
+  operator: string;
+  circle: string;
+  amount: number;
+  commission: number;
+  netCost: number;
+  status: string;
+  createdAt: number;
+}
+
+// ---- Tab 1: Recharge Toggle ----
+function RechargeToggleSection() {
+  const { actor } = useActor();
+  const [enabled, setEnabled] = useState<boolean>(() => {
+    return localStorage.getItem("dz_recharge_enabled") !== "false";
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleToggle = async () => {
+    const next = !enabled;
+    setSaving(true);
+    try {
+      if (actor && "setRechargeServiceEnabled" in actor) {
+        await (
+          actor as unknown as {
+            setRechargeServiceEnabled: (v: boolean) => Promise<boolean>;
+          }
+        ).setRechargeServiceEnabled(next);
+      }
+      localStorage.setItem("dz_recharge_enabled", next ? "true" : "false");
+      setEnabled(next);
+      broadcastSettingsChange();
+      toast.success(`Recharge Service ${next ? "ON" : "OFF"} ho gaya!`);
+    } catch {
+      toast.error("Setting save nahi ho saki");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Master Toggle Card */}
+      <div
+        className={`bg-white rounded-2xl border-2 shadow-card p-6 transition-colors ${
+          enabled ? "border-emerald-400" : "border-red-300"
+        }`}
+        data-ocid="recharge.toggle_card"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`w-4 h-4 rounded-full flex-shrink-0 ${
+                  enabled ? "bg-emerald-500 animate-pulse" : "bg-red-400"
+                }`}
+              />
+              <h3 className="font-heading font-bold text-foreground text-lg">
+                Recharge Service Master Switch
+              </h3>
+            </div>
+            <p className="text-sm text-muted-foreground ml-7">
+              {enabled
+                ? "✅ Recharge module ACTIVE hai — Users recharge kar sakte hain"
+                : "⛔ Recharge module BAND hai — Sidebar aur /recharge route dono disabled hain"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="recharge.master_toggle"
+            onClick={handleToggle}
+            disabled={saving}
+            className={`relative w-16 h-8 rounded-full transition-colors flex-shrink-0 disabled:opacity-60 ${
+              enabled ? "bg-emerald-500" : "bg-red-400"
+            }`}
+          >
+            {saving ? (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <Loader2 size={14} className="animate-spin text-white" />
+              </span>
+            ) : (
+              <span
+                className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                  enabled ? "translate-x-9" : "translate-x-1"
+                }`}
+              />
+            )}
+          </button>
+        </div>
+
+        <div
+          className={`mt-4 rounded-xl px-4 py-3 text-sm font-semibold ${
+            enabled
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "bg-red-50 text-red-600 border border-red-200"
+          }`}
+        >
+          {enabled
+            ? "📱 Mobile Recharge — Jio, Airtel, VI, BSNL — ACTIVE"
+            : "📴 Mobile Recharge module abhi OFF hai"}
+        </div>
+      </div>
+
+      {/* Info Card */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-2">
+        <p className="font-semibold text-blue-800 text-sm">
+          ℹ️ Yeh toggle kya karta hai?
+        </p>
+        <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+          <li>
+            OFF karne par Sidebar mein "Mobile Recharge" option chhupp jaayega
+          </li>
+          <li>
+            <code className="bg-blue-100 px-1 rounded">/recharge</code> route
+            blocked ho jaayegi — users redirect ho jaayenge
+          </li>
+          <li>
+            ON karne par turant active ho jaayega — koi page refresh zaroor nahi
+          </li>
+          <li>
+            Commission aur API settings is toggle se alag hain — woh tab bhi
+            configure ki ja sakti hain
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab 2: API Manager ----
+function RechargeApiManagerSection() {
+  const { actor } = useActor();
+  const [apiUrl, setApiUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [responseParam, setResponseParam] = useState("data.status");
+  const [autoRefundEnabled, setAutoRefundEnabled] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Load saved config
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (actor && "getRechargeApiConfig" in actor) {
+          // backend method (cast via unknown)
+          const cfg = (await (
+            actor as unknown as {
+              getRechargeApiConfig: () => Promise<RechargeApiConfig[]>;
+            }
+          ).getRechargeApiConfig()) as RechargeApiConfig[] | RechargeApiConfig;
+          const c = Array.isArray(cfg) ? cfg[0] : cfg;
+          if (c) {
+            setApiUrl(c.apiUrl ?? "");
+            setApiKey(c.apiKey ?? "");
+            setResponseParam(c.responseParam ?? "data.status");
+            setAutoRefundEnabled(c.autoRefundEnabled ?? false);
+          }
+        } else {
+          // localStorage fallback
+          const s = localStorage.getItem("dz_recharge_api");
+          if (s) {
+            const p = JSON.parse(s) as Partial<RechargeApiConfig>;
+            setApiUrl(p.apiUrl ?? "");
+            setApiKey(p.apiKey ?? "");
+            setResponseParam(p.responseParam ?? "data.status");
+            setAutoRefundEnabled(p.autoRefundEnabled ?? false);
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      setLoaded(true);
+    };
+    load();
+  }, [actor]);
+
+  const handleSave = async () => {
+    if (!apiUrl.trim()) {
+      toast.error("API URL zaroor bharen");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (actor && "updateRechargeApiConfig" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            updateRechargeApiConfig: (
+              u: string,
+              k: string,
+              r: string,
+              a: boolean,
+              ar: boolean,
+            ) => Promise<boolean>;
+          }
+        ).updateRechargeApiConfig(
+          apiUrl.trim(),
+          apiKey.trim(),
+          responseParam.trim(),
+          true,
+          autoRefundEnabled,
+        );
+      }
+      localStorage.setItem(
+        "dz_recharge_api",
+        JSON.stringify({
+          apiUrl,
+          apiKey,
+          responseParam,
+          isActive: true,
+          autoRefundEnabled,
+        }),
+      );
+      toast.success("API config save ho gaya! ✅");
+    } catch {
+      toast.error("Save nahi ho saka");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!loaded)
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <Settings size={18} className="text-primary" />
+          Recharge API Configuration
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          ⚡ Recharge Service ON hone par, har recharge ke liye yeh API call
+          hogi.
+        </p>
+
+        {/* API URL */}
+        <div>
+          <label
+            htmlFor="api-url"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            API URL (Full URL)
+          </label>
+          <input
+            id="api-url"
+            data-ocid="recharge.api_url_input"
+            type="url"
+            value={apiUrl}
+            onChange={(e) => setApiUrl(e.target.value)}
+            placeholder="https://api.recharge-provider.com/v1/recharge"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+          />
+        </div>
+
+        {/* API Key */}
+        <div>
+          <label
+            htmlFor="api-key"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            API Key
+          </label>
+          <div className="relative">
+            <input
+              id="api-key"
+              data-ocid="recharge.api_key_input"
+              type={showKey ? "text" : "password"}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-xxxxxxxxxxxxxxxxxx"
+              className="w-full border border-border rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-xs font-medium"
+            >
+              {showKey ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+
+        {/* Response Parameter */}
+        <div>
+          <label
+            htmlFor="resp-param"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Response Parameter (JSON path)
+          </label>
+          <input
+            id="resp-param"
+            data-ocid="recharge.response_param_input"
+            type="text"
+            value={responseParam}
+            onChange={(e) => setResponseParam(e.target.value)}
+            placeholder="data.status"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            API response mein success/fail check karne ke liye JSON path (e.g.{" "}
+            <code className="bg-muted px-1 rounded">data.status</code>,{" "}
+            <code className="bg-muted px-1 rounded">result.code</code>)
+          </p>
+        </div>
+
+        {/* Auto-Refund Toggle */}
+        <div
+          className={`flex items-center justify-between gap-4 p-4 rounded-xl border-2 transition-colors ${autoRefundEnabled ? "bg-emerald-50 border-emerald-200" : "bg-muted/40 border-border"}`}
+          data-ocid="recharge.auto_refund_toggle_card"
+        >
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              🔄 Auto-refund failed recharges to wallet
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Jab kisi recharge ka status API se "Failed" aaye, amount
+              automatically user ke wallet mein wapas credit ho jaayega.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="recharge.auto_refund_toggle"
+            onClick={() => setAutoRefundEnabled((v) => !v)}
+            className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${autoRefundEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${autoRefundEnabled ? "translate-x-6" : "translate-x-0.5"}`}
+            />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          data-ocid="recharge.save_api_button"
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60"
+        >
+          {saving ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <CheckCircle size={15} />
+          )}
+          API Config Save Karein
+        </button>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+        <p className="text-sm font-semibold text-amber-800 mb-1">
+          🔐 Security Note
+        </p>
+        <p className="text-xs text-amber-700">
+          API Key encrypted form mein save hota hai. Isko kabhi bhi users ke
+          saath share na karein. Production mein proper API authentication use
+          karein.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab 3: Commission Settings ----
+function CommissionSettingsSection() {
+  const { actor } = useActor();
+  const [globalPct, setGlobalPct] = useState("5");
+  const [retailerPct, setRetailerPct] = useState("2");
+  const [saving, setSaving] = useState(false);
+
+  const adminPct = Math.max(
+    0,
+    Number.parseFloat(globalPct || "0") - Number.parseFloat(retailerPct || "0"),
+  );
+  const retailerCost = 100 - Number.parseFloat(retailerPct || "0");
+  const isValid =
+    Number.parseFloat(retailerPct || "0") <=
+    Number.parseFloat(globalPct || "0");
+
+  // Load saved config
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (actor && "getCommissionConfig" in actor) {
+          // backend method (cast via unknown)
+          const cfg = (await (
+            actor as unknown as {
+              getCommissionConfig: () => Promise<CommissionConfig[]>;
+            }
+          ).getCommissionConfig()) as CommissionConfig[] | CommissionConfig;
+          const c = Array.isArray(cfg) ? cfg[0] : cfg;
+          if (c) {
+            setGlobalPct(String(c.globalCommissionPct ?? 5));
+            setRetailerPct(String(c.retailerSharePct ?? 2));
+          }
+        } else {
+          const s = localStorage.getItem("dz_commission_config");
+          if (s) {
+            const p = JSON.parse(s) as Partial<CommissionConfig>;
+            setGlobalPct(String(p.globalCommissionPct ?? 5));
+            setRetailerPct(String(p.retailerSharePct ?? 2));
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    load();
+  }, [actor]);
+
+  const handleSave = async () => {
+    if (!isValid) {
+      toast.error("Retailer Share, Global Commission se zyada nahi ho sakta");
+      return;
+    }
+    setSaving(true);
+    try {
+      const g = Number.parseFloat(globalPct);
+      const r = Number.parseFloat(retailerPct);
+      const a = Math.max(0, g - r);
+      if (actor && "updateCommissionConfig" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            updateCommissionConfig: (
+              g: number,
+              r: number,
+              a: number,
+            ) => Promise<boolean>;
+          }
+        ).updateCommissionConfig(g, r, a);
+      }
+      localStorage.setItem(
+        "dz_commission_config",
+        JSON.stringify({
+          globalCommissionPct: g,
+          retailerSharePct: r,
+          adminSharePct: a,
+        }),
+      );
+      toast.success("Commission settings save ho gayi! 💰");
+    } catch {
+      toast.error("Save nahi ho saka");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-5">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <DollarSign size={18} className="text-primary" />
+          Commission Configuration
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Global Commission */}
+          <div>
+            <label
+              htmlFor="global-pct"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Global Commission %{" "}
+              <span className="text-muted-foreground text-xs">
+                (API se milta hai)
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                id="global-pct"
+                data-ocid="recharge.global_commission_input"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={globalPct}
+                onChange={(e) => setGlobalPct(e.target.value)}
+                className="w-full border border-border rounded-xl px-4 py-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                %
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              API provider se milne wala commission
+            </p>
+          </div>
+
+          {/* Retailer Share */}
+          <div>
+            <label
+              htmlFor="retailer-pct"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Retailer Share %{" "}
+              <span className="text-muted-foreground text-xs">
+                (unhe milega)
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                id="retailer-pct"
+                data-ocid="recharge.retailer_commission_input"
+                type="number"
+                min="0"
+                max={globalPct || "100"}
+                step="0.1"
+                value={retailerPct}
+                onChange={(e) => setRetailerPct(e.target.value)}
+                className={`w-full border rounded-xl px-4 py-3 pr-8 text-sm outline-none focus:ring-2 ${
+                  isValid
+                    ? "border-border focus:ring-ring"
+                    : "border-red-400 focus:ring-red-400 bg-red-50"
+                }`}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                %
+              </span>
+            </div>
+            {!isValid && (
+              <p className="text-xs text-red-500 mt-1">
+                Global Commission se zyada nahi ho sakta!
+              </p>
+            )}
+          </div>
+
+          {/* Admin Take (read-only) */}
+          <div>
+            <label
+              htmlFor="admin-take-pct"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Admin Take %{" "}
+              <span className="text-muted-foreground text-xs">
+                (auto-calculated)
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                id="admin-take-pct"
+                type="number"
+                value={adminPct.toFixed(2)}
+                readOnly
+                className="w-full border border-border rounded-xl px-4 py-3 pr-8 text-sm bg-muted/40 text-muted-foreground cursor-not-allowed"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                %
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              = Global − Retailer (automatic)
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          data-ocid="recharge.save_commission_button"
+          onClick={handleSave}
+          disabled={saving || !isValid}
+          className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60"
+        >
+          {saving ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <CheckCircle size={15} />
+          )}
+          Commission Save Karein
+        </button>
+      </div>
+
+      {/* Live Preview Card */}
+      <div className="bg-gradient-to-br from-emerald-600 to-green-500 rounded-2xl p-5 text-white space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
+          💡 Live Preview — ₹100 Recharge par
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white/20 rounded-xl p-3 text-center">
+            <p className="text-xs opacity-80">Retailer Dega</p>
+            <p className="text-xl font-bold">₹{retailerCost.toFixed(0)}</p>
+            <p className="text-xs opacity-70">({retailerPct}% bachaya)</p>
+          </div>
+          <div className="bg-white/20 rounded-xl p-3 text-center">
+            <p className="text-xs opacity-80">Retailer Profit</p>
+            <p className="text-xl font-bold text-yellow-300">
+              ₹{Number.parseFloat(retailerPct || "0").toFixed(1)}
+            </p>
+            <p className="text-xs opacity-70">Instant!</p>
+          </div>
+          <div className="bg-white/20 rounded-xl p-3 text-center">
+            <p className="text-xs opacity-80">Admin Revenue</p>
+            <p className="text-xl font-bold text-cyan-300">
+              ₹{adminPct.toFixed(1)}
+            </p>
+            <p className="text-xs opacity-70">Net earning</p>
+          </div>
+        </div>
+        <p className="text-xs opacity-70 text-center">
+          Retailer ₹100 recharge karne par sirf ₹{retailerCost.toFixed(0)}{" "}
+          wallet se deduct hoga — ₹
+          {Number.parseFloat(retailerPct || "0").toFixed(1)} instant profit!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab 4: Wallet Manager ----
+function WalletManagerSection() {
+  const { actor } = useActor();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResult, setSearchResult] = useState<{
+    userId: number;
+    balance: number;
+    name?: string;
+  } | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [adjustUserId, setAdjustUserId] = useState("");
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustNote, setAdjustNote] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+  const [showAdjustFor, setShowAdjustFor] = useState<"add" | "deduct" | null>(
+    null,
+  );
+  const [topupRequests, setTopupRequests] = useState<WalletTopupRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  // Load topup requests
+  useEffect(() => {
+    const load = async () => {
+      setLoadingRequests(true);
+      try {
+        if (actor && "getAllTopupRequests" in actor) {
+          // backend method (cast via unknown)
+          const reqs = await (
+            actor as unknown as {
+              getAllTopupRequests: () => Promise<WalletTopupRequest[]>;
+            }
+          ).getAllTopupRequests();
+          setTopupRequests(Array.isArray(reqs) ? reqs : []);
+        } else {
+          setTopupRequests([]);
+        }
+      } catch {
+        setTopupRequests([]);
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    setSearching(true);
+    try {
+      if (actor && "getAllWalletBalances" in actor) {
+        // backend method (cast via unknown)
+        const balances = (await (
+          actor as unknown as {
+            getAllWalletBalances: () => Promise<[number, number][]>;
+          }
+        ).getAllWalletBalances()) as [number, number][];
+        const parsed = Array.isArray(balances) ? balances : [];
+        const numericId = Number(searchTerm.trim());
+        const found = parsed.find(([uid]) => uid === numericId);
+        if (found) {
+          setSearchResult({ userId: found[0], balance: found[1] });
+          setAdjustUserId(String(found[0]));
+        } else {
+          toast.error("User ID nahi mila");
+          setSearchResult(null);
+        }
+      } else {
+        toast.error("Backend connection nahi hai");
+      }
+    } catch {
+      toast.error("Search fail ho gaya");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAdjust = async (isAdd: boolean) => {
+    const uid = Number.parseInt(adjustUserId);
+    const amt = Number.parseFloat(adjustAmount);
+    if (!uid || !amt || amt <= 0) {
+      toast.error("Valid User ID aur Amount daalein");
+      return;
+    }
+    setAdjusting(true);
+    try {
+      if (actor && "adminAdjustWallet" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            adminAdjustWallet: (
+              u: number,
+              a: number,
+              add: boolean,
+              n: string,
+            ) => Promise<boolean>;
+          }
+        ).adminAdjustWallet(
+          uid,
+          amt,
+          isAdd,
+          adjustNote || (isAdd ? "Admin add" : "Admin deduct"),
+        );
+        toast.success(
+          `₹${amt} ${isAdd ? "add" : "deduct"} ho gaya! Wallet updated.`,
+        );
+        if (searchResult && searchResult.userId === uid) {
+          setSearchResult({
+            ...searchResult,
+            balance: isAdd
+              ? searchResult.balance + amt
+              : searchResult.balance - amt,
+          });
+        }
+      } else {
+        toast.success(`₹${amt} ${isAdd ? "add" : "deduct"} — backend pending`);
+      }
+      setAdjustAmount("");
+      setAdjustNote("");
+      setShowAdjustFor(null);
+    } catch {
+      toast.error("Wallet adjust nahi ho saka");
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
+  const handleTopupAction = async (reqId: number, approve: boolean) => {
+    setProcessingId(reqId);
+    try {
+      if (actor && "approveTopupRequest" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            approveTopupRequest: (
+              id: number,
+              approve: boolean,
+            ) => Promise<boolean>;
+          }
+        ).approveTopupRequest(reqId, approve);
+      }
+      setTopupRequests((prev) => prev.filter((r) => r.id !== reqId));
+      toast.success(
+        approve
+          ? "Topup approved! Balance add ho gaya ✅"
+          : "Topup request reject ho gaya.",
+      );
+    } catch {
+      toast.error("Action fail ho gaya");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Search & Adjust */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <Users size={18} className="text-primary" />
+          User Wallet Adjust Karein
+        </h3>
+
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search
+              size={16}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              data-ocid="recharge.wallet_search_input"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="User ID se search karein..."
+              className="w-full border border-border rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <button
+            type="button"
+            data-ocid="recharge.search_wallet_button"
+            onClick={handleSearch}
+            disabled={searching}
+            className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-4 py-3 rounded-xl hover:opacity-90 disabled:opacity-60 text-sm"
+          >
+            {searching ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Search size={14} />
+            )}
+            Search
+          </button>
+        </div>
+
+        {searchResult && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-foreground">
+                  User ID: {searchResult.userId}
+                </p>
+                <p className="text-2xl font-bold text-emerald-700 mt-1">
+                  ₹{searchResult.balance.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Current Wallet Balance
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  data-ocid="recharge.add_funds_button"
+                  onClick={() => setShowAdjustFor("add")}
+                  className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold px-3 py-2 rounded-xl transition-colors"
+                >
+                  <Plus size={14} /> Add Funds
+                </button>
+                <button
+                  type="button"
+                  data-ocid="recharge.deduct_funds_button"
+                  onClick={() => setShowAdjustFor("deduct")}
+                  className="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-3 py-2 rounded-xl transition-colors"
+                >
+                  <Trash2 size={14} /> Deduct
+                </button>
+              </div>
+            </div>
+
+            {showAdjustFor && (
+              <div
+                className={`border-2 rounded-xl p-3 space-y-2 ${showAdjustFor === "add" ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}
+              >
+                <p
+                  className={`text-sm font-semibold ${showAdjustFor === "add" ? "text-green-700" : "text-red-700"}`}
+                >
+                  {showAdjustFor === "add"
+                    ? "➕ Funds Add Karein"
+                    : "➖ Funds Deduct Karein"}
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    data-ocid="recharge.adjust_amount_input"
+                    type="number"
+                    min="1"
+                    value={adjustAmount}
+                    onChange={(e) => setAdjustAmount(e.target.value)}
+                    placeholder="Amount (₹)"
+                    className="flex-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                  />
+                  <input
+                    data-ocid="recharge.adjust_note_input"
+                    type="text"
+                    value={adjustNote}
+                    onChange={(e) => setAdjustNote(e.target.value)}
+                    placeholder="Note (optional)"
+                    className="flex-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    data-ocid="recharge.confirm_adjust_button"
+                    onClick={() => handleAdjust(showAdjustFor === "add")}
+                    disabled={adjusting}
+                    className={`flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-60 ${showAdjustFor === "add" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                  >
+                    {adjusting ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <CheckCircle size={13} />
+                    )}
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdjustFor(null)}
+                    className="text-sm font-medium px-4 py-2 rounded-xl border border-border hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Pending Topup Requests */}
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30">
+          <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+            <DollarSign size={18} className="text-primary" />
+            Pending Topup Requests
+            {topupRequests.length > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {topupRequests.length}
+              </span>
+            )}
+          </h3>
+        </div>
+        {loadingRequests ? (
+          <div
+            data-ocid="recharge.loading_state"
+            className="flex justify-center py-8"
+          >
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        ) : topupRequests.length === 0 ? (
+          <div
+            data-ocid="recharge.empty_state"
+            className="text-center py-12 text-muted-foreground"
+          >
+            <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+            <p className="font-medium">Sab cleared!</p>
+            <p className="text-sm">Koi pending topup request nahi hai</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {topupRequests.map((req, i) => (
+              <div
+                key={req.id}
+                data-ocid={`recharge.topup_item.${i + 1}`}
+                className="flex items-center justify-between px-5 py-4 hover:bg-muted/20"
+              >
+                <div>
+                  <p className="font-semibold text-foreground text-sm">
+                    User #{req.userId}
+                  </p>
+                  <p className="text-xl font-bold text-emerald-700">
+                    ₹{req.amount}
+                  </p>
+                  {req.note && (
+                    <p className="text-xs text-muted-foreground">{req.note}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(req.requestedAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    data-ocid={`recharge.approve_topup.${i + 1}`}
+                    onClick={() => handleTopupAction(req.id, true)}
+                    disabled={processingId === req.id}
+                    className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-bold px-3 py-2 rounded-xl disabled:opacity-60"
+                  >
+                    {processingId === req.id ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <CheckCircle size={13} />
+                    )}
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    data-ocid={`recharge.reject_topup.${i + 1}`}
+                    onClick={() => handleTopupAction(req.id, false)}
+                    disabled={processingId === req.id}
+                    className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-sm font-bold px-3 py-2 rounded-xl disabled:opacity-60"
+                  >
+                    <XCircle size={13} /> Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab 5: Recharge Logs ----
+function RechargeLogsSection() {
+  const { actor } = useActor();
+  const [transactions, setTransactions] = useState<RechargeTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<
+    "all" | "Success" | "Pending" | "Failed"
+  >("all");
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [smsSaving, setSmsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSms = async () => {
+      try {
+        if (actor && "getSmsConfig" in actor) {
+          const cfg = await (
+            actor as unknown as {
+              getSmsConfig: () => Promise<{
+                isEnabled: boolean;
+                fast2smsApiKey: string;
+                senderId: string;
+              }>;
+            }
+          ).getSmsConfig();
+          setSmsEnabled(cfg.isEnabled ?? false);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    loadSms();
+  }, [actor]);
+
+  const handleSmsSave = async () => {
+    setSmsSaving(true);
+    try {
+      if (actor && "getSmsConfig" in actor && "updateSmsConfig" in actor) {
+        const cfg = await (
+          actor as unknown as {
+            getSmsConfig: () => Promise<{
+              isEnabled: boolean;
+              fast2smsApiKey: string;
+              senderId: string;
+            }>;
+          }
+        ).getSmsConfig();
+        await (
+          actor as unknown as {
+            updateSmsConfig: (
+              k: string,
+              s: string,
+              e: boolean,
+            ) => Promise<boolean>;
+          }
+        ).updateSmsConfig(
+          cfg.fast2smsApiKey ?? "",
+          cfg.senderId ?? "",
+          smsEnabled,
+        );
+      }
+      toast.success(`SMS alerts ${smsEnabled ? "ON" : "OFF"} ho gaya! ✅`);
+    } catch {
+      toast.error("SMS setting save nahi ho saki");
+    } finally {
+      setSmsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (actor && "getAllRechargeTransactions" in actor) {
+          // backend method (cast via unknown)
+          const txns = await (
+            actor as unknown as {
+              getAllRechargeTransactions: () => Promise<RechargeTransaction[]>;
+            }
+          ).getAllRechargeTransactions();
+          setTransactions(Array.isArray(txns) ? txns : []);
+        } else {
+          setTransactions([]);
+        }
+      } catch {
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const filtered =
+    filter === "all"
+      ? transactions
+      : transactions.filter((t) => t.status === filter);
+
+  const handleRefund = async (txId: number) => {
+    setProcessingId(txId);
+    try {
+      if (actor && "refundRecharge" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            refundRecharge: (id: number) => Promise<boolean>;
+          }
+        ).refundRecharge(txId);
+      }
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === txId ? { ...t, status: "Refunded" } : t)),
+      );
+      toast.success("Refund processed! ✅");
+    } catch {
+      toast.error("Refund nahi ho saka");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleUpdateStatus = async (txId: number, status: string) => {
+    setProcessingId(txId);
+    try {
+      if (actor && "updateRechargeStatus" in actor) {
+        // backend method (cast via unknown)
+        await (
+          actor as unknown as {
+            updateRechargeStatus: (id: number, s: string) => Promise<boolean>;
+          }
+        ).updateRechargeStatus(txId, status);
+      }
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === txId ? { ...t, status } : t)),
+      );
+      toast.success(`Status "${status}" update ho gaya!`);
+    } catch {
+      toast.error("Status update nahi ho saca");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    const cls: Record<string, string> = {
+      Success: "bg-green-100 text-green-700",
+      Pending: "bg-yellow-100 text-yellow-700",
+      Failed: "bg-red-100 text-red-600",
+      Refunded: "bg-blue-100 text-blue-700",
+    };
+    return (
+      <span
+        className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${cls[status] ?? "bg-muted text-muted-foreground"}`}
+      >
+        {status}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* SMS Alerts Quick Toggle */}
+      <div
+        className={`flex items-center justify-between gap-4 p-4 rounded-2xl border-2 transition-colors ${smsEnabled ? "bg-blue-50 border-blue-200" : "bg-muted/40 border-border"}`}
+        data-ocid="recharge.logs_sms_card"
+      >
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+            📱 Fast2SMS Alerts
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-bold ${smsEnabled ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              {smsEnabled ? "ON" : "OFF"}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Recharge success/failure par user ko SMS alert bhejega. (API Key
+            OFFER CONTROL CENTER mein configure karein)
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            type="button"
+            data-ocid="recharge.sms_toggle"
+            onClick={() => setSmsEnabled((v) => !v)}
+            className={`relative w-12 h-6 rounded-full transition-colors ${smsEnabled ? "bg-blue-500" : "bg-muted-foreground/30"}`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${smsEnabled ? "translate-x-6" : "translate-x-0.5"}`}
+            />
+          </button>
+          <button
+            type="button"
+            data-ocid="recharge.sms_save"
+            onClick={handleSmsSave}
+            disabled={smsSaving}
+            className="text-xs bg-primary text-primary-foreground font-bold px-3 py-1.5 rounded-lg disabled:opacity-60"
+          >
+            {smsSaving ? "..." : "Save"}
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex gap-2 flex-wrap">
+        {(["all", "Success", "Pending", "Failed"] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            data-ocid={`recharge.filter_${f}`}
+            onClick={() => setFilter(f)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+              filter === f
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/70"
+            }`}
+          >
+            {f === "all" ? "All Transactions" : f}
+            {f !== "all" && (
+              <span className="ml-1 opacity-70">
+                ({transactions.filter((t) => t.status === f).length})
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+        {loading ? (
+          <div
+            data-ocid="recharge.logs_loading"
+            className="flex justify-center py-12"
+          >
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            data-ocid="recharge.logs_empty"
+            className="text-center py-12 text-muted-foreground"
+          >
+            <TrendingUp size={40} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Koi transaction nahi mila</p>
+            <p className="text-sm">
+              Filter change karein ya recharge hone ka wait karein
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" data-ocid="recharge.logs_table">
+              <thead className="bg-muted sticky top-0">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground whitespace-nowrap">
+                    User
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground whitespace-nowrap">
+                    Mobile
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground hidden sm:table-cell whitespace-nowrap">
+                    Operator
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold text-foreground whitespace-nowrap">
+                    Amount
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold text-foreground hidden md:table-cell whitespace-nowrap">
+                    Commission
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold text-foreground hidden md:table-cell whitespace-nowrap">
+                    Net Cost
+                  </th>
+                  <th className="text-center px-4 py-3 font-semibold text-foreground whitespace-nowrap">
+                    Status
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground hidden lg:table-cell whitespace-nowrap">
+                    Date
+                  </th>
+                  <th className="text-center px-4 py-3 font-semibold text-foreground whitespace-nowrap">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((tx, i) => (
+                  <tr
+                    key={tx.id}
+                    data-ocid={`recharge.log_row.${i + 1}`}
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-medium text-muted-foreground">
+                      #{tx.userId}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-foreground">
+                      {tx.mobile}
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                        {tx.operator}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-foreground">
+                      ₹{tx.amount}
+                    </td>
+                    <td className="px-4 py-3 text-right text-emerald-700 font-medium hidden md:table-cell">
+                      ₹{tx.commission.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-muted-foreground hidden md:table-cell">
+                      ₹{tx.netCost.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {statusBadge(tx.status)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+                      {new Date(tx.createdAt).toLocaleDateString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        {tx.status === "Failed" && (
+                          <button
+                            type="button"
+                            data-ocid={`recharge.refund_button.${i + 1}`}
+                            onClick={() => handleRefund(tx.id)}
+                            disabled={processingId === tx.id}
+                            className="text-xs bg-blue-500 hover:bg-blue-600 text-white font-bold px-2.5 py-1.5 rounded-lg disabled:opacity-60"
+                          >
+                            {processingId === tx.id ? "..." : "Refund"}
+                          </button>
+                        )}
+                        {tx.status === "Pending" && (
+                          <>
+                            <button
+                              type="button"
+                              data-ocid={`recharge.mark_success.${i + 1}`}
+                              onClick={() =>
+                                handleUpdateStatus(tx.id, "Success")
+                              }
+                              disabled={processingId === tx.id}
+                              className="text-xs bg-green-500 hover:bg-green-600 text-white font-bold px-2 py-1.5 rounded-lg disabled:opacity-60"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              type="button"
+                              data-ocid={`recharge.mark_failed.${i + 1}`}
+                              onClick={() =>
+                                handleUpdateStatus(tx.id, "Failed")
+                              }
+                              disabled={processingId === tx.id}
+                              className="text-xs bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1.5 rounded-lg disabled:opacity-60"
+                            >
+                              ✗
+                            </button>
+                          </>
+                        )}
+                        {(tx.status === "Success" ||
+                          tx.status === "Refunded") && (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---- Tab 6: Recharge Analytics ----
+function RechargeAnalyticsSection() {
+  const { actor } = useActor();
+  const [transactions, setTransactions] = useState<RechargeTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (actor && "getAllRechargeTransactions" in actor) {
+          // backend method (cast via unknown)
+          const txns = await (
+            actor as unknown as {
+              getAllRechargeTransactions: () => Promise<RechargeTransaction[]>;
+            }
+          ).getAllRechargeTransactions();
+          setTransactions(Array.isArray(txns) ? txns : []);
+        } else {
+          setTransactions([]);
+        }
+      } catch {
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const success = transactions.filter((t) => t.status === "Success");
+  const totalCount = transactions.length;
+  const totalAmount = success.reduce((s, t) => s + t.amount, 0);
+  const totalCommission = success.reduce((s, t) => s + t.commission, 0);
+
+  // Estimate retailer vs admin split from localStorage config
+  const commCfg: Partial<CommissionConfig> = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("dz_commission_config") ?? "{}");
+    } catch {
+      return {};
+    }
+  })();
+  const globalPct = commCfg.globalCommissionPct ?? 5;
+  const retailerPct = commCfg.retailerSharePct ?? 2;
+  const adminPct = commCfg.adminSharePct ?? globalPct - retailerPct;
+  const retailerCommissions = totalAmount * (retailerPct / 100);
+  const adminRevenue = totalAmount * (adminPct / 100);
+
+  const operators = ["Jio", "Airtel", "VI", "BSNL"];
+  const operatorStats = operators.map((op) => {
+    const opTxns = success.filter((t) => t.operator === op);
+    return {
+      op,
+      count: opTxns.length,
+      amount: opTxns.reduce((s, t) => s + t.amount, 0),
+    };
+  });
+
+  const summaryCards = [
+    {
+      label: "Total Recharges",
+      value: totalCount,
+      suffix: "",
+      color: "bg-blue-50 border-blue-200 text-blue-700",
+    },
+    {
+      label: "Total Amount",
+      value: totalAmount,
+      suffix: "₹",
+      prefix: true,
+      color: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    },
+    {
+      label: "Total Commission",
+      value: totalCommission,
+      suffix: "₹",
+      prefix: true,
+      color: "bg-yellow-50 border-yellow-200 text-yellow-700",
+    },
+    {
+      label: "Retailer Commission",
+      value: retailerCommissions,
+      suffix: "₹",
+      prefix: true,
+      color: "bg-purple-50 border-purple-200 text-purple-700",
+    },
+    {
+      label: "Admin Revenue",
+      value: adminRevenue,
+      suffix: "₹",
+      prefix: true,
+      color: "bg-orange-50 border-orange-200 text-orange-700",
+    },
+  ];
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {summaryCards.map((card) => (
+          <div
+            key={card.label}
+            data-ocid={`recharge.analytics_card.${card.label.toLowerCase().replace(/ /g, "_")}`}
+            className={`border rounded-2xl p-4 ${card.color}`}
+          >
+            <p className="text-xs font-semibold opacity-70 mb-1">
+              {card.label}
+            </p>
+            <p className="text-xl font-bold">
+              {card.prefix ? "₹" : ""}
+              {typeof card.value === "number"
+                ? card.prefix
+                  ? card.value.toFixed(0)
+                  : card.value
+                : card.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Operator Breakdown */}
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30">
+          <h3 className="font-heading font-semibold text-foreground">
+            Per-Operator Breakdown
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Sirf successful recharges ka data
+          </p>
+        </div>
+        <div className="divide-y divide-border">
+          {operatorStats.map((stat) => (
+            <div
+              key={stat.op}
+              data-ocid={`recharge.operator_stat.${stat.op.toLowerCase()}`}
+              className="flex items-center justify-between px-5 py-4"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold text-white ${
+                    stat.op === "Jio"
+                      ? "bg-blue-500"
+                      : stat.op === "Airtel"
+                        ? "bg-red-500"
+                        : stat.op === "VI"
+                          ? "bg-purple-500"
+                          : "bg-gray-600"
+                  }`}
+                >
+                  {stat.op[0]}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">
+                    {stat.op}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stat.count} recharges
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-foreground">
+                  ₹{stat.amount.toFixed(0)}
+                </p>
+                <p className="text-xs text-muted-foreground">Total volume</p>
+              </div>
+            </div>
+          ))}
+          {operatorStats.every((s) => s.count === 0) && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">Abhi koi successful recharge nahi hua</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- OFFER CONTROL CENTER ----
+type OfferSubTab =
+  | "systemToggle"
+  | "apiKeys"
+  | "profitMargin"
+  | "userList"
+  | "withdrawals";
+
+interface OfferUserLocal {
+  id: bigint;
+  email: string;
+  userId: string;
+  totalEarnings: bigint;
+  pendingEarnings: bigint;
+}
+
+interface OfferWithdrawalLocal {
+  id: bigint;
+  offerUserId: bigint;
+  upiId: string;
+  amount: bigint;
+  requestedAt: bigint;
+  status: string;
+  adminNote?: string;
+  processedAt?: bigint;
+}
+
+function OfferControlCenterSection() {
+  const [activeTab, setActiveTab] = useState<OfferSubTab>("systemToggle");
+
+  const OFFER_TABS: { key: OfferSubTab; label: string }[] = [
+    { key: "systemToggle", label: "⚡ System Toggle" },
+    { key: "apiKeys", label: "🔑 API Keys" },
+    { key: "profitMargin", label: "💹 Profit Margin" },
+    { key: "userList", label: "👥 User List" },
+    { key: "withdrawals", label: "💸 Withdrawals" },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-5 text-white">
+        <h2 className="font-heading font-bold text-xl flex items-center gap-2">
+          🚀 Offer Control Center
+        </h2>
+        <p className="text-white/80 text-sm mt-1">
+          Digital Zindagi Earning Portal ka pura control — toggle, APIs, profit
+          split, users, aur payouts sab yahan.
+        </p>
+      </div>
+
+      {/* Sub-tab nav */}
+      <div className="flex gap-2 flex-wrap" data-ocid="offer.subtab_nav">
+        {OFFER_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            data-ocid={`offer.tab_${t.key}`}
+            onClick={() => setActiveTab(t.key)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              activeTab === t.key
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/70"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sub-tab content */}
+      <div>
+        {activeTab === "systemToggle" && <OfferSystemToggleTab />}
+        {activeTab === "apiKeys" && <OfferApiKeysTab />}
+        {activeTab === "profitMargin" && <OfferProfitMarginTab />}
+        {activeTab === "userList" && <OfferUserListTab />}
+        {activeTab === "withdrawals" && <OfferWithdrawalsTab />}
+      </div>
+    </div>
+  );
+}
+
+// (A) System Toggle Tab
+function OfferSystemToggleTab() {
+  const { actor } = useActor();
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (actor && "getOfferPortalConfig" in actor) {
+          const cfg = await (
+            actor as unknown as {
+              getOfferPortalConfig: () => Promise<{
+                isEnabled: boolean;
+                cpaLeadWebhookSecret: string;
+                adminProfitPct: bigint;
+                userProfitPct: bigint;
+              }>;
+            }
+          ).getOfferPortalConfig();
+          setIsEnabled(cfg.isEnabled ?? false);
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const handleToggle = async () => {
+    setSaving(true);
+    try {
+      const next = !isEnabled;
+      if (
+        actor &&
+        "getOfferPortalConfig" in actor &&
+        "updateOfferPortalConfig" in actor
+      ) {
+        const cfg = await (
+          actor as unknown as {
+            getOfferPortalConfig: () => Promise<{
+              isEnabled: boolean;
+              cpaLeadWebhookSecret: string;
+              adminProfitPct: bigint;
+              userProfitPct: bigint;
+            }>;
+          }
+        ).getOfferPortalConfig();
+        await (
+          actor as unknown as {
+            updateOfferPortalConfig: (
+              e: boolean,
+              s: string,
+              a: bigint,
+              u: bigint,
+            ) => Promise<boolean>;
+          }
+        ).updateOfferPortalConfig(
+          next,
+          cfg.cpaLeadWebhookSecret ?? "",
+          cfg.adminProfitPct ?? BigInt(60),
+          cfg.userProfitPct ?? BigInt(40),
+        );
+      }
+      setIsEnabled(!isEnabled);
+      toast.success(`Offer Portal ${!isEnabled ? "ACTIVE" : "BAND"} ho gaya!`);
+    } catch {
+      toast.error("Setting save nahi ho saki");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-5">
+      <div
+        className={`bg-white rounded-2xl border-2 shadow-card p-6 transition-colors ${isEnabled ? "border-emerald-400" : "border-red-300"}`}
+        data-ocid="offer.system_toggle_card"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`w-4 h-4 rounded-full flex-shrink-0 ${isEnabled ? "bg-emerald-500 animate-pulse" : "bg-red-400"}`}
+              />
+              <h3 className="font-heading font-bold text-foreground text-lg">
+                Digital Zindagi Offer Portal
+              </h3>
+            </div>
+            <p className="text-sm text-muted-foreground ml-7">
+              {isEnabled
+                ? "✅ Earning Portal ACTIVE — Users sign up, earn, aur redeem kar sakte hain"
+                : "⛔ Earning Portal BAND — Koi bhi earn/signup nahi kar sakta"}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-ocid="offer.master_toggle"
+            onClick={handleToggle}
+            disabled={saving}
+            className={`relative w-16 h-8 rounded-full transition-colors flex-shrink-0 disabled:opacity-60 ${isEnabled ? "bg-emerald-500" : "bg-red-400"}`}
+          >
+            {saving ? (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <Loader2 size={14} className="animate-spin text-white" />
+              </span>
+            ) : (
+              <span
+                className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${isEnabled ? "translate-x-9" : "translate-x-1"}`}
+              />
+            )}
+          </button>
+        </div>
+
+        <div
+          className={`mt-4 rounded-xl px-4 py-3 text-sm font-semibold flex items-center gap-2 ${isEnabled ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}
+        >
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${isEnabled ? "bg-emerald-500" : "bg-red-400"}`}
+          />
+          Status:{" "}
+          <span
+            className={`font-bold uppercase tracking-wide ${isEnabled ? "text-emerald-700" : "text-red-600"}`}
+          >
+            {isEnabled ? "ON" : "OFF"}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+        <p className="font-semibold text-blue-800 text-sm mb-2">
+          ℹ️ Yeh portal kya hai?
+        </p>
+        <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+          <li>
+            App ke bottom mein alag "Digital Zindagi Offer" section — main app
+            se bilkul alag
+          </li>
+          <li>
+            Apna separate login/signup aur user ID system (offer_user_XXX)
+          </li>
+          <li>
+            Offer Wall postback se earnings — 60% Admin, 40% User (configurable)
+          </li>
+          <li>1% referral bonus aur UPI withdrawal system</li>
+          <li>Main recharge/provider data se completely isolated</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// (B) API Keys Tab
+function OfferApiKeysTab() {
+  const { actor } = useActor();
+  const [offerWallName, setOfferWallName] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
+  const [fast2smsKey, setFast2smsKey] = useState("");
+  const [senderId, setSenderId] = useState("DIGZIN");
+  const [showSmsKey, setShowSmsKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (actor && "getOfferPortalConfig" in actor) {
+          const cfg = await (
+            actor as unknown as {
+              getOfferPortalConfig: () => Promise<{
+                isEnabled: boolean;
+                cpaLeadWebhookSecret: string;
+                adminProfitPct: bigint;
+                userProfitPct: bigint;
+              }>;
+            }
+          ).getOfferPortalConfig();
+          setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
+        }
+        if (actor && "getSmsConfig" in actor) {
+          const sms = await (
+            actor as unknown as {
+              getSmsConfig: () => Promise<{
+                fast2smsApiKey: string;
+                senderId: string;
+                isEnabled: boolean;
+              }>;
+            }
+          ).getSmsConfig();
+          setFast2smsKey(sms.fast2smsApiKey ?? "");
+          setSenderId(sms.senderId ?? "DIGZIN");
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        setLoaded(true);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const canisterId =
+    typeof window !== "undefined"
+      ? window.location.hostname.split(".")[0]
+      : "your-canister-id";
+  const postbackUrl = `https://${canisterId}.icp0.io/cpalead-postback`;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (
+        actor &&
+        "getOfferPortalConfig" in actor &&
+        "updateOfferPortalConfig" in actor
+      ) {
+        const cfg = await (
+          actor as unknown as {
+            getOfferPortalConfig: () => Promise<{
+              isEnabled: boolean;
+              cpaLeadWebhookSecret: string;
+              adminProfitPct: bigint;
+              userProfitPct: bigint;
+            }>;
+          }
+        ).getOfferPortalConfig();
+        await (
+          actor as unknown as {
+            updateOfferPortalConfig: (
+              e: boolean,
+              s: string,
+              a: bigint,
+              u: bigint,
+            ) => Promise<boolean>;
+          }
+        ).updateOfferPortalConfig(
+          cfg.isEnabled,
+          webhookSecret.trim(),
+          cfg.adminProfitPct ?? BigInt(60),
+          cfg.userProfitPct ?? BigInt(40),
+        );
+      }
+      if (actor && "updateSmsConfig" in actor) {
+        await (
+          actor as unknown as {
+            updateSmsConfig: (
+              k: string,
+              s: string,
+              e: boolean,
+            ) => Promise<boolean>;
+          }
+        ).updateSmsConfig(fast2smsKey.trim(), senderId.trim(), true);
+      }
+      toast.success("API keys save ho gaye! ✅");
+    } catch {
+      toast.error("Save nahi ho saka");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!loaded)
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-5">
+      {/* Offer Wall Name */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-3">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          🌐 Offer Wall Name
+        </h3>
+        <div>
+          <label
+            htmlFor="offer-wall-name"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Offer Wall ka Naam (sirf reference ke liye)
+          </label>
+          <input
+            id="offer-wall-name"
+            data-ocid="offer.offer_wall_name_input"
+            type="text"
+            value={offerWallName}
+            onChange={(e) => setOfferWallName(e.target.value)}
+            placeholder="e.g. CPALead, CPAGrip, AdWork Media, OGAds"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Yeh field sirf aapki reference ke liye hai — Admin Panel mein dikhta
+            hai taaki aap jaanein kaun sa Offer Wall configured hai.
+          </p>
+        </div>
+      </div>
+
+      {/* Postback URL Info */}
+      <div
+        className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2"
+        data-ocid="offer.postback_info"
+      >
+        <p className="text-sm font-semibold text-blue-800 flex items-center gap-2">
+          🔗 Offer Wall Postback URL
+        </p>
+        <p className="text-xs text-blue-700">
+          Yeh URL apni Offer Wall settings mein "Postback/Callback URL" field
+          mein paste karein:
+        </p>
+        <div className="flex items-center gap-2 bg-white border border-blue-200 rounded-xl px-3 py-2">
+          <code className="text-xs font-mono text-blue-900 flex-1 break-all">
+            {postbackUrl}
+          </code>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(postbackUrl);
+              toast.success("URL copied!");
+            }}
+            className="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+          >
+            Copy
+          </button>
+        </div>
+        <p className="text-xs text-blue-600">
+          Copy this URL and paste it as the Postback/Callback URL in your Offer
+          Wall settings (works with CPALead, CPAGrip, AdWork, OGAds, or any
+          offer wall that supports server-to-server postbacks).
+        </p>
+        <p className="text-xs text-blue-600">
+          Standard parameters:{" "}
+          <code className="bg-blue-100 px-1 rounded">
+            offer_user_id={"{subid}"}
+          </code>{" "}
+          or{" "}
+          <code className="bg-blue-100 px-1 rounded">userId={"{subid}"}</code>,{" "}
+          <code className="bg-blue-100 px-1 rounded">amount={"{amount}"}</code>{" "}
+          (exact parameter names vary by offer wall — check your offer wall's
+          postback documentation).
+        </p>
+      </div>
+
+      {/* Webhook Secret */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <Shield size={16} className="text-primary" /> Offer Wall Webhook
+          Secret
+        </h3>
+        <div>
+          <label
+            htmlFor="offer-webhook-secret"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Webhook Secret Key
+          </label>
+          <div className="relative">
+            <input
+              id="offer-webhook-secret"
+              data-ocid="offer.webhook_secret_input"
+              type={showSecret ? "text" : "password"}
+              value={webhookSecret}
+              onChange={(e) => setWebhookSecret(e.target.value)}
+              placeholder="your_secret_key_xxxxxxxxxxxx"
+              className="w-full border border-border rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowSecret((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium"
+            >
+              {showSecret ? "Hide" : "Show"}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Set a secret key here and add the same key to your Offer Wall's
+            postback settings for security verification.
+          </p>
+        </div>
+      </div>
+
+      {/* Fast2SMS Config */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          <Send size={16} className="text-primary" /> Fast2SMS Configuration
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Recharge aur offer earning alerts ke liye Fast2SMS API. Account:{" "}
+          <a
+            href="https://www.fast2sms.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
+            fast2sms.com
+          </a>
+        </p>
+
+        <div>
+          <label
+            htmlFor="offer-f2s-key"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Fast2SMS API Key
+          </label>
+          <div className="relative">
+            <input
+              id="offer-f2s-key"
+              data-ocid="offer.fast2sms_key_input"
+              type={showSmsKey ? "text" : "password"}
+              value={fast2smsKey}
+              onChange={(e) => setFast2smsKey(e.target.value)}
+              placeholder="fast2sms-api-key-xxxx"
+              className="w-full border border-border rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowSmsKey((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium"
+            >
+              {showSmsKey ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="offer-sender-id"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Sender ID
+          </label>
+          <input
+            id="offer-sender-id"
+            data-ocid="offer.sender_id_input"
+            type="text"
+            value={senderId}
+            onChange={(e) => setSenderId(e.target.value)}
+            placeholder="DIGZIN"
+            maxLength={6}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring uppercase"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            6 character tak, uppercase only (e.g. DIGZIN)
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        data-ocid="offer.api_keys_save"
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60"
+      >
+        {saving ? (
+          <Loader2 size={15} className="animate-spin" />
+        ) : (
+          <CheckCircle size={15} />
+        )}
+        API Keys Save Karein
+      </button>
+    </div>
+  );
+}
+
+// (C) Profit Margin Tab
+function OfferProfitMarginTab() {
+  const { actor } = useActor();
+  const [adminPct, setAdminPct] = useState("60");
+  const [userPct, setUserPct] = useState("40");
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const total = Number(adminPct || "0") + Number(userPct || "0");
+  const isValid = total === 100;
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (actor && "getOfferPortalConfig" in actor) {
+          const cfg = await (
+            actor as unknown as {
+              getOfferPortalConfig: () => Promise<{
+                isEnabled: boolean;
+                cpaLeadWebhookSecret: string;
+                adminProfitPct: bigint;
+                userProfitPct: bigint;
+              }>;
+            }
+          ).getOfferPortalConfig();
+          setAdminPct(String(Number(cfg.adminProfitPct ?? 60n)));
+          setUserPct(String(Number(cfg.userProfitPct ?? 40n)));
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        setLoaded(true);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const handleSave = async () => {
+    if (!isValid) {
+      toast.error("Admin % + User % = 100 hona chahiye");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (
+        actor &&
+        "getOfferPortalConfig" in actor &&
+        "updateOfferPortalConfig" in actor
+      ) {
+        const cfg = await (
+          actor as unknown as {
+            getOfferPortalConfig: () => Promise<{
+              isEnabled: boolean;
+              cpaLeadWebhookSecret: string;
+              adminProfitPct: bigint;
+              userProfitPct: bigint;
+            }>;
+          }
+        ).getOfferPortalConfig();
+        await (
+          actor as unknown as {
+            updateOfferPortalConfig: (
+              e: boolean,
+              s: string,
+              a: bigint,
+              u: bigint,
+            ) => Promise<boolean>;
+          }
+        ).updateOfferPortalConfig(
+          cfg.isEnabled,
+          cfg.cpaLeadWebhookSecret ?? "",
+          BigInt(Number(adminPct)),
+          BigInt(Number(userPct)),
+        );
+      }
+      toast.success("Profit split save ho gaya! ✅");
+    } catch {
+      toast.error("Save nahi ho saka");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!loaded)
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-5">
+      {/* Current Split Display */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5">
+        <h3 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+          💹 CPALead Profit Split
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Jab CPALead se koi conversion aata hai, yeh percentage se earning
+          divide hogi Admin aur User ke beech.
+        </p>
+
+        {/* Visual Split Bar */}
+        <div className="mb-5" data-ocid="offer.profit_split_bar">
+          <div className="flex rounded-xl overflow-hidden h-8 mb-2">
+            <div
+              className="bg-emerald-500 flex items-center justify-center text-white text-xs font-bold transition-all"
+              style={{
+                width: `${Math.max(0, Math.min(100, Number(adminPct)))}%`,
+              }}
+            >
+              Admin {adminPct}%
+            </div>
+            <div
+              className="bg-blue-500 flex items-center justify-center text-white text-xs font-bold transition-all"
+              style={{
+                width: `${Math.max(0, Math.min(100, Number(userPct)))}%`,
+              }}
+            >
+              User {userPct}%
+            </div>
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>🏢 Admin keeps {adminPct}%</span>
+            <span
+              className={`font-semibold ${isValid ? "text-emerald-600" : "text-red-500"}`}
+            >
+              Total: {total}% {isValid ? "✓" : "≠ 100"}
+            </span>
+            <span>👤 User gets {userPct}%</span>
+          </div>
+        </div>
+
+        {!isValid && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+            <p className="text-sm font-semibold text-red-600">
+              ⚠️ Admin % + User % = 100 hona chahiye (abhi {total} hai)
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="offer-admin-pct"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Admin Profit %
+            </label>
+            <input
+              id="offer-admin-pct"
+              data-ocid="offer.admin_pct_input"
+              type="number"
+              min="0"
+              max="100"
+              value={adminPct}
+              onChange={(e) => {
+                setAdminPct(e.target.value);
+                setUserPct(String(100 - Number(e.target.value)));
+              }}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="offer-user-pct"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              User Profit %
+            </label>
+            <input
+              id="offer-user-pct"
+              data-ocid="offer.user_pct_input"
+              type="number"
+              min="0"
+              max="100"
+              value={userPct}
+              onChange={(e) => {
+                setUserPct(e.target.value);
+                setAdminPct(String(100 - Number(e.target.value)));
+              }}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 bg-muted/40 rounded-xl p-4">
+          <p className="text-xs font-semibold text-foreground mb-1">
+            📊 Example Calculation:
+          </p>
+          <p className="text-xs text-muted-foreground">
+            CPALead se ₹100 conversion aaya → Admin ko ₹{adminPct}, User ko ₹
+            {userPct} milega.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        data-ocid="offer.profit_margin_save"
+        onClick={handleSave}
+        disabled={saving || !isValid}
+        className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60"
+      >
+        {saving ? (
+          <Loader2 size={15} className="animate-spin" />
+        ) : (
+          <CheckCircle size={15} />
+        )}
+        Profit Split Save Karein
+      </button>
+    </div>
+  );
+}
+
+// (D) Offer User List Tab
+function OfferUserListTab() {
+  const { actor } = useActor();
+  const [users, setUsers] = useState<OfferUserLocal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (actor && "adminListOfferUsers" in actor) {
+          const list = await (
+            actor as unknown as {
+              adminListOfferUsers: () => Promise<OfferUserLocal[]>;
+            }
+          ).adminListOfferUsers();
+          setUsers(Array.isArray(list) ? list : []);
+        }
+      } catch {
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [actor]);
+
+  const filtered = users.filter(
+    (u) =>
+      !search ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.userId.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const totalEarningsAll = users.reduce(
+    (s, u) => s + Number(u.totalEarnings ?? 0n),
+    0,
+  );
+  const pendingAll = users.reduce(
+    (s, u) => s + Number(u.pendingEarnings ?? 0n),
+    0,
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          {
+            label: "Total Users",
+            value: users.length,
+            color: "bg-blue-50 border-blue-200 text-blue-700",
+          },
+          {
+            label: "Total Earned (₹)",
+            value: (totalEarningsAll / 100).toFixed(2),
+            color: "bg-emerald-50 border-emerald-200 text-emerald-700",
+          },
+          {
+            label: "Pending (₹)",
+            value: (pendingAll / 100).toFixed(2),
+            color: "bg-yellow-50 border-yellow-200 text-yellow-700",
+          },
+        ].map((c) => (
+          <div
+            key={c.label}
+            className={`border rounded-2xl p-4 ${c.color}`}
+            data-ocid={`offer.user_stat.${c.label.replace(/ /g, "_").toLowerCase()}`}
+          >
+            <p className="text-xs font-semibold opacity-70">{c.label}</p>
+            <p className="text-xl font-bold">{c.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          data-ocid="offer.user_search"
+          type="text"
+          placeholder="Email ya user ID se search karein..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            className="text-center py-12 text-muted-foreground"
+            data-ocid="offer.user_list_empty"
+          >
+            <Users size={36} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">
+              {search ? "Koi user nahi mila" : "Abhi koi offer user nahi hai"}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" data-ocid="offer.user_list_table">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold whitespace-nowrap">
+                    Email
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">
+                    User ID
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold whitespace-nowrap">
+                    Total Earned
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold whitespace-nowrap">
+                    Pending
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold whitespace-nowrap hidden md:table-cell">
+                    Withdrawals
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((u, i) => (
+                  <tr
+                    key={String(u.id)}
+                    data-ocid={`offer.user_row.${i + 1}`}
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-medium truncate max-w-[180px]">
+                      {u.email}
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-mono font-semibold">
+                        {u.userId}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-700">
+                      ₹{(Number(u.totalEarnings ?? 0n) / 100).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-yellow-600">
+                      ₹{(Number(u.pendingEarnings ?? 0n) / 100).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-muted-foreground hidden md:table-cell">
+                      —
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// (E) Withdrawal Requests Tab
+function OfferWithdrawalsTab() {
+  const { actor } = useActor();
+  const [withdrawals, setWithdrawals] = useState<OfferWithdrawalLocal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<bigint | null>(null);
+  const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setLoading(true);
+    if (actor && "adminListPendingWithdrawals" in actor) {
+      (
+        actor as unknown as {
+          adminListPendingWithdrawals: () => Promise<OfferWithdrawalLocal[]>;
+        }
+      )
+        .adminListPendingWithdrawals()
+        .then((list) => setWithdrawals(Array.isArray(list) ? list : []))
+
+        .catch(() => setWithdrawals([]))
+        .finally(() => setLoading(false));
+    } else {
+      setWithdrawals([]);
+      setLoading(false);
+    }
+  }, [actor]);
+
+  const reload = () => {
+    setLoading(true);
+    if (actor && "adminListPendingWithdrawals" in actor) {
+      (
+        actor as unknown as {
+          adminListPendingWithdrawals: () => Promise<OfferWithdrawalLocal[]>;
+        }
+      )
+        .adminListPendingWithdrawals()
+        .then((list) => setWithdrawals(Array.isArray(list) ? list : []))
+        .catch(() => setWithdrawals([]))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const resolveWithdrawal = async (
+    id: bigint,
+    status: "approved" | "paid" | "rejected",
+    note?: string,
+  ) => {
+    setProcessingId(id);
+    try {
+      if (actor && "adminResolveWithdrawal" in actor) {
+        await (
+          actor as unknown as {
+            adminResolveWithdrawal: (
+              id: bigint,
+              status: string,
+              note: string | null,
+            ) => Promise<boolean>;
+          }
+        ).adminResolveWithdrawal(id, status, note ?? null);
+      }
+      setWithdrawals((prev) =>
+        prev.map((w) => (String(w.id) === String(id) ? { ...w, status } : w)),
+      );
+      toast.success(
+        `Withdrawal ${status === "approved" ? "approved" : status === "paid" ? "paid marked" : "rejected"}! ✅`,
+      );
+    } catch {
+      toast.error("Action nahi ho saka");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const pending = withdrawals.filter((w) => w.status === "pending");
+  const completed = withdrawals.filter((w) => w.status !== "pending");
+
+  const statusBadge = (status: string) => {
+    const cls: Record<string, string> = {
+      pending: "bg-yellow-100 text-yellow-700",
+      approved: "bg-blue-100 text-blue-700",
+      paid: "bg-emerald-100 text-emerald-700",
+      rejected: "bg-red-100 text-red-600",
+    };
+    return (
+      <span
+        className={`inline-flex text-xs font-bold px-2 py-0.5 rounded-full ${cls[status] ?? "bg-muted text-muted-foreground"}`}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 size={24} className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-5">
+      {/* Pending Requests */}
+      <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div>
+            <h3 className="font-heading font-semibold text-foreground">
+              ⏳ Pending Withdrawal Requests
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {pending.length} pending request{pending.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={reload}
+            className="text-xs text-primary font-medium hover:underline"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {pending.length === 0 ? (
+          <div
+            className="text-center py-12 text-muted-foreground"
+            data-ocid="offer.withdrawals_empty"
+          >
+            <CheckCircle size={36} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Koi pending withdrawal nahi hai</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {pending.map((w, i) => (
+              <div
+                key={String(w.id)}
+                data-ocid={`offer.withdrawal_row.${i + 1}`}
+                className="p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">
+                        User #{String(w.offerUserId)}
+                      </span>
+                      {statusBadge(w.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      💳 UPI:{" "}
+                      <span className="font-mono text-foreground">
+                        {w.upiId}
+                      </span>
+                    </p>
+                    <p className="text-sm font-bold text-emerald-700 mt-0.5">
+                      ₹{(Number(w.amount ?? 0n) / 100).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      📅{" "}
+                      {new Date(
+                        Number(w.requestedAt ?? 0n) / 1_000_000,
+                      ).toLocaleDateString("en-IN")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reject note */}
+                <input
+                  type="text"
+                  placeholder="Rejection note (optional)"
+                  value={rejectNote[String(w.id)] ?? ""}
+                  onChange={(e) =>
+                    setRejectNote((prev) => ({
+                      ...prev,
+                      [String(w.id)]: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-ring"
+                  data-ocid={`offer.reject_note.${i + 1}`}
+                />
+
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    data-ocid={`offer.approve_btn.${i + 1}`}
+                    onClick={() => resolveWithdrawal(w.id, "approved")}
+                    disabled={processingId === w.id}
+                    className="flex-1 text-xs bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg disabled:opacity-60"
+                  >
+                    {processingId === w.id ? "..." : "✓ Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    data-ocid={`offer.mark_paid_btn.${i + 1}`}
+                    onClick={() => resolveWithdrawal(w.id, "paid")}
+                    disabled={processingId === w.id}
+                    className="flex-1 text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg disabled:opacity-60"
+                  >
+                    {processingId === w.id ? "..." : "💸 Mark Paid"}
+                  </button>
+                  <button
+                    type="button"
+                    data-ocid={`offer.reject_btn.${i + 1}`}
+                    onClick={() =>
+                      resolveWithdrawal(
+                        w.id,
+                        "rejected",
+                        rejectNote[String(w.id)],
+                      )
+                    }
+                    disabled={processingId === w.id}
+                    className="flex-1 text-xs bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg disabled:opacity-60"
+                  >
+                    {processingId === w.id ? "..." : "✗ Reject"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Completed Requests */}
+      {completed.length > 0 && (
+        <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-border bg-muted/30">
+            <h3 className="font-heading font-semibold text-foreground">
+              ✅ Completed Requests
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {completed.length} processed
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table
+              className="w-full text-sm"
+              data-ocid="offer.completed_withdrawals_table"
+            >
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold">User</th>
+                  <th className="text-left px-4 py-3 font-semibold hidden sm:table-cell">
+                    UPI ID
+                  </th>
+                  <th className="text-right px-4 py-3 font-semibold">Amount</th>
+                  <th className="text-center px-4 py-3 font-semibold">
+                    Status
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold hidden md:table-cell">
+                    Note
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {completed.map((w, i) => (
+                  <tr
+                    key={String(w.id)}
+                    data-ocid={`offer.completed_row.${i + 1}`}
+                    className="border-t border-border hover:bg-muted/30"
+                  >
+                    <td className="px-4 py-3 text-muted-foreground">
+                      #{String(w.offerUserId)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs hidden sm:table-cell">
+                      {w.upiId}
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold">
+                      ₹{(Number(w.amount ?? 0n) / 100).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {statusBadge(w.status)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
+                      {w.adminNote ?? "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
@@ -8737,6 +11545,7 @@ export default function AdminDashboardPage() {
     label: string;
     icon: React.ReactNode;
     managerVisible?: boolean;
+    groupHeader?: string;
   }[] = [
     {
       key: "founder",
@@ -8894,6 +11703,45 @@ export default function AdminDashboardPage() {
       label: "🎲 Ludo & Game Settings",
       icon: <span>🎲</span>,
     },
+    // ---- RECHARGE SYSTEM ----
+    {
+      key: "rechargeToggle" as AdminSection,
+      label: "📴 Recharge Toggle",
+      icon: <span>📴</span>,
+      groupHeader: "📱 Recharge System",
+    },
+    {
+      key: "rechargeApiManager" as AdminSection,
+      label: "🔌 API Manager",
+      icon: <span>🔌</span>,
+    },
+    {
+      key: "commissionSettings" as AdminSection,
+      label: "💰 Commission Settings",
+      icon: <span>💰</span>,
+    },
+    {
+      key: "walletManager" as AdminSection,
+      label: "👛 Wallet Manager",
+      icon: <span>👛</span>,
+    },
+    {
+      key: "rechargeLogs" as AdminSection,
+      label: "📋 Recharge Logs",
+      icon: <span>📋</span>,
+    },
+    {
+      key: "rechargeAnalytics" as AdminSection,
+      label: "📈 Recharge Analytics",
+      icon: <span>📈</span>,
+    },
+    // ---- OFFER PORTAL ----
+    {
+      key: "offerControlCenter" as AdminSection,
+      label: "🚀 Offer Control Center",
+      icon: <span>🚀</span>,
+      groupHeader: "🎯 Digital Zindagi Offer",
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -8978,6 +11826,20 @@ export default function AdminDashboardPage() {
         return <CustomSectionManagerSection />;
       case "ludoSettings" as AdminSection:
         return <LudoSettingsSection />;
+      case "rechargeToggle" as AdminSection:
+        return <RechargeToggleSection />;
+      case "rechargeApiManager" as AdminSection:
+        return <RechargeApiManagerSection />;
+      case "commissionSettings" as AdminSection:
+        return <CommissionSettingsSection />;
+      case "walletManager" as AdminSection:
+        return <WalletManagerSection />;
+      case "rechargeLogs" as AdminSection:
+        return <RechargeLogsSection />;
+      case "rechargeAnalytics" as AdminSection:
+        return <RechargeAnalyticsSection />;
+      case "offerControlCenter" as AdminSection:
+        return <OfferControlCenterSection />;
       default:
         return <UserManagement />;
     }
@@ -9040,22 +11902,32 @@ export default function AdminDashboardPage() {
             data-ocid="admin.panel"
           >
             {NAV_ITEMS.map((item) => (
-              <button
-                type="button"
-                key={item.key}
-                data-ocid="admin.link"
-                onClick={() => {
-                  setSection(item.key);
-                  setMobileNavOpen(false);
-                }}
-                className={`flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors text-left ${
-                  section === item.key
-                    ? "bg-accent text-accent-foreground border-r-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                {item.icon} {item.label}
-              </button>
+              <div key={item.key}>
+                {item.groupHeader && (
+                  <div className="px-4 pt-4 pb-1 flex items-center gap-2">
+                    <div className="flex-1 border-t border-border" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 whitespace-nowrap">
+                      {item.groupHeader}
+                    </span>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  data-ocid="admin.link"
+                  onClick={() => {
+                    setSection(item.key);
+                    setMobileNavOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors text-left ${
+                    section === item.key
+                      ? "bg-accent text-accent-foreground border-r-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  {item.icon} {item.label}
+                </button>
+              </div>
             ))}
           </nav>
         </aside>

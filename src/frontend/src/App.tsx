@@ -5,6 +5,7 @@ import NotificationBar from "./components/NotificationBar";
 import SplashScreen from "./components/SplashScreen";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { OfferAuthProvider } from "./contexts/OfferAuthContext";
 import { BrowserRouter, Navigate, Route, Routes } from "./lib/router";
 import { UserRole } from "./types/appTypes";
 import { runAutoCleanup } from "./utils/autoCleanup";
@@ -27,7 +28,9 @@ import JobsPage from "./pages/JobsPage";
 import LoginPage from "./pages/LoginPage";
 import ManagerDashboardPage from "./pages/ManagerDashboardPage";
 import ManagerLoginPage from "./pages/ManagerLoginPage";
+import MobileRechargePage from "./pages/MobileRechargePage";
 import NewsPage from "./pages/NewsPage";
+import OfferPortalPage from "./pages/OfferPortalPage";
 import OrdersPage from "./pages/OrdersPage";
 import PercentageCalculatorPage from "./pages/PercentageCalculatorPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -40,6 +43,7 @@ import SearchPage from "./pages/SearchPage";
 import SignupPage from "./pages/SignupPage";
 import TermsPage from "./pages/TermsPage";
 import UdhaarBookPage from "./pages/UdhaarBookPage";
+import WalletTransactionsPage from "./pages/WalletTransactionsPage";
 
 function ProviderRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -136,6 +140,14 @@ function AppRoutes() {
           element={<PercentageCalculatorPage />}
         />
         <Route path="/rewards-wallet" element={<RewardsWalletPage />} />
+        <Route path="/recharge" element={<MobileRechargePage />} />
+        <Route
+          path="/wallet-transactions"
+          element={<WalletTransactionsPage />}
+        />
+        {/* Offer Portal — publicly accessible, has its own isolated auth */}
+        <Route path="/offer-portal" element={<OfferPortalPage />} />
+        <Route path="/offer-portal/*" element={<OfferPortalPage />} />
         <Route path="/manager-login" element={<ManagerLoginPage />} />
         {/* Delivery Module */}
         <Route path="/delivery-register" element={<DeliveryRegisterPage />} />
@@ -191,14 +203,16 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <BrowserRouter>
-          <SplashScreen>
-            <AppRoutes />
-          </SplashScreen>
-          <Toaster richColors position="top-right" />
-        </BrowserRouter>
-      </LanguageProvider>
+      <OfferAuthProvider>
+        <LanguageProvider>
+          <BrowserRouter>
+            <SplashScreen>
+              <AppRoutes />
+            </SplashScreen>
+            <Toaster richColors position="top-right" />
+          </BrowserRouter>
+        </LanguageProvider>
+      </OfferAuthProvider>
     </AuthProvider>
   );
 }
