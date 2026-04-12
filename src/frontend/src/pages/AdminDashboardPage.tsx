@@ -10445,7 +10445,7 @@ function OfferSystemToggleTab() {
             }>;
           }
         ).getOfferPortalConfig();
-        await (
+        const ok = await (
           actor as unknown as {
             updateOfferPortalConfig: (
               e: boolean,
@@ -10460,9 +10460,13 @@ function OfferSystemToggleTab() {
           cfg.adminProfitPct ?? BigInt(60),
           cfg.userProfitPct ?? BigInt(40),
         );
+        if (ok === false) {
+          toast.error("Setting save nahi ho saki");
+          return;
+        }
+        setIsEnabled(next);
+        toast.success(`Offer Portal ${next ? "ACTIVE" : "BAND"} ho gaya!`);
       }
-      setIsEnabled(!isEnabled);
-      toast.success(`Offer Portal ${!isEnabled ? "ACTIVE" : "BAND"} ho gaya!`);
     } catch {
       toast.error("Setting save nahi ho saki");
     } finally {
@@ -10645,6 +10649,18 @@ function OfferApiKeysTab() {
           cfg.adminProfitPct ?? BigInt(60),
           cfg.userProfitPct ?? BigInt(40),
         );
+        // Re-fetch to confirm what was actually persisted
+        const updated = await (
+          actor as unknown as {
+            getOfferPortalConfig: () => Promise<{
+              isEnabled: boolean;
+              cpaLeadWebhookSecret: string;
+              adminProfitPct: bigint;
+              userProfitPct: bigint;
+            }>;
+          }
+        ).getOfferPortalConfig();
+        setWebhookSecret(updated.cpaLeadWebhookSecret ?? "");
       }
       if (actor && "updateSmsConfig" in actor) {
         await (
@@ -10656,6 +10672,20 @@ function OfferApiKeysTab() {
             ) => Promise<boolean>;
           }
         ).updateSmsConfig(fast2smsKey.trim(), senderId.trim(), true);
+        // Re-fetch SMS config to confirm persisted value
+        if ("getSmsConfig" in actor) {
+          const smsUpdated = await (
+            actor as unknown as {
+              getSmsConfig: () => Promise<{
+                fast2smsApiKey: string;
+                senderId: string;
+                isEnabled: boolean;
+              }>;
+            }
+          ).getSmsConfig();
+          setFast2smsKey(smsUpdated.fast2smsApiKey ?? "");
+          setSenderId(smsUpdated.senderId ?? "DIGZIN");
+        }
       }
       toast.success("API keys save ho gaye! ✅");
     } catch {
