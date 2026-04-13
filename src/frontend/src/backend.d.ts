@@ -463,6 +463,17 @@ export interface backendInterface {
      * / Get Offer Portal global config — admin only.
      */
     getOfferPortalConfig(): Promise<OfferPortalConfig>;
+    /**
+     * / Get Offer Portal global config — public (no auth required).
+     * / Returns the config so any visitor can check whether the portal is enabled
+     * / before showing the login/signup UI.  Webhook secrets are NOT included
+     * / in this method — admin-only fields remain protected via getOfferPortalConfig.
+     */
+    getOfferPortalConfigPublic(): Promise<{
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        userProfitPct: bigint;
+    }>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
@@ -557,8 +568,10 @@ export interface backendInterface {
     refundRecharge(txId: bigint): Promise<boolean>;
     /**
      * / Register a new Offer Portal user (isolated from main user DB).
+     * / Returns the full OfferUser record so the frontend can auto-login
+     * / immediately after signup without a second round-trip.
      */
-    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<bigint>;
+    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<OfferUser>;
     registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
     rejectProvider(userId: bigint): Promise<void>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
@@ -594,8 +607,15 @@ export interface backendInterface {
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+     * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
      */
-    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<boolean>;
+    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;
     updateProviderProfile(userId: bigint, shopName: string, description: string, address: string, category: string): Promise<void>;
     /**

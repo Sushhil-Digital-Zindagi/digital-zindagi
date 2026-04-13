@@ -477,6 +477,20 @@ export interface _SERVICE {
    * / Get Offer Portal global config — admin only.
    */
   'getOfferPortalConfig' : ActorMethod<[], OfferPortalConfig>,
+  /**
+   * / Get Offer Portal global config — public (no auth required).
+   * / Returns the config so any visitor can check whether the portal is enabled
+   * / before showing the login/signup UI.  Webhook secrets are NOT included
+   * / in this method — admin-only fields remain protected via getOfferPortalConfig.
+   */
+  'getOfferPortalConfigPublic' : ActorMethod<
+    [],
+    {
+      'adminProfitPct' : bigint,
+      'isEnabled' : boolean,
+      'userProfitPct' : bigint,
+    }
+  >,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
@@ -568,8 +582,10 @@ export interface _SERVICE {
   'refundRecharge' : ActorMethod<[bigint], boolean>,
   /**
    * / Register a new Offer Portal user (isolated from main user DB).
+   * / Returns the full OfferUser record so the frontend can auto-login
+   * / immediately after signup without a second round-trip.
    */
-  'registerOfferUser' : ActorMethod<[string, string, [] | [string]], bigint>,
+  'registerOfferUser' : ActorMethod<[string, string, [] | [string]], OfferUser>,
   'registerUser' : ActorMethod<
     [string, MobileNumber, string, UserRole, string, string],
     undefined
@@ -623,10 +639,12 @@ export interface _SERVICE {
   >,
   /**
    * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+   * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
    */
   'updateOfferPortalConfig' : ActorMethod<
     [boolean, string, bigint, bigint],
-    boolean
+    { 'ok' : boolean } |
+      { 'err' : string }
   >,
   'updateOrderStatus' : ActorMethod<[bigint, string], undefined>,
   'updateProviderProfile' : ActorMethod<

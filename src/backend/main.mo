@@ -23,6 +23,7 @@ import SmsLib     "lib/sms";
 
 
 
+
 // The persistent actor sculpture, defined with `persistent` fields:
 
 
@@ -1890,9 +1891,11 @@ persistent actor {
   // ── OFFER PORTAL — user-facing ────────────────────────────────────────────
 
   /// Register a new Offer Portal user (isolated from main user DB).
-  public shared ({ caller }) func registerOfferUser(email : Text, passwordHash : Text, referralCode : ?Text) : async Nat {
+  /// Returns the full OfferUser record so the frontend can auto-login
+  /// immediately after signup without a second round-trip.
+  public shared ({ caller }) func registerOfferUser(email : Text, passwordHash : Text, referralCode : ?Text) : async OPTypes.OfferUser {
     switch (OPApi.registerOfferUser(offerUsers, nextOfferUserId, email, passwordHash, referralCode)) {
-      case (#ok(id))   { nextOfferUserId += 1; id };
+      case (#ok(user)) { nextOfferUserId += 1; user };
       case (#err(msg)) { Runtime.trap(msg) };
     };
   };
@@ -2008,18 +2011,37 @@ persistent actor {
     offerPortalConfig;
   };
 
+  /// Get Offer Portal global config — public (no auth required).
+  /// Returns the config so any visitor can check whether the portal is enabled
+  /// before showing the login/signup UI.  Webhook secrets are NOT included
+  /// in this method — admin-only fields remain protected via getOfferPortalConfig.
+  public shared query ({ caller }) func getOfferPortalConfigPublic() : async { isEnabled : Bool; adminProfitPct : Nat; userProfitPct : Nat } {
+    {
+      isEnabled      = offerPortalConfig.isEnabled;
+      adminProfitPct = offerPortalConfig.adminProfitPct;
+      userProfitPct  = offerPortalConfig.userProfitPct;
+    };
+  };
+
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   public shared ({ caller }) func updateOfferPortalConfig(
     isEnabled            : Bool,
     cpaLeadWebhookSecret : Text,
     adminProfitPct       : Nat,
     userProfitPct        : Nat,
-  ) : async Bool {
+  ) : async { #ok : Bool; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return #err("Unauthorized: Admin only");
     };
-    offerPortalConfig := { isEnabled; cpaLeadWebhookSecret; adminProfitPct; userProfitPct };
-    true;
+    let newConfig : OPTypes.OfferPortalConfig = { isEnabled; cpaLeadWebhookSecret; adminProfitPct; userProfitPct };
+    switch (OPApi.updateOfferPortalConfig(offerPortalConfig, newConfig)) {
+      case (#err(msg)) { #err(msg) };
+      case (#ok(_))    {
+        offerPortalConfig := newConfig;
+        #ok(true);
+      };
+    };
   };
 
   // ── SMS config ────────────────────────────────────────────────────────────

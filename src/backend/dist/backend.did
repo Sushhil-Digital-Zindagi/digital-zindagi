@@ -468,6 +468,16 @@ service : {
     }) query;
   /// Get Offer Portal global config — admin only.
   getOfferPortalConfig: () -> (OfferPortalConfig) query;
+  /// Get Offer Portal global config — public (no auth required).
+  /// Returns the config so any visitor can check whether the portal is enabled
+  /// before showing the login/signup UI.  Webhook secrets are NOT included
+  /// in this method — admin-only fields remain protected via getOfferPortalConfig.
+  getOfferPortalConfigPublic: () ->
+   (record {
+      adminProfitPct: nat;
+      isEnabled: bool;
+      userProfitPct: nat;
+    }) query;
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
@@ -532,8 +542,10 @@ service : {
   /// Refund a Failed recharge — restores netCost to user wallet — admin only.
   refundRecharge: (txId: nat) -> (bool);
   /// Register a new Offer Portal user (isolated from main user DB).
+  /// Returns the full OfferUser record so the frontend can auto-login
+  /// immediately after signup without a second round-trip.
   registerOfferUser: (email: text, passwordHash: text, referralCode:
-   opt text) -> (nat);
+   opt text) -> (OfferUser);
   registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
    UserRole, securityQuestion: text, securityAnswer: text) -> ();
   rejectProvider: (userId: nat) -> ();
@@ -569,8 +581,13 @@ service : {
   updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
    text, category: text, enabled: bool) -> (bool);
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   updateOfferPortalConfig: (isEnabled: bool, cpaLeadWebhookSecret: text,
-   adminProfitPct: nat, userProfitPct: nat) -> (bool);
+   adminProfitPct: nat, userProfitPct: nat) ->
+   (variant {
+      err: text;
+      ok: bool;
+    });
   updateOrderStatus: (orderId: nat, status: text) -> ();
   updateProviderProfile: (userId: nat, shopName: text, description: text,
    address: text, category: text) -> ();

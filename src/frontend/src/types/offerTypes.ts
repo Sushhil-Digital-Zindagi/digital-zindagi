@@ -7,6 +7,7 @@ export interface OfferUser {
   id: bigint;
   userId: string;
   email: string;
+  passwordHash: string;
   referralCode: string;
   referredBy?: string;
   totalEarnings: bigint;

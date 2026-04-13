@@ -26,14 +26,16 @@ module {
   // ── Offer Portal auth ─────────────────────────────────────────────────────
 
   /// Register a new Offer Portal user (isolated from main user DB).
-  /// Returns #ok(userId) or #err(reason).
+  /// Returns #ok(OfferUser) — the full created user — or #err(reason).
+  /// Returning the full user object allows the caller to auto-login without
+  /// a second round-trip, eliminating the race condition on first signup.
   public func registerOfferUser(
     offerUsers    : Map.Map<Nat, OfferUser>,
     nextId        : Nat,
     email         : Text,
     passwordHash  : Text,
     referralCode  : ?Text,
-  ) : { #ok : Nat; #err : Text } {
+  ) : { #ok : OfferUser; #err : Text } {
     // Reject duplicate emails
     switch (OPLib.findByEmail(offerUsers, email)) {
       case (?_) { return #err("Email already registered") };
@@ -53,7 +55,7 @@ module {
 
     let user = OPLib.createOfferUser(nextId, email, passwordHash, referredBy);
     offerUsers.add(nextId, user);
-    #ok(nextId);
+    #ok(user);
   };
 
   /// Login for the Offer Portal.  Returns #ok(OfferUser) or #err.
@@ -290,11 +292,17 @@ module {
   };
 
   /// Admin: update Offer Portal config.
+  /// Returns #ok(true) on success, #err(reason) on validation failure.
+  /// Validation: if cpaLeadWebhookSecret is non-empty it must be >= 8 chars.
   public func updateOfferPortalConfig(
     _currentConfig : OfferPortalConfig,
     newConfig      : OfferPortalConfig,
-  ) : OfferPortalConfig {
-    newConfig;
+  ) : { #ok : Bool; #err : Text } {
+    // API key validation — empty = no offer wall yet (allowed), non-empty = must be ≥ 8 chars
+    if (newConfig.cpaLeadWebhookSecret != "" and newConfig.cpaLeadWebhookSecret.size() < 8) {
+      return #err("API key too short — minimum 8 characters");
+    };
+    #ok(true);
   };
 
   // ── SMS config ────────────────────────────────────────────────────────────

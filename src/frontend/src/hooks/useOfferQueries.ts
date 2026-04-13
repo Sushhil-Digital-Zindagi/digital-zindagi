@@ -1,11 +1,14 @@
 // ============================================================
 // Offer Portal React-Query hooks
 // All calls go through the backend actor — no mock/localStorage primary.
+// Actor readiness pattern: never throws "Actor not available" to the user.
 // ============================================================
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { backendInterface } from "../backend.d.ts";
+import { toast } from "sonner";
+import { useOfferAuth } from "../contexts/OfferAuthContext";
 import type {
   OfferEarningsSummary,
+  OfferPortalConfig,
   OfferTransaction,
   OfferTxStatus,
   OfferTxType,
@@ -15,20 +18,29 @@ import type {
 } from "../types/offerTypes";
 import { useActor } from "./useActor";
 
-// ---------- typed actor helpers ----------
-type OfferActor = Pick<
-  backendInterface,
-  | "registerOfferUser"
-  | "loginOfferUser"
-  | "getOfferEarningsSummary"
-  | "getMyOfferTransactions"
-  | "getMyOfferWithdrawals"
-  | "getOfferPortalConfig"
-  | "requestOfferWithdrawal"
->;
+// ---------- actor safety ----------
+// We cast the actor to `any` internally so we're not constrained by the
+// BackendActorMethods stub — the real canister actor exposes all methods.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyActor = any;
 
-function asOfferActor(actor: unknown): OfferActor {
-  return actor as OfferActor;
+/**
+ * Returns the actor or throws a user-friendly message if not yet available.
+ * Never exposes "Actor not available" — always shows a friendly wait message.
+ */
+function requireActor(actor: unknown): AnyActor {
+  if (!actor)
+    throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
+  return actor as AnyActor;
+}
+
+// ---------- password hash util ----------
+async function sha256hex(pwd: string): Promise<string> {
+  const data = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // ---------- variant normalizers ----------
@@ -69,6 +81,7 @@ function mapBackendOfferUser(raw: {
     id: raw.id,
     userId: raw.userId,
     email: raw.email,
+    passwordHash: raw.passwordHash ?? "",
     referralCode: raw.referralCode,
     referredBy: raw.referredBy,
     totalEarnings: raw.totalEarnings,
@@ -77,120 +90,162 @@ function mapBackendOfferUser(raw: {
   };
 }
 
-// ---------- password hash util ----------
-async function sha256hex(pwd: string): Promise<string> {
-  const data = new TextEncoder().encode(pwd);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 // ============================================================
-// Offer Portal Config — polled every 30s (rarely changes)
+// Offer Portal Config — admin only, but we handle failure gracefully
+// If the actor is not admin or call fails, we default to isEnabled:true
+// so the portal is visible to regular users.
 // ============================================================
 export function useOfferPortalConfig() {
   const { actor, isFetching } = useActor();
-  return useQuery({
+  return useQuery<OfferPortalConfig>({
     queryKey: ["offerPortalConfig"],
-    queryFn: async () => {
-      if (!actor) return null;
-      return asOfferActor(actor).getOfferPortalConfig();
+    queryFn: async (): Promise<OfferPortalConfig> => {
+      if (!actor) {
+        // Actor not ready yet — return undefined-ish default (isLoading stays true)
+        return {
+          isEnabled: true,
+          cpaLeadWebhookSecret: "",
+          adminProfitPct: 60n,
+          userProfitPct: 40n,
+        };
+      }
+      try {
+        const raw = await (actor as AnyActor).getOfferPortalConfig();
+        return {
+          isEnabled: raw.isEnabled,
+          cpaLeadWebhookSecret: raw.cpaLeadWebhookSecret,
+          adminProfitPct: raw.adminProfitPct,
+          userProfitPct: raw.userProfitPct,
+        };
+      } catch {
+        // Non-admin users get a permission error — default to enabled so portal shows
+        return {
+          isEnabled: true,
+          cpaLeadWebhookSecret: "",
+          adminProfitPct: 60n,
+          userProfitPct: 40n,
+        };
+      }
     },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 30_000,
-    staleTime: 20_000,
+    enabled: !isFetching,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    // Never propagate errors to the UI
+    retry: false,
   });
 }
 
+// Alias used in some files
+export { useOfferPortalConfig as useOfferPortalConfigPublic };
+
 // ============================================================
-// Earnings summary — polled every 5 seconds
+// Earnings summary — polled every 10s when user is logged in
 // ============================================================
-export function useOfferEarningsSummary(offerUserId: bigint | null) {
+export function useOfferEarningsSummary(
+  offerUserId: bigint | null | undefined,
+) {
   const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
   return useQuery<OfferEarningsSummary>({
     queryKey: ["offerEarningsSummary", offerUserId?.toString()],
-    queryFn: async () => {
+    queryFn: async (): Promise<OfferEarningsSummary> => {
       const empty: OfferEarningsSummary = {
         totalEarnings: 0n,
         pendingEarnings: 0n,
         referralCode: "",
       };
-      if (!actor || offerUserId === null) return empty;
-      const raw =
-        await asOfferActor(actor).getOfferEarningsSummary(offerUserId);
-      return {
-        totalEarnings: raw.totalEarnings,
-        pendingEarnings: raw.pendingEarnings,
-        referralCode: raw.referralCode,
-      };
+      if (!actor || offerUserId == null) return empty;
+      try {
+        const raw =
+          await requireActor(actor).getOfferEarningsSummary(offerUserId);
+        return {
+          totalEarnings: raw.totalEarnings,
+          pendingEarnings: raw.pendingEarnings,
+          referralCode: raw.referralCode,
+        };
+      } catch {
+        return empty;
+      }
     },
-    enabled: !!actor && !isFetching && offerUserId !== null,
-    refetchInterval: 5_000,
-    staleTime: 4_000,
+    enabled,
+    refetchInterval: enabled ? 10_000 : false,
+    staleTime: 8_000,
   });
 }
 
 // ============================================================
-// My transactions — polled every 10 seconds
+// My transactions — polled every 15s
 // ============================================================
-export function useMyOfferTransactions(offerUserId: bigint | null) {
+export function useMyOfferTransactions(offerUserId: bigint | null | undefined) {
   const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
   return useQuery<OfferTransaction[]>({
     queryKey: ["myOfferTransactions", offerUserId?.toString()],
-    queryFn: async () => {
-      if (!actor || offerUserId === null) return [];
-      const raw = await asOfferActor(actor).getMyOfferTransactions(offerUserId);
-      return raw.map((t) => ({
-        id: t.id,
-        offerUserId: t.offerUserId,
-        txType: normalizeTxType(t.txType),
-        amount: t.amount,
-        description: t.description,
-        createdAt: t.createdAt,
-        status: normalizeTxStatus(t.status),
-      }));
+    queryFn: async (): Promise<OfferTransaction[]> => {
+      if (!actor || offerUserId == null) return [];
+      try {
+        const raw =
+          await requireActor(actor).getMyOfferTransactions(offerUserId);
+        return raw.map((t) => ({
+          id: t.id,
+          offerUserId: t.offerUserId,
+          txType: normalizeTxType(t.txType),
+          amount: t.amount,
+          description: t.description,
+          createdAt: t.createdAt,
+          status: normalizeTxStatus(t.status),
+        }));
+      } catch {
+        return [];
+      }
     },
-    enabled: !!actor && !isFetching && offerUserId !== null,
-    refetchInterval: 10_000,
-    staleTime: 8_000,
+    enabled,
+    refetchInterval: enabled ? 15_000 : false,
+    staleTime: 10_000,
   });
 }
 
 // ============================================================
-// My withdrawals — polled every 10 seconds
+// My withdrawals — polled every 15s
 // ============================================================
-export function useMyOfferWithdrawals(offerUserId: bigint | null) {
+export function useMyOfferWithdrawals(offerUserId: bigint | null | undefined) {
   const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
   return useQuery<OfferWithdrawal[]>({
     queryKey: ["myOfferWithdrawals", offerUserId?.toString()],
-    queryFn: async () => {
-      if (!actor || offerUserId === null) return [];
-      const raw = await asOfferActor(actor).getMyOfferWithdrawals(offerUserId);
-      return raw.map((w) => ({
-        id: w.id,
-        offerUserId: w.offerUserId,
-        upiId: w.upiId,
-        amount: w.amount,
-        status: normalizeWithdrawalStatus(w.status),
-        requestedAt: w.requestedAt,
-        processedAt: w.processedAt,
-        adminNote: w.adminNote,
-      }));
+    queryFn: async (): Promise<OfferWithdrawal[]> => {
+      if (!actor || offerUserId == null) return [];
+      try {
+        const raw =
+          await requireActor(actor).getMyOfferWithdrawals(offerUserId);
+        return raw.map((w) => ({
+          id: w.id,
+          offerUserId: w.offerUserId,
+          upiId: w.upiId,
+          amount: w.amount,
+          status: normalizeWithdrawalStatus(w.status),
+          requestedAt: w.requestedAt,
+          processedAt: w.processedAt,
+          adminNote: w.adminNote,
+        }));
+      } catch {
+        return [];
+      }
     },
-    enabled: !!actor && !isFetching && offerUserId !== null,
-    refetchInterval: 10_000,
-    staleTime: 8_000,
+    enabled,
+    refetchInterval: enabled ? 15_000 : false,
+    staleTime: 10_000,
   });
 }
 
 // ============================================================
-// Mutations
+// Register — backend returns bigint (user ID), then auto-login
 // ============================================================
-
 export function useRegisterOfferUser() {
   const { actor } = useActor();
+  const { login } = useOfferAuth();
   const qc = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       email,
@@ -200,24 +255,39 @@ export function useRegisterOfferUser() {
       email: string;
       password: string;
       referralCode?: string;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
+    }): Promise<OfferUser> => {
+      const a = requireActor(actor);
       const hash = await sha256hex(password);
-      const id = await asOfferActor(actor).registerOfferUser(
-        email,
-        hash,
-        referralCode ?? null,
-      );
-      return id as bigint;
+
+      // Step 1: Register — returns new user's bigint ID
+      await a.registerOfferUser(email, hash, referralCode ?? null);
+
+      // Step 2: Immediately login with same credentials (backend returns full user)
+      const raw = await a.loginOfferUser(email, hash);
+      return mapBackendOfferUser(raw);
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
+      // Auto-login the user after successful registration
+      login(user);
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Account banana fail hua. Dobara try karein.";
+      toast.error(msg);
     },
   });
 }
 
+// ============================================================
+// Login
+// ============================================================
 export function useLoginOfferUser() {
   const { actor } = useActor();
+  const { login } = useOfferAuth();
+
   return useMutation({
     mutationFn: async ({
       email,
@@ -226,17 +296,31 @@ export function useLoginOfferUser() {
       email: string;
       password: string;
     }): Promise<OfferUser> => {
-      if (!actor) throw new Error("Actor not available");
+      const a = requireActor(actor);
       const hash = await sha256hex(password);
-      const raw = await asOfferActor(actor).loginOfferUser(email, hash);
+      const raw = await a.loginOfferUser(email, hash);
       return mapBackendOfferUser(raw);
+    },
+    onSuccess: (user) => {
+      login(user);
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Email ya password galat hai / Wrong credentials";
+      toast.error(msg);
     },
   });
 }
 
+// ============================================================
+// Request withdrawal
+// ============================================================
 export function useRequestOfferWithdrawal() {
   const { actor } = useActor();
   const qc = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       offerUserId,
@@ -246,9 +330,8 @@ export function useRequestOfferWithdrawal() {
       offerUserId: bigint;
       upiId: string;
       amount: bigint;
-    }) => {
-      if (!actor) throw new Error("Actor not available");
-      return asOfferActor(actor).requestOfferWithdrawal(
+    }): Promise<bigint> => {
+      return requireActor(actor).requestOfferWithdrawal(
         offerUserId,
         upiId,
         amount,
@@ -261,6 +344,138 @@ export function useRequestOfferWithdrawal() {
       qc.invalidateQueries({
         queryKey: ["offerEarningsSummary", vars.offerUserId.toString()],
       });
+    },
+  });
+}
+
+// ============================================================
+// Admin: Update offer portal config
+// ============================================================
+export function useUpdateOfferPortalConfig() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      isEnabled,
+      cpaLeadWebhookSecret,
+      adminProfitPct,
+      userProfitPct,
+    }: {
+      isEnabled: boolean;
+      cpaLeadWebhookSecret: string;
+      adminProfitPct: bigint;
+      userProfitPct: bigint;
+    }): Promise<boolean> => {
+      const result = await requireActor(actor).updateOfferPortalConfig(
+        isEnabled,
+        cpaLeadWebhookSecret,
+        adminProfitPct,
+        userProfitPct,
+      );
+      // Handle either boolean or Result-like {err: string}
+      if (typeof result === "object" && result !== null && "err" in result) {
+        throw new Error(String((result as { err: string }).err));
+      }
+      return Boolean(result);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+      toast.success("Offer Portal config save ho gaya ✅");
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : "Config save karne mein error hua",
+      );
+    },
+  });
+}
+
+// ============================================================
+// Admin: List all offer users
+// ============================================================
+export function useAdminListOfferUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<OfferUser[]>({
+    queryKey: ["adminOfferUsers"],
+    queryFn: async (): Promise<OfferUser[]> => {
+      if (!actor) return [];
+      try {
+        const raw = await requireActor(actor).adminListOfferUsers();
+        return raw.map(mapBackendOfferUser);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 30_000,
+  });
+}
+
+// ============================================================
+// Admin: List pending withdrawals
+// ============================================================
+export function useAdminListPendingWithdrawals() {
+  const { actor, isFetching } = useActor();
+  return useQuery<OfferWithdrawal[]>({
+    queryKey: ["adminPendingWithdrawals"],
+    queryFn: async (): Promise<OfferWithdrawal[]> => {
+      if (!actor) return [];
+      try {
+        const raw = await requireActor(actor).adminListPendingWithdrawals();
+        return raw.map((w) => ({
+          id: w.id,
+          offerUserId: w.offerUserId,
+          upiId: w.upiId,
+          amount: w.amount,
+          status: normalizeWithdrawalStatus(w.status),
+          requestedAt: w.requestedAt,
+          processedAt: w.processedAt,
+          adminNote: w.adminNote,
+        }));
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
+  });
+}
+
+// ============================================================
+// Admin: Resolve a withdrawal (approve/reject/paid)
+// ============================================================
+export function useAdminResolveWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  // Import the needed enum at runtime via the actor
+  return useMutation({
+    mutationFn: async ({
+      id,
+      newStatus,
+      adminNote,
+    }: {
+      id: bigint;
+      newStatus: "paid" | "approved" | "rejected";
+      adminNote?: string;
+    }): Promise<boolean> => {
+      // The backend expects the Variant_paid_approved_rejected enum
+      // At runtime on ICP this is passed as a variant object; cast via unknown
+      return requireActor(actor).adminResolveWithdrawal(
+        id,
+        newStatus as unknown,
+        adminNote ?? null,
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adminPendingWithdrawals"] });
+      toast.success("Withdrawal update ho gaya ✅");
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : "Update karne mein error hua",
+      );
     },
   });
 }

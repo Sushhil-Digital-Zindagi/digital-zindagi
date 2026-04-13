@@ -556,6 +556,17 @@ export interface backendInterface {
      * / Get Offer Portal global config — admin only.
      */
     getOfferPortalConfig(): Promise<OfferPortalConfig>;
+    /**
+     * / Get Offer Portal global config — public (no auth required).
+     * / Returns the config so any visitor can check whether the portal is enabled
+     * / before showing the login/signup UI.  Webhook secrets are NOT included
+     * / in this method — admin-only fields remain protected via getOfferPortalConfig.
+     */
+    getOfferPortalConfigPublic(): Promise<{
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        userProfitPct: bigint;
+    }>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
@@ -650,8 +661,10 @@ export interface backendInterface {
     refundRecharge(txId: bigint): Promise<boolean>;
     /**
      * / Register a new Offer Portal user (isolated from main user DB).
+     * / Returns the full OfferUser record so the frontend can auto-login
+     * / immediately after signup without a second round-trip.
      */
-    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<bigint>;
+    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<OfferUser>;
     registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
     rejectProvider(userId: bigint): Promise<void>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
@@ -687,8 +700,15 @@ export interface backendInterface {
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+     * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
      */
-    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<boolean>;
+    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateOrderStatus(orderId: bigint, status: string): Promise<void>;
     updateProviderProfile(userId: bigint, shopName: string, description: string, address: string, category: string): Promise<void>;
     /**
@@ -1706,6 +1726,24 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getOfferPortalConfigPublic(): Promise<{
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        userProfitPct: bigint;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOfferPortalConfigPublic();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOfferPortalConfigPublic();
+            return result;
+        }
+    }
     async getOrderById(arg0: bigint): Promise<Order | null> {
         if (this.processError) {
             try {
@@ -2172,18 +2210,18 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async registerOfferUser(arg0: string, arg1: string, arg2: string | null): Promise<bigint> {
+    async registerOfferUser(arg0: string, arg1: string, arg2: string | null): Promise<OfferUser> {
         if (this.processError) {
             try {
                 const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n20(this._uploadFile, this._downloadFile, arg2));
-                return result;
+                return from_candid_OfferUser_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n20(this._uploadFile, this._downloadFile, arg2));
-            return result;
+            return from_candid_OfferUser_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async registerUser(arg0: string, arg1: MobileNumber, arg2: string, arg3: UserRole, arg4: string, arg5: string): Promise<void> {
@@ -2466,18 +2504,24 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateOfferPortalConfig(arg0: boolean, arg1: string, arg2: bigint, arg3: bigint): Promise<boolean> {
+    async updateOfferPortalConfig(arg0: boolean, arg1: string, arg2: bigint, arg3: bigint): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3);
-                return result;
+                return from_candid_variant_n83(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3);
-            return result;
+            return from_candid_variant_n83(this._uploadFile, this._downloadFile, result);
         }
     }
     async updateOrderStatus(arg0: bigint, arg1: string): Promise<void> {
@@ -3239,6 +3283,25 @@ function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): {
     __kind__: "ok";
     ok: UdhaarCustomer;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n83(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: boolean;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: boolean;
 } | {
     __kind__: "err";
     err: string;

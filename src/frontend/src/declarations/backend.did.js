@@ -503,6 +503,17 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+  'getOfferPortalConfigPublic' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'adminProfitPct' : IDL.Nat,
+          'isEnabled' : IDL.Bool,
+          'userProfitPct' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
   'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
   'getOrdersByStatus' : IDL.Func(
       [IDL.Nat, IDL.Text],
@@ -589,7 +600,7 @@ export const idlService = IDL.Service({
   'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'registerOfferUser' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
-      [IDL.Nat],
+      [OfferUser],
       [],
     ),
   'registerUser' : IDL.Func(
@@ -655,7 +666,7 @@ export const idlService = IDL.Service({
     ),
   'updateOfferPortalConfig' : IDL.Func(
       [IDL.Bool, IDL.Text, IDL.Nat, IDL.Nat],
-      [IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
   'updateOrderStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
@@ -1216,6 +1227,17 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+    'getOfferPortalConfigPublic' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'adminProfitPct' : IDL.Nat,
+            'isEnabled' : IDL.Bool,
+            'userProfitPct' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
     'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
     'getOrdersByStatus' : IDL.Func(
         [IDL.Nat, IDL.Text],
@@ -1302,7 +1324,7 @@ export const idlFactory = ({ IDL }) => {
     'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'registerOfferUser' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
-        [IDL.Nat],
+        [OfferUser],
         [],
       ),
     'registerUser' : IDL.Func(
@@ -1368,7 +1390,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateOfferPortalConfig' : IDL.Func(
         [IDL.Bool, IDL.Text, IDL.Nat, IDL.Nat],
-        [IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
     'updateOrderStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
