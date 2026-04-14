@@ -141,6 +141,7 @@ module {
     {
       isEnabled            = false;
       cpaLeadWebhookSecret = "";
+      cpagripApiKey        = "";
       adminProfitPct       = 60;
       userProfitPct        = 40;
     };

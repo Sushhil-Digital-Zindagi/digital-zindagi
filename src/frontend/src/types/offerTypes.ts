@@ -55,6 +55,7 @@ export interface OfferWithdrawal {
 export interface OfferPortalConfig {
   isEnabled: boolean;
   cpaLeadWebhookSecret: string;
+  cpagripApiKey: string;
   adminProfitPct: bigint;
   userProfitPct: bigint;
 }

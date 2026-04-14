@@ -5,7 +5,9 @@
  */
 import { ArrowLeft, Wallet } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import ContentLockerOverlay from "../components/ContentLockerOverlay";
 import InterstitialAd from "../components/InterstitialAd";
+import { useContentLockerConfig } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -605,6 +607,15 @@ function useFullscreen(
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function GameComingSoonPage() {
+  const { data: lockerConfig } = useContentLockerConfig();
+  return (
+    <ContentLockerOverlay featureName="Game" config={lockerConfig}>
+      <LudoGameInner />
+    </ContentLockerOverlay>
+  );
+}
+
+function LudoGameInner() {
   const navigate = useNavigate();
   const gameContainerRef = useRef<HTMLDivElement | null>(null);
 

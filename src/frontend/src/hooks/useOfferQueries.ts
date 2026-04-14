@@ -105,6 +105,7 @@ export function useOfferPortalConfig() {
         return {
           isEnabled: true,
           cpaLeadWebhookSecret: "",
+          cpagripApiKey: "",
           adminProfitPct: 60n,
           userProfitPct: 40n,
         };
@@ -114,6 +115,7 @@ export function useOfferPortalConfig() {
         return {
           isEnabled: raw.isEnabled,
           cpaLeadWebhookSecret: raw.cpaLeadWebhookSecret,
+          cpagripApiKey: raw.cpagripApiKey ?? "",
           adminProfitPct: raw.adminProfitPct,
           userProfitPct: raw.userProfitPct,
         };
@@ -122,6 +124,7 @@ export function useOfferPortalConfig() {
         return {
           isEnabled: true,
           cpaLeadWebhookSecret: "",
+          cpagripApiKey: "",
           adminProfitPct: 60n,
           userProfitPct: 40n,
         };

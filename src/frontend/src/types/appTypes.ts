@@ -322,6 +322,49 @@ export interface RechargeReceipt {
   generatedAt: number;
 }
 
+// ---- Content Locker types ----
+
+export interface LockedFeature {
+  id: string;
+  featureName: string;
+  cpaOfferLink: string;
+  isLocked: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ContentLockerConfig {
+  features: LockedFeature[];
+}
+
+// ---- Audit Log ----
+
+export interface AuditLogEntry {
+  id: string;
+  adminEmail: string;
+  targetUserId: string;
+  action: string;
+  amount: number | null;
+  note: string;
+  timestamp: number;
+}
+
+// ---- User Subscription (admin-assigned) ----
+
+export interface UserSubscription {
+  userId: string;
+  status: "active" | "inactive";
+  startDate: number;
+  endDate: number;
+  assignedByAdmin: boolean;
+}
+
+// ---- Pending Provider (same structure as ProviderProfile + selectedPlan) ----
+
+export interface PendingProvider extends ProviderProfile {
+  selectedPlan: string;
+}
+
 /** Extended actor interface covering all methods called directly by pages. */
 export interface BackendActorMethods {
   // Auth

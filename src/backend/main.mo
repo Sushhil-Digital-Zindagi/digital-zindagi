@@ -20,6 +20,12 @@ import OPTypes    "types/offer-portal";
 import OPApi      "mixins/offer-portal-api";
 import OPLib      "lib/offer-portal";
 import SmsLib     "lib/sms";
+import CLTypes    "types/content-locker";
+import CLApi      "mixins/content-locker-api";
+import AuditTypes "types/admin-audit";
+import AuditApi   "mixins/admin-audit-api";
+import List       "mo:core/List";
+import Migration  "migration";
 
 
 
@@ -27,6 +33,7 @@ import SmsLib     "lib/sms";
 // The persistent actor sculpture, defined with `persistent` fields:
 
 
+(with migration = Migration.run)
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -101,6 +108,7 @@ persistent actor {
   var offerPortalConfig : OPTypes.OfferPortalConfig = {
     isEnabled            = false;
     cpaLeadWebhookSecret = "";
+    cpagripApiKey        = "";
     adminProfitPct       = 60;
     userProfitPct        = 40;
   };
@@ -109,6 +117,16 @@ persistent actor {
     senderId       = "DZNAGI";
     isEnabled      = false;
   };
+
+  // ── Content Locker state ──────────────────────────────────────────────────
+  var lockedFeatures : Map.Map<Text, CLTypes.LockedFeature> = Map.empty<Text, CLTypes.LockedFeature>();
+
+  // ── Admin Audit Log state ─────────────────────────────────────────────────
+  var auditLog : List.List<AuditTypes.AuditLogEntry> = List.empty<AuditTypes.AuditLogEntry>();
+  var nextAuditId : Nat = 1;
+
+  // ── User Subscriptions state ──────────────────────────────────────────────
+  var userSubscriptions : Map.Map<Text, AuditTypes.UserSubscription> = Map.empty<Text, AuditTypes.UserSubscription>();
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -832,6 +850,18 @@ persistent actor {
   };
 
   public query ({ caller }) func getProvidersPendingApproval() : async [ProviderProfile] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view pending approvals");
+    };
+    providerProfiles.values().toArray().filter(
+      func(profile : ProviderProfile) : Bool { 
+        profile.paymentScreenshotBlobId != null and profile.subscriptionStatus == #pending 
+      }
+    );
+  };
+
+  /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
+  public query ({ caller }) func getPendingApprovals() : async [ProviderProfile] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can view pending approvals");
     };
@@ -2028,13 +2058,14 @@ persistent actor {
   public shared ({ caller }) func updateOfferPortalConfig(
     isEnabled            : Bool,
     cpaLeadWebhookSecret : Text,
+    cpagripApiKey        : Text,
     adminProfitPct       : Nat,
     userProfitPct        : Nat,
   ) : async { #ok : Bool; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       return #err("Unauthorized: Admin only");
     };
-    let newConfig : OPTypes.OfferPortalConfig = { isEnabled; cpaLeadWebhookSecret; adminProfitPct; userProfitPct };
+    let newConfig : OPTypes.OfferPortalConfig = { isEnabled; cpaLeadWebhookSecret; cpagripApiKey; adminProfitPct; userProfitPct };
     switch (OPApi.updateOfferPortalConfig(offerPortalConfig, newConfig)) {
       case (#err(msg)) { #err(msg) };
       case (#ok(_))    {
@@ -2077,4 +2108,107 @@ persistent actor {
       case (?uid) { OPApi.getMyReceipts(rechargeReceipts, uid) };
     };
   };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ── Content Locker API ────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /// Return the full content-locker configuration (all features).
+  public shared query func getContentLockerConfig() : async CLTypes.ContentLockerConfig {
+    CLApi.getContentLockerConfig(lockedFeatures);
+  };
+
+  /// Create or update a locked feature — admin only.
+  public shared ({ caller }) func setLockedFeature(
+    featureName  : Text,
+    cpaOfferLink : Text,
+    secretKey    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    CLApi.setLockedFeature(lockedFeatures, featureName, cpaOfferLink, secretKey);
+  };
+
+  /// Remove a locked feature by id — admin only.
+  public shared ({ caller }) func removeLockedFeature(
+    featureId : Text,
+  ) : async { #ok; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    CLApi.removeLockedFeature(lockedFeatures, featureId);
+  };
+
+  /// User-facing: verify a plain-text unlock key for a named feature.
+  public shared func verifyUnlockKey(
+    featureName : Text,
+    userKey     : Text,
+  ) : async CLTypes.VerifyKeyResult {
+    CLApi.verifyUnlockKey(lockedFeatures, featureName, userKey);
+  };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ── Admin Audit Log & Subscription API ───────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /// Return the most recent `limit` audit log entries — admin only.
+  public shared query ({ caller }) func getAdminAuditLog(
+    limit : Nat,
+  ) : async [AuditTypes.AuditLogEntry] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    AuditApi.getAdminAuditLog(auditLog, limit);
+  };
+
+  /// Adjust (add or deduct) a user's wallet balance and log the action — admin only.
+  /// Returns the new balance as Int on success.
+  public shared ({ caller }) func adminAdjustWalletBalance(
+    userId : Text,
+    amount : Int,
+    action : Text,
+    note   : Text,
+  ) : async { #ok : Int; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let adminEmail = "admin";
+    let result = AuditApi.adminAdjustWalletBalance(
+      walletBalances, auditLog, nextAuditId, adminEmail, userId, amount, action, note,
+    );
+    switch (result) {
+      case (#ok(_)) { nextAuditId += 1 };
+      case (#err(_)) {};
+    };
+    result;
+  };
+
+  /// Manually assign or revoke a subscription for a user — admin only.
+  public shared ({ caller }) func adminAssignSubscription(
+    userId       : Text,
+    durationDays : Nat,
+    action       : Text,
+  ) : async { #ok; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let adminEmail = "admin";
+    let result = AuditApi.adminAssignSubscription(
+      userSubscriptions, auditLog, nextAuditId, adminEmail, userId, durationDays, action,
+    );
+    switch (result) {
+      case (#ok) { nextAuditId += 1 };
+      case (#err(_)) {};
+    };
+    result;
+  };
+
+  /// Get the current subscription status for a given user.
+  public shared query func getUserSubscriptionStatus(
+    userId : Text,
+  ) : async ?AuditTypes.UserSubscription {
+    AuditApi.getUserSubscriptionStatus(userSubscriptions, userId);
+  };
+
 };

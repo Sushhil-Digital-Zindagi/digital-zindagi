@@ -20,6 +20,23 @@ export interface AdminConfig {
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
+export type AuditAction = { 'SubscriptionRevoke' : null } |
+  { 'WalletDeduct' : null } |
+  { 'ProviderReject' : null } |
+  { 'SubscriptionAssign' : null } |
+  { 'WalletAdd' : null } |
+  { 'ProviderApprove' : null } |
+  { 'FeatureUnlock' : null } |
+  { 'FeatureLock' : null };
+export interface AuditLogEntry {
+  'id' : string,
+  'action' : AuditAction,
+  'note' : string,
+  'timestamp' : bigint,
+  'adminEmail' : string,
+  'amount' : [] | [bigint],
+  'targetUserId' : string,
+}
 export interface Banner {
   'id' : bigint,
   'title' : string,
@@ -41,6 +58,7 @@ export interface CommissionConfig {
   'adminSharePct' : number,
   'globalCommissionPct' : number,
 }
+export interface ContentLockerConfig { 'features' : Array<LockedFeature> }
 export interface CustomCode {
   'id' : bigint,
   'placement' : string,
@@ -71,6 +89,15 @@ export interface JobItem {
   'lastDate' : string,
   'location' : string,
 }
+export interface LockedFeature {
+  'id' : string,
+  'createdAt' : bigint,
+  'secretKeyHash' : string,
+  'cpaOfferLink' : string,
+  'updatedAt' : bigint,
+  'isLocked' : boolean,
+  'featureName' : string,
+}
 export type MobileNumber = string;
 export interface NewsItem {
   'id' : bigint,
@@ -84,6 +111,7 @@ export interface NewsItem {
 }
 export interface OfferPortalConfig {
   'cpaLeadWebhookSecret' : string,
+  'cpagripApiKey' : string,
   'adminProfitPct' : bigint,
   'isEnabled' : boolean,
   'userProfitPct' : bigint,
@@ -262,6 +290,15 @@ export type UserRole = { 'admin' : null } |
 export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface UserSubscription {
+  'status' : string,
+  'assignedByAdmin' : boolean,
+  'endDate' : bigint,
+  'userId' : string,
+  'startDate' : bigint,
+}
+export type VerifyKeyResult = { 'ok' : boolean } |
+  { 'err' : string };
 export interface VideoItem {
   'id' : bigint,
   'title' : string,
@@ -350,6 +387,23 @@ export interface _SERVICE {
    */
   'adminAdjustWallet' : ActorMethod<[bigint, number, boolean, string], boolean>,
   /**
+   * / Adjust (add or deduct) a user's wallet balance and log the action — admin only.
+   * / Returns the new balance as Int on success.
+   */
+  'adminAdjustWalletBalance' : ActorMethod<
+    [string, bigint, string, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  /**
+   * / Manually assign or revoke a subscription for a user — admin only.
+   */
+  'adminAssignSubscription' : ActorMethod<
+    [string, bigint, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
    * / List all Offer Portal users — admin only.
    */
   'adminListOfferUsers' : ActorMethod<[], Array<OfferUser>>,
@@ -409,6 +463,10 @@ export interface _SERVICE {
   'forgotPassword' : ActorMethod<[MobileNumber, string, string], undefined>,
   'getActiveBanners' : ActorMethod<[], Array<Banner>>,
   'getActiveProviders' : ActorMethod<[], Array<ProviderProfile>>,
+  /**
+   * / Return the most recent `limit` audit log entries — admin only.
+   */
+  'getAdminAuditLog' : ActorMethod<[bigint], Array<AuditLogEntry>>,
   'getAdminConfig' : ActorMethod<[], [] | [AdminConfig]>,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
@@ -433,6 +491,10 @@ export interface _SERVICE {
    * / Return the current commission config — public.
    */
   'getCommissionConfig' : ActorMethod<[], CommissionConfig>,
+  /**
+   * / Return the full content-locker configuration (all features).
+   */
+  'getContentLockerConfig' : ActorMethod<[], ContentLockerConfig>,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
@@ -493,6 +555,10 @@ export interface _SERVICE {
   >,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
+  /**
+   * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
+   */
+  'getPendingApprovals' : ActorMethod<[], Array<ProviderProfile>>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
   'getProviderProfile' : ActorMethod<[bigint], [] | [ProviderProfile]>,
   'getProvidersByCategory' : ActorMethod<[string], Array<ProviderProfile>>,
@@ -540,6 +606,10 @@ export interface _SERVICE {
   'getUserById' : ActorMethod<[bigint], [] | [User]>,
   'getUserByMobile' : ActorMethod<[MobileNumber], [] | [User]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  /**
+   * / Get the current subscription status for a given user.
+   */
+  'getUserSubscriptionStatus' : ActorMethod<[string], [] | [UserSubscription]>,
   'getUsersByRole' : ActorMethod<[UserRole], Array<User>>,
   'getVideos' : ActorMethod<[], Array<VideoItem>>,
   /**
@@ -591,6 +661,14 @@ export interface _SERVICE {
     undefined
   >,
   'rejectProvider' : ActorMethod<[bigint], undefined>,
+  /**
+   * / Remove a locked feature by id — admin only.
+   */
+  'removeLockedFeature' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'removeShopPhoto' : ActorMethod<[bigint, string], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
   /**
@@ -604,6 +682,14 @@ export interface _SERVICE {
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchUsers' : ActorMethod<[string], Array<User>>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
+  /**
+   * / Create or update a locked feature — admin only.
+   */
+  'setLockedFeature' : ActorMethod<
+    [string, string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
   /**
    * / Enable or disable the recharge service — admin only.
@@ -642,7 +728,7 @@ export interface _SERVICE {
    * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
    */
   'updateOfferPortalConfig' : ActorMethod<
-    [boolean, string, bigint, bigint],
+    [boolean, string, string, bigint, bigint],
     { 'ok' : boolean } |
       { 'err' : string }
   >,
@@ -704,6 +790,10 @@ export interface _SERVICE {
   >,
   'uploadPaymentScreenshot' : ActorMethod<[bigint, string], undefined>,
   'verifyAdminPin' : ActorMethod<[string], boolean>,
+  /**
+   * / User-facing: verify a plain-text unlock key for a named feature.
+   */
+  'verifyUnlockKey' : ActorMethod<[string, string], VerifyKeyResult>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

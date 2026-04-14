@@ -1,4 +1,4 @@
-// Version: 1.0.0
+// Version: 3.0.0
 type AdminConfig__889654536 =
   {
     adminName : Text;
@@ -9,6 +9,27 @@ type AdminConfig__889654536 =
   };
 type ApprovalStatus__1072888826 = {#approved; #pending; #rejected};
 type ApprovalStatus__575141016 = {#approved; #pending; #rejected};
+type AuditAction__698051298 =
+  {
+    #FeatureLock;
+    #FeatureUnlock;
+    #ProviderApprove;
+    #ProviderReject;
+    #SubscriptionAssign;
+    #SubscriptionRevoke;
+    #WalletAdd;
+    #WalletDeduct
+  };
+type AuditLogEntry__419766955 =
+  {
+    action : AuditAction__698051298;
+    adminEmail : Text;
+    amount : ?Int;
+    id : Text;
+    note : Text;
+    targetUserId : Text;
+    timestamp : Int
+  };
 type Banner__198884728 =
   {
     active : Bool;
@@ -59,6 +80,16 @@ type JobItem__343982965 =
     title : Text
   };
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type LockedFeature__872303456 =
+  {
+    cpaOfferLink : Text;
+    createdAt : Int;
+    featureName : Text;
+    id : Text;
+    isLocked : Bool;
+    secretKeyHash : Text;
+    updatedAt : Int
+  };
 type Map__158565046<K, V> = Map__297112838<K, V>;
 type Map__297112838<K, V> =
   {var root : Node__46230540<K, V>; var size : Nat__490723111};
@@ -111,6 +142,13 @@ type OfferWithdrawal__336029618 =
     requestedAt : Int;
     status : {#approved; #paid; #pending; #rejected};
     upiId : Text
+  };
+type OldOfferPortalConfig__682328126 =
+  {
+    adminProfitPct : Nat;
+    cpaLeadWebhookSecret : Text;
+    isEnabled : Bool;
+    userProfitPct : Nat
   };
 type Order__762448211 =
   {
@@ -213,6 +251,14 @@ type UserProfile__491224006 =
   };
 type UserRole__1054455867 = {#admin; #guest; #user};
 type UserRole__599675725 = {#admin; #customer; #provider};
+type UserSubscription__52863473 =
+  {
+    assignedByAdmin : Bool;
+    endDate : Int;
+    startDate : Int;
+    status : Text;
+    userId : Text
+  };
 type User__831686142 =
   {
     createdAt : Int;
@@ -247,7 +293,7 @@ type WalletTopupRequest__51988012 =
     status : Text;
     userId : Nat
   };
-actor {
+actor ({
   stable accessControlState :
     {
       var adminAssigned : Bool;
@@ -260,6 +306,12 @@ actor {
     {
       var approvalStatus :
         Map__605269027<Principal, ApprovalStatus__575141016>
+    };
+  stable var auditLog :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?AuditLogEntry__419766955]];
+      var elementIndex : Nat__490723111
     };
   stable var banners :
     {
@@ -292,11 +344,195 @@ actor {
       var root : Node__46230540<Nat, JobItem__343982965>;
       var size : Nat__490723111
     };
+  stable var lockedFeatures :
+    {
+      var root : Node__46230540<Text, LockedFeature__872303456>;
+      var size : Nat__490723111
+    };
   stable var newsItems :
     {
       var root : Node__46230540<Nat, NewsItem__791051751>;
       var size : Nat__490723111
     };
+  stable var nextAuditId : Nat;
+  stable var nextBannerId : Nat;
+  stable var nextCategoryId : Nat;
+  stable var nextCustomCodeId : Nat;
+  stable var nextCustomSectionId : Nat;
+  stable var nextJobId : Nat;
+  stable var nextNewsId : Nat;
+  stable var nextOfferTxnId : Nat;
+  stable var nextOfferUserId : Nat;
+  stable var nextOrderId : Nat;
+  stable var nextReceiptId : Nat;
+  stable var nextRechargeTxId : Nat;
+  stable var nextScrapRateId : Nat;
+  stable var nextTopupId : Nat;
+  stable var nextUserId : Nat;
+  stable var nextVideoId : Nat;
+  stable var nextWithdrawalId : Nat;
+  in var offerPortalConfig : OldOfferPortalConfig__682328126;
+  stable var offerTxns :
+    {
+      var root : Node__46230540<Nat, OfferTransaction__599458472>;
+      var size : Nat__490723111
+    };
+  stable var offerUsers :
+    {
+      var root : Node__46230540<Nat, OfferUser__179657268>;
+      var size : Nat__490723111
+    };
+  stable var offerWithdrawals :
+    {
+      var root : Node__46230540<Nat, OfferWithdrawal__336029618>;
+      var size : Nat__490723111
+    };
+  stable var orders :
+    {
+      var root : Node__46230540<Nat, Order__762448211>;
+      var size : Nat__490723111
+    };
+  stable var principalToUserId :
+    {var root : Node__46230540<Principal, Nat>; var size : Nat__490723111};
+  stable var providerProfiles :
+    {
+      var root : Node__46230540<Nat, ProviderProfile__706122890>;
+      var size : Nat__490723111
+    };
+  stable var rechargeApiConfig :
+    {
+      apiKey : Text;
+      apiUrl : Text;
+      autoRefundEnabled : Bool;
+      isActive : Bool;
+      responseParam : Text
+    };
+  stable var rechargeReceipts :
+    {
+      var root : Node__46230540<Nat, RechargeReceipt__91945020>;
+      var size : Nat__490723111
+    };
+  stable var rechargeServiceEnabled : Bool;
+  stable var rechargeTxns :
+    {
+      var root : Node__46230540<Nat, RechargeTransaction__394578144>;
+      var size : Nat__490723111
+    };
+  stable var scrapRates :
+    {
+      var root : Node__46230540<Nat, ScrapRate__369663379>;
+      var size : Nat__490723111
+    };
+  stable var scrapRatesSeeded : Bool;
+  stable var smsConfig :
+    {fast2smsApiKey : Text; isEnabled : Bool; senderId : Text};
+  stable var subscriptionPricing : ?SubscriptionPricing__787813395;
+  stable var toggles :
+    {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
+  stable var topupRequests :
+    {
+      var root : Node__46230540<Nat, WalletTopupRequest__51988012>;
+      var size : Nat__490723111
+    };
+  stable var udhaarCustomers :
+    {
+      var root : Node__46230540<Text, UdhaarCustomer__381297801>;
+      var size : Nat__490723111
+    };
+  stable var udhaarTransactions :
+    {
+      var root : Node__46230540<Text, UdhaarTransaction__696619663>;
+      var size : Nat__490723111
+    };
+  stable var userIdToPrincipal :
+    {var root : Node__46230540<Nat, Principal>; var size : Nat__490723111};
+  stable var userProfiles :
+    {
+      var root : Node__46230540<Principal, UserProfile__491224006>;
+      var size : Nat__490723111
+    };
+  stable var userSubscriptions :
+    {
+      var root : Node__46230540<Text, UserSubscription__52863473>;
+      var size : Nat__490723111
+    };
+  stable var users :
+    {
+      var root : Node__46230540<MobileNumber__283646848, User__831686142>;
+      var size : Nat__490723111
+    };
+  stable var videos :
+    {
+      var root : Node__46230540<Nat, VideoItem__865818871>;
+      var size : Nat__490723111
+    };
+  stable var walletBalances :
+    {
+      var root : Node__46230540<Nat, WalletBalance__274125096>;
+      var size : Nat__490723111
+    }
+}, {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable var adminConfig : ?AdminConfig__889654536;
+  stable var adminPinHash : Text;
+  stable var appSettingsJson : Text;
+  stable approvalState :
+    {
+      var approvalStatus :
+        Map__605269027<Principal, ApprovalStatus__575141016>
+    };
+  stable var auditLog :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?AuditLogEntry__419766955]];
+      var elementIndex : Nat__490723111
+    };
+  stable var banners :
+    {
+      var root : Node__46230540<Nat, Banner__198884728>;
+      var size : Nat__490723111
+    };
+  stable var categories :
+    {
+      var root : Node__46230540<Nat, Category__164941945>;
+      var size : Nat__490723111
+    };
+  stable var commissionConfig :
+    {
+      adminSharePct : Float;
+      globalCommissionPct : Float;
+      retailerSharePct : Float
+    };
+  stable var customCodes :
+    {
+      var root : Node__46230540<Nat, CustomCode__248340264>;
+      var size : Nat__490723111
+    };
+  stable var customSections :
+    {
+      var root : Node__46230540<Nat, CustomSection__448245083>;
+      var size : Nat__490723111
+    };
+  stable var jobItems :
+    {
+      var root : Node__46230540<Nat, JobItem__343982965>;
+      var size : Nat__490723111
+    };
+  stable var lockedFeatures :
+    {
+      var root : Node__46230540<Text, LockedFeature__872303456>;
+      var size : Nat__490723111
+    };
+  stable var newsItems :
+    {
+      var root : Node__46230540<Nat, NewsItem__791051751>;
+      var size : Nat__490723111
+    };
+  stable var nextAuditId : Nat;
   stable var nextBannerId : Nat;
   stable var nextCategoryId : Nat;
   stable var nextCustomCodeId : Nat;
@@ -317,6 +553,7 @@ actor {
     {
       adminProfitPct : Nat;
       cpaLeadWebhookSecret : Text;
+      cpagripApiKey : Text;
       isEnabled : Bool;
       userProfitPct : Nat
     };
@@ -399,6 +636,11 @@ actor {
       var root : Node__46230540<Principal, UserProfile__491224006>;
       var size : Nat__490723111
     };
+  stable var userSubscriptions :
+    {
+      var root : Node__46230540<Text, UserSubscription__52863473>;
+      var size : Nat__490723111
+    };
   stable var users :
     {
       var root : Node__46230540<MobileNumber__283646848, User__831686142>;
@@ -414,4 +656,4 @@ actor {
       var root : Node__46230540<Nat, WalletBalance__274125096>;
       var size : Nat__490723111
     }
-};
+}) ;

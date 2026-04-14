@@ -17,6 +17,33 @@ import { UserRole } from "../types/appTypes";
 
 type LoginMode = "mobile" | "email";
 
+// Additional super-admin alternate email
+const SUPER_ADMIN_ALT_EMAIL = "sushilkumar12022@gmail.com";
+
+function getLoginErrorMessage(err: unknown): string {
+  const msg = (err as Error)?.message ?? "";
+  const lowerMsg = msg.toLowerCase();
+  if (
+    lowerMsg.includes("agenterror") ||
+    lowerMsg.includes("fetch") ||
+    lowerMsg.includes("network") ||
+    lowerMsg.includes("connect") ||
+    lowerMsg.includes("timeout")
+  ) {
+    return "Connection error. Please check your internet and try again.";
+  }
+  if (
+    lowerMsg.includes("not found") ||
+    lowerMsg.includes("invalid") ||
+    lowerMsg.includes("wrong") ||
+    lowerMsg.includes("incorrect") ||
+    lowerMsg.includes("mismatch")
+  ) {
+    return "Email or password is incorrect.";
+  }
+  return "Login failed. Please try again in a moment.";
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>("mobile");
   const [mobile, setMobile] = useState("");
@@ -34,8 +61,10 @@ export default function LoginPage() {
     localStorage.getItem("dz_welcome_message") ??
     "Digital Zindagi में आपका स्वागत है";
 
+  const emailLower = email.trim().toLowerCase();
   const isSuperAdminEmail =
-    email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    emailLower === SUPER_ADMIN_EMAIL.toLowerCase() ||
+    emailLower === SUPER_ADMIN_ALT_EMAIL.toLowerCase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +102,14 @@ export default function LoginPage() {
         }
 
         // Manager email login
-        const hash = await hashPassword(password);
+        let hash: string;
+        try {
+          hash = await hashPassword(password);
+        } catch (err) {
+          toast.error(getLoginErrorMessage(err));
+          return;
+        }
+
         const managers: {
           id: string;
           name: string;
@@ -108,8 +144,8 @@ export default function LoginPage() {
         }
 
         toast.error("Email से कोई account नहीं मिला। Mobile से login करें।");
-      } catch (err: any) {
-        toast.error(err?.message ?? "Login fail हो गया");
+      } catch (err) {
+        toast.error(getLoginErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -122,12 +158,18 @@ export default function LoginPage() {
       return;
     }
     if (!actor) {
-      toast.error("Backend से connect नहीं हो पा रहा, थोड़ा wait करें");
+      toast.error("Backend से connect नहीं हो पा रहा, थोड़ा wait करें");
       return;
     }
     setLoading(true);
     try {
-      const hash = await hashPassword(password);
+      let hash: string;
+      try {
+        hash = await hashPassword(password);
+      } catch (err) {
+        toast.error(getLoginErrorMessage(err));
+        return;
+      }
 
       const managers: {
         id: string;
@@ -174,8 +216,8 @@ export default function LoginPage() {
       if (user.role === UserRole.admin) navigate("/admin");
       else if (user.role === UserRole.provider) navigate("/provider/dashboard");
       else navigate("/");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Login fail हो गया। दोबारा try करें।");
+    } catch (err) {
+      toast.error(getLoginErrorMessage(err));
     } finally {
       setLoading(false);
     }

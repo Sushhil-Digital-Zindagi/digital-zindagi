@@ -42,6 +42,7 @@ module {
   public type OfferPortalConfig = {
     isEnabled              : Bool;
     cpaLeadWebhookSecret   : Text;   // generic offer-wall webhook secret (works with any offer wall)
+    cpagripApiKey          : Text;   // CPAGrip API key for fetching automatic offers
     adminProfitPct         : Nat;   // e.g. 60 (%)
     userProfitPct          : Nat;   // e.g. 40 (%)
   };

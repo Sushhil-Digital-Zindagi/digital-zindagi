@@ -20,11 +20,21 @@ export interface ServiceRate {
     price: bigint;
 }
 export type MobileNumber = string;
+export interface ContentLockerConfig {
+    features: Array<LockedFeature>;
+}
 export interface SmsConfig {
     fast2smsApiKey: string;
     isEnabled: boolean;
     senderId: string;
 }
+export type VerifyKeyResult = {
+    __kind__: "ok";
+    ok: boolean;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export interface RechargeApiConfig {
     autoRefundEnabled: boolean;
     isActive: boolean;
@@ -53,6 +63,7 @@ export interface CustomCode {
 }
 export interface OfferPortalConfig {
     cpaLeadWebhookSecret: string;
+    cpagripApiKey: string;
     adminProfitPct: bigint;
     isEnabled: boolean;
     userProfitPct: bigint;
@@ -173,6 +184,15 @@ export interface OfferTransaction {
     txType: Variant_manualCredit_referralBonus_cpalead;
     amount: bigint;
 }
+export interface LockedFeature {
+    id: string;
+    createdAt: bigint;
+    secretKeyHash: string;
+    cpaOfferLink: string;
+    updatedAt: bigint;
+    isLocked: boolean;
+    featureName: string;
+}
 export interface UserApprovalInfo {
     status: ApprovalStatus;
     principal: Principal;
@@ -197,6 +217,15 @@ export interface Banner {
     displayOrder: bigint;
     imageUrl: string;
     subtitle: string;
+}
+export interface AuditLogEntry {
+    id: string;
+    action: AuditAction;
+    note: string;
+    timestamp: bigint;
+    adminEmail: string;
+    amount?: bigint;
+    targetUserId: string;
 }
 export interface OfferUser {
     id: bigint;
@@ -223,17 +252,24 @@ export interface CommissionConfig {
     adminSharePct: number;
     globalCommissionPct: number;
 }
+export interface UserSubscription {
+    status: string;
+    assignedByAdmin: boolean;
+    endDate: bigint;
+    userId: string;
+    startDate: bigint;
+}
+export interface SubscriptionPricing {
+    threeMonthPrice: bigint;
+    twelveMonthPrice: bigint;
+    oneMonthPrice: bigint;
+}
 export interface AdminConfig {
     email: string;
     adminName: string;
     upiId: string;
     mobile: MobileNumber;
     qrCodeBlobId: ExternalBlob;
-}
-export interface SubscriptionPricing {
-    threeMonthPrice: bigint;
-    twelveMonthPrice: bigint;
-    oneMonthPrice: bigint;
 }
 export interface UserProfile {
     userId: bigint;
@@ -262,6 +298,16 @@ export enum ApprovalStatus {
     pending = "pending",
     approved = "approved",
     rejected = "rejected"
+}
+export enum AuditAction {
+    SubscriptionRevoke = "SubscriptionRevoke",
+    WalletDeduct = "WalletDeduct",
+    ProviderReject = "ProviderReject",
+    SubscriptionAssign = "SubscriptionAssign",
+    WalletAdd = "WalletAdd",
+    ProviderApprove = "ProviderApprove",
+    FeatureUnlock = "FeatureUnlock",
+    FeatureLock = "FeatureLock"
 }
 export enum PlanType {
     pending = "pending",
@@ -347,6 +393,27 @@ export interface backendInterface {
      */
     adminAdjustWallet(userId: bigint, amount: number, isAdd: boolean, _note: string): Promise<boolean>;
     /**
+     * / Adjust (add or deduct) a user's wallet balance and log the action — admin only.
+     * / Returns the new balance as Int on success.
+     */
+    adminAdjustWalletBalance(userId: string, amount: bigint, action: string, note: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Manually assign or revoke a subscription for a user — admin only.
+     */
+    adminAssignSubscription(userId: string, durationDays: bigint, action: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
      * / List all Offer Portal users — admin only.
      */
     adminListOfferUsers(): Promise<Array<OfferUser>>;
@@ -398,6 +465,10 @@ export interface backendInterface {
     forgotPassword(mobile: MobileNumber, securityAnswer: string, newPasswordHash: string): Promise<void>;
     getActiveBanners(): Promise<Array<Banner>>;
     getActiveProviders(): Promise<Array<ProviderProfile>>;
+    /**
+     * / Return the most recent `limit` audit log entries — admin only.
+     */
+    getAdminAuditLog(limit: bigint): Promise<Array<AuditLogEntry>>;
     getAdminConfig(): Promise<AdminConfig | null>;
     getAllProviders(): Promise<Array<ProviderProfile>>;
     /**
@@ -422,6 +493,10 @@ export interface backendInterface {
      * / Return the current commission config — public.
      */
     getCommissionConfig(): Promise<CommissionConfig>;
+    /**
+     * / Return the full content-locker configuration (all features).
+     */
+    getContentLockerConfig(): Promise<ContentLockerConfig>;
     getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
@@ -476,6 +551,10 @@ export interface backendInterface {
     }>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
+    /**
+     * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
+     */
+    getPendingApprovals(): Promise<Array<ProviderProfile>>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
     getProviderProfile(userId: bigint): Promise<ProviderProfile | null>;
     getProvidersByCategory(category: string): Promise<Array<ProviderProfile>>;
@@ -527,6 +606,10 @@ export interface backendInterface {
     getUserById(userId: bigint): Promise<User | null>;
     getUserByMobile(mobile: MobileNumber): Promise<User | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    /**
+     * / Get the current subscription status for a given user.
+     */
+    getUserSubscriptionStatus(userId: string): Promise<UserSubscription | null>;
     getUsersByRole(role: UserRole): Promise<Array<User>>;
     getVideos(): Promise<Array<VideoItem>>;
     /**
@@ -574,6 +657,16 @@ export interface backendInterface {
     registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<OfferUser>;
     registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
     rejectProvider(userId: bigint): Promise<void>;
+    /**
+     * / Remove a locked feature by id — admin only.
+     */
+    removeLockedFeature(featureId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
     requestApproval(): Promise<void>;
     /**
@@ -587,6 +680,16 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
+    /**
+     * / Create or update a locked feature — admin only.
+     */
+    setLockedFeature(featureName: string, cpaOfferLink: string, secretKey: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
     /**
      * / Enable or disable the recharge service — admin only.
@@ -609,7 +712,7 @@ export interface backendInterface {
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
      * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
      */
-    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<{
+    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, cpagripApiKey: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<{
         __kind__: "ok";
         ok: boolean;
     } | {
@@ -663,4 +766,8 @@ export interface backendInterface {
     updateVideo(id: bigint, title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string, enabled: boolean): Promise<boolean>;
     uploadPaymentScreenshot(userId: bigint, blobId: string): Promise<void>;
     verifyAdminPin(pinHash: string): Promise<boolean>;
+    /**
+     * / User-facing: verify a plain-text unlock key for a named feature.
+     */
+    verifyUnlockKey(featureName: string, userKey: string): Promise<VerifyKeyResult>;
 }

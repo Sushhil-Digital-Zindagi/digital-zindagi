@@ -49,12 +49,17 @@ import {
   useAddNews,
   useAddScrapRate,
   useAddVideo,
+  useAdminAdjustWalletBalance,
+  useAdminAssignSubscription,
+  useAdminAuditLog,
   useAdminConfig,
   useAllProviders,
   useAllToggles,
+  useAllUsers,
   useAppSettings,
   useApproveProvider,
   useCategories,
+  useContentLockerConfig,
   useCustomCodes,
   useCustomSections,
   useDeleteCategory,
@@ -66,14 +71,17 @@ import {
   useDeleteVideo,
   useGetAllLudoRedemptionRequests,
   useGetFirebaseConfigLink,
+  useGetUserSubscriptionStatus,
   useJobs,
   useNews,
   useProvidersPendingApproval,
   useRecentUsers,
   useRejectProvider,
+  useRemoveLockedFeature,
   useScrapRates,
   useSearchUsers,
   useSetFirebaseConfigLink,
+  useSetLockedFeature,
   useSubscriptionPricing,
   useToggleCustomSection,
   useUpdateAppSettings,
@@ -89,11 +97,14 @@ import {
 } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
 import type {
+  AuditLogEntry,
   Banner,
+  LockedFeature,
   LudoRedemptionRequest,
   ProviderProfile,
   SubscriptionPlan,
   User,
+  UserSubscription,
 } from "../types/appTypes";
 import {
   type SheetRow,
@@ -142,7 +153,10 @@ type AdminSection =
   | "walletManager"
   | "rechargeLogs"
   | "rechargeAnalytics"
-  | "offerControlCenter";
+  | "offerControlCenter"
+  | "providerApprovalsMgr"
+  | "walletManagement"
+  | "contentLocker";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -10566,6 +10580,8 @@ function OfferApiKeysTab() {
   const [offerWallName, setOfferWallName] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
+  const [cpagripApiKey, setCpagripApiKey] = useState("");
+  const [showCpagripKey, setShowCpagripKey] = useState(false);
   const [fast2smsKey, setFast2smsKey] = useState("");
   const [senderId, setSenderId] = useState("DIGZIN");
   const [showSmsKey, setShowSmsKey] = useState(false);
@@ -10588,6 +10604,8 @@ function OfferApiKeysTab() {
           ).getOfferPortalConfig();
           setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
         }
+        // Load CPAGrip API key from localStorage (stored separately)
+        setCpagripApiKey(localStorage.getItem("dz_cpagrip_api_key") ?? "");
         if (actor && "getSmsConfig" in actor) {
           const sms = await (
             actor as unknown as {
@@ -10688,6 +10706,8 @@ function OfferApiKeysTab() {
         }
       }
       toast.success("API keys save ho gaye! ✅");
+      // Save CPAGrip API key to localStorage (isolated from canister offer config)
+      localStorage.setItem("dz_cpagrip_api_key", cpagripApiKey.trim());
     } catch {
       toast.error("Save nahi ho saka");
     } finally {
@@ -10811,6 +10831,43 @@ function OfferApiKeysTab() {
           <p className="text-xs text-muted-foreground mt-1">
             Set a secret key here and add the same key to your Offer Wall's
             postback settings for security verification.
+          </p>
+        </div>
+      </div>
+
+      {/* CPAGrip API Key */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
+          🔑 CPAGrip API Key
+        </h3>
+        <div>
+          <label
+            htmlFor="offer-cpagrip-key"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            CPAGrip API Key
+          </label>
+          <div className="relative">
+            <input
+              id="offer-cpagrip-key"
+              data-ocid="offer.cpagrip_api_key_input"
+              type={showCpagripKey ? "text" : "password"}
+              value={cpagripApiKey}
+              onChange={(e) => setCpagripApiKey(e.target.value)}
+              placeholder="your-cpagrip-api-key-here"
+              className="w-full border border-border rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowCpagripKey((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium"
+            >
+              {showCpagripKey ? "Hide" : "Show"}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            CPAGrip account ke API key ko yahan paste karein. Automatic offer
+            fetching ke liye use hoga.
           </p>
         </div>
       </div>
@@ -11563,6 +11620,982 @@ function OfferWithdrawalsTab() {
   );
 }
 
+// =====================================================================
+// SECTION A: Provider Approvals Manager
+// =====================================================================
+type ProviderApprovalTab = "pending" | "approved" | "rejected";
+
+function ProviderApprovalsMgrSection() {
+  const [tab, setTab] = useState<ProviderApprovalTab>("pending");
+  const [rejectPopup, setRejectPopup] = useState<{
+    userId: bigint;
+    name: string;
+  } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const { data: allProviders = [], isLoading } = useAllProviders();
+  const { data: pendingProviders = [], isLoading: pendingLoading } =
+    useProvidersPendingApproval();
+  const approveM = useApproveProvider();
+  const rejectM = useRejectProvider();
+  const qc = useQueryClient();
+
+  const pending = pendingProviders;
+  const approved = allProviders.filter((p) => {
+    const s = getPlanLabel(p.approvalStatus);
+    return s === "approved";
+  });
+  const rejected = allProviders.filter((p) => {
+    const s = getPlanLabel(p.approvalStatus);
+    return s === "rejected";
+  });
+
+  const handleApprove = async (userId: bigint, name: string) => {
+    try {
+      await approveM.mutateAsync({
+        userId,
+        plan: "oneMonth" as SubscriptionPlan,
+      });
+      toast.success(`✅ ${name} approved!`);
+      qc.invalidateQueries({ queryKey: ["allProviders"] });
+      qc.invalidateQueries({ queryKey: ["providersPendingApproval"] });
+    } catch {
+      toast.error("Approve nahi ho paya — dobara try karein");
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectPopup) return;
+    try {
+      await rejectM.mutateAsync(rejectPopup.userId);
+      toast.success(`❌ ${rejectPopup.name} rejected.`);
+      qc.invalidateQueries({ queryKey: ["allProviders"] });
+      qc.invalidateQueries({ queryKey: ["providersPendingApproval"] });
+      setRejectPopup(null);
+      setRejectReason("");
+    } catch {
+      toast.error("Reject nahi ho paya — dobara try karein");
+    }
+  };
+
+  const TAB_CONFIG: {
+    key: ProviderApprovalTab;
+    label: string;
+    count: number;
+  }[] = [
+    { key: "pending", label: "⏳ Pending", count: pending.length },
+    { key: "approved", label: "✅ Approved", count: approved.length },
+    { key: "rejected", label: "❌ Rejected", count: rejected.length },
+  ];
+
+  const displayList =
+    tab === "pending" ? pending : tab === "approved" ? approved : rejected;
+
+  const loading = tab === "pending" ? pendingLoading : isLoading;
+
+  return (
+    <div className="space-y-4">
+      {/* Reject Popup */}
+      {rejectPopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          data-ocid="provider_approvals.reject_modal"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRejectPopup(null);
+          }}
+          onKeyDown={(e) => e.key === "Escape" && setRejectPopup(null)}
+        >
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
+            <h3 className="font-heading font-bold text-lg text-foreground">
+              Reject करें: {rejectPopup.name}
+            </h3>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Rejection reason (optional)"
+              rows={3}
+              data-ocid="provider_approvals.reject_reason"
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                data-ocid="provider_approvals.confirm_reject"
+                onClick={handleReject}
+                disabled={rejectM.isPending}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-60"
+              >
+                {rejectM.isPending ? (
+                  <Loader2 size={14} className="animate-spin inline" />
+                ) : (
+                  "Reject करें"
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejectPopup(null)}
+                className="flex-1 border border-border rounded-xl text-sm font-medium py-2.5 hover:bg-muted/50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-muted rounded-xl p-1 overflow-x-auto">
+        {TAB_CONFIG.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            data-ocid={`provider_approvals.tab.${t.key}`}
+            onClick={() => setTab(t.key)}
+            className={`flex-shrink-0 flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+              tab === t.key
+                ? "bg-white text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span
+                className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
+                  t.key === "pending"
+                    ? "bg-amber-500 text-white"
+                    : t.key === "approved"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-red-500 text-white"
+                }`}
+              >
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Provider Table */}
+      <div
+        className="bg-white rounded-2xl border border-border shadow-card overflow-hidden"
+        data-ocid="provider_approvals.table_card"
+      >
+        {loading ? (
+          <div
+            className="flex justify-center py-12"
+            data-ocid="provider_approvals.loading"
+          >
+            <Loader2 size={28} className="animate-spin text-primary" />
+          </div>
+        ) : displayList.length === 0 ? (
+          <div
+            className="text-center py-14 space-y-2"
+            data-ocid="provider_approvals.empty_state"
+          >
+            <CheckCircle
+              size={36}
+              className="mx-auto text-emerald-400 opacity-40"
+            />
+            <p className="font-medium text-muted-foreground">
+              {tab === "pending"
+                ? "कोई pending provider नहीं है"
+                : tab === "approved"
+                  ? "कोई approved provider नहीं है"
+                  : "कोई rejected provider नहीं है"}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table
+              className="w-full text-sm"
+              data-ocid="provider_approvals.table"
+            >
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground">
+                    Provider
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground hidden sm:table-cell">
+                    Category
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground hidden md:table-cell">
+                    Plan
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-foreground hidden lg:table-cell">
+                    Mobile
+                  </th>
+                  {tab === "pending" && (
+                    <th className="text-center px-4 py-3 font-semibold text-foreground">
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {displayList.map((p, i) => (
+                  <tr
+                    key={String(p.userId)}
+                    data-ocid={`provider_approvals.row.${i + 1}`}
+                    className="border-t border-border hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="font-semibold text-foreground truncate max-w-[140px]">
+                          {p.shopName ??
+                            p.businessName ??
+                            `Provider #${String(p.userId)}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          ID: {String(p.userId)}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                      {p.category || "—"}
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          getPlanLabel(p.planType) === "premium" ||
+                          getPlanLabel(p.planType) === "subscription"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {getPlanLabel(p.planType) === "premium" ||
+                        getPlanLabel(p.planType) === "subscription"
+                          ? "⭐ Subscription"
+                          : "🆓 Free / Ads"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell text-xs font-mono">
+                      {p.mobile ?? p.phone ?? "—"}
+                    </td>
+                    {tab === "pending" && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 justify-center">
+                          <button
+                            type="button"
+                            data-ocid={`provider_approvals.approve_btn.${i + 1}`}
+                            onClick={() =>
+                              handleApprove(
+                                p.userId,
+                                p.shopName ?? p.businessName ?? "Provider",
+                              )
+                            }
+                            disabled={approveM.isPending}
+                            className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-60"
+                          >
+                            <CheckCircle size={12} /> Approve
+                          </button>
+                          <button
+                            type="button"
+                            data-ocid={`provider_approvals.reject_btn.${i + 1}`}
+                            onClick={() =>
+                              setRejectPopup({
+                                userId: p.userId,
+                                name:
+                                  p.shopName ?? p.businessName ?? "Provider",
+                              })
+                            }
+                            className="flex items-center gap-1 border border-red-300 text-red-600 hover:bg-red-50 text-xs font-bold px-3 py-1.5 rounded-lg"
+                          >
+                            <XCircle size={12} /> Reject
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// SECTION B: Wallet Management
+// =====================================================================
+
+function WalletManagementSection() {
+  const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [addAmount, setAddAmount] = useState("");
+  const [deductAmount, setDeductAmount] = useState("");
+  const [addNote, setAddNote] = useState("");
+  const [deductNote, setDeductNote] = useState("");
+  const [subDuration, setSubDuration] = useState<7 | 15 | 30 | 90>(30);
+
+  const { data: allUsers = [], isLoading } = useAllUsers();
+  const { data: auditLog = [] } = useAdminAuditLog(100);
+  const adjustM = useAdminAdjustWalletBalance();
+  const assignSubM = useAdminAssignSubscription();
+  const { data: subStatus } = useGetUserSubscriptionStatus(expandedId);
+
+  const filtered = allUsers.filter((u) => {
+    const q = search.toLowerCase();
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.mobile.toLowerCase().includes(q)
+    );
+  });
+
+  const handleAddBalance = async (userId: number) => {
+    const amount = Number(addAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Valid amount enter karein");
+      return;
+    }
+    try {
+      await adjustM.mutateAsync({
+        userId,
+        amount,
+        action: "add",
+        note: addNote || "Admin credit",
+      });
+      toast.success(`✅ ₹${amount} wallet mein add ho gaya`);
+      setAddAmount("");
+      setAddNote("");
+    } catch {
+      toast.error("Balance add nahi ho paya");
+    }
+  };
+
+  const handleDeductBalance = async (userId: number) => {
+    const amount = Number(deductAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Valid amount enter karein");
+      return;
+    }
+    try {
+      await adjustM.mutateAsync({
+        userId,
+        amount,
+        action: "deduct",
+        note: deductNote || "Admin deduction",
+      });
+      toast.success(`✅ ₹${amount} wallet se deduct ho gaya`);
+      setDeductAmount("");
+      setDeductNote("");
+    } catch {
+      toast.error("Balance deduct nahi ho paya");
+    }
+  };
+
+  const handleAssignSub = async (userId: number) => {
+    try {
+      await assignSubM.mutateAsync({
+        userId,
+        durationDays: subDuration,
+        action: "assign",
+      });
+      toast.success(`✅ ${subDuration} din ki subscription assign ho gayi`);
+    } catch {
+      toast.error("Subscription assign nahi ho payi");
+    }
+  };
+
+  const handleRevokeSub = async (userId: number) => {
+    try {
+      await assignSubM.mutateAsync({
+        userId,
+        durationDays: 0,
+        action: "revoke",
+      });
+      toast.success("✅ Subscription revoke ho gayi");
+    } catch {
+      toast.error("Subscription revoke nahi ho payi");
+    }
+  };
+
+  // Filter audit log for expanded user
+  const userAuditLog = expandedId
+    ? auditLog.filter((e) => e.targetUserId === String(expandedId)).slice(0, 5)
+    : [];
+
+  return (
+    <div className="space-y-4">
+      {/* Search */}
+      <div className="relative">
+        <Search
+          size={16}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          data-ocid="wallet_mgmt.search"
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Email, mobile ya naam se search karein..."
+          className="w-full border border-border rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+        />
+      </div>
+
+      {/* User List */}
+      <div
+        className="bg-white rounded-2xl border border-border shadow-card overflow-hidden"
+        data-ocid="wallet_mgmt.user_list"
+      >
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 size={28} className="animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Users size={36} className="mx-auto mb-3 opacity-30" />
+            <p>
+              {search
+                ? "Koi user nahi mila"
+                : "Abhi koi user registered nahi hai"}
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {filtered.map((u, i) => {
+              const isExpanded = expandedId === u.id;
+              return (
+                <div key={u.id} data-ocid={`wallet_mgmt.user_row.${i + 1}`}>
+                  {/* User row */}
+                  <button
+                    type="button"
+                    data-ocid={`wallet_mgmt.expand_btn.${i + 1}`}
+                    onClick={() => setExpandedId(isExpanded ? null : u.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">
+                        {u.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {u.email || u.mobile}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-4">
+                      <span className="text-sm font-bold text-emerald-700">
+                        ₹{u.balance ?? 0}
+                      </span>
+                      <Pencil
+                        size={14}
+                        className={`transition-transform ${isExpanded ? "rotate-90" : ""} text-muted-foreground`}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Expanded detail panel */}
+                  {isExpanded && (
+                    <div
+                      className="px-4 py-4 bg-muted/20 border-t border-border space-y-4"
+                      data-ocid={`wallet_mgmt.detail_panel.${i + 1}`}
+                    >
+                      {/* Current status */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white border border-border rounded-xl p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Current Balance
+                          </p>
+                          <p className="font-bold text-emerald-700 text-lg">
+                            ₹{u.balance ?? 0}
+                          </p>
+                        </div>
+                        <div className="bg-white border border-border rounded-xl p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Subscription
+                          </p>
+                          {subStatus?.status === "active" ? (
+                            <div>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                ✅ Active
+                              </span>
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                Until:{" "}
+                                {new Date(subStatus.endDate).toLocaleDateString(
+                                  "en-IN",
+                                )}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+                              ❌ Inactive
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Add Balance */}
+                      <div className="bg-white border border-emerald-200 rounded-xl p-3 space-y-2">
+                        <p className="text-xs font-bold text-emerald-700">
+                          💰 Balance Add करें
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={addAmount}
+                            onChange={(e) => setAddAmount(e.target.value)}
+                            placeholder="Amount (₹)"
+                            data-ocid={`wallet_mgmt.add_amount.${i + 1}`}
+                            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                          />
+                          <button
+                            type="button"
+                            data-ocid={`wallet_mgmt.add_btn.${i + 1}`}
+                            onClick={() => handleAddBalance(u.id)}
+                            disabled={adjustM.isPending}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-60"
+                          >
+                            {adjustM.isPending ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              "Add"
+                            )}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={addNote}
+                          onChange={(e) => setAddNote(e.target.value)}
+                          placeholder="Note (optional)"
+                          data-ocid={`wallet_mgmt.add_note.${i + 1}`}
+                          className="w-full border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+
+                      {/* Deduct Balance */}
+                      <div className="bg-white border border-red-200 rounded-xl p-3 space-y-2">
+                        <p className="text-xs font-bold text-red-600">
+                          📤 Balance Deduct करें
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={deductAmount}
+                            onChange={(e) => setDeductAmount(e.target.value)}
+                            placeholder="Amount (₹)"
+                            data-ocid={`wallet_mgmt.deduct_amount.${i + 1}`}
+                            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                          />
+                          <button
+                            type="button"
+                            data-ocid={`wallet_mgmt.deduct_btn.${i + 1}`}
+                            onClick={() => handleDeductBalance(u.id)}
+                            disabled={adjustM.isPending}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-60"
+                          >
+                            {adjustM.isPending ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              "Deduct"
+                            )}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={deductNote}
+                          onChange={(e) => setDeductNote(e.target.value)}
+                          placeholder="Reason (optional)"
+                          data-ocid={`wallet_mgmt.deduct_note.${i + 1}`}
+                          className="w-full border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+
+                      {/* Assign Subscription */}
+                      <div className="bg-white border border-blue-200 rounded-xl p-3 space-y-2">
+                        <p className="text-xs font-bold text-blue-700">
+                          🎫 Subscription Assign करें
+                        </p>
+                        <div className="flex gap-2">
+                          <select
+                            value={subDuration}
+                            onChange={(e) =>
+                              setSubDuration(
+                                Number(e.target.value) as 7 | 15 | 30 | 90,
+                              )
+                            }
+                            data-ocid={`wallet_mgmt.sub_duration.${i + 1}`}
+                            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value={7}>7 दिन</option>
+                            <option value={15}>15 दिन</option>
+                            <option value={30}>30 दिन</option>
+                            <option value={90}>90 दिन</option>
+                          </select>
+                          <button
+                            type="button"
+                            data-ocid={`wallet_mgmt.assign_sub_btn.${i + 1}`}
+                            onClick={() => handleAssignSub(u.id)}
+                            disabled={assignSubM.isPending}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-60"
+                          >
+                            Assign
+                          </button>
+                          <button
+                            type="button"
+                            data-ocid={`wallet_mgmt.revoke_sub_btn.${i + 1}`}
+                            onClick={() => handleRevokeSub(u.id)}
+                            disabled={assignSubM.isPending}
+                            className="border border-red-300 text-red-600 hover:bg-red-50 font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-60"
+                          >
+                            Revoke
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Recent audit log */}
+                      {userAuditLog.length > 0 && (
+                        <div className="bg-white border border-border rounded-xl overflow-hidden">
+                          <div className="px-3 py-2 border-b border-border bg-muted/30">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                              📋 Recent Activity (Last 5)
+                            </p>
+                          </div>
+                          <div className="divide-y divide-border">
+                            {userAuditLog.map((entry) => (
+                              <div
+                                key={entry.id}
+                                className="px-3 py-2 flex items-center justify-between gap-2"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium text-foreground truncate">
+                                    {entry.action}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {new Date(
+                                      entry.timestamp,
+                                    ).toLocaleDateString("en-IN")}
+                                  </p>
+                                </div>
+                                {entry.amount != null && (
+                                  <span className="text-xs font-bold text-emerald-700 whitespace-nowrap">
+                                    ₹{entry.amount}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// SECTION C: Content Locker
+// =====================================================================
+
+const FEATURE_OPTIONS = [
+  "Udhaar Book",
+  "Mobile Recharge",
+  "Video Gallery",
+  "Game",
+  "Offer Portal",
+  "Custom",
+] as const;
+type FeatureOption = (typeof FEATURE_OPTIONS)[number];
+
+function ContentLockerSection() {
+  const [featureName, setFeatureName] = useState<FeatureOption>("Udhaar Book");
+  const [customFeatureName, setCustomFeatureName] = useState("");
+  const [cpaOfferLink, setCpaOfferLink] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
+  const [editingFeature, setEditingFeature] = useState<LockedFeature | null>(
+    null,
+  );
+
+  const { data: config, isLoading } = useContentLockerConfig();
+  const setLockedM = useSetLockedFeature();
+  const removeM = useRemoveLockedFeature();
+
+  const lockedFeatures: LockedFeature[] = config?.features ?? [];
+
+  const resetForm = () => {
+    setFeatureName("Udhaar Book");
+    setCustomFeatureName("");
+    setCpaOfferLink("");
+    setSecretKey("");
+    setEditingFeature(null);
+  };
+
+  const handleLock = async () => {
+    const finalName =
+      featureName === "Custom" ? customFeatureName.trim() : featureName;
+    if (!finalName) {
+      toast.error("Feature name enter karein");
+      return;
+    }
+    if (!secretKey.trim()) {
+      toast.error("Secret unlock key required hai");
+      return;
+    }
+    try {
+      await setLockedM.mutateAsync({
+        featureName: finalName,
+        cpaOfferLink: cpaOfferLink.trim(),
+        secretKey: secretKey.trim(),
+      });
+      toast.success(`🔒 "${finalName}" lock ho gaya!`);
+      resetForm();
+    } catch {
+      toast.error("Lock nahi ho paya — dobara try karein");
+    }
+  };
+
+  const handleUnlock = async (feature: LockedFeature) => {
+    try {
+      await removeM.mutateAsync(feature.id);
+      toast.success(`🔓 "${feature.featureName}" unlock ho gaya`);
+    } catch {
+      toast.error("Unlock nahi ho paya");
+    }
+  };
+
+  const handleEditStart = (feature: LockedFeature) => {
+    setEditingFeature(feature);
+    const isCustom = !FEATURE_OPTIONS.slice(0, -1).includes(
+      feature.featureName as Exclude<FeatureOption, "Custom">,
+    );
+    if (isCustom) {
+      setFeatureName("Custom");
+      setCustomFeatureName(feature.featureName);
+    } else {
+      setFeatureName(feature.featureName as FeatureOption);
+      setCustomFeatureName("");
+    }
+    setCpaOfferLink(feature.cpaOfferLink);
+    setSecretKey("");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Add / Edit Form */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-heading font-bold text-foreground">
+            {editingFeature ? "✏️ Feature Edit करें" : "🔒 New Feature Lock करें"}
+          </h3>
+          {editingFeature && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {/* Feature name */}
+        <div>
+          <label
+            htmlFor="cl-feature-name"
+            className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block"
+          >
+            Feature Name
+          </label>
+          <select
+            id="cl-feature-name"
+            value={featureName}
+            onChange={(e) => setFeatureName(e.target.value as FeatureOption)}
+            data-ocid="content_locker.feature_select"
+            className="w-full border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+          >
+            {FEATURE_OPTIONS.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {featureName === "Custom" && (
+          <div>
+            <label
+              htmlFor="cl-custom-name"
+              className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block"
+            >
+              Custom Feature Name
+            </label>
+            <input
+              id="cl-custom-name"
+              type="text"
+              value={customFeatureName}
+              onChange={(e) => setCustomFeatureName(e.target.value)}
+              placeholder="e.g. Premium Videos"
+              data-ocid="content_locker.custom_feature_name"
+              className="w-full border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        )}
+
+        {/* CPA Offer Link */}
+        <div>
+          <label
+            htmlFor="cl-cpa-link"
+            className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block"
+          >
+            CPA Offer Link (optional)
+          </label>
+          <input
+            id="cl-cpa-link"
+            type="url"
+            value={cpaOfferLink}
+            onChange={(e) => setCpaOfferLink(e.target.value)}
+            placeholder="https://cpagriplink.com/offer/..."
+            data-ocid="content_locker.cpa_link"
+            className="w-full border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {/* Secret Key */}
+        <div>
+          <label
+            htmlFor="cl-secret-key"
+            className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block"
+          >
+            Secret Unlock Key
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <input
+              id="cl-secret-key"
+              type={showSecret ? "text" : "password"}
+              value={secretKey}
+              onChange={(e) => setSecretKey(e.target.value)}
+              placeholder="Enter secret key to unlock this feature"
+              data-ocid="content_locker.secret_key"
+              className="w-full border border-border rounded-xl px-3 py-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              type="button"
+              onClick={() => setShowSecret(!showSecret)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showSecret ? <XCircle size={16} /> : <Shield size={16} />}
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            यह key users को feature unlock करने के लिए enter करनी होगी
+          </p>
+        </div>
+
+        <button
+          type="button"
+          data-ocid="content_locker.lock_btn"
+          onClick={handleLock}
+          disabled={setLockedM.isPending}
+          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-60"
+        >
+          {setLockedM.isPending ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Shield size={16} />
+          )}
+          {editingFeature ? "Update Feature" : "Lock Feature"}
+        </button>
+      </div>
+
+      {/* Locked features list */}
+      <div
+        className="bg-white rounded-2xl border border-border shadow-card overflow-hidden"
+        data-ocid="content_locker.features_list"
+      >
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div>
+            <h3 className="font-heading font-semibold text-foreground">
+              🔒 Locked Features
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {lockedFeatures.length} feature
+              {lockedFeatures.length !== 1 ? "s" : ""} locked
+            </p>
+          </div>
+          {isLoading && (
+            <Loader2 size={16} className="animate-spin text-muted-foreground" />
+          )}
+        </div>
+
+        {lockedFeatures.length === 0 ? (
+          <div
+            className="text-center py-12 text-muted-foreground space-y-2"
+            data-ocid="content_locker.empty_state"
+          >
+            <Shield size={36} className="mx-auto opacity-30" />
+            <p className="font-medium">Abhi koi feature locked nahi hai</p>
+            <p className="text-xs">Upar form se koi feature lock karein</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {lockedFeatures.map((f, i) => (
+              <div
+                key={f.id}
+                data-ocid={`content_locker.feature_row.${i + 1}`}
+                className="p-4 flex items-start justify-between gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg">🔒</span>
+                    <span className="font-semibold text-foreground">
+                      {f.featureName}
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        f.isLocked
+                          ? "bg-red-100 text-red-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {f.isLocked ? "🔒 Locked" : "🔓 Unlocked"}
+                    </span>
+                  </div>
+                  {f.cpaOfferLink && (
+                    <p className="text-xs text-muted-foreground mt-1 truncate max-w-xs">
+                      🔗 {f.cpaOfferLink}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Created: {new Date(f.createdAt).toLocaleDateString("en-IN")}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    data-ocid={`content_locker.edit_btn.${i + 1}`}
+                    onClick={() => handleEditStart(f)}
+                    className="flex items-center gap-1 text-xs border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 px-3 py-1.5 rounded-lg"
+                  >
+                    <Pencil size={12} /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    data-ocid={`content_locker.unlock_btn.${i + 1}`}
+                    onClick={() => handleUnlock(f)}
+                    disabled={removeM.isPending}
+                    className="flex items-center gap-1 text-xs bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg disabled:opacity-60"
+                  >
+                    <XCircle size={12} /> Unlock
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
@@ -11772,6 +12805,23 @@ export default function AdminDashboardPage() {
       icon: <span>🚀</span>,
       groupHeader: "🎯 Digital Zindagi Offer",
     },
+    // ---- NEW ADMIN SECTIONS ----
+    {
+      key: "providerApprovalsMgr" as AdminSection,
+      label: "🔐 Provider Approvals",
+      icon: <CheckSquare size={18} />,
+      groupHeader: "🛡️ Advanced Controls",
+    },
+    {
+      key: "walletManagement" as AdminSection,
+      label: "💰 Wallet Management",
+      icon: <DollarSign size={18} />,
+    },
+    {
+      key: "contentLocker" as AdminSection,
+      label: "🔒 Content Locker",
+      icon: <Shield size={18} />,
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -11870,6 +12920,12 @@ export default function AdminDashboardPage() {
         return <RechargeAnalyticsSection />;
       case "offerControlCenter" as AdminSection:
         return <OfferControlCenterSection />;
+      case "providerApprovalsMgr" as AdminSection:
+        return <ProviderApprovalsMgrSection />;
+      case "walletManagement" as AdminSection:
+        return <WalletManagementSection />;
+      case "contentLocker" as AdminSection:
+        return <ContentLockerSection />;
       default:
         return <UserManagement />;
     }

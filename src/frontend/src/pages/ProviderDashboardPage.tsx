@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
   CheckCircle,
+  Clock,
   Loader2,
   Package,
   Plus,
@@ -12,7 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ExternalBlob } from "../backend";
 import Header from "../components/Header";
@@ -175,6 +176,42 @@ export default function ProviderDashboardPage() {
     user?.userId ?? null,
   );
 
+  // Approval status polling — every 3 seconds when page is visible
+  const [polledApprovalStatus, setPolledApprovalStatus] =
+    useState<ApprovalStatus | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!actor || !user?.userId) return;
+
+    const poll = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const p = await actor.getProviderProfile(user.userId);
+        if (p?.approvalStatus) {
+          setPolledApprovalStatus(p.approvalStatus as ApprovalStatus);
+          // Invalidate React Query cache so profile re-renders if status changed
+          qc.invalidateQueries({ queryKey: ["providerProfile"] });
+        }
+      } catch {
+        // Silently ignore polling failures
+      }
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, 3000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") poll();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [actor, user?.userId, qc]);
+
   const [shopName, setShopName] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
@@ -203,7 +240,39 @@ export default function ProviderDashboardPage() {
     );
   }
 
-  const approved = profile?.approvalStatus === ApprovalStatus.approved;
+  // Use polled status (real-time) if available, otherwise fall back to React Query profile
+  const effectiveApprovalStatus =
+    polledApprovalStatus ?? profile?.approvalStatus;
+  const approved = effectiveApprovalStatus === ApprovalStatus.approved;
+  const rejected = effectiveApprovalStatus === ApprovalStatus.rejected;
+
+  if (rejected) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div
+          className="max-w-md mx-auto px-4 py-20 text-center"
+          data-ocid="dashboard.card"
+        >
+          <div className="text-5xl mb-4">❌</div>
+          <h2 className="font-heading font-bold text-2xl text-foreground mb-2">
+            Registration Rejected
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            Aapki provider registration reject ho gayi hai. Admin se contact
+            karein ya dubara register karein.
+          </p>
+          <Link
+            to="/signup"
+            data-ocid="dashboard.primary_button"
+            className="inline-block bg-primary text-primary-foreground font-bold px-8 py-3 rounded-full hover:opacity-90"
+          >
+            Dubara Register Karein
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!approved) {
     return (
@@ -213,14 +282,31 @@ export default function ProviderDashboardPage() {
           className="max-w-md mx-auto px-4 py-20 text-center"
           data-ocid="dashboard.card"
         >
-          <div className="text-5xl mb-4">⏳</div>
-          <h2 className="font-heading font-bold text-2xl text-foreground mb-2">
-            Approval Pending
-          </h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            Aapka account admin ke review mein hai. 24-48 ghante mein approval
-            milega.
-          </p>
+          {/* Approval pending banner */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex flex-col items-center gap-3"
+            data-ocid="dashboard.approval_banner"
+          >
+            <Clock size={36} className="text-amber-500" />
+            <div>
+              <h2 className="font-heading font-bold text-xl text-amber-800 mb-1">
+                🕐 Admin Approval Pending
+              </h2>
+              <p className="text-amber-700 text-sm leading-relaxed">
+                आपकी profile admin review में है।
+                <br />
+                Approval के बाद dashboard access मिलेगा।
+              </p>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <Loader2 size={14} className="animate-spin text-amber-500" />
+              <span className="text-xs text-amber-600">
+                Auto-checking every 3 seconds...
+              </span>
+            </div>
+          </motion.div>
           {!profile && (
             <Link
               to="/provider/subscribe"

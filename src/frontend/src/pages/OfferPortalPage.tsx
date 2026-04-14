@@ -30,6 +30,7 @@ import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import ContentLockerOverlay from "../components/ContentLockerOverlay";
 import { useOfferAuth } from "../contexts/OfferAuthContext";
 import { useActor } from "../hooks/useActor";
 import {
@@ -45,6 +46,7 @@ import {
   useRequestOfferWithdrawal,
   useUpdateOfferPortalConfig,
 } from "../hooks/useOfferQueries";
+import { useContentLockerConfig } from "../hooks/useQueries";
 import { useNavigate } from "../lib/router";
 import type { OfferTransaction, OfferWithdrawal } from "../types/offerTypes";
 
@@ -107,6 +109,9 @@ export default function OfferPortalPage() {
   const { currentOfferUser, offerAuthLoading, logout } = useOfferAuth();
   const { isFetching: actorLoading } = useActor();
 
+  // Content locker — fail-open if loading/errored
+  const { data: lockerConfig } = useContentLockerConfig();
+
   const [view, setView] = useState<View>(() =>
     currentOfferUser ? "dashboard" : "landing",
   );
@@ -166,77 +171,79 @@ export default function OfferPortalPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Top bar */}
-      <div
-        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-border/30 shadow-sm"
-        style={{
-          background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition-colors"
-          aria-label="Back to home"
+    <ContentLockerOverlay featureName="Offer Portal" config={lockerConfig}>
+      <div className="min-h-screen flex flex-col bg-background">
+        {/* Top bar */}
+        <div
+          className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-border/30 shadow-sm"
+          style={{
+            background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
+          }}
         >
-          <ArrowLeft size={16} />
-          Home
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xl" aria-hidden>
-            🚀
-          </span>
-          <span className="font-heading font-bold text-white text-base">
-            DZ Offer Portal
-          </span>
-        </div>
-        {currentOfferUser ? (
           <button
             type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1 text-white/70 hover:text-white text-xs font-medium"
-            aria-label="Logout"
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition-colors"
+            aria-label="Back to home"
           >
-            <LogOut size={14} /> Logout
+            <ArrowLeft size={16} />
+            Home
           </button>
-        ) : (
-          <div className="w-16" />
-        )}
-      </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xl" aria-hidden>
+              🚀
+            </span>
+            <span className="font-heading font-bold text-white text-base">
+              DZ Offer Portal
+            </span>
+          </div>
+          {currentOfferUser ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1 text-white/70 hover:text-white text-xs font-medium"
+              aria-label="Logout"
+            >
+              <LogOut size={14} /> Logout
+            </button>
+          ) : (
+            <div className="w-16" />
+          )}
+        </div>
 
-      <AnimatePresence mode="wait">
-        {view === "landing" && (
-          <LandingView
-            key="landing"
-            onLogin={() => setView("login")}
-            onSignup={() => setView("signup")}
-          />
-        )}
-        {view === "login" && (
-          <LoginView
-            key="login"
-            onSuccess={() => setView("dashboard")}
-            onSignup={() => setView("signup")}
-            onBack={() => setView("landing")}
-          />
-        )}
-        {view === "signup" && (
-          <SignupView
-            key="signup"
-            onSuccess={() => setView("dashboard")}
-            onLogin={() => setView("login")}
-            onBack={() => setView("landing")}
-          />
-        )}
-        {view === "dashboard" && currentOfferUser && (
-          <DashboardView key="dashboard" onRedeem={() => setView("redeem")} />
-        )}
-        {view === "redeem" && currentOfferUser && (
-          <RedeemView key="redeem" onBack={() => setView("dashboard")} />
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence mode="wait">
+          {view === "landing" && (
+            <LandingView
+              key="landing"
+              onLogin={() => setView("login")}
+              onSignup={() => setView("signup")}
+            />
+          )}
+          {view === "login" && (
+            <LoginView
+              key="login"
+              onSuccess={() => setView("dashboard")}
+              onSignup={() => setView("signup")}
+              onBack={() => setView("landing")}
+            />
+          )}
+          {view === "signup" && (
+            <SignupView
+              key="signup"
+              onSuccess={() => setView("dashboard")}
+              onLogin={() => setView("login")}
+              onBack={() => setView("landing")}
+            />
+          )}
+          {view === "dashboard" && currentOfferUser && (
+            <DashboardView key="dashboard" onRedeem={() => setView("redeem")} />
+          )}
+          {view === "redeem" && currentOfferUser && (
+            <RedeemView key="redeem" onBack={() => setView("dashboard")} />
+          )}
+        </AnimatePresence>
+      </div>
+    </ContentLockerOverlay>
   );
 }
 

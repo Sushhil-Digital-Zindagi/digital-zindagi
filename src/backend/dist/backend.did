@@ -32,6 +32,19 @@ type VideoItem =
    title: text;
    videoUrl: text;
  };
+type VerifyKeyResult = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type UserSubscription = 
+ record {
+   assignedByAdmin: bool;
+   endDate: int;
+   startDate: int;
+   status: text;
+   userId: text;
+ };
 type UserRole__1 = 
  variant {
    admin;
@@ -248,6 +261,7 @@ type OfferPortalConfig =
  record {
    adminProfitPct: nat;
    cpaLeadWebhookSecret: text;
+   cpagripApiKey: text;
    isEnabled: bool;
    userProfitPct: nat;
  };
@@ -263,6 +277,16 @@ type NewsItem =
    title: text;
  };
 type MobileNumber = text;
+type LockedFeature = 
+ record {
+   cpaOfferLink: text;
+   createdAt: int;
+   featureName: text;
+   id: text;
+   isLocked: bool;
+   secretKeyHash: text;
+   updatedAt: int;
+ };
 type JobItem = 
  record {
    applyLink: text;
@@ -296,6 +320,7 @@ type CustomCode =
    name: text;
    placement: text;
  };
+type ContentLockerConfig = record {features: vec LockedFeature;};
 type CommissionConfig = 
  record {
    adminSharePct: float64;
@@ -319,6 +344,27 @@ type Banner =
    linkUrl: text;
    subtitle: text;
    title: text;
+ };
+type AuditLogEntry = 
+ record {
+   action: AuditAction;
+   adminEmail: text;
+   amount: opt int;
+   id: text;
+   note: text;
+   targetUserId: text;
+   timestamp: int;
+ };
+type AuditAction = 
+ variant {
+   FeatureLock;
+   FeatureUnlock;
+   ProviderApprove;
+   ProviderReject;
+   SubscriptionAssign;
+   SubscriptionRevoke;
+   WalletAdd;
+   WalletDeduct;
  };
 type ApprovalStatus = 
  variant {
@@ -379,6 +425,19 @@ service : {
   /// Directly add or deduct balance for any user — admin only.
   adminAdjustWallet: (userId: nat, amount: float64, isAdd: bool, _note:
    text) -> (bool);
+  /// Adjust (add or deduct) a user's wallet balance and log the action — admin only.
+  /// Returns the new balance as Int on success.
+  adminAdjustWalletBalance: (userId: text, amount: int, action: text, note:
+   text) -> (variant {
+               err: text;
+               ok: int;
+             });
+  /// Manually assign or revoke a subscription for a user — admin only.
+  adminAssignSubscription: (userId: text, durationDays: nat, action: 
+   text) -> (variant {
+               err: text;
+               ok;
+             });
   /// List all Offer Portal users — admin only.
   adminListOfferUsers: () -> (vec OfferUser) query;
   /// List all pending withdrawal requests — admin only.
@@ -420,6 +479,8 @@ service : {
    newPasswordHash: text) -> ();
   getActiveBanners: () -> (vec Banner) query;
   getActiveProviders: () -> (vec ProviderProfile) query;
+  /// Return the most recent `limit` audit log entries — admin only.
+  getAdminAuditLog: (limit: nat) -> (vec AuditLogEntry) query;
   getAdminConfig: () -> (opt AdminConfig) query;
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
@@ -442,6 +503,8 @@ service : {
   getCategories: () -> (vec Category) query;
   /// Return the current commission config — public.
   getCommissionConfig: () -> (CommissionConfig) query;
+  /// Return the full content-locker configuration (all features).
+  getContentLockerConfig: () -> (ContentLockerConfig) query;
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
@@ -480,6 +543,8 @@ service : {
     }) query;
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
+  /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
+  getPendingApprovals: () -> (vec ProviderProfile) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
   getProviderProfile: (userId: nat) -> (opt ProviderProfile) query;
   getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
@@ -513,6 +578,8 @@ service : {
   getUserById: (userId: nat) -> (opt User) query;
   getUserByMobile: (mobile: MobileNumber) -> (opt User) query;
   getUserProfile: (user: principal) -> (opt UserProfile) query;
+  /// Get the current subscription status for a given user.
+  getUserSubscriptionStatus: (userId: text) -> (opt UserSubscription) query;
   getUsersByRole: (role: UserRole) -> (vec User) query;
   getVideos: () -> (vec VideoItem) query;
   /// Return wallet balance for any userId — admin only.
@@ -549,6 +616,11 @@ service : {
   registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
    UserRole, securityQuestion: text, securityAnswer: text) -> ();
   rejectProvider: (userId: nat) -> ();
+  /// Remove a locked feature by id — admin only.
+  removeLockedFeature: (featureId: text) -> (variant {
+                                               err: text;
+                                               ok;
+                                             });
   removeShopPhoto: (userId: nat, blobId: text) -> ();
   requestApproval: () -> ();
   /// Submit a UPI withdrawal request from the Offer Portal.
@@ -559,6 +631,12 @@ service : {
   saveCallerUserProfile: (profile: UserProfile) -> ();
   searchUsers: (searchText: text) -> (vec User) query;
   setApproval: (user: principal, status: ApprovalStatus) -> ();
+  /// Create or update a locked feature — admin only.
+  setLockedFeature: (featureName: text, cpaOfferLink: text, secretKey:
+   text) -> (variant {
+               err: text;
+               ok: text;
+             });
   setPlanType: (userId: nat, planType: PlanType) -> ();
   /// Enable or disable the recharge service — admin only.
   setRechargeServiceEnabled: (enabled: bool) -> (bool);
@@ -583,7 +661,7 @@ service : {
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
   /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   updateOfferPortalConfig: (isEnabled: bool, cpaLeadWebhookSecret: text,
-   adminProfitPct: nat, userProfitPct: nat) ->
+   cpagripApiKey: text, adminProfitPct: nat, userProfitPct: nat) ->
    (variant {
       err: text;
       ok: bool;
@@ -627,4 +705,6 @@ service : {
    platform: text, category: text, enabled: bool) -> (bool);
   uploadPaymentScreenshot: (userId: nat, blobId: text) -> ();
   verifyAdminPin: (pinHash: text) -> (bool) query;
+  /// User-facing: verify a plain-text unlock key for a named feature.
+  verifyUnlockKey: (featureName: text, userKey: text) -> (VerifyKeyResult);
 }

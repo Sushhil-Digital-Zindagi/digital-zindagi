@@ -4,6 +4,7 @@ import {
   Crown,
   Eye,
   EyeOff,
+  Loader2,
   LocateFixed,
   QrCode,
   Square,
@@ -14,6 +15,28 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+function getSignupErrorMessage(err: unknown): string {
+  const msg = (err as Error)?.message ?? "";
+  const lowerMsg = msg.toLowerCase();
+  if (
+    lowerMsg.includes("already exists") ||
+    lowerMsg.includes("duplicate") ||
+    lowerMsg.includes("already registered")
+  ) {
+    return "An account with this email/mobile already exists.";
+  }
+  if (
+    lowerMsg.includes("agenterror") ||
+    lowerMsg.includes("fetch") ||
+    lowerMsg.includes("network") ||
+    lowerMsg.includes("connect") ||
+    lowerMsg.includes("timeout")
+  ) {
+    return "Could not connect to server. Please try again.";
+  }
+  return "Registration failed. Please try again.";
+}
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { SUPER_ADMIN_EMAIL } from "../contexts/AuthContext";
 import { useAdminConfig, useCategories } from "../hooks/useQueries";
@@ -221,7 +244,13 @@ export default function SignupPage() {
       lng: shopLng ?? undefined,
     };
 
-    saveProviderToLocalStorage(providerData);
+    try {
+      saveProviderToLocalStorage(providerData);
+    } catch (err) {
+      toast.error(getSignupErrorMessage(err));
+      setSubmitting(false);
+      return;
+    }
 
     setTimeout(() => {
       setSubmitting(false);
@@ -258,8 +287,16 @@ export default function SignupPage() {
       navigate("/admin");
       return;
     }
-    toast.success("Account ban gaya!");
-    navigate("/");
+
+    setSubmitting(true);
+    try {
+      toast.success("Account ban gaya!");
+      navigate("/");
+    } catch (err) {
+      toast.error(getSignupErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -1,11 +1,9 @@
-import { CheckCircle, Crown, Loader2, Tv2, Zap } from "lucide-react";
+import { CheckCircle, Crown, Tv2, Zap } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
-import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { Link, useNavigate } from "../lib/router";
-import { PlanType, SubscriptionPlan } from "../types/appTypes";
+import { PlanType } from "../types/appTypes";
 
 const PREMIUM_FEATURES = [
   "Full profile listing",
@@ -24,38 +22,38 @@ const FREE_FEATURES = [
 ];
 
 export default function ChoosePlanPage() {
-  const [loading, setLoading] = useState<"premium" | "free" | null>(null);
   const { user } = useAuth();
   const { actor } = useActor();
   const navigate = useNavigate();
 
   const handlePremium = () => {
     if (!user) return;
-    // Save plan type choice to localStorage, then go to subscribe
+    // Save plan choice immediately
+    localStorage.setItem("planChoice", "subscription");
     localStorage.setItem(`dz_provider_plantype_${user.userId}`, "premium");
+    // Fire-and-forget canister call in background
+    if (actor) {
+      actor.setPlanType(user.userId, PlanType.premium).catch(() => {
+        /* background update — ignore failure */
+      });
+    }
+    // Navigate to subscription/registration page
     navigate("/provider/subscribe");
   };
 
-  const handleFree = async () => {
-    if (!user || !actor) {
-      toast.error("Backend se connect nahi, thoda wait karein");
-      return;
+  const handleFree = () => {
+    if (!user) return;
+    // Save plan choice
+    localStorage.setItem("planChoice", "free");
+    localStorage.setItem(`dz_provider_plantype_${user.userId}`, "free");
+    // Fire canister call in background (non-blocking)
+    if (actor) {
+      actor.setPlanType(user.userId, PlanType.free).catch(() => {
+        /* background update — ignore failure */
+      });
     }
-    setLoading("free");
-    try {
-      // Set plan type to free on backend
-      await actor.setPlanType(user.userId, PlanType.free);
-      // Save to localStorage too
-      localStorage.setItem(`dz_provider_plantype_${user.userId}`, "free");
-      // Auto-approve free users
-      await actor.approveProvider(user.userId, SubscriptionPlan.oneMonth);
-      toast.success("Free plan select hua! Profile live ho gayi.");
-      navigate("/provider/dashboard");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Kuch problem ho gaya, dobara try karein");
-    } finally {
-      setLoading(null);
-    }
+    // Free plan providers go to dashboard (handles first-time setup inline)
+    navigate("/provider/dashboard");
   };
 
   return (
@@ -199,15 +197,10 @@ export default function ChoosePlanPage() {
                 type="button"
                 data-ocid="choose_plan.secondary_button"
                 onClick={handleFree}
-                disabled={loading === "free"}
-                className="w-full bg-slate-100 text-slate-700 border border-slate-200 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-60"
+                className="w-full bg-slate-100 text-slate-700 border border-slate-200 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 text-sm"
               >
-                {loading === "free" ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Tv2 size={16} />
-                )}
-                {loading === "free" ? "Processing..." : "Ads Dekhe"}
+                <Tv2 size={16} />
+                Ads Dekhe
               </button>
             </div>
           </motion.div>

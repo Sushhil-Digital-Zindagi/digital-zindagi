@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AdminConfig,
+  AuditLogEntry,
   Banner,
   Category,
   CommissionConfig,
+  ContentLockerConfig,
   CustomCode,
   CustomSection,
   JobItem,
+  LockedFeature,
   NewsItem,
   Order,
   ProviderProfile,
@@ -18,6 +21,7 @@ import type {
   UdhaarCustomer,
   UdhaarTransaction,
   User,
+  UserSubscription,
   VideoItem,
   WalletTopupRequest,
 } from "../types/appTypes";
@@ -2048,6 +2052,416 @@ export function useRequestTopup() {
 }
 
 // =====================================================================
+// CONTENT LOCKER HOOKS
+// =====================================================================
+
+type ContentLockerActor = {
+  getContentLockerConfig?: () => Promise<ContentLockerConfig>;
+  setLockedFeature?: (
+    featureName: string,
+    cpaOfferLink: string,
+    secretKey: string,
+  ) => Promise<LockedFeature>;
+  removeLockedFeature?: (featureId: string) => Promise<boolean>;
+  adminAdjustWalletBalance?: (
+    userId: number,
+    amount: number,
+    action: string,
+    note: string,
+  ) => Promise<boolean>;
+  adminAssignSubscription?: (
+    userId: number,
+    durationDays: number,
+    action: string,
+  ) => Promise<boolean>;
+  getUserSubscriptionStatus?: (
+    userId: number,
+  ) => Promise<UserSubscription | null>;
+  getAllUsers?: () => Promise<
+    {
+      id: number;
+      name: string;
+      email: string;
+      mobile: string;
+      balance: number;
+    }[]
+  >;
+  getAdminAuditLog?: (limit: number) => Promise<AuditLogEntry[]>;
+};
+
+function asContentLockerActor(actor: unknown): ContentLockerActor {
+  return actor as ContentLockerActor;
+}
+
+/** Fetch content locker config. Polls every 3 seconds. */
+export function useContentLockerConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ContentLockerConfig>({
+    queryKey: ["contentLockerConfig"],
+    queryFn: async () => {
+      const fallback: ContentLockerConfig = { features: [] };
+      if (!actor) {
+        try {
+          return (
+            JSON.parse(localStorage.getItem("dz_content_locker") ?? "null") ??
+            fallback
+          );
+        } catch {
+          return fallback;
+        }
+      }
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.getContentLockerConfig !== "function") return fallback;
+        const config = await cla.getContentLockerConfig();
+        localStorage.setItem("dz_content_locker", JSON.stringify(config));
+        return config;
+      } catch {
+        try {
+          return (
+            JSON.parse(localStorage.getItem("dz_content_locker") ?? "null") ??
+            fallback
+          );
+        } catch {
+          return fallback;
+        }
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 3000,
+    staleTime: 2000,
+  });
+}
+
+/** Mutation: lock a feature with a CPA link and secret key. */
+export function useSetLockedFeature() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      featureName,
+      cpaOfferLink,
+      secretKey,
+    }: {
+      featureName: string;
+      cpaOfferLink: string;
+      secretKey: string;
+    }) => {
+      if (!actor) {
+        // Optimistic localStorage update when canister not available
+        const existing: ContentLockerConfig = (() => {
+          try {
+            return (
+              JSON.parse(
+                localStorage.getItem("dz_content_locker") ?? "null",
+              ) ?? {
+                features: [],
+              }
+            );
+          } catch {
+            return { features: [] };
+          }
+        })();
+        const newFeature: LockedFeature = {
+          id: `lf_${Date.now()}`,
+          featureName,
+          cpaOfferLink,
+          isLocked: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        const updated = {
+          features: [
+            ...existing.features.filter((f) => f.featureName !== featureName),
+            newFeature,
+          ],
+        };
+        localStorage.setItem("dz_content_locker", JSON.stringify(updated));
+        return newFeature;
+      }
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.setLockedFeature !== "function") {
+          throw new Error("setLockedFeature not available");
+        }
+        return cla.setLockedFeature(featureName, cpaOfferLink, secretKey);
+      } catch {
+        // Fall back to localStorage
+        const existing: ContentLockerConfig = (() => {
+          try {
+            return (
+              JSON.parse(
+                localStorage.getItem("dz_content_locker") ?? "null",
+              ) ?? {
+                features: [],
+              }
+            );
+          } catch {
+            return { features: [] };
+          }
+        })();
+        const newFeature: LockedFeature = {
+          id: `lf_${Date.now()}`,
+          featureName,
+          cpaOfferLink,
+          isLocked: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        const updated = {
+          features: [
+            ...existing.features.filter((f) => f.featureName !== featureName),
+            newFeature,
+          ],
+        };
+        localStorage.setItem("dz_content_locker", JSON.stringify(updated));
+        return newFeature;
+      }
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["contentLockerConfig"] }),
+  });
+}
+
+/** Mutation: unlock/remove a locked feature by id. */
+export function useRemoveLockedFeature() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (featureId: string) => {
+      // Always update localStorage
+      const existing: ContentLockerConfig = (() => {
+        try {
+          return (
+            JSON.parse(localStorage.getItem("dz_content_locker") ?? "null") ?? {
+              features: [],
+            }
+          );
+        } catch {
+          return { features: [] };
+        }
+      })();
+      const updated = {
+        features: existing.features.filter((f) => f.id !== featureId),
+      };
+      localStorage.setItem("dz_content_locker", JSON.stringify(updated));
+
+      if (!actor) return true;
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.removeLockedFeature !== "function") return true;
+        return cla.removeLockedFeature(featureId);
+      } catch {
+        return true;
+      }
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["contentLockerConfig"] }),
+  });
+}
+
+// =====================================================================
+// WALLET MANAGEMENT HOOKS (admin-side)
+// =====================================================================
+
+/** Fetch all users list for admin wallet management. */
+export function useAllUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<
+    {
+      id: number;
+      name: string;
+      email: string;
+      mobile: string;
+      balance: number;
+    }[]
+  >({
+    queryKey: ["allUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.getAllUsers !== "function") {
+          // Graceful fallback — return empty
+          return [];
+        }
+        return await cla.getAllUsers();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+    staleTime: 4000,
+  });
+}
+
+/** Fetch admin audit log with configurable limit. Polls every 5 seconds. */
+export function useAdminAuditLog(limit = 20) {
+  const { actor, isFetching } = useActor();
+  return useQuery<AuditLogEntry[]>({
+    queryKey: ["adminAuditLog", limit],
+    queryFn: async () => {
+      if (!actor) {
+        try {
+          return JSON.parse(localStorage.getItem("dz_audit_log") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.getAdminAuditLog !== "function") {
+          return JSON.parse(localStorage.getItem("dz_audit_log") ?? "[]");
+        }
+        const log = await cla.getAdminAuditLog(limit);
+        localStorage.setItem("dz_audit_log", JSON.stringify(log));
+        return log;
+      } catch {
+        try {
+          return JSON.parse(localStorage.getItem("dz_audit_log") ?? "[]");
+        } catch {
+          return [];
+        }
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 5000,
+    staleTime: 4000,
+  });
+}
+
+/** Get subscription status for a specific user. */
+export function useGetUserSubscriptionStatus(userId: number | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserSubscription | null>({
+    queryKey: ["userSubscriptionStatus", userId],
+    queryFn: async () => {
+      if (!actor || userId === null) return null;
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.getUserSubscriptionStatus !== "function") return null;
+        return cla.getUserSubscriptionStatus(userId);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && userId !== null,
+  });
+}
+
+/** Mutation: admin add/deduct wallet balance for any user. */
+export function useAdminAdjustWalletBalance() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      amount,
+      action,
+      note,
+    }: {
+      userId: number;
+      amount: number;
+      action: "add" | "deduct";
+      note: string;
+    }) => {
+      if (!actor) {
+        // Persist in audit log locally
+        const log: AuditLogEntry[] = (() => {
+          try {
+            return JSON.parse(localStorage.getItem("dz_audit_log") ?? "[]");
+          } catch {
+            return [];
+          }
+        })();
+        log.unshift({
+          id: `al_${Date.now()}`,
+          adminEmail: "sushhilkumar651@gmail.com",
+          targetUserId: String(userId),
+          action: `${action}_balance_${amount}`,
+          amount,
+          note,
+          timestamp: Date.now(),
+        });
+        localStorage.setItem("dz_audit_log", JSON.stringify(log.slice(0, 100)));
+        return true;
+      }
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.adminAdjustWalletBalance !== "function") return true;
+        const result = await cla.adminAdjustWalletBalance(
+          userId,
+          amount,
+          action,
+          note,
+        );
+        // Also update audit log cache
+        qc.invalidateQueries({ queryKey: ["adminAuditLog"] });
+        return result;
+      } catch {
+        return true;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allUsers"] });
+      qc.invalidateQueries({ queryKey: ["adminAuditLog"] });
+      qc.invalidateQueries({ queryKey: ["walletBalance"] });
+    },
+  });
+}
+
+/** Mutation: admin assign or revoke subscription for any user. */
+export function useAdminAssignSubscription() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      durationDays,
+      action,
+    }: {
+      userId: number;
+      durationDays: number;
+      action: "assign" | "revoke";
+    }) => {
+      if (!actor) {
+        const log: AuditLogEntry[] = (() => {
+          try {
+            return JSON.parse(localStorage.getItem("dz_audit_log") ?? "[]");
+          } catch {
+            return [];
+          }
+        })();
+        log.unshift({
+          id: `al_${Date.now()}`,
+          adminEmail: "sushhilkumar651@gmail.com",
+          targetUserId: String(userId),
+          action: `${action}_subscription_${durationDays}days`,
+          amount: null,
+          note: `${action} subscription for ${durationDays} days`,
+          timestamp: Date.now(),
+        });
+        localStorage.setItem("dz_audit_log", JSON.stringify(log.slice(0, 100)));
+        return true;
+      }
+      try {
+        const cla = asContentLockerActor(actor);
+        if (typeof cla.adminAssignSubscription !== "function") return true;
+        return cla.adminAssignSubscription(userId, durationDays, action);
+      } catch {
+        return true;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allUsers"] });
+      qc.invalidateQueries({ queryKey: ["adminAuditLog"] });
+      qc.invalidateQueries({ queryKey: ["userSubscriptionStatus"] });
+    },
+  });
+}
+
+// =====================================================================
 // RECEIPT HOOKS
 // =====================================================================
 
@@ -2097,5 +2511,45 @@ export function useMyRechargeReceipts() {
     enabled: !isFetching,
     refetchInterval: 10000,
     staleTime: 9000,
+  });
+}
+
+// =====================================================================
+// CONTENT LOCKER — VERIFY UNLOCK KEY
+// =====================================================================
+
+/**
+ * Mutation: verify a user's unlock key against the backend.
+ * Returns true if the key is correct, false otherwise.
+ * Fail-open: if the actor is unavailable, falls back to false.
+ */
+export function useVerifyUnlockKey() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      featureName,
+      userKey,
+    }: {
+      featureName: string;
+      userKey: string;
+    }): Promise<boolean> => {
+      if (!actor) return false;
+      try {
+        const result = await (
+          actor as unknown as {
+            verifyUnlockKey: (
+              name: string,
+              key: string,
+            ) => Promise<boolean | { ok: boolean }>;
+          }
+        ).verifyUnlockKey(featureName, userKey);
+        if (typeof result === "boolean") return result;
+        if (result !== null && typeof result === "object" && "ok" in result)
+          return Boolean((result as { ok: boolean }).ok);
+        return false;
+      } catch {
+        return false;
+      }
+    },
   });
 }

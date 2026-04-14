@@ -122,6 +122,25 @@ export const ProviderProfile = IDL.Record({
   'planType' : PlanType,
   'photos' : IDL.Vec(IDL.Text),
 });
+export const AuditAction = IDL.Variant({
+  'SubscriptionRevoke' : IDL.Null,
+  'WalletDeduct' : IDL.Null,
+  'ProviderReject' : IDL.Null,
+  'SubscriptionAssign' : IDL.Null,
+  'WalletAdd' : IDL.Null,
+  'ProviderApprove' : IDL.Null,
+  'FeatureUnlock' : IDL.Null,
+  'FeatureLock' : IDL.Null,
+});
+export const AuditLogEntry = IDL.Record({
+  'id' : IDL.Text,
+  'action' : AuditAction,
+  'note' : IDL.Text,
+  'timestamp' : IDL.Int,
+  'adminEmail' : IDL.Text,
+  'amount' : IDL.Opt(IDL.Int),
+  'targetUserId' : IDL.Text,
+});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const AdminConfig = IDL.Record({
   'email' : IDL.Text,
@@ -183,6 +202,18 @@ export const CommissionConfig = IDL.Record({
   'retailerSharePct' : IDL.Float64,
   'adminSharePct' : IDL.Float64,
   'globalCommissionPct' : IDL.Float64,
+});
+export const LockedFeature = IDL.Record({
+  'id' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'secretKeyHash' : IDL.Text,
+  'cpaOfferLink' : IDL.Text,
+  'updatedAt' : IDL.Int,
+  'isLocked' : IDL.Bool,
+  'featureName' : IDL.Text,
+});
+export const ContentLockerConfig = IDL.Record({
+  'features' : IDL.Vec(LockedFeature),
 });
 export const CustomCode = IDL.Record({
   'id' : IDL.Nat,
@@ -266,6 +297,7 @@ export const NewsItem = IDL.Record({
 });
 export const OfferPortalConfig = IDL.Record({
   'cpaLeadWebhookSecret' : IDL.Text,
+  'cpagripApiKey' : IDL.Text,
   'adminProfitPct' : IDL.Nat,
   'isEnabled' : IDL.Bool,
   'userProfitPct' : IDL.Nat,
@@ -294,6 +326,13 @@ export const SubscriptionPricing = IDL.Record({
   'twelveMonthPrice' : IDL.Nat,
   'oneMonthPrice' : IDL.Nat,
 });
+export const UserSubscription = IDL.Record({
+  'status' : IDL.Text,
+  'assignedByAdmin' : IDL.Bool,
+  'endDate' : IDL.Int,
+  'userId' : IDL.Text,
+  'startDate' : IDL.Int,
+});
 export const VideoItem = IDL.Record({
   'id' : IDL.Nat,
   'title' : IDL.Text,
@@ -307,6 +346,10 @@ export const VideoItem = IDL.Record({
 export const UserApprovalInfo = IDL.Record({
   'status' : ApprovalStatus,
   'principal' : IDL.Principal,
+});
+export const VerifyKeyResult = IDL.Variant({
+  'ok' : IDL.Bool,
+  'err' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -390,6 +433,16 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
+  'adminAdjustWalletBalance' : IDL.Func(
+      [IDL.Text, IDL.Int, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminAssignSubscription' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
   'adminListPendingWithdrawals' : IDL.Func(
       [],
@@ -440,6 +493,7 @@ export const idlService = IDL.Service({
   'forgotPassword' : IDL.Func([MobileNumber, IDL.Text, IDL.Text], [], []),
   'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+  'getAdminAuditLog' : IDL.Func([IDL.Nat], [IDL.Vec(AuditLogEntry)], ['query']),
   'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
   'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAllRechargeTransactions' : IDL.Func(
@@ -468,6 +522,7 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
   'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
+  'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
   'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
@@ -520,6 +575,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(Order)],
       ['query'],
     ),
+  'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getProviderProfile' : IDL.Func(
       [IDL.Nat],
@@ -569,6 +625,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserSubscriptionStatus' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(UserSubscription)],
+      ['query'],
+    ),
   'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
   'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
   'getWalletBalanceByUserId' : IDL.Func([IDL.Nat], [IDL.Float64], ['query']),
@@ -609,6 +670,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+  'removeLockedFeature' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'requestApproval' : IDL.Func([], [], []),
   'requestOfferWithdrawal' : IDL.Func(
@@ -620,6 +686,11 @@ export const idlService = IDL.Service({
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+  'setLockedFeature' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
   'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
@@ -665,7 +736,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateOfferPortalConfig' : IDL.Func(
-      [IDL.Bool, IDL.Text, IDL.Nat, IDL.Nat],
+      [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
@@ -719,6 +790,7 @@ export const idlService = IDL.Service({
     ),
   'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+  'verifyUnlockKey' : IDL.Func([IDL.Text, IDL.Text], [VerifyKeyResult], []),
 });
 
 export const idlInitArgs = [];
@@ -838,6 +910,25 @@ export const idlFactory = ({ IDL }) => {
     'planType' : PlanType,
     'photos' : IDL.Vec(IDL.Text),
   });
+  const AuditAction = IDL.Variant({
+    'SubscriptionRevoke' : IDL.Null,
+    'WalletDeduct' : IDL.Null,
+    'ProviderReject' : IDL.Null,
+    'SubscriptionAssign' : IDL.Null,
+    'WalletAdd' : IDL.Null,
+    'ProviderApprove' : IDL.Null,
+    'FeatureUnlock' : IDL.Null,
+    'FeatureLock' : IDL.Null,
+  });
+  const AuditLogEntry = IDL.Record({
+    'id' : IDL.Text,
+    'action' : AuditAction,
+    'note' : IDL.Text,
+    'timestamp' : IDL.Int,
+    'adminEmail' : IDL.Text,
+    'amount' : IDL.Opt(IDL.Int),
+    'targetUserId' : IDL.Text,
+  });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const AdminConfig = IDL.Record({
     'email' : IDL.Text,
@@ -899,6 +990,18 @@ export const idlFactory = ({ IDL }) => {
     'retailerSharePct' : IDL.Float64,
     'adminSharePct' : IDL.Float64,
     'globalCommissionPct' : IDL.Float64,
+  });
+  const LockedFeature = IDL.Record({
+    'id' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'secretKeyHash' : IDL.Text,
+    'cpaOfferLink' : IDL.Text,
+    'updatedAt' : IDL.Int,
+    'isLocked' : IDL.Bool,
+    'featureName' : IDL.Text,
+  });
+  const ContentLockerConfig = IDL.Record({
+    'features' : IDL.Vec(LockedFeature),
   });
   const CustomCode = IDL.Record({
     'id' : IDL.Nat,
@@ -982,6 +1085,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const OfferPortalConfig = IDL.Record({
     'cpaLeadWebhookSecret' : IDL.Text,
+    'cpagripApiKey' : IDL.Text,
     'adminProfitPct' : IDL.Nat,
     'isEnabled' : IDL.Bool,
     'userProfitPct' : IDL.Nat,
@@ -1010,6 +1114,13 @@ export const idlFactory = ({ IDL }) => {
     'twelveMonthPrice' : IDL.Nat,
     'oneMonthPrice' : IDL.Nat,
   });
+  const UserSubscription = IDL.Record({
+    'status' : IDL.Text,
+    'assignedByAdmin' : IDL.Bool,
+    'endDate' : IDL.Int,
+    'userId' : IDL.Text,
+    'startDate' : IDL.Int,
+  });
   const VideoItem = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
@@ -1024,6 +1135,7 @@ export const idlFactory = ({ IDL }) => {
     'status' : ApprovalStatus,
     'principal' : IDL.Principal,
   });
+  const VerifyKeyResult = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   
   return IDL.Service({
     '_immutableObjectStorageBlobsAreLive' : IDL.Func(
@@ -1106,6 +1218,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'adminAdjustWalletBalance' : IDL.Func(
+        [IDL.Text, IDL.Int, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminAssignSubscription' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
     'adminListPendingWithdrawals' : IDL.Func(
         [],
@@ -1156,6 +1278,11 @@ export const idlFactory = ({ IDL }) => {
     'forgotPassword' : IDL.Func([MobileNumber, IDL.Text, IDL.Text], [], []),
     'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
     'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+    'getAdminAuditLog' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(AuditLogEntry)],
+        ['query'],
+      ),
     'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
     'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAllRechargeTransactions' : IDL.Func(
@@ -1184,6 +1311,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
     'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
+    'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
     'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
@@ -1244,6 +1372,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Order)],
         ['query'],
       ),
+    'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getProviderProfile' : IDL.Func(
         [IDL.Nat],
@@ -1293,6 +1422,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserSubscriptionStatus' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(UserSubscription)],
+        ['query'],
+      ),
     'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
     'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
     'getWalletBalanceByUserId' : IDL.Func([IDL.Nat], [IDL.Float64], ['query']),
@@ -1333,6 +1467,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+    'removeLockedFeature' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'requestApproval' : IDL.Func([], [], []),
     'requestOfferWithdrawal' : IDL.Func(
@@ -1344,6 +1483,11 @@ export const idlFactory = ({ IDL }) => {
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+    'setLockedFeature' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
     'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
@@ -1389,7 +1533,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateOfferPortalConfig' : IDL.Func(
-        [IDL.Bool, IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
@@ -1447,6 +1591,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'verifyUnlockKey' : IDL.Func([IDL.Text, IDL.Text], [VerifyKeyResult], []),
   });
 };
 

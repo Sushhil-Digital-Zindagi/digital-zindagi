@@ -1,22 +1,27 @@
 {
-  "overview": "Digital Zindagi is a premium Indian super-app with mobile recharge, an earning portal, admin controls, and a multi-vendor marketplace — all manageable from a single Admin Panel.",
+  "overview": "Digital Zindagi is a premium multi-vendor marketplace and professional super-app for India. It features role-based access for Super Admins, Providers, and Customers, with a real-time admin control panel, mobile recharge system, Udhaar Book, offer portal, and deep emerald green branding.",
   "features": [
-    "Auto-refund for failed recharges",
-    "Fast2SMS alerts for recharge success/failure",
-    "Digital receipt after every recharge",
-    "Independent Digital Zindagi Offer Portal with isolated login",
-    "Earnings dashboard with 1% referral bonus",
-    "CPALead postback integration with 60/40 profit split",
-    "Admin Offer Control Center with API keys, profit margin, user list, and withdrawal management"
+    "Multi-role authentication (Super Admin, Provider, Customer, Manager)",
+    "Provider registration with approval workflow and plan selection",
+    "Admin control panel with real-time sync for all settings",
+    "Content Locker system with secret unlock keys",
+    "Mobile recharge business system with commission engine",
+    "Udhaar Book provider ledger with WhatsApp sharing",
+    "Isolated earning offer portal with 60/40 profit split",
+    "Video gallery with AdMob integration",
+    "Scrap rate calculator with WhatsApp/PDF share",
+    "PWA with emerald green branding and offline support"
   ],
-  "category": "productivity",
+  "category": "marketplace",
   "tags": [
-    "recharge",
-    "earning",
-    "admin",
+    "marketplace",
     "india",
+    "providers",
+    "admin-panel",
     "pwa",
+    "hindi",
+    "recharge",
     "multi-vendor"
   ],
-  "last_updated": "2026-04-11T04:08:28.222Z"
+  "last_updated": "2026-04-14T05:13:56.964Z"
 }
