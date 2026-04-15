@@ -20,6 +20,10 @@ export interface OfferEarningsSummary {
   pendingEarnings: bigint;
   /** referralCode is returned by the backend summary endpoint */
   referralCode: string;
+  /** 3-tier MLM commission earnings */
+  tier1Earnings?: bigint;
+  tier2Earnings?: bigint;
+  tier3Earnings?: bigint;
 }
 
 export type OfferTxType = "cpalead" | "referralBonus" | "manualCredit";

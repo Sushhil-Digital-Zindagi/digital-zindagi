@@ -605,11 +605,21 @@ function SignupView({
           onSuccess();
         },
         onError: (err) => {
-          setErrorMsg(
+          const msg =
             err instanceof Error
               ? err.message
-              : "Account banana fail hua. Dobara try karein.",
-          );
+              : "Account banana fail hua. Dobara try karein.";
+          // Show toast (not red error) if user already exists
+          const isAlreadyRegistered =
+            msg.toLowerCase().includes("already") ||
+            msg.toLowerCase().includes("exists") ||
+            msg.toLowerCase().includes("registered");
+          if (isAlreadyRegistered) {
+            toast.error("User already registered — Login karein");
+            setErrorMsg("");
+          } else {
+            setErrorMsg(msg);
+          }
         },
       },
     );
@@ -843,6 +853,105 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
           label="Pending Withdrawal"
           value={formatRupees(pendingWithdrawalTotal)}
         />
+      </div>
+
+      {/* 3-Tier Commission Breakdown */}
+      <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={15} className="text-emerald-600" />
+          <h3 className="font-bold text-foreground text-sm">
+            Multi-Tier Commission Breakdown
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Aapke refer kiye gaye users ki kamai se automatic commission
+        </p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between py-2 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">
+                1
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Direct Earnings
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Aapke khud ke conversions
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-emerald-600">
+              {formatRupees(
+                (summary?.totalEarnings ?? 0n) -
+                  (summary?.tier1Earnings ?? 0n) -
+                  (summary?.tier2Earnings ?? 0n) -
+                  (summary?.tier3Earnings ?? 0n),
+              )}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
+                T1
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Tier 1 Commission{" "}
+                  <span className="text-emerald-600">(5%)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Aapke direct referrals ki kamai
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-blue-600">
+              {formatRupees(summary?.tier1Earnings ?? 0n)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">
+                T2
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Tier 2 Commission{" "}
+                  <span className="text-emerald-600">(2%)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Aapke referrals ke referrals
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-purple-600">
+              {formatRupees(summary?.tier2Earnings ?? 0n)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center">
+                T3
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Tier 3 Commission{" "}
+                  <span className="text-emerald-600">(1%)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  3rd level ka network bonus
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-amber-600">
+              {formatRupees(summary?.tier3Earnings ?? 0n)}
+            </span>
+          </div>
+        </div>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-700">
+          💡 A → B invite kare, B → C, C → D: D ki kamai par C ko 5%, B ko 2%, A
+          ko 1% milta hai.
+        </div>
       </div>
 
       {/* Redeem CTA */}

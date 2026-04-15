@@ -44,13 +44,18 @@ type Category__164941945 =
   {color : Text; emoji : Text; enabled : Bool; id : Nat; name : Text};
 type CustomCode__248340264 =
   {
+    alignment : Text;
     btnLabel : Text;
     code : Text;
     enabled : Bool;
     icon : Text;
     id : Nat;
+    layoutStyle : Text;
     name : Text;
-    placement : Text
+    placement : Text;
+    subtitle1 : Text;
+    subtitle2 : Text;
+    title : Text
   };
 type CustomSection__448245083 =
   {
@@ -129,6 +134,9 @@ type OfferUser__179657268 =
     pendingEarnings : Nat;
     referralCode : Text;
     referredBy : ?Text;
+    tier1Earnings : Nat;
+    tier2Earnings : Nat;
+    tier3Earnings : Nat;
     totalEarnings : Nat;
     userId : Text
   };
@@ -143,12 +151,27 @@ type OfferWithdrawal__336029618 =
     status : {#approved; #paid; #pending; #rejected};
     upiId : Text
   };
-type OldOfferPortalConfig__682328126 =
+type OldCustomCode__1002481000 =
   {
-    adminProfitPct : Nat;
-    cpaLeadWebhookSecret : Text;
-    isEnabled : Bool;
-    userProfitPct : Nat
+    btnLabel : Text;
+    code : Text;
+    enabled : Bool;
+    icon : Text;
+    id : Nat;
+    name : Text;
+    placement : Text
+  };
+type OldOfferUser__458097054 =
+  {
+    createdAt : Int;
+    email : Text;
+    id : Nat;
+    passwordHash : Text;
+    pendingEarnings : Nat;
+    referralCode : Text;
+    referredBy : ?Text;
+    totalEarnings : Nat;
+    userId : Text
   };
 type Order__762448211 =
   {
@@ -329,11 +352,7 @@ actor ({
       globalCommissionPct : Float;
       retailerSharePct : Float
     };
-  stable var customCodes :
-    {
-      var root : Node__46230540<Nat, CustomCode__248340264>;
-      var size : Nat__490723111
-    };
+  in var customCodes : Map__605269027<Nat, OldCustomCode__1002481000>;
   stable var customSections :
     {
       var root : Node__46230540<Nat, CustomSection__448245083>;
@@ -371,17 +390,20 @@ actor ({
   stable var nextUserId : Nat;
   stable var nextVideoId : Nat;
   stable var nextWithdrawalId : Nat;
-  in var offerPortalConfig : OldOfferPortalConfig__682328126;
+  stable var offerPortalConfig :
+    {
+      adminProfitPct : Nat;
+      cpaLeadWebhookSecret : Text;
+      cpagripApiKey : Text;
+      isEnabled : Bool;
+      userProfitPct : Nat
+    };
   stable var offerTxns :
     {
       var root : Node__46230540<Nat, OfferTransaction__599458472>;
       var size : Nat__490723111
     };
-  stable var offerUsers :
-    {
-      var root : Node__46230540<Nat, OfferUser__179657268>;
-      var size : Nat__490723111
-    };
+  in var offerUsers : Map__605269027<Nat, OldOfferUser__458097054>;
   stable var offerWithdrawals :
     {
       var root : Node__46230540<Nat, OfferWithdrawal__336029618>;
@@ -391,6 +413,13 @@ actor ({
     {
       var root : Node__46230540<Nat, Order__762448211>;
       var size : Nat__490723111
+    };
+  stable var paymentConfig :
+    {
+      qrCodeUrl : Text;
+      razorpayKeyId : Text;
+      razorpayKeySecret : Text;
+      upiVpa : Text
     };
   stable var principalToUserId :
     {var root : Node__46230540<Principal, Nat>; var size : Nat__490723111};
@@ -576,6 +605,13 @@ actor ({
     {
       var root : Node__46230540<Nat, Order__762448211>;
       var size : Nat__490723111
+    };
+  stable var paymentConfig :
+    {
+      qrCodeUrl : Text;
+      razorpayKeyId : Text;
+      razorpayKeySecret : Text;
+      upiVpa : Text
     };
   stable var principalToUserId :
     {var root : Node__46230540<Principal, Nat>; var size : Nat__490723111};

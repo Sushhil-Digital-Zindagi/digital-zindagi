@@ -439,6 +439,11 @@ interface CustomCodeEntry {
   placement: "top" | "middle" | "bottom" | string;
   enabled: boolean;
   createdAt?: number;
+  title?: string;
+  subtitle1?: string;
+  subtitle2?: string;
+  alignment?: "left" | "right" | "center";
+  layoutStyle?: "grid" | "stacked";
 }
 
 interface AdPlacementsSettings {
@@ -470,6 +475,13 @@ function sanitizeHtml(html: string): string {
 
 function CustomCodeBlock({ entry }: { entry: CustomCodeEntry }) {
   const ref = React.useRef<HTMLDivElement>(null);
+  const alignClass =
+    entry.alignment === "right"
+      ? "text-right items-end"
+      : entry.alignment === "center"
+        ? "text-center items-center"
+        : "text-left items-start";
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when code changes
   React.useEffect(() => {
     if (!ref.current) return;
@@ -490,14 +502,38 @@ function CustomCodeBlock({ entry }: { entry: CustomCodeEntry }) {
     }, 100);
     return () => clearTimeout(timer);
   }, [entry.code]);
+
   return (
     <div
-      ref={ref}
       id={`dz-custom-code-${entry.id}`}
-      className="custom-code-block w-full"
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: admin-controlled code
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.code) }}
-    />
+      className={`custom-code-block w-full flex flex-col gap-1 ${alignClass} px-2 py-1`}
+    >
+      {(entry.title || entry.subtitle1 || entry.subtitle2) && (
+        <div className={`flex flex-col gap-0.5 ${alignClass}`}>
+          {entry.title && (
+            <span className="text-xs font-semibold text-foreground leading-tight">
+              {entry.title}
+            </span>
+          )}
+          {entry.subtitle1 && (
+            <span className="text-xs text-muted-foreground leading-tight">
+              {entry.subtitle1}
+            </span>
+          )}
+          {entry.subtitle2 && (
+            <span className="text-xs text-muted-foreground leading-tight">
+              {entry.subtitle2}
+            </span>
+          )}
+        </div>
+      )}
+      <div
+        ref={ref}
+        className="w-full [&_button]:text-xs [&_button]:py-1 [&_button]:px-3 [&_a]:text-xs [&_a]:py-1 [&_a]:px-3"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: admin-controlled code
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.code) }}
+      />
+    </div>
   );
 }
 
@@ -647,6 +683,11 @@ export default function HomePage() {
         code: c.code,
         placement: c.placement as "top" | "middle" | "bottom",
         enabled: c.enabled,
+        title: c.title,
+        subtitle1: c.subtitle1,
+        subtitle2: c.subtitle2,
+        alignment: c.alignment,
+        layoutStyle: c.layoutStyle,
       }));
     }
     // Fallback to localStorage
@@ -808,18 +849,28 @@ export default function HomePage() {
 
   // Mirror dz-container-* content to legacy alias IDs so external scripts targeting
   // home-top-container / home-middle-container / home-bottom-container still work.
+  // Also mirrors to home-*-custom-code aliases for scripts targeting those IDs.
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-mirror whenever codes/sections change
   useEffect(() => {
-    const pairs: [string, string][] = [
-      ["dz-container-top", "home-top-container"],
-      ["dz-container-middle", "home-middle-container"],
-      ["dz-container-bottom", "home-bottom-container"],
+    const pairs: [string, string[]][] = [
+      ["dz-container-top", ["home-top-container", "home-top-custom-code"]],
+      [
+        "dz-container-middle",
+        ["home-middle-container", "home-middle-custom-code"],
+      ],
+      [
+        "dz-container-bottom",
+        ["home-bottom-container", "home-bottom-custom-code"],
+      ],
     ];
-    for (const [srcId, aliasId] of pairs) {
+    for (const [srcId, aliasIds] of pairs) {
       const src = document.getElementById(srcId);
-      const alias = document.getElementById(aliasId);
-      if (src && alias && alias !== src) {
-        alias.innerHTML = src.innerHTML;
+      if (!src) continue;
+      for (const aliasId of aliasIds) {
+        const alias = document.getElementById(aliasId);
+        if (alias && alias !== src) {
+          alias.innerHTML = src.innerHTML;
+        }
       }
     }
   }, [customCodes, customSections]);
@@ -861,15 +912,17 @@ export default function HomePage() {
           }
           el.appendChild(wrapper);
         }
-        // Mirror to alias after injection
-        const aliasId =
+        // Mirror to aliases after injection
+        const aliasIds =
           placement === "top"
-            ? "home-top-container"
+            ? ["home-top-container", "home-top-custom-code"]
             : placement === "middle"
-              ? "home-middle-container"
-              : "home-bottom-container";
-        const alias = document.getElementById(aliasId);
-        if (alias) alias.innerHTML = el.innerHTML;
+              ? ["home-middle-container", "home-middle-custom-code"]
+              : ["home-bottom-container", "home-bottom-custom-code"];
+        for (const aliasId of aliasIds) {
+          const alias = document.getElementById(aliasId);
+          if (alias) alias.innerHTML = el.innerHTML;
+        }
       }
     }, 250);
     return () => clearTimeout(timer);
@@ -882,12 +935,28 @@ export default function HomePage() {
       <main className="flex-1">
         {/* ── TOP CONTAINER ─────────────────────────────────────────── */}
         <div id="dz-container-top" style={{ minHeight: 1 }}>
-          {/* Custom Code — TOP placement */}
-          {customCodes
-            .filter((c) => c.enabled && c.placement === "top")
-            .map((entry) => (
-              <CustomCodeBlock key={entry.id} entry={entry} />
-            ))}
+          {/* Custom Code — TOP placement, group by layoutStyle */}
+          {(() => {
+            const topCodes = customCodes.filter(
+              (c) => c.enabled && c.placement === "top",
+            );
+            const gridCodes = topCodes.filter((c) => c.layoutStyle === "grid");
+            const otherCodes = topCodes.filter((c) => c.layoutStyle !== "grid");
+            return (
+              <>
+                {gridCodes.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 px-2 py-1">
+                    {gridCodes.map((entry) => (
+                      <CustomCodeBlock key={entry.id} entry={entry} />
+                    ))}
+                  </div>
+                )}
+                {otherCodes.map((entry) => (
+                  <CustomCodeBlock key={entry.id} entry={entry} />
+                ))}
+              </>
+            );
+          })()}
           {/* Dynamic Custom Sections — TOP placement */}
           {(customSections ?? [])
             .filter((s) => s.enabled && s.placement === "top")
@@ -898,6 +967,12 @@ export default function HomePage() {
         {/* Legacy alias for external scripts targeting home-top-container */}
         <div
           id="home-top-container"
+          style={{ display: "none" }}
+          aria-hidden="true"
+        />
+        {/* Alias for custom code injection — home-top-custom-code */}
+        <div
+          id="home-top-custom-code"
           style={{ display: "none" }}
           aria-hidden="true"
         />
@@ -1289,11 +1364,27 @@ export default function HomePage() {
         {/* ── MIDDLE CONTAINER ──────────────────────────────────────── */}
         <div id="dz-container-middle" style={{ minHeight: 1 }}>
           {/* Custom Code — MIDDLE placement (after CategoryGrid, before providers) */}
-          {customCodes
-            .filter((c) => c.enabled && c.placement === "middle")
-            .map((entry) => (
-              <CustomCodeBlock key={entry.id} entry={entry} />
-            ))}
+          {(() => {
+            const midCodes = customCodes.filter(
+              (c) => c.enabled && c.placement === "middle",
+            );
+            const gridCodes = midCodes.filter((c) => c.layoutStyle === "grid");
+            const otherCodes = midCodes.filter((c) => c.layoutStyle !== "grid");
+            return (
+              <>
+                {gridCodes.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 px-2 py-1">
+                    {gridCodes.map((entry) => (
+                      <CustomCodeBlock key={entry.id} entry={entry} />
+                    ))}
+                  </div>
+                )}
+                {otherCodes.map((entry) => (
+                  <CustomCodeBlock key={entry.id} entry={entry} />
+                ))}
+              </>
+            );
+          })()}
           {/* Dynamic Custom Sections — MIDDLE placement */}
           {(customSections ?? [])
             .filter((s) => s.enabled && s.placement === "middle")
@@ -1304,6 +1395,12 @@ export default function HomePage() {
         {/* Legacy alias for external scripts targeting home-middle-container */}
         <div
           id="home-middle-container"
+          style={{ display: "none" }}
+          aria-hidden="true"
+        />
+        {/* Alias for custom code injection — home-middle-custom-code */}
+        <div
+          id="home-middle-custom-code"
           style={{ display: "none" }}
           aria-hidden="true"
         />
@@ -1526,11 +1623,27 @@ export default function HomePage() {
       {/* ── BOTTOM CONTAINER ──────────────────────────────────────── */}
       <div id="dz-container-bottom" style={{ minHeight: 1 }}>
         {/* Custom Code — BOTTOM placement (before Footer) */}
-        {customCodes
-          .filter((c) => c.enabled && c.placement === "bottom")
-          .map((entry) => (
-            <CustomCodeBlock key={entry.id} entry={entry} />
-          ))}
+        {(() => {
+          const btmCodes = customCodes.filter(
+            (c) => c.enabled && c.placement === "bottom",
+          );
+          const gridCodes = btmCodes.filter((c) => c.layoutStyle === "grid");
+          const otherCodes = btmCodes.filter((c) => c.layoutStyle !== "grid");
+          return (
+            <>
+              {gridCodes.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 px-2 py-1">
+                  {gridCodes.map((entry) => (
+                    <CustomCodeBlock key={entry.id} entry={entry} />
+                  ))}
+                </div>
+              )}
+              {otherCodes.map((entry) => (
+                <CustomCodeBlock key={entry.id} entry={entry} />
+              ))}
+            </>
+          );
+        })()}
         {/* Dynamic Custom Sections — BOTTOM placement */}
         {(customSections ?? [])
           .filter((s) => s.enabled && s.placement === "bottom")
@@ -1541,6 +1654,12 @@ export default function HomePage() {
       {/* Legacy alias for external scripts targeting home-bottom-container */}
       <div
         id="home-bottom-container"
+        style={{ display: "none" }}
+        aria-hidden="true"
+      />
+      {/* Alias for custom code injection — home-bottom-custom-code */}
+      <div
+        id="home-bottom-custom-code"
         style={{ display: "none" }}
         aria-hidden="true"
       />
@@ -1608,7 +1727,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-4 mt-3 flex-wrap">
                     <div className="flex items-center gap-1.5 text-xs text-white/60">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse" />
-                      CPALead Powered
+                      Digital Zindagi Powered
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-white/60">
                       <span>💸</span>

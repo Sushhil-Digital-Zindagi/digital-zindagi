@@ -1,27 +1,31 @@
 {
-  "overview": "Digital Zindagi is a premium multi-vendor marketplace and professional super-app for India. It features role-based access for Super Admins, Providers, and Customers, with a real-time admin control panel, mobile recharge system, Udhaar Book, offer portal, and deep emerald green branding.",
+  "overview": "Digital Zindagi is a premium multi-vendor marketplace and professional super-app for India. It includes a full Admin Control Panel, Provider management, Recharge Business System, Offer Portal with 3-tier MLM referral commissions, Udhaar Book, Ludo game, Video Gallery, and a Custom Code Manager for homepage customization — all branded exclusively as Digital Zindagi.",
   "features": [
-    "Multi-role authentication (Super Admin, Provider, Customer, Manager)",
-    "Provider registration with approval workflow and plan selection",
-    "Admin control panel with real-time sync for all settings",
-    "Content Locker system with secret unlock keys",
-    "Mobile recharge business system with commission engine",
-    "Udhaar Book provider ledger with WhatsApp sharing",
-    "Isolated earning offer portal with 60/40 profit split",
-    "Video gallery with AdMob integration",
-    "Scrap rate calculator with WhatsApp/PDF share",
-    "PWA with emerald green branding and offline support"
+    "3-tier MLM referral commission system (5%/2%/1%) with Earnings Dashboard",
+    "Custom Code Manager with Title/Subtitle fields, compact buttons, and flexible Left/Right/Top/Bottom placement",
+    "Grid and stacked layout control for homepage custom code sections",
+    "White-label Digital Zindagi branding — all third-party branding removed",
+    "Universal real-time sync across Admin Panel, Caffeine preview, and Vercel",
+    "Provider registration green screen fix with smooth navigation",
+    "Toast notifications for user-friendly error handling",
+    "Recharge Business System with wallet and commission engine",
+    "Offer Portal with isolated login/signup and earnings dashboard",
+    "Udhaar Book provider-specific customer ledger",
+    "Ludo game ecosystem with rewards wallet",
+    "Multi-role access: Super Admin, Manager, Provider, Customer"
   ],
   "category": "marketplace",
   "tags": [
     "marketplace",
     "india",
-    "providers",
+    "super-app",
+    "referral",
+    "mlm",
+    "recharge",
+    "wallet",
     "admin-panel",
     "pwa",
-    "hindi",
-    "recharge",
-    "multi-vendor"
+    "hindi"
   ],
-  "last_updated": "2026-04-14T05:13:56.964Z"
+  "last_updated": "2026-04-15T05:02:03.891Z"
 }

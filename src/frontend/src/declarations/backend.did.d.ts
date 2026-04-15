@@ -61,12 +61,17 @@ export interface CommissionConfig {
 export interface ContentLockerConfig { 'features' : Array<LockedFeature> }
 export interface CustomCode {
   'id' : bigint,
+  'title' : string,
   'placement' : string,
+  'layoutStyle' : string,
   'code' : string,
   'icon' : string,
   'name' : string,
   'enabled' : boolean,
   'btnLabel' : string,
+  'alignment' : string,
+  'subtitle1' : string,
+  'subtitle2' : string,
 }
 export interface CustomSection {
   'id' : bigint,
@@ -135,10 +140,13 @@ export interface OfferUser {
   'userId' : string,
   'createdAt' : bigint,
   'pendingEarnings' : bigint,
+  'tier3Earnings' : bigint,
   'email' : string,
   'referredBy' : [] | [string],
+  'tier2Earnings' : bigint,
   'passwordHash' : string,
   'totalEarnings' : bigint,
+  'tier1Earnings' : bigint,
 }
 export interface OfferWithdrawal {
   'id' : bigint,
@@ -163,6 +171,12 @@ export interface Order {
   'imageUrl' : [] | [string],
   'customerId' : bigint,
   'providerId' : bigint,
+}
+export interface PaymentConfig {
+  'razorpayKeyId' : string,
+  'razorpayKeySecret' : string,
+  'upiVpa' : string,
+  'qrCodeUrl' : string,
 }
 export type PlanType = { 'pending' : null } |
   { 'premium' : null } |
@@ -352,7 +366,18 @@ export interface _SERVICE {
   'addBanner' : ActorMethod<[string, string, string, string, bigint], bigint>,
   'addCategory' : ActorMethod<[string, string, string], bigint>,
   'addCustomCode' : ActorMethod<
-    [string, string, string, string, string],
+    [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
     bigint
   >,
   'addCustomSection' : ActorMethod<[string, string, string, string], bigint>,
@@ -532,7 +557,10 @@ export interface _SERVICE {
     {
       'referralCode' : string,
       'pendingEarnings' : bigint,
+      'tier3Earnings' : bigint,
+      'tier2Earnings' : bigint,
       'totalEarnings' : bigint,
+      'tier1Earnings' : bigint,
     }
   >,
   /**
@@ -555,6 +583,11 @@ export interface _SERVICE {
   >,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
+  /**
+   * / Returns the current payment configuration.
+   * / Readable by all callers — providers and riders need to display UPI/QR.
+   */
+  'getPaymentConfig' : ActorMethod<[], PaymentConfig>,
   /**
    * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
    */
@@ -643,7 +676,7 @@ export interface _SERVICE {
   >,
   /**
    * / Process a CPALead postback: verify secret, split profit, credit earnings.
-   * / Also triggers 1% referral bonus to the referrer if any.
+   * / Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
    */
   'processCpaLeadPostback' : ActorMethod<[bigint, bigint, string], boolean>,
   /**
@@ -652,10 +685,14 @@ export interface _SERVICE {
   'refundRecharge' : ActorMethod<[bigint], boolean>,
   /**
    * / Register a new Offer Portal user (isolated from main user DB).
-   * / Returns the full OfferUser record so the frontend can auto-login
-   * / immediately after signup without a second round-trip.
+   * / Returns #ok(OfferUser) on success or #err("already_registered") for duplicate email
+   * / so the frontend can show a clean toast instead of a red error code.
    */
-  'registerOfferUser' : ActorMethod<[string, string, [] | [string]], OfferUser>,
+  'registerOfferUser' : ActorMethod<
+    [string, string, [] | [string]],
+    { 'ok' : OfferUser } |
+      { 'err' : string }
+  >,
   'registerUser' : ActorMethod<
     [string, MobileNumber, string, UserRole, string, string],
     undefined
@@ -690,6 +727,10 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  /**
+   * / Updates the payment configuration (admin only).
+   */
+  'setPaymentConfig' : ActorMethod<[PaymentConfig], boolean>,
   'setPlanType' : ActorMethod<[bigint, PlanType], undefined>,
   /**
    * / Enable or disable the recharge service — admin only.
@@ -708,7 +749,20 @@ export interface _SERVICE {
    */
   'updateCommissionConfig' : ActorMethod<[number, number, number], boolean>,
   'updateCustomCode' : ActorMethod<
-    [bigint, string, string, string, string, string, boolean],
+    [
+      bigint,
+      string,
+      string,
+      string,
+      string,
+      string,
+      boolean,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
     boolean
   >,
   'updateCustomSection' : ActorMethod<

@@ -156,6 +156,9 @@ export function useOfferEarningsSummary(
         totalEarnings: 0n,
         pendingEarnings: 0n,
         referralCode: "",
+        tier1Earnings: 0n,
+        tier2Earnings: 0n,
+        tier3Earnings: 0n,
       };
       if (!actor || offerUserId == null) return empty;
       try {
@@ -165,6 +168,9 @@ export function useOfferEarningsSummary(
           totalEarnings: raw.totalEarnings,
           pendingEarnings: raw.pendingEarnings,
           referralCode: raw.referralCode,
+          tier1Earnings: raw.tier1Earnings ?? 0n,
+          tier2Earnings: raw.tier2Earnings ?? 0n,
+          tier3Earnings: raw.tier3Earnings ?? 0n,
         };
       } catch {
         return empty;
@@ -279,7 +285,17 @@ export function useRegisterOfferUser() {
         err instanceof Error
           ? err.message
           : "Account banana fail hua. Dobara try karein.";
-      toast.error(msg);
+      // Detect "already registered" error and show a friendly toast
+      const isAlreadyRegistered =
+        msg.toLowerCase().includes("already") ||
+        msg.toLowerCase().includes("exists") ||
+        msg.toLowerCase().includes("registered") ||
+        msg.includes("already_registered");
+      if (isAlreadyRegistered) {
+        toast.error("User already registered — Login karein");
+      } else {
+        toast.error(msg);
+      }
     },
   });
 }

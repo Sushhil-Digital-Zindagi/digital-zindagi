@@ -38,7 +38,7 @@ module {
   ) : { #ok : OfferUser; #err : Text } {
     // Reject duplicate emails
     switch (OPLib.findByEmail(offerUsers, email)) {
-      case (?_) { return #err("Email already registered") };
+      case (?_) { return #err("already_registered") };
       case null {};
     };
 
@@ -82,16 +82,19 @@ module {
   public func getEarningsSummary(
     offerUsers  : Map.Map<Nat, OfferUser>,
     offerUserId : Nat,
-  ) : { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text } {
+  ) : { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat } {
     switch (offerUsers.get(offerUserId)) {
       case null {
-        { totalEarnings = 0; pendingEarnings = 0; referralCode = "" };
+        { totalEarnings = 0; pendingEarnings = 0; referralCode = ""; tier1Earnings = 0; tier2Earnings = 0; tier3Earnings = 0 };
       };
       case (?user) {
         {
           totalEarnings   = user.totalEarnings;
           pendingEarnings = user.pendingEarnings;
           referralCode    = user.referralCode;
+          tier1Earnings   = user.tier1Earnings;
+          tier2Earnings   = user.tier2Earnings;
+          tier3Earnings   = user.tier3Earnings;
         };
       };
     };
@@ -109,7 +112,8 @@ module {
 
   /// Process an inbound offer wall postback (CPALead, CPAGrip, AdWork, etc.).
   /// Verifies webhookSecret, applies configurable profit split, credits user earnings.
-  /// Returns #ok(txnId) on success, #err(reason) on any validation failure.
+  /// Also distributes 3-tier MLM commissions from the gross amount to ancestors.
+  /// Returns #ok(nextTxnId) reflecting how many txn IDs were consumed, #err(reason) on failure.
   public func processCpaLeadPostback(
     offerUsers    : Map.Map<Nat, OfferUser>,
     offerTxns     : Map.Map<Nat, OfferTransaction>,
@@ -139,48 +143,129 @@ module {
         // Build a descriptive transaction label using the actual configured percentage
         let desc = "Offer completed — gross: ₹" # grossAmount.toText()
           # " | Your share (" # config.userProfitPct.toText() # "%): ₹" # userShare.toText();
-        // Create transaction
+        // Create the primary user transaction
         let txn = OPLib.createOfferTransaction(
           nextTxnId, offerUserId, #cpalead, userShare, desc,
         );
         offerTxns.add(nextTxnId, txn);
-        // Credit exactly userShare to the user's totalEarnings
+        // Credit userShare to the user's totalEarnings
         offerUsers.add(offerUserId, { user with
           totalEarnings = user.totalEarnings + userShare;
         });
-        #ok(nextTxnId);
+        // Distribute 3-tier MLM commissions from grossAmount to ancestors
+        let afterMlm = distributeMlmCommissions(
+          offerUsers, offerTxns, nextTxnId + 1,
+          offerUserId, grossAmount, "offer wall postback",
+        );
+        #ok(afterMlm);
       };
     };
   };
 
-  // ── Referral bonus ────────────────────────────────────────────────────────
+  // ── Referral bonus (3-tier MLM) ───────────────────────────────────────────
 
-  /// Credit a 1% referral bonus to the referrer.
-  /// referrerId is the offer user ID of the referrer.
-  /// Returns the new txnId used, or 0 if the referrer was not found.
-  public func creditReferralBonus(
-    offerUsers  : Map.Map<Nat, OfferUser>,
-    offerTxns   : Map.Map<Nat, OfferTransaction>,
-    nextTxnId   : Nat,
-    referrerId  : Nat,
-    baseAmount  : Nat,
+  /// Credit 3-tier MLM referral commissions from a gross earning event.
+  /// Chain: earner.referredBy = tier1 (5%), tier1.referredBy = tier2 (2%), tier2.referredBy = tier3 (1%).
+  /// Commissions are calculated from the raw grossAmount BEFORE profit split.
+  /// Stores OfferTransaction records for each tier commission credited.
+  /// Returns the next unused txnId after all distributions (may equal startTxnId if none distributed).
+  public func distributeMlmCommissions(
+    offerUsers    : Map.Map<Nat, OfferUser>,
+    offerTxns     : Map.Map<Nat, OfferTransaction>,
+    startTxnId    : Nat,
+    earnerUserId  : Nat,
+    grossAmount   : Nat,
+    triggerDesc   : Text,
   ) : Nat {
-    switch (offerUsers.get(referrerId)) {
-      case null { 0 };
-      case (?referrer) {
-        let bonus = (baseAmount * 1) / 100;
-        if (bonus == 0) { return 0 };
-        let txn = OPLib.createOfferTransaction(
-          nextTxnId, referrerId, #referralBonus, bonus,
-          "1% referral bonus on " # baseAmount.toText(),
-        );
-        offerTxns.add(nextTxnId, txn);
-        offerUsers.add(referrerId, { referrer with
-          totalEarnings = referrer.totalEarnings + bonus;
-        });
-        nextTxnId;
+    var nextId = startTxnId;
+
+    // Resolve the referral chain up to 3 tiers from the earner
+    let mEarner = offerUsers.get(earnerUserId);
+    let tier1Code : ?Text = switch (mEarner) {
+      case null { null };
+      case (?earner) { earner.referredBy };
+    };
+
+    let mTier1 : ?OfferUser = switch (tier1Code) {
+      case null { null };
+      case (?code) { OPLib.findByReferralCode(offerUsers, code) };
+    };
+
+    let tier2Code : ?Text = switch (mTier1) {
+      case null { null };
+      case (?t1) { t1.referredBy };
+    };
+
+    let mTier2 : ?OfferUser = switch (tier2Code) {
+      case null { null };
+      case (?code) { OPLib.findByReferralCode(offerUsers, code) };
+    };
+
+    let tier3Code : ?Text = switch (mTier2) {
+      case null { null };
+      case (?t2) { t2.referredBy };
+    };
+
+    let mTier3 : ?OfferUser = switch (tier3Code) {
+      case null { null };
+      case (?code) { OPLib.findByReferralCode(offerUsers, code) };
+    };
+
+    // Tier 1 — 5% of grossAmount
+    switch (mTier1) {
+      case null {};
+      case (?t1) {
+        let bonus = (grossAmount * 5) / 100;
+        if (bonus > 0) {
+          let desc = "Tier-1 referral bonus (5%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let txn = OPLib.createOfferTransaction(nextId, t1.id, #referralBonus, bonus, desc);
+          offerTxns.add(nextId, txn);
+          nextId += 1;
+          offerUsers.add(t1.id, { t1 with
+            totalEarnings = t1.totalEarnings + bonus;
+            tier1Earnings = t1.tier1Earnings + bonus;
+          });
+        };
       };
     };
+
+    // Tier 2 — 2% of grossAmount
+    switch (mTier2) {
+      case null {};
+      case (?t2) {
+        let bonus = (grossAmount * 2) / 100;
+        if (bonus > 0) {
+          let desc = "Tier-2 referral bonus (2%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let txn = OPLib.createOfferTransaction(nextId, t2.id, #referralBonus, bonus, desc);
+          offerTxns.add(nextId, txn);
+          nextId += 1;
+          offerUsers.add(t2.id, { t2 with
+            totalEarnings = t2.totalEarnings + bonus;
+            tier2Earnings = t2.tier2Earnings + bonus;
+          });
+        };
+      };
+    };
+
+    // Tier 3 — 1% of grossAmount
+    switch (mTier3) {
+      case null {};
+      case (?t3) {
+        let bonus = (grossAmount * 1) / 100;
+        if (bonus > 0) {
+          let desc = "Tier-3 referral bonus (1%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let txn = OPLib.createOfferTransaction(nextId, t3.id, #referralBonus, bonus, desc);
+          offerTxns.add(nextId, txn);
+          nextId += 1;
+          offerUsers.add(t3.id, { t3 with
+            totalEarnings = t3.totalEarnings + bonus;
+            tier3Earnings = t3.tier3Earnings + bonus;
+          });
+        };
+      };
+    };
+
+    nextId;
   };
 
   // ── Withdrawals ───────────────────────────────────────────────────────────

@@ -1,5 +1,7 @@
-import { CheckCircle, Crown, Tv2, Zap } from "lucide-react";
+import { CheckCircle, Crown, Loader2, Tv2, Zap } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { Link, useNavigate } from "../lib/router";
@@ -25,35 +27,53 @@ export default function ChoosePlanPage() {
   const { user } = useAuth();
   const { actor } = useActor();
   const navigate = useNavigate();
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  const handlePremium = () => {
-    if (!user) return;
-    // Save plan choice immediately
-    localStorage.setItem("planChoice", "subscription");
-    localStorage.setItem(`dz_provider_plantype_${user.userId}`, "premium");
-    // Fire-and-forget canister call in background
-    if (actor) {
-      actor.setPlanType(user.userId, PlanType.premium).catch(() => {
-        /* background update — ignore failure */
-      });
+  const handlePremium = async () => {
+    if (!user) {
+      toast.error("Pehle login karein");
+      return;
     }
-    // Navigate to subscription/registration page
-    navigate("/provider/subscribe");
+    setIsNavigating(true);
+    try {
+      localStorage.setItem("planChoice", "subscription");
+      localStorage.setItem(`dz_provider_plantype_${user.userId}`, "premium");
+      if (actor) {
+        actor.setPlanType(user.userId, PlanType.premium).catch(() => {
+          /* background update — ignore failure */
+        });
+      }
+      // Use replace to prevent back-navigation causing infinite loop
+      navigate("/provider/subscribe", { replace: true } as Parameters<
+        typeof navigate
+      >[1]);
+    } catch {
+      toast.error("Navigation fail hua, dobara try karein");
+      setIsNavigating(false);
+    }
   };
 
-  const handleFree = () => {
-    if (!user) return;
-    // Save plan choice
-    localStorage.setItem("planChoice", "free");
-    localStorage.setItem(`dz_provider_plantype_${user.userId}`, "free");
-    // Fire canister call in background (non-blocking)
-    if (actor) {
-      actor.setPlanType(user.userId, PlanType.free).catch(() => {
-        /* background update — ignore failure */
-      });
+  const handleFree = async () => {
+    if (!user) {
+      toast.error("Pehle login karein");
+      return;
     }
-    // Free plan providers go to dashboard (handles first-time setup inline)
-    navigate("/provider/dashboard");
+    setIsNavigating(true);
+    try {
+      localStorage.setItem("planChoice", "free");
+      localStorage.setItem(`dz_provider_plantype_${user.userId}`, "free");
+      if (actor) {
+        actor.setPlanType(user.userId, PlanType.free).catch(() => {
+          /* background update — ignore failure */
+        });
+      }
+      navigate("/provider/dashboard", { replace: true } as Parameters<
+        typeof navigate
+      >[1]);
+    } catch {
+      toast.error("Navigation fail hua, dobara try karein");
+      setIsNavigating(false);
+    }
   };
 
   return (
@@ -83,6 +103,18 @@ export default function ChoosePlanPage() {
         </div>
       </div>
 
+      {/* Navigating overlay */}
+      {isNavigating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl">
+            <Loader2 size={32} className="animate-spin text-primary" />
+            <p className="font-heading font-semibold text-foreground text-sm">
+              Loading...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Plan Cards */}
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
         <p className="text-center text-sm text-muted-foreground mb-8">
@@ -99,7 +131,6 @@ export default function ChoosePlanPage() {
             data-ocid="choose_plan.item.1"
             className="bg-white rounded-3xl border-2 border-primary shadow-card-hover overflow-hidden"
           >
-            {/* Badge */}
             <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4 text-white">
               <div className="flex items-center gap-2 mb-1">
                 <Crown size={18} className="text-yellow-300" />
@@ -138,9 +169,14 @@ export default function ChoosePlanPage() {
                 type="button"
                 data-ocid="choose_plan.primary_button"
                 onClick={handlePremium}
-                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+                disabled={isNavigating}
+                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2 text-sm shadow-md disabled:opacity-60"
               >
-                <Crown size={16} />
+                {isNavigating ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Crown size={16} />
+                )}
                 Subscription Lege
               </button>
             </div>
@@ -154,7 +190,6 @@ export default function ChoosePlanPage() {
             data-ocid="choose_plan.item.2"
             className="bg-white rounded-3xl border-2 border-border shadow-card overflow-hidden"
           >
-            {/* Badge */}
             <div className="bg-gradient-to-r from-slate-500 to-slate-400 px-6 py-4 text-white">
               <div className="flex items-center gap-2 mb-1">
                 <Tv2 size={18} className="text-slate-200" />
@@ -197,7 +232,8 @@ export default function ChoosePlanPage() {
                 type="button"
                 data-ocid="choose_plan.secondary_button"
                 onClick={handleFree}
-                className="w-full bg-slate-100 text-slate-700 border border-slate-200 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 text-sm"
+                disabled={isNavigating}
+                className="w-full bg-slate-100 text-slate-700 border border-slate-200 font-bold py-3 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-60"
               >
                 <Tv2 size={16} />
                 Ads Dekhe

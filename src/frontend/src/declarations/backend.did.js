@@ -49,10 +49,13 @@ export const OfferUser = IDL.Record({
   'userId' : IDL.Text,
   'createdAt' : IDL.Int,
   'pendingEarnings' : IDL.Nat,
+  'tier3Earnings' : IDL.Nat,
   'email' : IDL.Text,
   'referredBy' : IDL.Opt(IDL.Text),
+  'tier2Earnings' : IDL.Nat,
   'passwordHash' : IDL.Text,
   'totalEarnings' : IDL.Nat,
+  'tier1Earnings' : IDL.Nat,
 });
 export const OfferWithdrawal = IDL.Record({
   'id' : IDL.Nat,
@@ -217,12 +220,17 @@ export const ContentLockerConfig = IDL.Record({
 });
 export const CustomCode = IDL.Record({
   'id' : IDL.Nat,
+  'title' : IDL.Text,
   'placement' : IDL.Text,
+  'layoutStyle' : IDL.Text,
   'code' : IDL.Text,
   'icon' : IDL.Text,
   'name' : IDL.Text,
   'enabled' : IDL.Bool,
   'btnLabel' : IDL.Text,
+  'alignment' : IDL.Text,
+  'subtitle1' : IDL.Text,
+  'subtitle2' : IDL.Text,
 });
 export const CustomSection = IDL.Record({
   'id' : IDL.Nat,
@@ -301,6 +309,12 @@ export const OfferPortalConfig = IDL.Record({
   'adminProfitPct' : IDL.Nat,
   'isEnabled' : IDL.Bool,
   'userProfitPct' : IDL.Nat,
+});
+export const PaymentConfig = IDL.Record({
+  'razorpayKeyId' : IDL.Text,
+  'razorpayKeySecret' : IDL.Text,
+  'upiVpa' : IDL.Text,
+  'qrCodeUrl' : IDL.Text,
 });
 export const RechargeApiConfig = IDL.Record({
   'autoRefundEnabled' : IDL.Bool,
@@ -387,7 +401,18 @@ export const idlService = IDL.Service({
     ),
   'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
   'addCustomCode' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
       [IDL.Nat],
       [],
     ),
@@ -552,7 +577,10 @@ export const idlService = IDL.Service({
         IDL.Record({
           'referralCode' : IDL.Text,
           'pendingEarnings' : IDL.Nat,
+          'tier3Earnings' : IDL.Nat,
+          'tier2Earnings' : IDL.Nat,
           'totalEarnings' : IDL.Nat,
+          'tier1Earnings' : IDL.Nat,
         }),
       ],
       ['query'],
@@ -575,6 +603,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(Order)],
       ['query'],
     ),
+  'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
   'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getProviderProfile' : IDL.Func(
@@ -661,7 +690,7 @@ export const idlService = IDL.Service({
   'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'registerOfferUser' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
-      [OfferUser],
+      [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
       [],
     ),
   'registerUser' : IDL.Func(
@@ -691,6 +720,7 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
   'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
@@ -707,7 +737,20 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateCustomCode' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
       [IDL.Bool],
       [],
     ),
@@ -837,10 +880,13 @@ export const idlFactory = ({ IDL }) => {
     'userId' : IDL.Text,
     'createdAt' : IDL.Int,
     'pendingEarnings' : IDL.Nat,
+    'tier3Earnings' : IDL.Nat,
     'email' : IDL.Text,
     'referredBy' : IDL.Opt(IDL.Text),
+    'tier2Earnings' : IDL.Nat,
     'passwordHash' : IDL.Text,
     'totalEarnings' : IDL.Nat,
+    'tier1Earnings' : IDL.Nat,
   });
   const OfferWithdrawal = IDL.Record({
     'id' : IDL.Nat,
@@ -1005,12 +1051,17 @@ export const idlFactory = ({ IDL }) => {
   });
   const CustomCode = IDL.Record({
     'id' : IDL.Nat,
+    'title' : IDL.Text,
     'placement' : IDL.Text,
+    'layoutStyle' : IDL.Text,
     'code' : IDL.Text,
     'icon' : IDL.Text,
     'name' : IDL.Text,
     'enabled' : IDL.Bool,
     'btnLabel' : IDL.Text,
+    'alignment' : IDL.Text,
+    'subtitle1' : IDL.Text,
+    'subtitle2' : IDL.Text,
   });
   const CustomSection = IDL.Record({
     'id' : IDL.Nat,
@@ -1089,6 +1140,12 @@ export const idlFactory = ({ IDL }) => {
     'adminProfitPct' : IDL.Nat,
     'isEnabled' : IDL.Bool,
     'userProfitPct' : IDL.Nat,
+  });
+  const PaymentConfig = IDL.Record({
+    'razorpayKeyId' : IDL.Text,
+    'razorpayKeySecret' : IDL.Text,
+    'upiVpa' : IDL.Text,
+    'qrCodeUrl' : IDL.Text,
   });
   const RechargeApiConfig = IDL.Record({
     'autoRefundEnabled' : IDL.Bool,
@@ -1172,7 +1229,18 @@ export const idlFactory = ({ IDL }) => {
       ),
     'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
     'addCustomCode' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
         [IDL.Nat],
         [],
       ),
@@ -1349,7 +1417,10 @@ export const idlFactory = ({ IDL }) => {
           IDL.Record({
             'referralCode' : IDL.Text,
             'pendingEarnings' : IDL.Nat,
+            'tier3Earnings' : IDL.Nat,
+            'tier2Earnings' : IDL.Nat,
             'totalEarnings' : IDL.Nat,
+            'tier1Earnings' : IDL.Nat,
           }),
         ],
         ['query'],
@@ -1372,6 +1443,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Order)],
         ['query'],
       ),
+    'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
     'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getProviderProfile' : IDL.Func(
@@ -1458,7 +1530,7 @@ export const idlFactory = ({ IDL }) => {
     'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'registerOfferUser' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
-        [OfferUser],
+        [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
         [],
       ),
     'registerUser' : IDL.Func(
@@ -1488,6 +1560,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
     'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
@@ -1504,7 +1577,20 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateCustomCode' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
         [IDL.Bool],
         [],
       ),

@@ -199,6 +199,13 @@ type PlanType =
    pending;
    premium;
  };
+type PaymentConfig = 
+ record {
+   qrCodeUrl: text;
+   razorpayKeyId: text;
+   razorpayKeySecret: text;
+   upiVpa: text;
+ };
 type Order = 
  record {
    createdAt: int;
@@ -236,6 +243,9 @@ type OfferUser =
    pendingEarnings: nat;
    referralCode: text;
    referredBy: opt text;
+   tier1Earnings: nat;
+   tier2Earnings: nat;
+   tier3Earnings: nat;
    totalEarnings: nat;
    userId: text;
  };
@@ -312,13 +322,18 @@ type CustomSection =
  };
 type CustomCode = 
  record {
+   alignment: text;
    btnLabel: text;
    code: text;
    enabled: bool;
    icon: text;
    id: nat;
+   layoutStyle: text;
    name: text;
    placement: text;
+   subtitle1: text;
+   subtitle2: text;
+   title: text;
  };
 type ContentLockerConfig = record {features: vec LockedFeature;};
 type CommissionConfig = 
@@ -395,7 +410,8 @@ service : {
    displayOrder: nat) -> (nat);
   addCategory: (name: text, emoji: text, color: text) -> (nat);
   addCustomCode: (name: text, code: text, btnLabel: text, icon: text,
-   placement: text) -> (nat);
+   placement: text, title: text, subtitle1: text, subtitle2: text, alignment:
+   text, layoutStyle: text) -> (nat);
   addCustomSection: (name: text, heading: text, placement: text, buttons:
    text) -> (nat);
   addJob: (title: text, department: text, location: text, lastDate: text,
@@ -527,6 +543,9 @@ service : {
    (record {
       pendingEarnings: nat;
       referralCode: text;
+      tier1Earnings: nat;
+      tier2Earnings: nat;
+      tier3Earnings: nat;
       totalEarnings: nat;
     }) query;
   /// Get Offer Portal global config — admin only.
@@ -543,6 +562,9 @@ service : {
     }) query;
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
+  /// Returns the current payment configuration.
+  /// Readable by all callers — providers and riders need to display UPI/QR.
+  getPaymentConfig: () -> (PaymentConfig) query;
   /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
   getPendingApprovals: () -> (vec ProviderProfile) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
@@ -603,16 +625,19 @@ service : {
   placeOrder: (providerId: nat, customerName: text, description: text,
    orderType: text, imageUrl: opt text) -> (nat);
   /// Process a CPALead postback: verify secret, split profit, credit earnings.
-  /// Also triggers 1% referral bonus to the referrer if any.
+  /// Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
   processCpaLeadPostback: (offerUserId: nat, grossAmount: nat, webhookSecret:
    text) -> (bool);
   /// Refund a Failed recharge — restores netCost to user wallet — admin only.
   refundRecharge: (txId: nat) -> (bool);
   /// Register a new Offer Portal user (isolated from main user DB).
-  /// Returns the full OfferUser record so the frontend can auto-login
-  /// immediately after signup without a second round-trip.
+  /// Returns #ok(OfferUser) on success or #err("already_registered") for duplicate email
+  /// so the frontend can show a clean toast instead of a red error code.
   registerOfferUser: (email: text, passwordHash: text, referralCode:
-   opt text) -> (OfferUser);
+   opt text) -> (variant {
+                   err: text;
+                   ok: OfferUser;
+                 });
   registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
    UserRole, securityQuestion: text, securityAnswer: text) -> ();
   rejectProvider: (userId: nat) -> ();
@@ -637,6 +662,8 @@ service : {
                err: text;
                ok: text;
              });
+  /// Updates the payment configuration (admin only).
+  setPaymentConfig: (config: PaymentConfig) -> (bool);
   setPlanType: (userId: nat, planType: PlanType) -> ();
   /// Enable or disable the recharge service — admin only.
   setRechargeServiceEnabled: (enabled: bool) -> (bool);
@@ -650,7 +677,8 @@ service : {
   updateCommissionConfig: (globalPct: float64, retailerPct: float64,
    adminPct: float64) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
-   text, placement: text, enabled: bool) -> (bool);
+   text, placement: text, enabled: bool, title: text, subtitle1: text,
+   subtitle2: text, alignment: text, layoutStyle: text) -> (bool);
   updateCustomSection: (id: nat, name: text, heading: text, placement: 
    text, buttons: text, enabled: bool) -> (bool);
   updateJob: (id: nat, title: text, department: text, location: text,

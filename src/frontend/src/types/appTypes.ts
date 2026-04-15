@@ -177,6 +177,14 @@ export interface CustomCode {
   icon: string;
   placement: string;
   enabled: boolean;
+  /** Optional professional info fields */
+  title?: string;
+  subtitle1?: string;
+  subtitle2?: string;
+  /** Layout alignment: 'left' | 'right' | 'center' */
+  alignment?: "left" | "right" | "center";
+  /** Layout style: 'grid' (side-by-side) | 'stacked' (column) */
+  layoutStyle?: "grid" | "stacked";
 }
 
 export interface ScrapRate {
@@ -357,6 +365,15 @@ export interface UserSubscription {
   startDate: number;
   endDate: number;
   assignedByAdmin: boolean;
+}
+
+// ---- Payment Configuration ----
+
+export interface PaymentConfig {
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
+  upiVpa: string;
+  qrCodeUrl: string;
 }
 
 // ---- Pending Provider (same structure as ProviderProfile + selectedPlan) ----

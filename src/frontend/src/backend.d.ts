@@ -54,12 +54,17 @@ export interface OfferWithdrawal {
 }
 export interface CustomCode {
     id: bigint;
+    title: string;
     placement: string;
+    layoutStyle: string;
     code: string;
     icon: string;
     name: string;
     enabled: boolean;
     btnLabel: string;
+    alignment: string;
+    subtitle1: string;
+    subtitle2: string;
 }
 export interface OfferPortalConfig {
     cpaLeadWebhookSecret: string;
@@ -91,6 +96,12 @@ export interface Category {
     color: string;
     emoji: string;
     enabled: boolean;
+}
+export interface PaymentConfig {
+    razorpayKeyId: string;
+    razorpayKeySecret: string;
+    upiVpa: string;
+    qrCodeUrl: string;
 }
 export interface JobItem {
     id: bigint;
@@ -233,10 +244,13 @@ export interface OfferUser {
     userId: string;
     createdAt: bigint;
     pendingEarnings: bigint;
+    tier3Earnings: bigint;
     email: string;
     referredBy?: string;
+    tier2Earnings: bigint;
     passwordHash: string;
     totalEarnings: bigint;
+    tier1Earnings: bigint;
 }
 export interface CustomSection {
     id: bigint;
@@ -359,7 +373,7 @@ export enum Variant_pending_reversed_credited {
 export interface backendInterface {
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
     addCategory(name: string, emoji: string, color: string): Promise<bigint>;
-    addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string): Promise<bigint>;
+    addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<bigint>;
     addCustomSection(name: string, heading: string, placement: string, buttons: string): Promise<bigint>;
     addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
     addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
@@ -532,7 +546,10 @@ export interface backendInterface {
     getOfferEarningsSummary(offerUserId: bigint): Promise<{
         referralCode: string;
         pendingEarnings: bigint;
+        tier3Earnings: bigint;
+        tier2Earnings: bigint;
         totalEarnings: bigint;
+        tier1Earnings: bigint;
     }>;
     /**
      * / Get Offer Portal global config — admin only.
@@ -551,6 +568,11 @@ export interface backendInterface {
     }>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
+    /**
+     * / Returns the current payment configuration.
+     * / Readable by all callers — providers and riders need to display UPI/QR.
+     */
+    getPaymentConfig(): Promise<PaymentConfig>;
     /**
      * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
      */
@@ -642,7 +664,7 @@ export interface backendInterface {
     placeOrder(providerId: bigint, customerName: string, description: string, orderType: string, imageUrl: string | null): Promise<bigint>;
     /**
      * / Process a CPALead postback: verify secret, split profit, credit earnings.
-     * / Also triggers 1% referral bonus to the referrer if any.
+     * / Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
      */
     processCpaLeadPostback(offerUserId: bigint, grossAmount: bigint, webhookSecret: string): Promise<boolean>;
     /**
@@ -651,10 +673,16 @@ export interface backendInterface {
     refundRecharge(txId: bigint): Promise<boolean>;
     /**
      * / Register a new Offer Portal user (isolated from main user DB).
-     * / Returns the full OfferUser record so the frontend can auto-login
-     * / immediately after signup without a second round-trip.
+     * / Returns #ok(OfferUser) on success or #err("already_registered") for duplicate email
+     * / so the frontend can show a clean toast instead of a red error code.
      */
-    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<OfferUser>;
+    registerOfferUser(email: string, passwordHash: string, referralCode: string | null): Promise<{
+        __kind__: "ok";
+        ok: OfferUser;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
     rejectProvider(userId: bigint): Promise<void>;
     /**
@@ -690,6 +718,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Updates the payment configuration (admin only).
+     */
+    setPaymentConfig(config: PaymentConfig): Promise<boolean>;
     setPlanType(userId: bigint, planType: PlanType): Promise<void>;
     /**
      * / Enable or disable the recharge service — admin only.
@@ -704,7 +736,7 @@ export interface backendInterface {
      * / Validates: retailerPct + adminPct must equal globalPct.
      */
     updateCommissionConfig(globalPct: number, retailerPct: number, adminPct: number): Promise<boolean>;
-    updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean): Promise<boolean>;
+    updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;

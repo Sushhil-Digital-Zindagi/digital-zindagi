@@ -18,14 +18,16 @@ import WRTypes    "types/wallet-recharge";
 import WRApi      "mixins/wallet-recharge-api";
 import OPTypes    "types/offer-portal";
 import OPApi      "mixins/offer-portal-api";
-import OPLib      "lib/offer-portal";
 import SmsLib     "lib/sms";
 import CLTypes    "types/content-locker";
 import CLApi      "mixins/content-locker-api";
 import AuditTypes "types/admin-audit";
 import AuditApi   "mixins/admin-audit-api";
 import List       "mo:core/List";
+import PCTypes    "types/payment-config";
+import PCApi      "mixins/payment-config-api";
 import Migration  "migration";
+
 
 
 
@@ -127,6 +129,14 @@ persistent actor {
 
   // ── User Subscriptions state ──────────────────────────────────────────────
   var userSubscriptions : Map.Map<Text, AuditTypes.UserSubscription> = Map.empty<Text, AuditTypes.UserSubscription>();
+
+  // ── Payment Configuration state ───────────────────────────────────────────
+  var paymentConfig : PCTypes.PaymentConfig = {
+    razorpayKeyId     = "";
+    razorpayKeySecret = "";
+    upiVpa            = "";
+    qrCodeUrl         = "";
+  };
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -296,13 +306,18 @@ persistent actor {
   };
 
   type CustomCode = {
-    id : Nat;
-    name : Text;
-    code : Text;
-    btnLabel : Text;
-    icon : Text;
-    placement : Text;
-    enabled : Bool;
+    id          : Nat;
+    name        : Text;
+    code        : Text;
+    btnLabel    : Text;
+    icon        : Text;
+    placement   : Text;   // 'top' | 'middle' | 'bottom'
+    enabled     : Bool;
+    title       : Text;   // professional title label
+    subtitle1   : Text;   // first subtitle / info line
+    subtitle2   : Text;   // second subtitle / info line
+    alignment   : Text;   // 'left' | 'right' | 'center'
+    layoutStyle : Text;   // 'grid' | 'stacked'
   };
 
   type ScrapRate = {
@@ -1311,22 +1326,46 @@ persistent actor {
     customCodes.values().toArray();
   };
 
-  public shared ({ caller }) func addCustomCode(name : Text, code : Text, btnLabel : Text, icon : Text, placement : Text) : async Nat {
+  public shared ({ caller }) func addCustomCode(
+    name        : Text,
+    code        : Text,
+    btnLabel    : Text,
+    icon        : Text,
+    placement   : Text,
+    title       : Text,
+    subtitle1   : Text,
+    subtitle2   : Text,
+    alignment   : Text,
+    layoutStyle : Text,
+  ) : async Nat {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can add custom codes");
     };
     let id = nextCustomCodeId;
-    customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled = true });
+    customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled = true; title; subtitle1; subtitle2; alignment; layoutStyle });
     nextCustomCodeId += 1;
     id;
   };
 
-  public shared ({ caller }) func updateCustomCode(id : Nat, name : Text, code : Text, btnLabel : Text, icon : Text, placement : Text, enabled : Bool) : async Bool {
+  public shared ({ caller }) func updateCustomCode(
+    id          : Nat,
+    name        : Text,
+    code        : Text,
+    btnLabel    : Text,
+    icon        : Text,
+    placement   : Text,
+    enabled     : Bool,
+    title       : Text,
+    subtitle1   : Text,
+    subtitle2   : Text,
+    alignment   : Text,
+    layoutStyle : Text,
+  ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can update custom codes");
     };
     if (customCodes.containsKey(id)) {
-      customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled });
+      customCodes.add(id, { id; name; code; btnLabel; icon; placement; enabled; title; subtitle1; subtitle2; alignment; layoutStyle });
       true;
     } else { false };
   };
@@ -1921,12 +1960,12 @@ persistent actor {
   // ── OFFER PORTAL — user-facing ────────────────────────────────────────────
 
   /// Register a new Offer Portal user (isolated from main user DB).
-  /// Returns the full OfferUser record so the frontend can auto-login
-  /// immediately after signup without a second round-trip.
-  public shared ({ caller }) func registerOfferUser(email : Text, passwordHash : Text, referralCode : ?Text) : async OPTypes.OfferUser {
+  /// Returns #ok(OfferUser) on success or #err("already_registered") for duplicate email
+  /// so the frontend can show a clean toast instead of a red error code.
+  public shared ({ caller }) func registerOfferUser(email : Text, passwordHash : Text, referralCode : ?Text) : async { #ok : OPTypes.OfferUser; #err : Text } {
     switch (OPApi.registerOfferUser(offerUsers, nextOfferUserId, email, passwordHash, referralCode)) {
-      case (#ok(user)) { nextOfferUserId += 1; user };
-      case (#err(msg)) { Runtime.trap(msg) };
+      case (#ok(user)) { nextOfferUserId += 1; #ok(user) };
+      case (#err(msg)) { #err(msg) };
     };
   };
 
@@ -1939,7 +1978,7 @@ persistent actor {
   };
 
   /// Get earnings summary for an Offer Portal user.
-  public shared query ({ caller }) func getOfferEarningsSummary(offerUserId : Nat) : async { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text } {
+  public shared query ({ caller }) func getOfferEarningsSummary(offerUserId : Nat) : async { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat } {
     OPApi.getEarningsSummary(offerUsers, offerUserId);
   };
 
@@ -1964,7 +2003,7 @@ persistent actor {
   // ── OFFER PORTAL — CPALead postback ───────────────────────────────────────
 
   /// Process a CPALead postback: verify secret, split profit, credit earnings.
-  /// Also triggers 1% referral bonus to the referrer if any.
+  /// Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
   public shared ({ caller }) func processCpaLeadPostback(
     offerUserId   : Nat,
     grossAmount   : Nat,
@@ -1975,33 +2014,9 @@ persistent actor {
       offerPortalConfig, offerUserId, grossAmount, webhookSecret,
     )) {
       case (#err(_)) { false };
-      case (#ok(usedTxnId)) {
-        nextOfferTxnId += 1;
-        // Trigger referral bonus if user was referred
-        switch (offerUsers.get(offerUserId)) {
-          case null {};
-          case (?user) {
-            switch (user.referredBy) {
-              case null {};
-              case (?refCode) {
-                // Find referrer by referral code
-                let mReferrer = offerUsers.values()
-                  .find(func(u : OPTypes.OfferUser) : Bool { u.referralCode == refCode });
-                switch (mReferrer) {
-                  case null {};
-                  case (?referrer) {
-                    // Calculate user share for bonus base
-                    let (userShare, _) = OPLib.calculateProfitSplit(grossAmount, offerPortalConfig.userProfitPct);
-                    let txnUsed = OPApi.creditReferralBonus(
-                      offerUsers, offerTxns, nextOfferTxnId, referrer.id, userShare,
-                    );
-                    if (txnUsed != 0) { nextOfferTxnId += 1 };
-                  };
-                };
-              };
-            };
-          };
-        };
+      case (#ok(nextId)) {
+        // nextId reflects all consumed txn IDs (primary + up to 3 MLM tiers)
+        nextOfferTxnId := nextId;
         true;
       };
     };
@@ -2209,6 +2224,25 @@ persistent actor {
     userId : Text,
   ) : async ?AuditTypes.UserSubscription {
     AuditApi.getUserSubscriptionStatus(userSubscriptions, userId);
+  };
+
+  // ── Payment Configuration ─────────────────────────────────────────────────
+
+  /// Returns the current payment configuration.
+  /// Readable by all callers — providers and riders need to display UPI/QR.
+  public query func getPaymentConfig() : async PCTypes.PaymentConfig {
+    PCApi.getPaymentConfig(paymentConfig);
+  };
+
+  /// Updates the payment configuration (admin only).
+  public shared ({ caller }) func setPaymentConfig(config : PCTypes.PaymentConfig) : async Bool {
+    switch (PCApi.validateSetPaymentConfig(accessControlState, caller, config)) {
+      case (#err(_)) { false };
+      case (#ok(validated)) {
+        paymentConfig := validated;
+        true;
+      };
+    };
   };
 
 };

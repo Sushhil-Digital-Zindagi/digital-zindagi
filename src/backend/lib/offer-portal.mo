@@ -27,14 +27,17 @@ module {
   ) : OfferUser {
     {
       id;
-      userId        = "offer_user_" # id.toText();
+      userId          = "offer_user_" # id.toText();
       email;
       passwordHash;
-      referralCode  = generateReferralCode(id);
+      referralCode    = generateReferralCode(id);
       referredBy;
       totalEarnings   = 0;
       pendingEarnings = 0;
-      createdAt     = Time.now();
+      tier1Earnings   = 0;
+      tier2Earnings   = 0;
+      tier3Earnings   = 0;
+      createdAt       = Time.now();
     };
   };
 

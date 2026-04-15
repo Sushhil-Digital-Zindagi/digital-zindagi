@@ -12,6 +12,7 @@ import type {
   LockedFeature,
   NewsItem,
   Order,
+  PaymentConfig,
   ProviderProfile,
   RechargeReceipt,
   RechargeTransaction,
@@ -2551,5 +2552,81 @@ export function useVerifyUnlockKey() {
         return false;
       }
     },
+  });
+}
+
+// =====================================================================
+// PAYMENT CONFIGURATION HOOKS
+// Real-time 2s polling — admin sets, providers/users read instantly
+// =====================================================================
+
+const PAYMENT_CONFIG_LS_KEY = "dz_payment_config_cache";
+
+function lsReadPaymentConfig(): PaymentConfig {
+  try {
+    const raw = localStorage.getItem(PAYMENT_CONFIG_LS_KEY);
+    if (!raw)
+      return {
+        razorpayKeyId: "",
+        razorpayKeySecret: "",
+        upiVpa: "",
+        qrCodeUrl: "",
+      };
+    return JSON.parse(raw) as PaymentConfig;
+  } catch {
+    return {
+      razorpayKeyId: "",
+      razorpayKeySecret: "",
+      upiVpa: "",
+      qrCodeUrl: "",
+    };
+  }
+}
+
+/** Fetch payment configuration. Polls every 2s to ensure instant admin→user sync. */
+export function usePaymentConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery<PaymentConfig>({
+    queryKey: ["paymentConfig"],
+    queryFn: async () => {
+      if (!actor) return lsReadPaymentConfig();
+      try {
+        const raw = await (
+          actor as unknown as { getPaymentConfig(): Promise<string> }
+        ).getPaymentConfig();
+        if (!raw || raw === "{}") return lsReadPaymentConfig();
+        const parsed = JSON.parse(raw) as PaymentConfig;
+        localStorage.setItem(PAYMENT_CONFIG_LS_KEY, JSON.stringify(parsed));
+        return parsed;
+      } catch {
+        return lsReadPaymentConfig();
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 2000,
+    staleTime: 1500,
+  });
+}
+
+/** Mutation: admin saves payment config. Writes to canister and caches locally. */
+export function useUpdatePaymentConfig() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (config: PaymentConfig) => {
+      // Always cache locally first for instant UI update
+      localStorage.setItem(PAYMENT_CONFIG_LS_KEY, JSON.stringify(config));
+      if (!actor) return;
+      try {
+        await (
+          actor as unknown as {
+            setPaymentConfig(json: string): Promise<void>;
+          }
+        ).setPaymentConfig(JSON.stringify(config));
+      } catch {
+        // localStorage already saved — canister will sync on next poll
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentConfig"] }),
   });
 }

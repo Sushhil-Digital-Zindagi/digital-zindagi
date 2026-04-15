@@ -4,15 +4,18 @@ module {
   /// A user of the isolated Digital Zindagi Offer Portal.
   /// userId is prefixed with "offer_user_" to isolate from main user IDs.
   public type OfferUser = {
-    id            : Nat;
-    userId        : Text;    // e.g. "offer_user_42"
-    email         : Text;
-    passwordHash  : Text;    // stored as-is (future: apply hashing)
-    referralCode  : Text;    // unique referral code for this user
-    referredBy    : ?Text;   // referral code of the referrer, if any
-    totalEarnings : Nat;     // lifetime credited earnings (paise / smallest unit)
-    pendingEarnings : Nat;   // not-yet-credited earnings
-    createdAt     : Int;
+    id              : Nat;
+    userId          : Text;    // e.g. "offer_user_42"
+    email           : Text;
+    passwordHash    : Text;    // stored as-is (future: apply hashing)
+    referralCode    : Text;    // unique referral code for this user
+    referredBy      : ?Text;   // referral code of the direct referrer, if any
+    totalEarnings   : Nat;     // lifetime credited earnings (paise / smallest unit)
+    pendingEarnings : Nat;     // not-yet-credited earnings
+    tier1Earnings   : Nat;     // sum of commissions earned as tier-1 (5%)
+    tier2Earnings   : Nat;     // sum of commissions earned as tier-2 (2%)
+    tier3Earnings   : Nat;     // sum of commissions earned as tier-3 (1%)
+    createdAt       : Int;
   };
 
   /// A credit or debit event in the Offer Portal ledger.

@@ -74,6 +74,7 @@ import {
   useGetUserSubscriptionStatus,
   useJobs,
   useNews,
+  usePaymentConfig,
   useProvidersPendingApproval,
   useRecentUsers,
   useRejectProvider,
@@ -91,6 +92,7 @@ import {
   useUpdateJob,
   useUpdateLudoRedemptionStatus,
   useUpdateNews,
+  useUpdatePaymentConfig,
   useUpdateScrapRate,
   useUpdateToggle,
   useUsersByRole,
@@ -101,6 +103,7 @@ import type {
   Banner,
   LockedFeature,
   LudoRedemptionRequest,
+  PaymentConfig,
   ProviderProfile,
   SubscriptionPlan,
   User,
@@ -156,7 +159,8 @@ type AdminSection =
   | "offerControlCenter"
   | "providerApprovalsMgr"
   | "walletManagement"
-  | "contentLocker";
+  | "contentLocker"
+  | "paymentConfig";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -7244,6 +7248,11 @@ interface CustomCodeEntry {
   placement: "top" | "middle" | "bottom";
   enabled: boolean;
   createdAt: number;
+  title?: string;
+  subtitle1?: string;
+  subtitle2?: string;
+  alignment?: "left" | "right" | "center";
+  layoutStyle?: "grid" | "stacked";
 }
 
 function CustomCodeManagerSection() {
@@ -7266,6 +7275,13 @@ function CustomCodeManagerSection() {
   const [placement, setPlacement] = useState<"top" | "middle" | "bottom">(
     "middle",
   );
+  const [title, setTitle] = useState("");
+  const [subtitle1, setSubtitle1] = useState("");
+  const [subtitle2, setSubtitle2] = useState("");
+  const [alignment, setAlignment] = useState<"left" | "right" | "center">(
+    "left",
+  );
+  const [layoutStyle, setLayoutStyle] = useState<"grid" | "stacked">("stacked");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Sync canister data into local state when it arrives
@@ -7278,6 +7294,11 @@ function CustomCodeManagerSection() {
         placement: (c.placement as "top" | "middle" | "bottom") ?? "middle",
         enabled: c.enabled,
         createdAt: c.id,
+        title: c.title,
+        subtitle1: c.subtitle1,
+        subtitle2: c.subtitle2,
+        alignment: c.alignment,
+        layoutStyle: c.layoutStyle,
       }));
       setEntries(mapped);
       localStorage.setItem("dz_custom_codes", JSON.stringify(mapped));
@@ -7290,6 +7311,18 @@ function CustomCodeManagerSection() {
     broadcastSettingsChange();
   };
 
+  const resetForm = () => {
+    setBtnLabel("");
+    setCode("");
+    setPlacement("middle");
+    setTitle("");
+    setSubtitle1("");
+    setSubtitle2("");
+    setAlignment("left");
+    setLayoutStyle("stacked");
+    setEditingId(null);
+  };
+
   const handleSave = async () => {
     if (!btnLabel.trim()) {
       toast.error("Label/naam dena zaroori hai");
@@ -7299,6 +7332,9 @@ function CustomCodeManagerSection() {
       toast.error("Code dena zaroori hai");
       return;
     }
+    // Build extra fields into the name (JSON-encoded metadata stored in name field)
+    // since canister addCustomCode doesn't accept extra args yet, we store metadata
+    // in localStorage-merged entry and use the name field for frontend display.
     try {
       if (editingId) {
         await updateCustomCodeMutation.mutateAsync({
@@ -7318,12 +7354,17 @@ function CustomCodeManagerSection() {
                   btnLabel: btnLabel.trim(),
                   code: code.trim(),
                   placement,
+                  title: title.trim() || undefined,
+                  subtitle1: subtitle1.trim() || undefined,
+                  subtitle2: subtitle2.trim() || undefined,
+                  alignment,
+                  layoutStyle,
                 }
               : e,
           ),
         );
         toast.success("Code update ho gaya!");
-        setEditingId(null);
+        resetForm();
       } else {
         await addCustomCodeMutation.mutateAsync({
           name: btnLabel.trim(),
@@ -7345,12 +7386,17 @@ function CustomCodeManagerSection() {
                   btnLabel: btnLabel.trim(),
                   code: code.trim(),
                   placement,
+                  title: title.trim() || undefined,
+                  subtitle1: subtitle1.trim() || undefined,
+                  subtitle2: subtitle2.trim() || undefined,
+                  alignment,
+                  layoutStyle,
                 }
               : e,
           ),
         );
         toast.success("Code update ho gaya!");
-        setEditingId(null);
+        resetForm();
       } else {
         const newEntry: CustomCodeEntry = {
           id: Date.now().toString(),
@@ -7359,14 +7405,17 @@ function CustomCodeManagerSection() {
           placement,
           enabled: true,
           createdAt: Date.now(),
+          title: title.trim() || undefined,
+          subtitle1: subtitle1.trim() || undefined,
+          subtitle2: subtitle2.trim() || undefined,
+          alignment,
+          layoutStyle,
         };
         saveEntries([...entries, newEntry]);
         toast.success("Custom code add ho gaya! Homepage par dikh raha hai.");
       }
     }
-    setBtnLabel("");
-    setCode("");
-    setPlacement("middle");
+    resetForm();
   };
 
   const handleEdit = (entry: CustomCodeEntry) => {
@@ -7374,6 +7423,11 @@ function CustomCodeManagerSection() {
     setBtnLabel(entry.btnLabel);
     setCode(entry.code);
     setPlacement(entry.placement);
+    setTitle(entry.title ?? "");
+    setSubtitle1(entry.subtitle1 ?? "");
+    setSubtitle2(entry.subtitle2 ?? "");
+    setAlignment(entry.alignment ?? "left");
+    setLayoutStyle(entry.layoutStyle ?? "stacked");
   };
 
   const handleDelete = async (id: string) => {
@@ -7407,13 +7461,6 @@ function CustomCodeManagerSection() {
     broadcastSettingsChange();
   };
 
-  const handleCancel = () => {
-    setEditingId(null);
-    setBtnLabel("");
-    setCode("");
-    setPlacement("middle");
-  };
-
   const placementLabels = {
     top: "Top (Hero ke upar)",
     middle: "Middle (Category ke baad)",
@@ -7431,6 +7478,8 @@ function CustomCodeManagerSection() {
           Koi bhi HTML, JS, ya CSS code paste karein — Homepage par
           automatically button ban jaayega.
         </p>
+
+        {/* Label / Button Name */}
         <div>
           <label
             htmlFor="cc-label"
@@ -7448,6 +7497,110 @@ function CustomCodeManagerSection() {
             className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
+
+        {/* Professional Info: Title + Subtitle1 + Subtitle2 */}
+        <div className="grid grid-cols-1 gap-3">
+          <div>
+            <label
+              htmlFor="cc-title"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1"
+            >
+              Title (Optional)
+            </label>
+            <input
+              id="cc-title"
+              data-ocid="admin.input"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="jaise: Special Offer"
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                htmlFor="cc-sub1"
+                className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1"
+              >
+                Subtitle 1
+              </label>
+              <input
+                id="cc-sub1"
+                data-ocid="admin.input"
+                type="text"
+                value={subtitle1}
+                onChange={(e) => setSubtitle1(e.target.value)}
+                placeholder="Sub-heading 1"
+                className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="cc-sub2"
+                className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1"
+              >
+                Subtitle 2
+              </label>
+              <input
+                id="cc-sub2"
+                data-ocid="admin.input"
+                type="text"
+                value={subtitle2}
+                onChange={(e) => setSubtitle2(e.target.value)}
+                placeholder="Sub-heading 2"
+                className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Layout Controls: Alignment + Layout Style */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label
+              htmlFor="cc-alignment"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1"
+            >
+              Alignment
+            </label>
+            <select
+              id="cc-alignment"
+              data-ocid="admin.input"
+              value={alignment}
+              onChange={(e) =>
+                setAlignment(e.target.value as "left" | "right" | "center")
+              }
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="cc-layout"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1"
+            >
+              Layout Style
+            </label>
+            <select
+              id="cc-layout"
+              data-ocid="admin.input"
+              value={layoutStyle}
+              onChange={(e) =>
+                setLayoutStyle(e.target.value as "grid" | "stacked")
+              }
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-white"
+            >
+              <option value="stacked">Stacked (Column)</option>
+              <option value="grid">Grid (Side-by-side)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Placement */}
         <div>
           <label
             htmlFor="cc-placement"
@@ -7469,6 +7622,8 @@ function CustomCodeManagerSection() {
             <option value="bottom">Bottom — Footer ke pehle</option>
           </select>
         </div>
+
+        {/* Code Textarea */}
         <div>
           <label
             htmlFor="cc-code"
@@ -7488,6 +7643,47 @@ function CustomCodeManagerSection() {
             className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono resize-y"
           />
         </div>
+
+        {/* Button Preview */}
+        {btnLabel && (
+          <div className="bg-muted/40 rounded-xl p-3 border border-border">
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+              Preview
+            </p>
+            <div
+              className={`flex flex-col gap-0.5 ${
+                alignment === "right"
+                  ? "items-end"
+                  : alignment === "center"
+                    ? "items-center"
+                    : "items-start"
+              }`}
+            >
+              {title && (
+                <span className="text-xs font-semibold text-foreground">
+                  {title}
+                </span>
+              )}
+              {subtitle1 && (
+                <span className="text-xs text-muted-foreground">
+                  {subtitle1}
+                </span>
+              )}
+              {subtitle2 && (
+                <span className="text-xs text-muted-foreground">
+                  {subtitle2}
+                </span>
+              )}
+              <button
+                type="button"
+                className="text-xs py-1 px-3 bg-primary text-primary-foreground rounded-lg font-medium mt-1"
+              >
+                {btnLabel}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button
             type="button"
@@ -7500,8 +7696,8 @@ function CustomCodeManagerSection() {
           {editingId && (
             <button
               type="button"
-              onClick={handleCancel}
-              className="px-5 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+              onClick={resetForm}
+              className="px-5 py-3 bg-muted text-muted-foreground rounded-xl text-sm font-medium hover:bg-muted/80 transition-colors"
             >
               Cancel
             </button>
@@ -7531,8 +7727,15 @@ function CustomCodeManagerSection() {
                     <p className="font-semibold text-sm text-foreground truncate">
                       {entry.btnLabel}
                     </p>
+                    {entry.title && (
+                      <p className="text-xs text-foreground/70 truncate">
+                        📌 {entry.title}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       📍 {placementLabels[entry.placement]} &nbsp;|&nbsp;{" "}
+                      {entry.alignment ?? "left"} &nbsp;|&nbsp;{" "}
+                      {entry.layoutStyle ?? "stacked"} &nbsp;|&nbsp;{" "}
                       {entry.enabled ? "✅ ON" : "⛔ OFF"}
                     </p>
                   </div>
@@ -7588,7 +7791,8 @@ function CustomCodeManagerSection() {
             JS code bhi kaam karta hai — popup, floating button, timer, sab kuch
           </li>
           <li>CSS inject karna ho to &lt;style&gt; tag mein wrap karein</li>
-          <li>Placement choose karein — top, middle, ya bottom</li>
+          <li>Title/Subtitle fields se professional info add karein</li>
+          <li>Grid layout se 2 buttons side-by-side dikhenge</li>
           <li>ON/OFF toggle se turant Homepage par show/hide hoga</li>
         </ul>
       </div>
@@ -11052,11 +11256,11 @@ function OfferProfitMarginTab() {
       {/* Current Split Display */}
       <div className="bg-white rounded-2xl border border-border shadow-card p-5">
         <h3 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
-          💹 CPALead Profit Split
+          💹 Offer Portal Profit Split
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Jab CPALead se koi conversion aata hai, yeh percentage se earning
-          divide hogi Admin aur User ke beech.
+          Jab koi conversion aata hai, yeh percentage se earning divide hogi
+          Admin aur User ke beech.
         </p>
 
         {/* Visual Split Bar */}
@@ -11148,8 +11352,8 @@ function OfferProfitMarginTab() {
             📊 Example Calculation:
           </p>
           <p className="text-xs text-muted-foreground">
-            CPALead se ₹100 conversion aaya → Admin ko ₹{adminPct}, User ko ₹
-            {userPct} milega.
+            Conversion se ₹100 aaya → Admin ko ₹{adminPct}, User ko ₹{userPct}{" "}
+            milega.
           </p>
         </div>
       </div>
@@ -12596,6 +12800,246 @@ function ContentLockerSection() {
   );
 }
 
+// ─── Payment Configuration Section ─────────────────────────────────────────
+
+function PaymentConfigSection() {
+  const { data: config, isLoading } = usePaymentConfig();
+  const updateConfig = useUpdatePaymentConfig();
+
+  const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState("");
+  const [upiVpa, setUpiVpa] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate fields from loaded config (once)
+  if (!hydrated && config !== undefined) {
+    setRazorpayKeyId(config.razorpayKeyId ?? "");
+    setRazorpayKeySecret(config.razorpayKeySecret ?? "");
+    setUpiVpa(config.upiVpa ?? "");
+    setQrCodeUrl(config.qrCodeUrl ?? "");
+    setHydrated(true);
+  }
+
+  const handleSave = () => {
+    if (!upiVpa.trim()) {
+      toast.error("UPI VPA (ID) daalna zaroori hai");
+      return;
+    }
+    const payload: PaymentConfig = {
+      razorpayKeyId: razorpayKeyId.trim(),
+      razorpayKeySecret: razorpayKeySecret.trim(),
+      upiVpa: upiVpa.trim(),
+      qrCodeUrl: qrCodeUrl.trim(),
+    };
+    updateConfig.mutate(payload, {
+      onSuccess: () =>
+        toast.success(
+          "💳 Payment Config saved! Sabhi providers ko 2s mein dikhi jaayegi.",
+        ),
+      onError: () => toast.error("Save fail hua — dobara try karein"),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+        <Loader2 size={16} className="animate-spin" />
+        <span className="text-sm">Loading payment config...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Info Banner */}
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
+        <span className="text-xl mt-0.5">💳</span>
+        <div>
+          <p className="text-sm font-semibold text-emerald-800">
+            Payment Gateway Control
+          </p>
+          <p className="text-xs text-emerald-700 mt-0.5">
+            Yahan jo bhi save hoga — UPI ID, QR Code URL, Razorpay keys — woh
+            sabhi Providers aur Riders ko 1-2 seconds mein dikhai dega. Admin
+            Panel hi single source of truth hai.
+          </p>
+        </div>
+      </div>
+
+      {/* Razorpay Settings */}
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+        <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+          <span>🏦</span> Razorpay Integration (India)
+        </h3>
+        <div>
+          <label
+            htmlFor="pc-rzp-key-id"
+            className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+          >
+            Razorpay Key ID
+          </label>
+          <input
+            id="pc-rzp-key-id"
+            data-ocid="payment_config.razorpay_key_id_input"
+            type="text"
+            placeholder="rzp_live_xxxxxxxxxxxx"
+            value={razorpayKeyId}
+            onChange={(e) => setRazorpayKeyId(e.target.value)}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="pc-rzp-key-secret"
+            className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+          >
+            Razorpay Key Secret
+          </label>
+          <div className="relative">
+            <input
+              id="pc-rzp-key-secret"
+              data-ocid="payment_config.razorpay_secret_input"
+              type={showSecret ? "text" : "password"}
+              placeholder="Key Secret (confidential)"
+              value={razorpayKeySecret}
+              onChange={(e) => setRazorpayKeySecret(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono pr-20"
+            />
+            <button
+              type="button"
+              onClick={() => setShowSecret((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary font-semibold hover:underline"
+            >
+              {showSecret ? "Hide" : "Show"}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            ⚠️ Key Secret ko secure rakhein — kisi ke saath share mat karein
+          </p>
+        </div>
+      </div>
+
+      {/* UPI & QR Settings */}
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+        <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+          <span>📱</span> UPI & QR Code
+        </h3>
+        <div>
+          <label
+            htmlFor="pc-upi-vpa"
+            className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+          >
+            UPI VPA (ID) *
+          </label>
+          <input
+            id="pc-upi-vpa"
+            data-ocid="payment_config.upi_vpa_input"
+            type="text"
+            placeholder="yourname@upi"
+            value={upiVpa}
+            onChange={(e) => setUpiVpa(e.target.value)}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Yeh ID Provider Subscribe page par dikhegi
+          </p>
+        </div>
+        <div>
+          <label
+            htmlFor="pc-qr-url"
+            className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+          >
+            QR Code Image URL
+          </label>
+          <input
+            id="pc-qr-url"
+            data-ocid="payment_config.qr_code_url_input"
+            type="url"
+            placeholder="https://example.com/qr.png"
+            value={qrCodeUrl}
+            onChange={(e) => setQrCodeUrl(e.target.value)}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Imgur ya kisi bhi CDN par upload karke URL paste karein
+          </p>
+        </div>
+
+        {/* QR Preview */}
+        {qrCodeUrl && (
+          <div className="border border-border rounded-xl p-3 flex items-center gap-3">
+            <img
+              src={qrCodeUrl}
+              alt="QR Code Preview"
+              className="w-20 h-20 object-contain rounded-lg border border-border flex-shrink-0"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-foreground">
+                QR Code Preview
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {qrCodeUrl}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Save Button */}
+      <button
+        type="button"
+        data-ocid="payment_config.save_button"
+        onClick={handleSave}
+        disabled={updateConfig.isPending}
+        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all disabled:opacity-60 text-sm shadow-md"
+      >
+        {updateConfig.isPending ? (
+          <>
+            <Loader2 size={15} className="animate-spin" /> Saving...
+          </>
+        ) : (
+          <>💾 Payment Config Save Karein</>
+        )}
+      </button>
+
+      {/* Current live values summary */}
+      {config && (config.upiVpa || config.razorpayKeyId) && (
+        <div className="bg-muted/40 border border-border rounded-xl p-4">
+          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+            Currently Live
+          </p>
+          <div className="space-y-1">
+            {config.upiVpa && (
+              <p className="text-sm text-foreground">
+                UPI:{" "}
+                <span className="font-mono font-semibold">{config.upiVpa}</span>
+              </p>
+            )}
+            {config.razorpayKeyId && (
+              <p className="text-sm text-foreground">
+                Razorpay Key:{" "}
+                <span className="font-mono font-semibold">
+                  {config.razorpayKeyId.slice(0, 12)}...
+                </span>
+              </p>
+            )}
+            {config.qrCodeUrl && (
+              <p className="text-sm text-foreground">
+                QR: <span className="text-emerald-600 font-medium">Set ✅</span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const isManager = user?.role === "manager";
@@ -12822,6 +13266,12 @@ export default function AdminDashboardPage() {
       label: "🔒 Content Locker",
       icon: <Shield size={18} />,
     },
+    {
+      key: "paymentConfig" as AdminSection,
+      label: "💳 Payment Config",
+      icon: <span>💳</span>,
+      groupHeader: "💳 Payment Gateway",
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -12926,6 +13376,8 @@ export default function AdminDashboardPage() {
         return <WalletManagementSection />;
       case "contentLocker" as AdminSection:
         return <ContentLockerSection />;
+      case "paymentConfig" as AdminSection:
+        return <PaymentConfigSection />;
       default:
         return <UserManagement />;
     }

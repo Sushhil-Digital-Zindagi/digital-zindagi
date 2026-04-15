@@ -49,12 +49,13 @@ function ProviderRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <span className="text-primary">Load Ho Raha Hai...</span>
       </div>
     );
-  if (!user || user.role !== UserRole.provider)
-    return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/signup?role=provider" replace />;
+  if (user.role !== UserRole.provider)
+    return <Navigate to="/signup?role=provider" replace />;
   return <>{children}</>;
 }
 
@@ -68,7 +69,7 @@ function ManagerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <span className="text-primary">Load Ho Raha Hai...</span>
       </div>
     );
@@ -82,7 +83,7 @@ function UdhaarRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isFullAdmin } = useAuth();
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <span className="text-primary">Load Ho Raha Hai...</span>
       </div>
     );

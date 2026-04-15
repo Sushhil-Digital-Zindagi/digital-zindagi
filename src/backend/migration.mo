@@ -1,45 +1,114 @@
-// migration.mo — Explicit migration for offerPortalConfig schema change.
-// Adds the new `cpagripApiKey` field with a default empty string.
+// migration.mo — Explicit migration for stable-incompatible field additions.
 //
-// Old OfferPortalConfig (no cpagripApiKey):
-//   { isEnabled; cpaLeadWebhookSecret; adminProfitPct; userProfitPct }
+// Two stable variables changed shape between the old and new version:
+//   1. customCodes: CustomCode gained title/subtitle1/subtitle2/alignment/layoutStyle fields.
+//   2. offerUsers:  OfferUser gained tier1Earnings/tier2Earnings/tier3Earnings fields.
 //
-// New OfferPortalConfig (with cpagripApiKey):
-//   { isEnabled; cpaLeadWebhookSecret; cpagripApiKey; adminProfitPct; userProfitPct }
+// All other stable fields are unchanged and are passed through implicitly.
+
+import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 
 module {
 
-  // Old type — defined inline (do NOT import from .old/)
-  type OldOfferPortalConfig = {
-    isEnabled            : Bool;
-    cpaLeadWebhookSecret : Text;
-    adminProfitPct       : Nat;
-    userProfitPct        : Nat;
+  // ── Old type definitions (copied from .old/src/backend/main.mo) ────────────
+
+  type OldCustomCode = {
+    id       : Nat;
+    name     : Text;
+    code     : Text;
+    btnLabel : Text;
+    icon     : Text;
+    placement : Text;
+    enabled  : Bool;
   };
 
-  // New type — matches the current types/offer-portal.mo definition
-  type NewOfferPortalConfig = {
-    isEnabled            : Bool;
-    cpaLeadWebhookSecret : Text;
-    cpagripApiKey        : Text;
-    adminProfitPct       : Nat;
-    userProfitPct        : Nat;
+  type OldOfferUser = {
+    id              : Nat;
+    userId          : Text;
+    email           : Text;
+    passwordHash    : Text;
+    referralCode    : Text;
+    referredBy      : ?Text;
+    totalEarnings   : Nat;
+    pendingEarnings : Nat;
+    createdAt       : Int;
   };
 
-  type OldActor = {
-    var offerPortalConfig : OldOfferPortalConfig;
+  // ── New type definitions (must match main.mo exactly) ─────────────────────
+
+  type NewCustomCode = {
+    id          : Nat;
+    name        : Text;
+    code        : Text;
+    btnLabel    : Text;
+    icon        : Text;
+    placement   : Text;
+    enabled     : Bool;
+    title       : Text;
+    subtitle1   : Text;
+    subtitle2   : Text;
+    alignment   : Text;
+    layoutStyle : Text;
   };
 
-  type NewActor = {
-    var offerPortalConfig : NewOfferPortalConfig;
+  type NewOfferUser = {
+    id              : Nat;
+    userId          : Text;
+    email           : Text;
+    passwordHash    : Text;
+    referralCode    : Text;
+    referredBy      : ?Text;
+    totalEarnings   : Nat;
+    pendingEarnings : Nat;
+    tier1Earnings   : Nat;
+    tier2Earnings   : Nat;
+    tier3Earnings   : Nat;
+    createdAt       : Int;
   };
 
-  public func run(old : OldActor) : NewActor {
+  // ── Migration input/output records ────────────────────────────────────────
+
+  type OldState = {
+    var customCodes : Map.Map<Nat, OldCustomCode>;
+    var offerUsers  : Map.Map<Nat, OldOfferUser>;
+  };
+
+  type NewState = {
+    var customCodes : Map.Map<Nat, NewCustomCode>;
+    var offerUsers  : Map.Map<Nat, NewOfferUser>;
+  };
+
+  // ── Migration function ─────────────────────────────────────────────────────
+
+  public func run(old : OldState) : NewState {
+    let newCustomCodes = old.customCodes.map<Nat, OldCustomCode, NewCustomCode>(
+      func(_id, cc) {
+        {
+          cc with
+          title       = "";
+          subtitle1   = "";
+          subtitle2   = "";
+          alignment   = "left";
+          layoutStyle = "stacked";
+        };
+      }
+    );
+
+    let newOfferUsers = old.offerUsers.map<Nat, OldOfferUser, NewOfferUser>(
+      func(_id, u) {
+        {
+          u with
+          tier1Earnings = 0;
+          tier2Earnings = 0;
+          tier3Earnings = 0;
+        };
+      }
+    );
+
     {
-      var offerPortalConfig = {
-        old.offerPortalConfig with
-        cpagripApiKey = "";
-      };
+      var customCodes = newCustomCodes;
+      var offerUsers  = newOfferUsers;
     };
   };
 
