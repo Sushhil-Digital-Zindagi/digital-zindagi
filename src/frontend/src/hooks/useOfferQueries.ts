@@ -159,6 +159,8 @@ export function useOfferEarningsSummary(
         tier1Earnings: 0n,
         tier2Earnings: 0n,
         tier3Earnings: 0n,
+        tier4Earnings: 0n,
+        tier5Earnings: 0n,
       };
       if (!actor || offerUserId == null) return empty;
       try {
@@ -171,6 +173,8 @@ export function useOfferEarningsSummary(
           tier1Earnings: raw.tier1Earnings ?? 0n,
           tier2Earnings: raw.tier2Earnings ?? 0n,
           tier3Earnings: raw.tier3Earnings ?? 0n,
+          tier4Earnings: raw.tier4Earnings ?? 0n,
+          tier5Earnings: raw.tier5Earnings ?? 0n,
         };
       } catch {
         return empty;
@@ -284,7 +288,7 @@ export function useRegisterOfferUser() {
       const msg =
         err instanceof Error
           ? err.message
-          : "Account banana fail hua. Dobara try karein.";
+          : "Registration failed. Please try again.";
       // Detect "already registered" error and show a friendly toast
       const isAlreadyRegistered =
         msg.toLowerCase().includes("already") ||
@@ -292,9 +296,9 @@ export function useRegisterOfferUser() {
         msg.toLowerCase().includes("registered") ||
         msg.includes("already_registered");
       if (isAlreadyRegistered) {
-        toast.error("User already registered — Login karein");
+        toast.error("User already registered");
       } else {
-        toast.error(msg);
+        toast.error("Registration failed. Please try again.");
       }
     },
   });

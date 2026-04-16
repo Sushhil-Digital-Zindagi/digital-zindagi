@@ -26,13 +26,14 @@ import AuditApi   "mixins/admin-audit-api";
 import List       "mo:core/List";
 import PCTypes    "types/payment-config";
 import PCApi      "mixins/payment-config-api";
+import ASTypes    "types/admin-settings";
 import Migration  "migration";
 
 
 
 
-
 // The persistent actor sculpture, defined with `persistent` fields:
+
 
 
 (with migration = Migration.run)
@@ -136,6 +137,30 @@ persistent actor {
     razorpayKeySecret = "";
     upiVpa            = "";
     qrCodeUrl         = "";
+  };
+
+  // ── Unified Admin Settings state ──────────────────────────────────────────
+  var adminSettings : ASTypes.AdminSettings = {
+    referralLevel1Pct   = 5;
+    referralLevel2Pct   = 2;
+    referralLevel3Pct   = 1;
+    referralLevel4Pct   = 0.5;
+    referralLevel5Pct   = 0.25;
+    upiId               = "";
+    upiQrCodeUrl        = "";
+    razorpayKeyId       = "";
+    razorpayKeySecret   = "";
+    pointsPerAd         = 10;
+    redemptionRate      = 100;
+    minWithdrawal       = 50;
+    cpagripApiKey       = "";
+    cloudinaryCloudName = "dquyiiu7o";
+    cloudinaryApiKey    = "199372638334688";
+    cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
+    ludoEnabled         = true;
+    rewardsEnabled      = true;
+    gameEnabled         = true;
+    udhaarBookEnabled   = true;
   };
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
@@ -1978,7 +2003,7 @@ persistent actor {
   };
 
   /// Get earnings summary for an Offer Portal user.
-  public shared query ({ caller }) func getOfferEarningsSummary(offerUserId : Nat) : async { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat } {
+  public shared query ({ caller }) func getOfferEarningsSummary(offerUserId : Nat) : async { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat; tier4Earnings : Nat; tier5Earnings : Nat } {
     OPApi.getEarningsSummary(offerUsers, offerUserId);
   };
 
@@ -2011,7 +2036,7 @@ persistent actor {
   ) : async Bool {
     switch (OPApi.processCpaLeadPostback(
       offerUsers, offerTxns, nextOfferTxnId,
-      offerPortalConfig, offerUserId, grossAmount, webhookSecret,
+      offerPortalConfig, adminSettings, offerUserId, grossAmount, webhookSecret,
     )) {
       case (#err(_)) { false };
       case (#ok(nextId)) {
@@ -2243,6 +2268,97 @@ persistent actor {
         true;
       };
     };
+  };
+
+  // ── Unified Admin Settings ────────────────────────────────────────────────
+
+  /// Return all admin settings — readable by any caller so the frontend can
+  /// apply toggles and rates without an admin auth round-trip.
+  public query func getAdminSettings() : async ASTypes.AdminSettings {
+    adminSettings;
+  };
+
+  /// Replace ALL admin settings in one atomic call — admin only.
+  /// All existing field values are overwritten with the supplied record.
+  public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettings) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    adminSettings := settings;
+    // Mirror payment fields into paymentConfig for backward compat
+    paymentConfig := {
+      razorpayKeyId     = settings.razorpayKeyId;
+      razorpayKeySecret = settings.razorpayKeySecret;
+      upiVpa            = settings.upiId;
+      qrCodeUrl         = settings.upiQrCodeUrl;
+    };
+    // Mirror cpagripApiKey into offerPortalConfig
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = settings.cpagripApiKey };
+    true;
+  };
+
+  /// Update only Ludo / Rewards settings — admin only.
+  public shared ({ caller }) func updateLudoSettings(
+    ludoEnabled    : Bool,
+    rewardsEnabled : Bool,
+    pointsPerAd    : Nat,
+    redemptionRate : Nat,
+    minWithdrawal  : Nat,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    adminSettings := {
+      adminSettings with
+      ludoEnabled;
+      rewardsEnabled;
+      pointsPerAd;
+      redemptionRate;
+      minWithdrawal;
+    };
+    true;
+  };
+
+  /// Update only the 5-tier referral rates — admin only.
+  public shared ({ caller }) func updateReferralRates(
+    level1Pct : Nat,
+    level2Pct : Nat,
+    level3Pct : Nat,
+    level4Pct : Float,
+    level5Pct : Float,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    adminSettings := {
+      adminSettings with
+      referralLevel1Pct = level1Pct;
+      referralLevel2Pct = level2Pct;
+      referralLevel3Pct = level3Pct;
+      referralLevel4Pct = level4Pct;
+      referralLevel5Pct = level5Pct;
+    };
+    true;
+  };
+
+  /// Return Cloudinary cloud name and API key — public query.
+  /// The API secret is NEVER returned; it stays server-side only.
+  public query func getCloudinaryConfig() : async { cloudName : Text; apiKey : Text } {
+    {
+      cloudName = adminSettings.cloudinaryCloudName;
+      apiKey    = adminSettings.cloudinaryApiKey;
+    };
+  };
+
+  /// Save the CPAGrip API key in canister state — admin only.
+  /// Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
+  public shared ({ caller }) func updateCpagripApiKey(apiKey : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    adminSettings := { adminSettings with cpagripApiKey = apiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
+    true;
   };
 
 };

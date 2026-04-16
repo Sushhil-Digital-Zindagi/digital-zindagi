@@ -45,7 +45,9 @@ export const UdhaarTransaction = IDL.Record({
 });
 export const OfferUser = IDL.Record({
   'id' : IDL.Nat,
+  'tier5Earnings' : IDL.Nat,
   'referralCode' : IDL.Text,
+  'tier4Earnings' : IDL.Nat,
   'userId' : IDL.Text,
   'createdAt' : IDL.Int,
   'pendingEarnings' : IDL.Nat,
@@ -151,6 +153,28 @@ export const AdminConfig = IDL.Record({
   'upiId' : IDL.Text,
   'mobile' : MobileNumber,
   'qrCodeBlobId' : ExternalBlob,
+});
+export const AdminSettings = IDL.Record({
+  'pointsPerAd' : IDL.Nat,
+  'cloudinaryApiKey' : IDL.Text,
+  'cpagripApiKey' : IDL.Text,
+  'razorpayKeyId' : IDL.Text,
+  'razorpayKeySecret' : IDL.Text,
+  'gameEnabled' : IDL.Bool,
+  'referralLevel1Pct' : IDL.Nat,
+  'referralLevel2Pct' : IDL.Nat,
+  'referralLevel3Pct' : IDL.Nat,
+  'referralLevel4Pct' : IDL.Float64,
+  'referralLevel5Pct' : IDL.Float64,
+  'minWithdrawal' : IDL.Nat,
+  'upiQrCodeUrl' : IDL.Text,
+  'rewardsEnabled' : IDL.Bool,
+  'upiId' : IDL.Text,
+  'cloudinaryCloudName' : IDL.Text,
+  'ludoEnabled' : IDL.Bool,
+  'redemptionRate' : IDL.Nat,
+  'udhaarBookEnabled' : IDL.Bool,
+  'cloudinaryApiSecret' : IDL.Text,
 });
 export const RechargeTransaction = IDL.Record({
   'id' : IDL.Nat,
@@ -520,6 +544,7 @@ export const idlService = IDL.Service({
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAdminAuditLog' : IDL.Func([IDL.Nat], [IDL.Vec(AuditLogEntry)], ['query']),
   'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
+  'getAdminSettings' : IDL.Func([], [AdminSettings], ['query']),
   'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAllRechargeTransactions' : IDL.Func(
       [],
@@ -546,6 +571,11 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'getCloudinaryConfig' : IDL.Func(
+      [],
+      [IDL.Record({ 'cloudName' : IDL.Text, 'apiKey' : IDL.Text })],
+      ['query'],
+    ),
   'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
   'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
@@ -575,7 +605,9 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [
         IDL.Record({
+          'tier5Earnings' : IDL.Nat,
           'referralCode' : IDL.Text,
+          'tier4Earnings' : IDL.Nat,
           'pendingEarnings' : IDL.Nat,
           'tier3Earnings' : IDL.Nat,
           'tier2Earnings' : IDL.Nat,
@@ -725,6 +757,7 @@ export const idlService = IDL.Service({
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
   'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+  'updateAdminSettings' : IDL.Func([AdminSettings], [IDL.Bool], []),
   'updateAppSettings' : IDL.Func([IDL.Text], [], []),
   'updateCategory' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
@@ -736,6 +769,7 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
+  'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'updateCustomCode' : IDL.Func(
       [
         IDL.Nat,
@@ -770,6 +804,11 @@ export const idlService = IDL.Service({
         IDL.Text,
         IDL.Bool,
       ],
+      [IDL.Bool],
+      [],
+    ),
+  'updateLudoSettings' : IDL.Func(
+      [IDL.Bool, IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
       [IDL.Bool],
       [],
     ),
@@ -808,6 +847,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateRechargeStatus' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+  'updateReferralRates' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Float64, IDL.Float64],
+      [IDL.Bool],
+      [],
+    ),
   'updateScrapRate' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Float64, IDL.Float64, IDL.Bool],
       [IDL.Bool],
@@ -876,7 +920,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const OfferUser = IDL.Record({
     'id' : IDL.Nat,
+    'tier5Earnings' : IDL.Nat,
     'referralCode' : IDL.Text,
+    'tier4Earnings' : IDL.Nat,
     'userId' : IDL.Text,
     'createdAt' : IDL.Int,
     'pendingEarnings' : IDL.Nat,
@@ -982,6 +1028,28 @@ export const idlFactory = ({ IDL }) => {
     'upiId' : IDL.Text,
     'mobile' : MobileNumber,
     'qrCodeBlobId' : ExternalBlob,
+  });
+  const AdminSettings = IDL.Record({
+    'pointsPerAd' : IDL.Nat,
+    'cloudinaryApiKey' : IDL.Text,
+    'cpagripApiKey' : IDL.Text,
+    'razorpayKeyId' : IDL.Text,
+    'razorpayKeySecret' : IDL.Text,
+    'gameEnabled' : IDL.Bool,
+    'referralLevel1Pct' : IDL.Nat,
+    'referralLevel2Pct' : IDL.Nat,
+    'referralLevel3Pct' : IDL.Nat,
+    'referralLevel4Pct' : IDL.Float64,
+    'referralLevel5Pct' : IDL.Float64,
+    'minWithdrawal' : IDL.Nat,
+    'upiQrCodeUrl' : IDL.Text,
+    'rewardsEnabled' : IDL.Bool,
+    'upiId' : IDL.Text,
+    'cloudinaryCloudName' : IDL.Text,
+    'ludoEnabled' : IDL.Bool,
+    'redemptionRate' : IDL.Nat,
+    'udhaarBookEnabled' : IDL.Bool,
+    'cloudinaryApiSecret' : IDL.Text,
   });
   const RechargeTransaction = IDL.Record({
     'id' : IDL.Nat,
@@ -1352,6 +1420,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
+    'getAdminSettings' : IDL.Func([], [AdminSettings], ['query']),
     'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAllRechargeTransactions' : IDL.Func(
         [],
@@ -1378,6 +1447,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'getCloudinaryConfig' : IDL.Func(
+        [],
+        [IDL.Record({ 'cloudName' : IDL.Text, 'apiKey' : IDL.Text })],
+        ['query'],
+      ),
     'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
     'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
@@ -1415,7 +1489,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [
           IDL.Record({
+            'tier5Earnings' : IDL.Nat,
             'referralCode' : IDL.Text,
+            'tier4Earnings' : IDL.Nat,
             'pendingEarnings' : IDL.Nat,
             'tier3Earnings' : IDL.Nat,
             'tier2Earnings' : IDL.Nat,
@@ -1565,6 +1641,7 @@ export const idlFactory = ({ IDL }) => {
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
     'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
+    'updateAdminSettings' : IDL.Func([AdminSettings], [IDL.Bool], []),
     'updateAppSettings' : IDL.Func([IDL.Text], [], []),
     'updateCategory' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
@@ -1576,6 +1653,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'updateCustomCode' : IDL.Func(
         [
           IDL.Nat,
@@ -1610,6 +1688,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
           IDL.Bool,
         ],
+        [IDL.Bool],
+        [],
+      ),
+    'updateLudoSettings' : IDL.Func(
+        [IDL.Bool, IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
         [IDL.Bool],
         [],
       ),
@@ -1648,6 +1731,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateRechargeStatus' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+    'updateReferralRates' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Float64, IDL.Float64],
+        [IDL.Bool],
+        [],
+      ),
     'updateScrapRate' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Float64, IDL.Float64, IDL.Bool],
         [IDL.Bool],

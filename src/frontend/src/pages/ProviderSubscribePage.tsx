@@ -1,4 +1,12 @@
-import { CheckCircle, Crown, Loader2, Upload, X, ZoomIn } from "lucide-react";
+import {
+  CheckCircle,
+  Cloud,
+  Crown,
+  Loader2,
+  Upload,
+  X,
+  ZoomIn,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import ReactCrop, {
@@ -8,11 +16,15 @@ import ReactCrop, {
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { toast } from "sonner";
-import { ExternalBlob } from "../backend";
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useAdminConfig, useSubscriptionPricing } from "../hooks/useQueries";
+import {
+  useAdminConfig,
+  useCloudinaryConfig,
+  useSubscriptionPricing,
+} from "../hooks/useQueries";
+import { uploadToCloudinary } from "../lib/cloudinary";
 import { Link, useParams } from "../lib/router";
 import { SubscriptionPlan } from "../types/appTypes";
 
@@ -131,14 +143,36 @@ function PhotoCropModal({
         outputSize,
       );
 
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
-          (b) =>
-            b ? resolve(b) : reject(new Error("Canvas conversion failed")),
-          "image/jpeg",
-          0.88,
-        );
-      });
+      // Smart compression: try WebP first, fall back to JPEG
+      const supportsWebP = canvas
+        .toDataURL("image/webp")
+        .startsWith("data:image/webp");
+      const mimeType = supportsWebP ? "image/webp" : "image/jpeg";
+
+      // Two-pass compression: try quality 0.85 first, then 0.75 if still >300KB
+      const tryBlob = (quality: number): Promise<Blob> =>
+        new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(
+            (b) =>
+              b ? resolve(b) : reject(new Error("Canvas conversion failed")),
+            mimeType,
+            quality,
+          );
+        });
+
+      let blob = await tryBlob(0.85);
+      if (blob.size > 300 * 1024) {
+        const compressed = await tryBlob(0.75);
+        // Use more compressed version only if it's actually smaller
+        if (compressed.size < blob.size) blob = compressed;
+      }
+
+      // Log compression ratio (not shown to user)
+      const originalEst = img.naturalWidth * img.naturalHeight * 3;
+      console.debug(
+        `[ImageCompress] ${(blob.size / 1024).toFixed(0)}KB (est. ${(originalEst / 1024).toFixed(0)}KB raw)`,
+      );
+
       onConfirm(blob);
     } catch {
       toast.error("Photo crop fail hua, dobara try karein");
@@ -259,6 +293,9 @@ export default function ProviderSubscribePage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const [croppedPreviewUrl, setCroppedPreviewUrl] = useState<string | null>(
+    null,
+  );
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -270,6 +307,7 @@ export default function ProviderSubscribePage() {
   const { actor } = useActor();
   const { data: config } = useAdminConfig();
   const { data: pricing } = useSubscriptionPricing();
+  const { data: cloudinaryConfig } = useCloudinaryConfig();
   const params = useParams() as { category?: string };
   const catName = params.category;
 
@@ -319,7 +357,11 @@ export default function ProviderSubscribePage() {
   };
 
   const handleCropConfirm = (blob: Blob) => {
+    // Revoke previous preview URL to avoid memory leaks
+    if (croppedPreviewUrl) URL.revokeObjectURL(croppedPreviewUrl);
+    const previewUrl = URL.createObjectURL(blob);
     setCroppedBlob(blob);
+    setCroppedPreviewUrl(previewUrl);
     setShowCropModal(false);
     setCropSrc(null);
     toast.success("Photo crop ho gayi! ✅");
@@ -330,13 +372,23 @@ export default function ProviderSubscribePage() {
     const fileToUpload = croppedBlob ?? screenshotFile;
     if (!fileToUpload) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const bytes = new Uint8Array(await fileToUpload.arrayBuffer());
-      const blob = ExternalBlob.fromBytes(bytes).withUploadProgress((pct) =>
-        setUploadProgress(pct),
-      );
-      const blobId = blob.getDirectURL();
-      await actor.uploadPaymentScreenshot(user.userId, blobId);
+      toast.loading("Uploading to cloud...", { id: "upload-progress" });
+      // Upload to Cloudinary
+      const config_cld = cloudinaryConfig ?? {
+        cloudName:
+          localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+        apiKey:
+          localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+      };
+      const secureUrl = await uploadToCloudinary(fileToUpload, config_cld, {
+        folder: "digital-zindagi/payment-screenshots",
+      });
+      setUploadProgress(100);
+      toast.dismiss("upload-progress");
+
+      await actor.uploadPaymentScreenshot(user.userId, secureUrl);
 
       try {
         await actor.approveProvider(
@@ -350,8 +402,16 @@ export default function ProviderSubscribePage() {
       setSubmitted(true);
       toast.success("Profile live ho gayi! Ab aap listed hain.");
     } catch (err: unknown) {
+      toast.dismiss("upload-progress");
       const msg = err instanceof Error ? err.message : "Upload fail ho gaya";
-      toast.error(msg);
+      if (
+        msg.toLowerCase().includes("network") ||
+        msg.toLowerCase().includes("fetch")
+      ) {
+        toast.error("Connection error. Please check your internet.");
+      } else {
+        toast.error("Upload failed. Please try again.");
+      }
     } finally {
       setUploading(false);
     }
@@ -594,12 +654,18 @@ export default function ProviderSubscribePage() {
                     </p>
 
                     {/* Preview of cropped image */}
-                    {croppedBlob && (
+                    {croppedBlob && croppedPreviewUrl && (
                       <div className="mb-3 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-3">
                         <img
-                          src={URL.createObjectURL(croppedBlob)}
+                          src={croppedPreviewUrl}
                           alt="Cropped preview"
-                          className="w-14 h-14 rounded-lg object-cover border border-border flex-shrink-0"
+                          className="w-14 h-14 rounded-lg flex-shrink-0"
+                          style={{
+                            width: "56px",
+                            height: "56px",
+                            objectFit: "cover",
+                            aspectRatio: "1/1",
+                          }}
                         />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-green-700">

@@ -137,6 +137,8 @@ type OfferUser__179657268 =
     tier1Earnings : Nat;
     tier2Earnings : Nat;
     tier3Earnings : Nat;
+    tier4Earnings : Nat;
+    tier5Earnings : Nat;
     totalEarnings : Nat;
     userId : Text
   };
@@ -151,15 +153,23 @@ type OfferWithdrawal__336029618 =
     status : {#approved; #paid; #pending; #rejected};
     upiId : Text
   };
-type OldCustomCode__1002481000 =
+type OldAdminSettings__589275897 =
   {
-    btnLabel : Text;
-    code : Text;
-    enabled : Bool;
-    icon : Text;
-    id : Nat;
-    name : Text;
-    placement : Text
+    cpagripApiKey : Text;
+    gameEnabled : Bool;
+    ludoEnabled : Bool;
+    minWithdrawal : Nat;
+    pointsPerAd : Nat;
+    razorpayKeyId : Text;
+    razorpayKeySecret : Text;
+    redemptionRate : Nat;
+    referralLevel1Pct : Nat;
+    referralLevel2Pct : Nat;
+    referralLevel3Pct : Nat;
+    rewardsEnabled : Bool;
+    udhaarBookEnabled : Bool;
+    upiId : Text;
+    upiQrCodeUrl : Text
   };
 type OldOfferUser__458097054 =
   {
@@ -170,6 +180,9 @@ type OldOfferUser__458097054 =
     pendingEarnings : Nat;
     referralCode : Text;
     referredBy : ?Text;
+    tier1Earnings : Nat;
+    tier2Earnings : Nat;
+    tier3Earnings : Nat;
     totalEarnings : Nat;
     userId : Text
   };
@@ -324,6 +337,7 @@ actor ({
     };
   stable var adminConfig : ?AdminConfig__889654536;
   stable var adminPinHash : Text;
+  in var adminSettings : OldAdminSettings__589275897;
   stable var appSettingsJson : Text;
   stable approvalState :
     {
@@ -352,7 +366,11 @@ actor ({
       globalCommissionPct : Float;
       retailerSharePct : Float
     };
-  in var customCodes : Map__605269027<Nat, OldCustomCode__1002481000>;
+  stable var customCodes :
+    {
+      var root : Node__46230540<Nat, CustomCode__248340264>;
+      var size : Nat__490723111
+    };
   stable var customSections :
     {
       var root : Node__46230540<Nat, CustomSection__448245083>;
@@ -508,6 +526,29 @@ actor ({
     };
   stable var adminConfig : ?AdminConfig__889654536;
   stable var adminPinHash : Text;
+  stable var adminSettings :
+    {
+      cloudinaryApiKey : Text;
+      cloudinaryApiSecret : Text;
+      cloudinaryCloudName : Text;
+      cpagripApiKey : Text;
+      gameEnabled : Bool;
+      ludoEnabled : Bool;
+      minWithdrawal : Nat;
+      pointsPerAd : Nat;
+      razorpayKeyId : Text;
+      razorpayKeySecret : Text;
+      redemptionRate : Nat;
+      referralLevel1Pct : Nat;
+      referralLevel2Pct : Nat;
+      referralLevel3Pct : Nat;
+      referralLevel4Pct : Float;
+      referralLevel5Pct : Float;
+      rewardsEnabled : Bool;
+      udhaarBookEnabled : Bool;
+      upiId : Text;
+      upiQrCodeUrl : Text
+    };
   stable var appSettingsJson : Text;
   stable approvalState :
     {

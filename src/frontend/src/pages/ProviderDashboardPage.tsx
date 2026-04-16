@@ -15,11 +15,15 @@ import {
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ExternalBlob } from "../backend";
 import Header from "../components/Header";
 import { useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useProviderOrders, useProviderProfile } from "../hooks/useQueries";
+import {
+  useCloudinaryConfig,
+  useProviderOrders,
+  useProviderProfile,
+} from "../hooks/useQueries";
+import { uploadToCloudinary } from "../lib/cloudinary";
 import { Link } from "../lib/router";
 import { ApprovalStatus } from "../types/appTypes";
 import type { Order, ServiceRate } from "../types/appTypes";
@@ -175,6 +179,7 @@ export default function ProviderDashboardPage() {
   const { data: orders, isLoading: ordersLoading } = useProviderOrders(
     user?.userId ?? null,
   );
+  const { data: cloudinaryConfig } = useCloudinaryConfig();
 
   // Approval status polling — every 3 seconds when page is visible
   const [polledApprovalStatus, setPolledApprovalStatus] =
@@ -353,13 +358,19 @@ export default function ProviderDashboardPage() {
     if (!actor) return;
     setUploadingQr(true);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const blob = ExternalBlob.fromBytes(bytes);
-      const url = blob.getDirectURL();
+      const cfg = cloudinaryConfig ?? {
+        cloudName:
+          localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+        apiKey:
+          localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+      };
+      const url = await uploadToCloudinary(file, cfg, {
+        folder: "digital-zindagi/qr-codes",
+      });
       setQrCodeBlobId(url);
       toast.success("QR Code upload ho gaya! Save zaroor karein.");
-    } catch (err: any) {
-      toast.error(err?.message ?? "QR upload fail ho gaya");
+    } catch {
+      toast.error("Upload failed. Please try again.");
     } finally {
       setUploadingQr(false);
     }
@@ -408,14 +419,20 @@ export default function ProviderDashboardPage() {
     if (!actor) return;
     setUploadingPhoto(true);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const blob = ExternalBlob.fromBytes(bytes);
-      const blobId = blob.getDirectURL();
-      await actor.addShopPhoto(user.userId, blobId);
+      const cfg = cloudinaryConfig ?? {
+        cloudName:
+          localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+        apiKey:
+          localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+      };
+      const secureUrl = await uploadToCloudinary(file, cfg, {
+        folder: "digital-zindagi/providers",
+      });
+      await actor.addShopPhoto(user.userId, secureUrl);
       toast.success("Photo upload ho gayi!");
       qc.invalidateQueries({ queryKey: ["providerProfile"] });
-    } catch (err: any) {
-      toast.error(err?.message ?? "Photo upload fail ho gayi");
+    } catch {
+      toast.error("Upload failed. Please try again.");
     } finally {
       setUploadingPhoto(false);
     }

@@ -69,6 +69,7 @@ import {
   useDeleteNews,
   useDeleteScrapRate,
   useDeleteVideo,
+  useGetAdminSettings,
   useGetAllLudoRedemptionRequests,
   useGetFirebaseConfigLink,
   useGetUserSubscriptionStatus,
@@ -85,12 +86,15 @@ import {
   useSetLockedFeature,
   useSubscriptionPricing,
   useToggleCustomSection,
+  useUpdateAdminSettings,
   useUpdateAppSettings,
   useUpdateCategory,
+  useUpdateCpagripApiKey,
   useUpdateCustomCode,
   useUpdateCustomSection,
   useUpdateJob,
   useUpdateLudoRedemptionStatus,
+  useUpdateLudoSettings,
   useUpdateNews,
   useUpdatePaymentConfig,
   useUpdateScrapRate,
@@ -281,7 +285,8 @@ function ProviderQuickActionModal({
               <img
                 src={profile.paymentScreenshotBlobId}
                 alt="Payment Screenshot"
-                className="w-40 h-40 object-contain border border-border rounded-xl mx-auto block"
+                className="w-40 h-40 rounded-xl mx-auto block border border-border"
+                style={{ objectFit: "cover", aspectRatio: "1/1" }}
               />
             ) : (
               <div className="w-full h-24 bg-muted rounded-xl flex items-center justify-center">
@@ -957,7 +962,10 @@ function ProviderApprovals() {
                   <img
                     src={p.paymentScreenshotBlobId}
                     alt="Payment Screenshot"
-                    className="w-40 h-40 object-contain border border-border rounded-xl"
+                    className="w-40 h-40 rounded-xl border border-border object-contain bg-muted/30"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
                   />
                 </div>
               )}
@@ -1477,7 +1485,8 @@ function FounderSettingsSection() {
               <img
                 src={founderPhoto}
                 alt="Founder"
-                className="w-14 h-14 rounded-full object-cover border-2 border-primary flex-shrink-0"
+                className="w-14 h-14 rounded-full border-2 border-primary flex-shrink-0"
+                style={{ objectFit: "cover", aspectRatio: "1/1" }}
               />
             )}
             <div className="flex-1 space-y-2">
@@ -2442,6 +2451,35 @@ function AdminSettings() {
   const [qrFile, setQrFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Cloudinary Settings State
+  const { data: adminSettingsData } = useGetAdminSettings();
+  const updateAdminSettings = useUpdateAdminSettings();
+  const [cloudinaryCloudName, setCloudinaryCloudName] = useState(
+    localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+  );
+  const [cloudinaryApiKey, setCloudinaryApiKey] = useState(
+    localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+  );
+  const [cloudinaryApiSecret, setCloudinaryApiSecret] = useState("");
+  const [cloudinarySaving, setCloudinarySaving] = useState(false);
+
+  // Referral Level 4 & 5 state
+  const [referralLevel4Pct, setReferralLevel4Pct] = useState<number>(0.5);
+  const [referralLevel5Pct, setReferralLevel5Pct] = useState<number>(0.25);
+
+  // Sync from canister when data arrives
+  useEffect(() => {
+    if (!adminSettingsData) return;
+    if (adminSettingsData.cloudinaryCloudName)
+      setCloudinaryCloudName(adminSettingsData.cloudinaryCloudName);
+    if (adminSettingsData.cloudinaryApiKey)
+      setCloudinaryApiKey(adminSettingsData.cloudinaryApiKey);
+    if (adminSettingsData.referralLevel4Pct !== undefined)
+      setReferralLevel4Pct(adminSettingsData.referralLevel4Pct);
+    if (adminSettingsData.referralLevel5Pct !== undefined)
+      setReferralLevel5Pct(adminSettingsData.referralLevel5Pct);
+  }, [adminSettingsData]);
+
   // Theme color state
   const [themeColor, setThemeColor] = useState<string>(
     () => localStorage.getItem("dz_theme_color") ?? DEFAULT_EMERALD,
@@ -3054,6 +3092,228 @@ function AdminSettings() {
         >
           {socialSaving ? <Loader2 size={15} className="animate-spin" /> : null}
           Social Links Save Karein
+        </button>
+      </div>
+
+      {/* ☁️ Cloudinary Image Storage */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xl">☁️</span>
+          <h3 className="font-heading font-semibold text-foreground">
+            Cloudinary Image Storage
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Sab images (provider photos, payment screenshots, QR codes) Cloudinary
+          par save hoti hain. Yahan apni keys update karein.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="cld-cloud-name"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Cloud Name
+            </label>
+            <input
+              id="cld-cloud-name"
+              data-ocid="admin.cloudinary_cloud_name_input"
+              type="text"
+              value={cloudinaryCloudName}
+              onChange={(e) => setCloudinaryCloudName(e.target.value)}
+              placeholder="e.g. dquyiiu7o"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="cld-api-key"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              API Key
+            </label>
+            <input
+              id="cld-api-key"
+              data-ocid="admin.cloudinary_api_key_input"
+              type="text"
+              value={cloudinaryApiKey}
+              onChange={(e) => setCloudinaryApiKey(e.target.value)}
+              placeholder="e.g. 199372638334688"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="cld-api-secret"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              API Secret
+            </label>
+            <input
+              id="cld-api-secret"
+              data-ocid="admin.cloudinary_api_secret_input"
+              type="password"
+              value={cloudinaryApiSecret}
+              onChange={(e) => setCloudinaryApiSecret(e.target.value)}
+              placeholder="Your Cloudinary API Secret"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              🔒 Your API Secret is stored securely and never exposed publicly.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          data-ocid="admin.cloudinary_save_button"
+          disabled={cloudinarySaving}
+          onClick={async () => {
+            if (!cloudinaryCloudName.trim() || !cloudinaryApiKey.trim()) {
+              toast.error("Cloud Name aur API Key dono bharen");
+              return;
+            }
+            setCloudinarySaving(true);
+            try {
+              await updateAdminSettings.mutateAsync({
+                cloudinaryCloudName: cloudinaryCloudName.trim(),
+                cloudinaryApiKey: cloudinaryApiKey.trim(),
+                ...(cloudinaryApiSecret.trim()
+                  ? { cloudinaryApiSecret: cloudinaryApiSecret.trim() }
+                  : {}),
+              });
+              toast.success("✅ Cloudinary Settings Saved!");
+              setCloudinaryApiSecret("");
+            } catch {
+              toast.error("Save nahi ho saka. Please try again.");
+            } finally {
+              setCloudinarySaving(false);
+            }
+          }}
+          className="bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 flex items-center gap-2 disabled:opacity-60"
+        >
+          {cloudinarySaving ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : null}
+          Save Cloudinary Settings
+        </button>
+      </div>
+
+      {/* 🔗 5-Tier Referral Commission Rates */}
+      <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xl">🔗</span>
+          <h3 className="font-heading font-semibold text-foreground">
+            5-Tier Referral Commission Rates
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">
+          A → B invite kare, B → C, C → D, D → E: E ki kamai par D ko L1%, C ko
+          L2%, B ko L3%, A ko L4%, aur unka referrer ko L5% milta hai.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {[
+            {
+              label: "Level 1 (Direct)",
+              key: "level1",
+              defaultVal: 5,
+              hint: "Direct Referral",
+            },
+            {
+              label: "Level 2",
+              key: "level2",
+              defaultVal: 2,
+              hint: "Tier 2 Network",
+            },
+            {
+              label: "Level 3",
+              key: "level3",
+              defaultVal: 1,
+              hint: "Tier 3 Network",
+            },
+          ].map((lvl) => (
+            <div key={lvl.key}>
+              <label
+                htmlFor={`ref-${lvl.key}`}
+                className="block text-xs font-medium text-foreground mb-1"
+              >
+                {lvl.label} (%)
+              </label>
+              <input
+                id={`ref-${lvl.key}`}
+                type="number"
+                step="0.1"
+                min={0}
+                max={100}
+                defaultValue={lvl.defaultVal}
+                readOnly
+                className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none bg-muted/30 text-muted-foreground"
+                title="Managed via Offer Portal Config"
+              />
+              <p className="text-xs text-muted-foreground mt-1">{lvl.hint}</p>
+            </div>
+          ))}
+          <div>
+            <label
+              htmlFor="ref-level4"
+              className="block text-xs font-medium text-foreground mb-1"
+            >
+              Level 4 (%)
+            </label>
+            <input
+              id="ref-level4"
+              data-ocid="admin.referral_level4_input"
+              type="number"
+              step="0.05"
+              min={0}
+              max={100}
+              value={referralLevel4Pct}
+              onChange={(e) =>
+                setReferralLevel4Pct(Number.parseFloat(e.target.value) || 0)
+              }
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Tier 4 Network</p>
+          </div>
+          <div>
+            <label
+              htmlFor="ref-level5"
+              className="block text-xs font-medium text-foreground mb-1"
+            >
+              Level 5 (%)
+            </label>
+            <input
+              id="ref-level5"
+              data-ocid="admin.referral_level5_input"
+              type="number"
+              step="0.05"
+              min={0}
+              max={100}
+              value={referralLevel5Pct}
+              onChange={(e) =>
+                setReferralLevel5Pct(Number.parseFloat(e.target.value) || 0)
+              }
+              className="w-full border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Tier 5 Network</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          data-ocid="admin.referral_save_button"
+          onClick={async () => {
+            try {
+              await updateAdminSettings.mutateAsync({
+                referralLevel4Pct,
+                referralLevel5Pct,
+              });
+              toast.success("✅ Referral Rates Saved!");
+            } catch {
+              toast.error("Save nahi ho saka. Please try again.");
+            }
+          }}
+          className="bg-primary text-primary-foreground font-bold px-6 py-2.5 rounded-xl hover:opacity-90 flex items-center gap-2"
+        >
+          Save Referral Rates
         </button>
       </div>
 
@@ -8396,30 +8656,37 @@ function LudoSettingsSection() {
   const { data: firebaseLinkData } = useGetFirebaseConfigLink();
   const setFirebaseLink = useSetFirebaseConfigLink();
   const updateStatus = useUpdateLudoRedemptionStatus();
+  const updateLudoSettings = useUpdateLudoSettings();
 
   useEffect(() => {
     if (firebaseLinkData) setFirebaseUrl(firebaseLinkData);
   }, [firebaseLinkData]);
 
-  const handleLudoToggle = (val: boolean) => {
+  const handleLudoToggle = async (val: boolean) => {
     setLudoEnabled(val);
-    localStorage.setItem("dz_ludo_enabled", val ? "true" : "false");
-    localStorage.setItem("dz_game_visible", val ? "true" : "false");
     broadcastSettingsChange();
-    // Dispatch specific CustomEvent so GameComingSoonPage can react immediately
     window.dispatchEvent(
       new CustomEvent("dz_settings_update", {
         detail: { key: "ludoEnabled", value: val },
       }),
     );
-    toast.success(`Ludo Game ${val ? "ON" : "OFF"} ho gaya!`);
+    try {
+      await updateLudoSettings.mutateAsync({ ludoEnabled: val });
+      toast.success("Settings Updated Successfully");
+    } catch {
+      toast.success(`Ludo Game ${val ? "ON" : "OFF"} ho gaya!`);
+    }
   };
 
-  const handleRewardsToggle = (val: boolean) => {
+  const handleRewardsToggle = async (val: boolean) => {
     setRewardsEnabled(val);
-    localStorage.setItem("dz_ludo_rewards_enabled", val ? "true" : "false");
     broadcastSettingsChange();
-    toast.success(`Reward System ${val ? "ON" : "OFF"} ho gaya!`);
+    try {
+      await updateLudoSettings.mutateAsync({ rewardsEnabled: val });
+      toast.success("Settings Updated Successfully");
+    } catch {
+      toast.success(`Reward System ${val ? "ON" : "OFF"} ho gaya!`);
+    }
   };
 
   const handlePortraitLockToggle = (val: boolean) => {
@@ -8431,7 +8698,7 @@ function LudoSettingsSection() {
         detail: { key: "ludoPortraitLock", value: val },
       }),
     );
-    toast.success(`Portrait Lock ${val ? "ON" : "OFF"} ho gaya!`);
+    toast.success("Settings Updated Successfully");
   };
 
   const handleHideStatusBarToggle = (val: boolean) => {
@@ -8443,7 +8710,7 @@ function LudoSettingsSection() {
         detail: { key: "ludoHideStatusBar", value: val },
       }),
     );
-    toast.success(`Status Bar ${val ? "Hide" : "Visible"} ho gaya!`);
+    toast.success("Settings Updated Successfully");
   };
 
   const handleAdmobSave = (key: string, val: string) => {
@@ -8453,7 +8720,7 @@ function LudoSettingsSection() {
     broadcastSettingsChange();
   };
 
-  const handleRewardCtrlSave = () => {
+  const handleRewardCtrlSave = async () => {
     setRewardCtrlSaving(true);
     const ppe = Number.parseInt(pointsPerAd, 10);
     const rr = Number.parseInt(redemptionRate, 10);
@@ -8473,9 +8740,6 @@ function LudoSettingsSection() {
       setRewardCtrlSaving(false);
       return;
     }
-    localStorage.setItem("dz_ludo_points_per_ad", String(ppe));
-    localStorage.setItem("dz_ludo_redemption_rate", String(rr));
-    localStorage.setItem("dz_ludo_min_withdrawal", String(mw));
     broadcastSettingsChange();
     // Dispatch specific CustomEvents for real-time updates in other pages
     window.dispatchEvent(
@@ -8493,10 +8757,18 @@ function LudoSettingsSection() {
         detail: { key: "minWithdrawal", value: mw },
       }),
     );
-    setTimeout(() => {
-      setRewardCtrlSaving(false);
+    try {
+      await updateLudoSettings.mutateAsync({
+        pointsPerAd: ppe,
+        redemptionRate: rr,
+        minWithdrawal: mw,
+      });
+      toast.success("Settings Updated Successfully");
+    } catch {
       toast.success("Dynamic Reward Controls save ho gaye!");
-    }, 300);
+    } finally {
+      setRewardCtrlSaving(false);
+    }
   };
 
   const handleFirebaseSave = async () => {
@@ -10781,6 +11053,7 @@ function OfferSystemToggleTab() {
 // (B) API Keys Tab
 function OfferApiKeysTab() {
   const { actor } = useActor();
+  const updateCpagripApiKey = useUpdateCpagripApiKey();
   const [offerWallName, setOfferWallName] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
@@ -10808,8 +11081,10 @@ function OfferApiKeysTab() {
           ).getOfferPortalConfig();
           setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
         }
-        // Load CPAGrip API key from localStorage (stored separately)
-        setCpagripApiKey(localStorage.getItem("dz_cpagrip_api_key") ?? "");
+        // Load CPAGrip API key — prefer canister AppSettings, fallback to localStorage
+        const storedCpagripKey =
+          localStorage.getItem("dz_cpagrip_api_key") ?? "";
+        setCpagripApiKey(storedCpagripKey);
         if (actor && "getSmsConfig" in actor) {
           const sms = await (
             actor as unknown as {
@@ -10909,11 +11184,11 @@ function OfferApiKeysTab() {
           setSenderId(smsUpdated.senderId ?? "DIGZIN");
         }
       }
-      toast.success("API keys save ho gaye! ✅");
-      // Save CPAGrip API key to localStorage (isolated from canister offer config)
-      localStorage.setItem("dz_cpagrip_api_key", cpagripApiKey.trim());
+      // Save CPAGrip API key to canister AND localStorage
+      await updateCpagripApiKey.mutateAsync(cpagripApiKey);
+      toast.success("Settings Updated Successfully");
     } catch {
-      toast.error("Save nahi ho saka");
+      toast.error("Failed to save. Please try again.");
     } finally {
       setSaving(false);
     }

@@ -6,6 +6,7 @@
 //
 import OPTypes  "../types/offer-portal";
 import OPLib    "../lib/offer-portal";
+import ASTypes  "../types/admin-settings";
 import WRTypes  "../types/wallet-recharge";
 import Map      "mo:core/Map";
 import Time     "mo:core/Time";
@@ -13,6 +14,7 @@ import Runtime  "mo:core/Runtime";
 import Nat      "mo:core/Nat";
 import Text     "mo:core/Text";
 import Int      "mo:core/Int";
+import Float    "mo:core/Float";
 
 module {
 
@@ -38,7 +40,7 @@ module {
   ) : { #ok : OfferUser; #err : Text } {
     // Reject duplicate emails
     switch (OPLib.findByEmail(offerUsers, email)) {
-      case (?_) { return #err("already_registered") };
+      case (?_) { return #err("User already registered") };
       case null {};
     };
 
@@ -82,10 +84,10 @@ module {
   public func getEarningsSummary(
     offerUsers  : Map.Map<Nat, OfferUser>,
     offerUserId : Nat,
-  ) : { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat } {
+  ) : { totalEarnings : Nat; pendingEarnings : Nat; referralCode : Text; tier1Earnings : Nat; tier2Earnings : Nat; tier3Earnings : Nat; tier4Earnings : Nat; tier5Earnings : Nat } {
     switch (offerUsers.get(offerUserId)) {
       case null {
-        { totalEarnings = 0; pendingEarnings = 0; referralCode = ""; tier1Earnings = 0; tier2Earnings = 0; tier3Earnings = 0 };
+        { totalEarnings = 0; pendingEarnings = 0; referralCode = ""; tier1Earnings = 0; tier2Earnings = 0; tier3Earnings = 0; tier4Earnings = 0; tier5Earnings = 0 };
       };
       case (?user) {
         {
@@ -95,6 +97,8 @@ module {
           tier1Earnings   = user.tier1Earnings;
           tier2Earnings   = user.tier2Earnings;
           tier3Earnings   = user.tier3Earnings;
+          tier4Earnings   = user.tier4Earnings;
+          tier5Earnings   = user.tier5Earnings;
         };
       };
     };
@@ -112,13 +116,14 @@ module {
 
   /// Process an inbound offer wall postback (CPALead, CPAGrip, AdWork, etc.).
   /// Verifies webhookSecret, applies configurable profit split, credits user earnings.
-  /// Also distributes 3-tier MLM commissions from the gross amount to ancestors.
+  /// Also distributes 5-tier MLM commissions from the gross amount to ancestors.
   /// Returns #ok(nextTxnId) reflecting how many txn IDs were consumed, #err(reason) on failure.
   public func processCpaLeadPostback(
     offerUsers    : Map.Map<Nat, OfferUser>,
     offerTxns     : Map.Map<Nat, OfferTransaction>,
     nextTxnId     : Nat,
     config        : OfferPortalConfig,
+    settings      : ASTypes.AdminSettings,
     offerUserId   : Nat,
     grossAmount   : Nat,
     webhookSecret : Text,
@@ -152,20 +157,22 @@ module {
         offerUsers.add(offerUserId, { user with
           totalEarnings = user.totalEarnings + userShare;
         });
-        // Distribute 3-tier MLM commissions from grossAmount to ancestors
+        // Distribute 5-tier MLM commissions from grossAmount to ancestors
         let afterMlm = distributeMlmCommissions(
           offerUsers, offerTxns, nextTxnId + 1,
-          offerUserId, grossAmount, "offer wall postback",
+          offerUserId, grossAmount, "offer wall postback", settings,
         );
         #ok(afterMlm);
       };
     };
   };
 
-  // ── Referral bonus (3-tier MLM) ───────────────────────────────────────────
+  // ── Referral bonus (5-tier MLM) ───────────────────────────────────────────
 
-  /// Credit 3-tier MLM referral commissions from a gross earning event.
-  /// Chain: earner.referredBy = tier1 (5%), tier1.referredBy = tier2 (2%), tier2.referredBy = tier3 (1%).
+  /// Credit 5-tier MLM referral commissions from a gross earning event.
+  /// Chain: earner.referredBy = tier1 (5%), tier1.referredBy = tier2 (2%),
+  ///        tier2.referredBy = tier3 (1%), tier3.referredBy = tier4 (0.5%),
+  ///        tier4.referredBy = tier5 (0.25%).
   /// Commissions are calculated from the raw grossAmount BEFORE profit split.
   /// Stores OfferTransaction records for each tier commission credited.
   /// Returns the next unused txnId after all distributions (may equal startTxnId if none distributed).
@@ -176,10 +183,11 @@ module {
     earnerUserId  : Nat,
     grossAmount   : Nat,
     triggerDesc   : Text,
+    settings      : ASTypes.AdminSettings,
   ) : Nat {
     var nextId = startTxnId;
 
-    // Resolve the referral chain up to 3 tiers from the earner
+    // Resolve the referral chain up to 5 tiers from the earner
     let mEarner = offerUsers.get(earnerUserId);
     let tier1Code : ?Text = switch (mEarner) {
       case null { null };
@@ -211,13 +219,34 @@ module {
       case (?code) { OPLib.findByReferralCode(offerUsers, code) };
     };
 
-    // Tier 1 — 5% of grossAmount
+    let tier4Code : ?Text = switch (mTier3) {
+      case null { null };
+      case (?t3) { t3.referredBy };
+    };
+
+    let mTier4 : ?OfferUser = switch (tier4Code) {
+      case null { null };
+      case (?code) { OPLib.findByReferralCode(offerUsers, code) };
+    };
+
+    let tier5Code : ?Text = switch (mTier4) {
+      case null { null };
+      case (?t4) { t4.referredBy };
+    };
+
+    let mTier5 : ?OfferUser = switch (tier5Code) {
+      case null { null };
+      case (?code) { OPLib.findByReferralCode(offerUsers, code) };
+    };
+
+    // Tier 1 — 5% of grossAmount (from settings.referralLevel1Pct)
     switch (mTier1) {
       case null {};
       case (?t1) {
-        let bonus = (grossAmount * 5) / 100;
+        let pct = settings.referralLevel1Pct;
+        let bonus = (grossAmount * pct) / 100;
         if (bonus > 0) {
-          let desc = "Tier-1 referral bonus (5%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let desc = "Tier-1 referral bonus (" # pct.toText() # "%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
           let txn = OPLib.createOfferTransaction(nextId, t1.id, #referralBonus, bonus, desc);
           offerTxns.add(nextId, txn);
           nextId += 1;
@@ -229,13 +258,14 @@ module {
       };
     };
 
-    // Tier 2 — 2% of grossAmount
+    // Tier 2 — 2% of grossAmount (from settings.referralLevel2Pct)
     switch (mTier2) {
       case null {};
       case (?t2) {
-        let bonus = (grossAmount * 2) / 100;
+        let pct = settings.referralLevel2Pct;
+        let bonus = (grossAmount * pct) / 100;
         if (bonus > 0) {
-          let desc = "Tier-2 referral bonus (2%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let desc = "Tier-2 referral bonus (" # pct.toText() # "%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
           let txn = OPLib.createOfferTransaction(nextId, t2.id, #referralBonus, bonus, desc);
           offerTxns.add(nextId, txn);
           nextId += 1;
@@ -247,19 +277,60 @@ module {
       };
     };
 
-    // Tier 3 — 1% of grossAmount
+    // Tier 3 — 1% of grossAmount (from settings.referralLevel3Pct)
     switch (mTier3) {
       case null {};
       case (?t3) {
-        let bonus = (grossAmount * 1) / 100;
+        let pct = settings.referralLevel3Pct;
+        let bonus = (grossAmount * pct) / 100;
         if (bonus > 0) {
-          let desc = "Tier-3 referral bonus (1%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let desc = "Tier-3 referral bonus (" # pct.toText() # "%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
           let txn = OPLib.createOfferTransaction(nextId, t3.id, #referralBonus, bonus, desc);
           offerTxns.add(nextId, txn);
           nextId += 1;
           offerUsers.add(t3.id, { t3 with
             totalEarnings = t3.totalEarnings + bonus;
             tier3Earnings = t3.tier3Earnings + bonus;
+          });
+        };
+      };
+    };
+
+    // Tier 4 — 0.5% of grossAmount (from settings.referralLevel4Pct)
+    switch (mTier4) {
+      case null {};
+      case (?t4) {
+        let pctF = settings.referralLevel4Pct;
+        let bonusInt : Int = (grossAmount.toFloat() * pctF / 100.0).toInt();
+        let bonusNat : Nat = if (bonusInt > 0) { Int.abs(bonusInt) } else { 0 };
+        if (bonusNat > 0) {
+          let desc = "Tier-4 referral bonus (" # pctF.toText() # "%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let txn = OPLib.createOfferTransaction(nextId, t4.id, #referralBonus, bonusNat, desc);
+          offerTxns.add(nextId, txn);
+          nextId += 1;
+          offerUsers.add(t4.id, { t4 with
+            totalEarnings = t4.totalEarnings + bonusNat;
+            tier4Earnings = t4.tier4Earnings + bonusNat;
+          });
+        };
+      };
+    };
+
+    // Tier 5 — 0.25% of grossAmount (from settings.referralLevel5Pct)
+    switch (mTier5) {
+      case null {};
+      case (?t5) {
+        let pctF = settings.referralLevel5Pct;
+        let bonusInt : Int = (grossAmount.toFloat() * pctF / 100.0).toInt();
+        let bonusNat : Nat = if (bonusInt > 0) { Int.abs(bonusInt) } else { 0 };
+        if (bonusNat > 0) {
+          let desc = "Tier-5 referral bonus (" # pctF.toText() # "%) from " # triggerDesc # " | base: ₹" # grossAmount.toText();
+          let txn = OPLib.createOfferTransaction(nextId, t5.id, #referralBonus, bonusNat, desc);
+          offerTxns.add(nextId, txn);
+          nextId += 1;
+          offerUsers.add(t5.id, { t5 with
+            totalEarnings = t5.totalEarnings + bonusNat;
+            tier5Earnings = t5.tier5Earnings + bonusNat;
           });
         };
       };

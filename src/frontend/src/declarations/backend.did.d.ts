@@ -17,6 +17,28 @@ export interface AdminConfig {
   'mobile' : MobileNumber,
   'qrCodeBlobId' : ExternalBlob,
 }
+export interface AdminSettings {
+  'pointsPerAd' : bigint,
+  'cloudinaryApiKey' : string,
+  'cpagripApiKey' : string,
+  'razorpayKeyId' : string,
+  'razorpayKeySecret' : string,
+  'gameEnabled' : boolean,
+  'referralLevel1Pct' : bigint,
+  'referralLevel2Pct' : bigint,
+  'referralLevel3Pct' : bigint,
+  'referralLevel4Pct' : number,
+  'referralLevel5Pct' : number,
+  'minWithdrawal' : bigint,
+  'upiQrCodeUrl' : string,
+  'rewardsEnabled' : boolean,
+  'upiId' : string,
+  'cloudinaryCloudName' : string,
+  'ludoEnabled' : boolean,
+  'redemptionRate' : bigint,
+  'udhaarBookEnabled' : boolean,
+  'cloudinaryApiSecret' : string,
+}
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
@@ -136,7 +158,9 @@ export interface OfferTransaction {
 }
 export interface OfferUser {
   'id' : bigint,
+  'tier5Earnings' : bigint,
   'referralCode' : string,
+  'tier4Earnings' : bigint,
   'userId' : string,
   'createdAt' : bigint,
   'pendingEarnings' : bigint,
@@ -493,6 +517,11 @@ export interface _SERVICE {
    */
   'getAdminAuditLog' : ActorMethod<[bigint], Array<AuditLogEntry>>,
   'getAdminConfig' : ActorMethod<[], [] | [AdminConfig]>,
+  /**
+   * / Return all admin settings — readable by any caller so the frontend can
+   * / apply toggles and rates without an admin auth round-trip.
+   */
+  'getAdminSettings' : ActorMethod<[], AdminSettings>,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return all recharge transactions (master log) — admin only.
@@ -512,6 +541,14 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCategories' : ActorMethod<[], Array<Category>>,
+  /**
+   * / Return Cloudinary cloud name and API key — public query.
+   * / The API secret is NEVER returned; it stays server-side only.
+   */
+  'getCloudinaryConfig' : ActorMethod<
+    [],
+    { 'cloudName' : string, 'apiKey' : string }
+  >,
   /**
    * / Return the current commission config — public.
    */
@@ -555,7 +592,9 @@ export interface _SERVICE {
   'getOfferEarningsSummary' : ActorMethod<
     [bigint],
     {
+      'tier5Earnings' : bigint,
       'referralCode' : string,
+      'tier4Earnings' : bigint,
       'pendingEarnings' : bigint,
       'tier3Earnings' : bigint,
       'tier2Earnings' : bigint,
@@ -738,6 +777,11 @@ export interface _SERVICE {
   'setRechargeServiceEnabled' : ActorMethod<[boolean], boolean>,
   'toggleCustomSection' : ActorMethod<[bigint, boolean], boolean>,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
+  /**
+   * / Replace ALL admin settings in one atomic call — admin only.
+   * / All existing field values are overwritten with the supplied record.
+   */
+  'updateAdminSettings' : ActorMethod<[AdminSettings], boolean>,
   'updateAppSettings' : ActorMethod<[string], undefined>,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
@@ -748,6 +792,11 @@ export interface _SERVICE {
    * / Validates: retailerPct + adminPct must equal globalPct.
    */
   'updateCommissionConfig' : ActorMethod<[number, number, number], boolean>,
+  /**
+   * / Save the CPAGrip API key in canister state — admin only.
+   * / Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
+   */
+  'updateCpagripApiKey' : ActorMethod<[string], boolean>,
   'updateCustomCode' : ActorMethod<
     [
       bigint,
@@ -771,6 +820,13 @@ export interface _SERVICE {
   >,
   'updateJob' : ActorMethod<
     [bigint, string, string, string, string, string, string, boolean],
+    boolean
+  >,
+  /**
+   * / Update only Ludo / Rewards settings — admin only.
+   */
+  'updateLudoSettings' : ActorMethod<
+    [boolean, boolean, bigint, bigint, bigint],
     boolean
   >,
   'updateNews' : ActorMethod<
@@ -812,6 +868,13 @@ export interface _SERVICE {
    * / SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
    */
   'updateRechargeStatus' : ActorMethod<[bigint, string], boolean>,
+  /**
+   * / Update only the 5-tier referral rates — admin only.
+   */
+  'updateReferralRates' : ActorMethod<
+    [bigint, bigint, bigint, number, number],
+    boolean
+  >,
   'updateScrapRate' : ActorMethod<
     [bigint, string, number, number, boolean],
     boolean

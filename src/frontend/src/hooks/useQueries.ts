@@ -1072,6 +1072,10 @@ export type AppSettings = {
   admobConfig?: Record<string, unknown>;
   adPlacements?: Record<string, boolean>;
   customInternalAds?: string[];
+  /** Ludo game + rewards settings persisted to canister */
+  ludoSettings?: Record<string, unknown>;
+  /** CPAGrip API key persisted to canister */
+  cpagripApiKey?: string;
 };
 
 const APP_SETTINGS_LS_KEY = "dz_app_settings_cache";
@@ -2605,6 +2609,273 @@ export function usePaymentConfig() {
     enabled: !isFetching,
     refetchInterval: 2000,
     staleTime: 1500,
+  });
+}
+
+// =====================================================================
+// LUDO SETTINGS MUTATIONS (canister-backed via AppSettings JSON blob)
+// =====================================================================
+
+/**
+ * Persist Ludo toggle + reward controls to the canister via updateAppSettings.
+ * Falls back to localStorage if canister is unavailable.
+ */
+export function useUpdateLudoSettings() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: {
+      ludoEnabled?: boolean;
+      rewardsEnabled?: boolean;
+      pointsPerAd?: number;
+      redemptionRate?: number;
+      minWithdrawal?: number;
+    }) => {
+      // Always persist to localStorage first so other pages react immediately
+      if (settings.ludoEnabled !== undefined) {
+        localStorage.setItem(
+          "dz_ludo_enabled",
+          settings.ludoEnabled ? "true" : "false",
+        );
+        localStorage.setItem(
+          "dz_game_visible",
+          settings.ludoEnabled ? "true" : "false",
+        );
+      }
+      if (settings.rewardsEnabled !== undefined)
+        localStorage.setItem(
+          "dz_ludo_rewards_enabled",
+          settings.rewardsEnabled ? "true" : "false",
+        );
+      if (settings.pointsPerAd !== undefined)
+        localStorage.setItem(
+          "dz_ludo_points_per_ad",
+          String(settings.pointsPerAd),
+        );
+      if (settings.redemptionRate !== undefined)
+        localStorage.setItem(
+          "dz_ludo_redemption_rate",
+          String(settings.redemptionRate),
+        );
+      if (settings.minWithdrawal !== undefined)
+        localStorage.setItem(
+          "dz_ludo_min_withdrawal",
+          String(settings.minWithdrawal),
+        );
+
+      // Persist to canister by merging into AppSettings JSON blob
+      if (!actor) return;
+      try {
+        const raw = await (
+          actor as unknown as { getAppSettings(): Promise<string> }
+        ).getAppSettings();
+        const current: AppSettings =
+          raw && raw !== "{}" ? (JSON.parse(raw) as AppSettings) : {};
+        const merged = {
+          ...current,
+          ludoSettings: {
+            ...(typeof current.ludoSettings === "object" &&
+            current.ludoSettings !== null
+              ? current.ludoSettings
+              : {}),
+            ...settings,
+          },
+        };
+        await (
+          actor as unknown as { updateAppSettings(json: string): Promise<void> }
+        ).updateAppSettings(JSON.stringify(merged));
+      } catch {
+        // localStorage already updated — canister will sync on next poll
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["appSettings"] }),
+  });
+}
+
+/**
+ * Persist CPAGrip API key to both canister AppSettings and localStorage.
+ */
+export function useUpdateCpagripApiKey() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (apiKey: string) => {
+      // Always persist to localStorage first
+      localStorage.setItem("dz_cpagrip_api_key", apiKey.trim());
+
+      if (!actor) return;
+      try {
+        const raw = await (
+          actor as unknown as { getAppSettings(): Promise<string> }
+        ).getAppSettings();
+        const current: AppSettings =
+          raw && raw !== "{}" ? (JSON.parse(raw) as AppSettings) : {};
+        const merged = { ...current, cpagripApiKey: apiKey.trim() };
+        await (
+          actor as unknown as { updateAppSettings(json: string): Promise<void> }
+        ).updateAppSettings(JSON.stringify(merged));
+        localStorage.setItem(
+          APP_SETTINGS_LS_KEY,
+          JSON.stringify({ ...current, cpagripApiKey: apiKey.trim() }),
+        );
+      } catch {
+        // localStorage already updated
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["appSettings"] }),
+  });
+}
+
+// =====================================================================
+// CLOUDINARY CONFIG HOOK
+// =====================================================================
+
+export function useCloudinaryConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery<{ cloudName: string; apiKey: string }>({
+    queryKey: ["cloudinaryConfig"],
+    queryFn: async () => {
+      if (!actor) {
+        return {
+          cloudName:
+            localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+          apiKey:
+            localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+        };
+      }
+      try {
+        const result = await (
+          actor as unknown as {
+            getCloudinaryConfig(): Promise<{
+              cloudName: string;
+              apiKey: string;
+            }>;
+          }
+        ).getCloudinaryConfig();
+        localStorage.setItem("dz_cloudinary_cloud_name", result.cloudName);
+        localStorage.setItem("dz_cloudinary_api_key", result.apiKey);
+        return result;
+      } catch {
+        return {
+          cloudName:
+            localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+          apiKey:
+            localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+        };
+      }
+    },
+    enabled: !isFetching,
+    staleTime: 10 * 60 * 1000, // 10 min cache
+  });
+}
+
+// =====================================================================
+// ADMIN SETTINGS (AdminSettings struct — cloudinary/referral/etc.)
+// =====================================================================
+
+import type { AdminSettings as BackendAdminSettings } from "../backend.d.ts";
+
+const ADMIN_SETTINGS_LS_KEY = "dz_admin_settings_cache";
+
+function lsReadAdminSettings(): Partial<BackendAdminSettings> {
+  try {
+    const raw = localStorage.getItem(ADMIN_SETTINGS_LS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Partial<BackendAdminSettings>;
+  } catch {
+    return {};
+  }
+}
+
+export function useGetAdminSettings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Partial<BackendAdminSettings>>({
+    queryKey: ["adminSettings"],
+    queryFn: async () => {
+      if (!actor) return lsReadAdminSettings();
+      try {
+        const data = await (
+          actor as unknown as {
+            getAdminSettings(): Promise<BackendAdminSettings>;
+          }
+        ).getAdminSettings();
+        localStorage.setItem(ADMIN_SETTINGS_LS_KEY, JSON.stringify(data));
+        // Cache individual cloudinary fields for quick access
+        if (data.cloudinaryCloudName)
+          localStorage.setItem(
+            "dz_cloudinary_cloud_name",
+            data.cloudinaryCloudName,
+          );
+        if (data.cloudinaryApiKey)
+          localStorage.setItem("dz_cloudinary_api_key", data.cloudinaryApiKey);
+        return data;
+      } catch {
+        return lsReadAdminSettings();
+      }
+    },
+    enabled: !isFetching,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateAdminSettings() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: Partial<BackendAdminSettings>) => {
+      // Merge with cached settings
+      const cached = lsReadAdminSettings();
+      const merged = { ...cached, ...settings };
+      localStorage.setItem(ADMIN_SETTINGS_LS_KEY, JSON.stringify(merged));
+      if (!actor) return;
+      const current = await (
+        actor as unknown as {
+          getAdminSettings(): Promise<BackendAdminSettings>;
+        }
+      )
+        .getAdminSettings()
+        .catch(() => ({}) as BackendAdminSettings);
+      const full: BackendAdminSettings = {
+        pointsPerAd: current.pointsPerAd ?? 10n,
+        cloudinaryApiKey: current.cloudinaryApiKey ?? "",
+        cpagripApiKey: current.cpagripApiKey ?? "",
+        razorpayKeyId: current.razorpayKeyId ?? "",
+        razorpayKeySecret: current.razorpayKeySecret ?? "",
+        gameEnabled: current.gameEnabled ?? false,
+        referralLevel1Pct: current.referralLevel1Pct ?? 5n,
+        referralLevel2Pct: current.referralLevel2Pct ?? 2n,
+        referralLevel3Pct: current.referralLevel3Pct ?? 1n,
+        referralLevel4Pct: current.referralLevel4Pct ?? 0.5,
+        referralLevel5Pct: current.referralLevel5Pct ?? 0.25,
+        minWithdrawal: current.minWithdrawal ?? 100n,
+        upiQrCodeUrl: current.upiQrCodeUrl ?? "",
+        rewardsEnabled: current.rewardsEnabled ?? true,
+        upiId: current.upiId ?? "",
+        cloudinaryCloudName: current.cloudinaryCloudName ?? "",
+        ludoEnabled: current.ludoEnabled ?? true,
+        redemptionRate: current.redemptionRate ?? 100n,
+        udhaarBookEnabled: current.udhaarBookEnabled ?? true,
+        cloudinaryApiSecret: current.cloudinaryApiSecret ?? "",
+        ...settings,
+      };
+      await (
+        actor as unknown as {
+          updateAdminSettings(s: BackendAdminSettings): Promise<boolean>;
+        }
+      ).updateAdminSettings(full);
+      // Update cloudinary cache fields
+      if (full.cloudinaryCloudName)
+        localStorage.setItem(
+          "dz_cloudinary_cloud_name",
+          full.cloudinaryCloudName,
+        );
+      if (full.cloudinaryApiKey)
+        localStorage.setItem("dz_cloudinary_api_key", full.cloudinaryApiKey);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adminSettings"] });
+      qc.invalidateQueries({ queryKey: ["cloudinaryConfig"] });
+    },
   });
 }
 

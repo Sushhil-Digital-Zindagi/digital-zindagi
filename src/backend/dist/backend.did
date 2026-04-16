@@ -246,6 +246,8 @@ type OfferUser =
    tier1Earnings: nat;
    tier2Earnings: nat;
    tier3Earnings: nat;
+   tier4Earnings: nat;
+   tier5Earnings: nat;
    totalEarnings: nat;
    userId: text;
  };
@@ -387,6 +389,29 @@ type ApprovalStatus =
    pending;
    rejected;
  };
+type AdminSettings = 
+ record {
+   cloudinaryApiKey: text;
+   cloudinaryApiSecret: text;
+   cloudinaryCloudName: text;
+   cpagripApiKey: text;
+   gameEnabled: bool;
+   ludoEnabled: bool;
+   minWithdrawal: nat;
+   pointsPerAd: nat;
+   razorpayKeyId: text;
+   razorpayKeySecret: text;
+   redemptionRate: nat;
+   referralLevel1Pct: nat;
+   referralLevel2Pct: nat;
+   referralLevel3Pct: nat;
+   referralLevel4Pct: float64;
+   referralLevel5Pct: float64;
+   rewardsEnabled: bool;
+   udhaarBookEnabled: bool;
+   upiId: text;
+   upiQrCodeUrl: text;
+ };
 type AdminConfig = 
  record {
    adminName: text;
@@ -498,6 +523,9 @@ service : {
   /// Return the most recent `limit` audit log entries — admin only.
   getAdminAuditLog: (limit: nat) -> (vec AuditLogEntry) query;
   getAdminConfig: () -> (opt AdminConfig) query;
+  /// Return all admin settings — readable by any caller so the frontend can
+  /// apply toggles and rates without an admin auth round-trip.
+  getAdminSettings: () -> (AdminSettings) query;
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
   getAllRechargeTransactions: () -> (vec RechargeTransaction) query;
@@ -517,6 +545,12 @@ service : {
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole__1) query;
   getCategories: () -> (vec Category) query;
+  /// Return Cloudinary cloud name and API key — public query.
+  /// The API secret is NEVER returned; it stays server-side only.
+  getCloudinaryConfig: () -> (record {
+                                apiKey: text;
+                                cloudName: text;
+                              }) query;
   /// Return the current commission config — public.
   getCommissionConfig: () -> (CommissionConfig) query;
   /// Return the full content-locker configuration (all features).
@@ -546,6 +580,8 @@ service : {
       tier1Earnings: nat;
       tier2Earnings: nat;
       tier3Earnings: nat;
+      tier4Earnings: nat;
+      tier5Earnings: nat;
       totalEarnings: nat;
     }) query;
   /// Get Offer Portal global config — admin only.
@@ -669,6 +705,9 @@ service : {
   setRechargeServiceEnabled: (enabled: bool) -> (bool);
   toggleCustomSection: (id: nat, enabled: bool) -> (bool);
   updateAdminConfig: (newConfig: AdminConfig) -> ();
+  /// Replace ALL admin settings in one atomic call — admin only.
+  /// All existing field values are overwritten with the supplied record.
+  updateAdminSettings: (settings: AdminSettings) -> (bool);
   updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
@@ -676,6 +715,9 @@ service : {
   /// Validates: retailerPct + adminPct must equal globalPct.
   updateCommissionConfig: (globalPct: float64, retailerPct: float64,
    adminPct: float64) -> (bool);
+  /// Save the CPAGrip API key in canister state — admin only.
+  /// Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
+  updateCpagripApiKey: (apiKey: text) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool, title: text, subtitle1: text,
    subtitle2: text, alignment: text, layoutStyle: text) -> (bool);
@@ -684,6 +726,9 @@ service : {
   updateJob: (id: nat, title: text, department: text, location: text,
    lastDate: text, applyLink: text, category: text, enabled: bool) -> (
    bool);
+  /// Update only Ludo / Rewards settings — admin only.
+  updateLudoSettings: (ludoEnabled: bool, rewardsEnabled: bool, pointsPerAd:
+   nat, redemptionRate: nat, minWithdrawal: nat) -> (bool);
   updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
    text, category: text, enabled: bool) -> (bool);
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
@@ -709,6 +754,9 @@ service : {
   /// Receipt: if status = "Success", generates a digital receipt.
   /// SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
   updateRechargeStatus: (txId: nat, status: text) -> (bool);
+  /// Update only the 5-tier referral rates — admin only.
+  updateReferralRates: (level1Pct: nat, level2Pct: nat, level3Pct: nat,
+   level4Pct: float64, level5Pct: float64) -> (bool);
   updateScrapRate: (id: nat, itemName: text, ratePerKg: float64, ratePerGram:
    float64, enabled: bool) -> (bool);
   /// Update SMS config — admin only.

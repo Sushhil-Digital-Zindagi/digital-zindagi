@@ -886,7 +886,9 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
                 (summary?.totalEarnings ?? 0n) -
                   (summary?.tier1Earnings ?? 0n) -
                   (summary?.tier2Earnings ?? 0n) -
-                  (summary?.tier3Earnings ?? 0n),
+                  (summary?.tier3Earnings ?? 0n) -
+                  (summary?.tier4Earnings ?? 0n) -
+                  (summary?.tier5Earnings ?? 0n),
               )}
             </span>
           </div>
@@ -928,7 +930,7 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
               {formatRupees(summary?.tier2Earnings ?? 0n)}
             </span>
           </div>
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 border-b border-border/50">
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center">
                 T3
@@ -947,10 +949,48 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
               {formatRupees(summary?.tier3Earnings ?? 0n)}
             </span>
           </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center">
+                T4
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Tier 4 Commission{" "}
+                  <span className="text-emerald-600">(0.5%)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  4th level ka network bonus
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-rose-600">
+              {formatRupees(summary?.tier4Earnings ?? 0n)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold flex items-center justify-center">
+                T5
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Tier 5 Commission{" "}
+                  <span className="text-emerald-600">(0.25%)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  5th level ka network bonus
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-teal-600">
+              {formatRupees(summary?.tier5Earnings ?? 0n)}
+            </span>
+          </div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-700">
-          💡 A → B invite kare, B → C, C → D: D ki kamai par C ko 5%, B ko 2%, A
-          ko 1% milta hai.
+          💡 A → B invite kare, B → C, C → D, D → E: E ki kamai par D ko 5%, C
+          ko 2%, B ko 1%, A ko 0.5%, unka referrer ko 0.25% milta hai.
         </div>
       </div>
 

@@ -326,7 +326,9 @@ export interface AuditLogEntry {
 }
 export interface OfferUser {
     id: bigint;
+    tier5Earnings: bigint;
     referralCode: string;
+    tier4Earnings: bigint;
     userId: string;
     createdAt: bigint;
     pendingEarnings: bigint;
@@ -337,6 +339,28 @@ export interface OfferUser {
     passwordHash: string;
     totalEarnings: bigint;
     tier1Earnings: bigint;
+}
+export interface AdminSettings {
+    pointsPerAd: bigint;
+    cloudinaryApiKey: string;
+    cpagripApiKey: string;
+    razorpayKeyId: string;
+    razorpayKeySecret: string;
+    gameEnabled: boolean;
+    referralLevel1Pct: bigint;
+    referralLevel2Pct: bigint;
+    referralLevel3Pct: bigint;
+    referralLevel4Pct: number;
+    referralLevel5Pct: number;
+    minWithdrawal: bigint;
+    upiQrCodeUrl: string;
+    rewardsEnabled: boolean;
+    upiId: string;
+    cloudinaryCloudName: string;
+    ludoEnabled: boolean;
+    redemptionRate: bigint;
+    udhaarBookEnabled: boolean;
+    cloudinaryApiSecret: string;
 }
 export interface CustomSection {
     id: bigint;
@@ -577,6 +601,11 @@ export interface backendInterface {
      */
     getAdminAuditLog(limit: bigint): Promise<Array<AuditLogEntry>>;
     getAdminConfig(): Promise<AdminConfig | null>;
+    /**
+     * / Return all admin settings — readable by any caller so the frontend can
+     * / apply toggles and rates without an admin auth round-trip.
+     */
+    getAdminSettings(): Promise<AdminSettings>;
     getAllProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return all recharge transactions (master log) — admin only.
@@ -596,6 +625,14 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
+    /**
+     * / Return Cloudinary cloud name and API key — public query.
+     * / The API secret is NEVER returned; it stays server-side only.
+     */
+    getCloudinaryConfig(): Promise<{
+        cloudName: string;
+        apiKey: string;
+    }>;
     /**
      * / Return the current commission config — public.
      */
@@ -637,7 +674,9 @@ export interface backendInterface {
      * / Get earnings summary for an Offer Portal user.
      */
     getOfferEarningsSummary(offerUserId: bigint): Promise<{
+        tier5Earnings: bigint;
         referralCode: string;
+        tier4Earnings: bigint;
         pendingEarnings: bigint;
         tier3Earnings: bigint;
         tier2Earnings: bigint;
@@ -822,6 +861,11 @@ export interface backendInterface {
     setRechargeServiceEnabled(enabled: boolean): Promise<boolean>;
     toggleCustomSection(id: bigint, enabled: boolean): Promise<boolean>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
+    /**
+     * / Replace ALL admin settings in one atomic call — admin only.
+     * / All existing field values are overwritten with the supplied record.
+     */
+    updateAdminSettings(settings: AdminSettings): Promise<boolean>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     /**
@@ -829,9 +873,18 @@ export interface backendInterface {
      * / Validates: retailerPct + adminPct must equal globalPct.
      */
     updateCommissionConfig(globalPct: number, retailerPct: number, adminPct: number): Promise<boolean>;
+    /**
+     * / Save the CPAGrip API key in canister state — admin only.
+     * / Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
+     */
+    updateCpagripApiKey(apiKey: string): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
+    /**
+     * / Update only Ludo / Rewards settings — admin only.
+     */
+    updateLudoSettings(ludoEnabled: boolean, rewardsEnabled: boolean, pointsPerAd: bigint, redemptionRate: bigint, minWithdrawal: bigint): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
@@ -861,6 +914,10 @@ export interface backendInterface {
      * / SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
      */
     updateRechargeStatus(txId: bigint, status: string): Promise<boolean>;
+    /**
+     * / Update only the 5-tier referral rates — admin only.
+     */
+    updateReferralRates(level1Pct: bigint, level2Pct: bigint, level3Pct: bigint, level4Pct: number, level5Pct: number): Promise<boolean>;
     updateScrapRate(id: bigint, itemName: string, ratePerKg: number, ratePerGram: number, enabled: boolean): Promise<boolean>;
     /**
      * / Update SMS config — admin only.
@@ -1579,6 +1636,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n43(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getAdminSettings(): Promise<AdminSettings> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdminSettings();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdminSettings();
+            return result;
+        }
+    }
     async getAllProviders(): Promise<Array<ProviderProfile>> {
         if (this.processError) {
             try {
@@ -1716,6 +1787,23 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getCategories();
+            return result;
+        }
+    }
+    async getCloudinaryConfig(): Promise<{
+        cloudName: string;
+        apiKey: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCloudinaryConfig();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCloudinaryConfig();
             return result;
         }
     }
@@ -1902,7 +1990,9 @@ export class Backend implements backendInterface {
         }
     }
     async getOfferEarningsSummary(arg0: bigint): Promise<{
+        tier5Earnings: bigint;
         referralCode: string;
+        tier4Earnings: bigint;
         pendingEarnings: bigint;
         tier3Earnings: bigint;
         tier2Earnings: bigint;
@@ -2718,6 +2808,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateAdminSettings(arg0: AdminSettings): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateAdminSettings(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateAdminSettings(arg0);
+            return result;
+        }
+    }
     async updateAppSettings(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -2760,6 +2864,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateCpagripApiKey(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateCpagripApiKey(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateCpagripApiKey(arg0);
+            return result;
+        }
+    }
     async updateCustomCode(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: boolean, arg7: string, arg8: string, arg9: string, arg10: string, arg11: string): Promise<boolean> {
         if (this.processError) {
             try {
@@ -2799,6 +2917,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateJob(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            return result;
+        }
+    }
+    async updateLudoSettings(arg0: boolean, arg1: boolean, arg2: bigint, arg3: bigint, arg4: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateLudoSettings(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateLudoSettings(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -2903,6 +3035,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateRechargeStatus(arg0, arg1);
+            return result;
+        }
+    }
+    async updateReferralRates(arg0: bigint, arg1: bigint, arg2: bigint, arg3: number, arg4: number): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateReferralRates(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateReferralRates(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -3160,7 +3306,9 @@ function from_candid_opt_n75(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 }
 function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
+    tier5Earnings: bigint;
     referralCode: string;
+    tier4Earnings: bigint;
     userId: string;
     createdAt: bigint;
     pendingEarnings: bigint;
@@ -3173,7 +3321,9 @@ function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uin
     tier1Earnings: bigint;
 }): {
     id: bigint;
+    tier5Earnings: bigint;
     referralCode: string;
+    tier4Earnings: bigint;
     userId: string;
     createdAt: bigint;
     pendingEarnings: bigint;
@@ -3187,7 +3337,9 @@ function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         id: value.id,
+        tier5Earnings: value.tier5Earnings,
         referralCode: value.referralCode,
+        tier4Earnings: value.tier4Earnings,
         userId: value.userId,
         createdAt: value.createdAt,
         pendingEarnings: value.pendingEarnings,

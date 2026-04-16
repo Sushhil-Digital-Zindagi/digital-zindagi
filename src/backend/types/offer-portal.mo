@@ -15,6 +15,8 @@ module {
     tier1Earnings   : Nat;     // sum of commissions earned as tier-1 (5%)
     tier2Earnings   : Nat;     // sum of commissions earned as tier-2 (2%)
     tier3Earnings   : Nat;     // sum of commissions earned as tier-3 (1%)
+    tier4Earnings   : Nat;     // sum of commissions earned as tier-4 (0.5%)
+    tier5Earnings   : Nat;     // sum of commissions earned as tier-5 (0.25%)
     createdAt       : Int;
   };
 

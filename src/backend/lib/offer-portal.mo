@@ -37,6 +37,8 @@ module {
       tier1Earnings   = 0;
       tier2Earnings   = 0;
       tier3Earnings   = 0;
+      tier4Earnings   = 0;
+      tier5Earnings   = 0;
       createdAt       = Time.now();
     };
   };

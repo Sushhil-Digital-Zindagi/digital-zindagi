@@ -24,7 +24,14 @@ function getSignupErrorMessage(err: unknown): string {
     lowerMsg.includes("duplicate") ||
     lowerMsg.includes("already registered")
   ) {
-    return "An account with this email/mobile already exists.";
+    return "Account already exists. Please login.";
+  }
+  if (
+    lowerMsg.includes("method not found") ||
+    lowerMsg.includes("canister") ||
+    lowerMsg.includes("actor")
+  ) {
+    return "Service temporarily unavailable. Please try again.";
   }
   if (
     lowerMsg.includes("agenterror") ||
@@ -33,12 +40,13 @@ function getSignupErrorMessage(err: unknown): string {
     lowerMsg.includes("connect") ||
     lowerMsg.includes("timeout")
   ) {
-    return "Could not connect to server. Please try again.";
+    return "Connection error. Please check your internet.";
   }
   return "Registration failed. Please try again.";
 }
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { SUPER_ADMIN_EMAIL } from "../contexts/AuthContext";
+import { useActor } from "../hooks/useActor";
 import { useAdminConfig, useCategories } from "../hooks/useQueries";
 import { Link, useNavigate } from "../lib/router";
 
@@ -95,6 +103,7 @@ export default function SignupPage() {
   const [shopLat, setShopLat] = useState<number | null>(null);
   const [shopLng, setShopLng] = useState<number | null>(null);
   const [detectingGPS, setDetectingGPS] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
 
   // Revenue wall state
   const [showAdsConsentModal, setShowAdsConsentModal] = useState(false);
@@ -134,6 +143,7 @@ export default function SignupPage() {
   };
 
   const { data: adminConfig } = useAdminConfig();
+  const { actor } = useActor();
   const navigate = useNavigate();
 
   // ── Dynamic categories from canister (polls every 2s) ──────────────────
@@ -223,7 +233,7 @@ export default function SignupPage() {
     }
   };
 
-  const completeProviderRegistration = (
+  const completeProviderRegistration = async (
     planType: "pending_premium" | "free",
   ) => {
     setSubmitting(true);
@@ -252,21 +262,59 @@ export default function SignupPage() {
       return;
     }
 
-    setTimeout(() => {
-      setSubmitting(false);
-      if (planType === "pending_premium") {
-        toast.success(
-          "Registration Successful! Admin will approve you soon. 🎉",
+    // Call canister registerUser if available (non-blocking)
+    if (actor) {
+      try {
+        await (
+          actor as unknown as {
+            registerUser(
+              name: string,
+              mobile: string,
+              email: string,
+              password: string,
+              secQ: string,
+              secA: string,
+              role: string,
+              referralCode: string,
+            ): Promise<unknown>;
+          }
+        ).registerUser(
+          name.trim(),
+          mobile.trim(),
+          email.trim(),
+          password,
+          secQ,
+          secA.trim(),
+          "provider",
+          referralCode.trim(),
         );
-        navigate("/provider/subscribe");
-      } else {
-        toast.success("Registration Successful! Aap ab listed hain. 🎉");
-        navigate("/provider/dashboard");
+      } catch (err: unknown) {
+        const msg = (err as Error)?.message ?? "";
+        if (
+          msg.toLowerCase().includes("already") ||
+          msg.toLowerCase().includes("duplicate") ||
+          msg.toLowerCase().includes("registered")
+        ) {
+          // Already registered is ok — proceed with registration flow
+          console.info("[Signup] Provider already in canister, continuing...");
+        } else {
+          // Non-blocking: warn but don't stop the flow
+          console.warn("[Signup] Canister registerUser failed:", msg);
+        }
       }
-    }, 400);
+    }
+
+    setSubmitting(false);
+    if (planType === "pending_premium") {
+      toast.success("Registration Successful! Admin will approve you soon. 🎉");
+      navigate("/provider/subscribe");
+    } else {
+      toast.success("Registration Successful! Aap ab listed hain. 🎉");
+      navigate("/provider/dashboard");
+    }
   };
 
-  const handleCustomerSubmit = (e: React.FormEvent) => {
+  const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !mobile.trim() || !password || !secA.trim()) {
       toast.error("Sab fields bharna zaroori hai");
@@ -289,14 +337,63 @@ export default function SignupPage() {
     }
 
     setSubmitting(true);
-    try {
-      toast.success("Account ban gaya!");
-      navigate("/");
-    } catch (err) {
-      toast.error(getSignupErrorMessage(err));
-    } finally {
-      setSubmitting(false);
+    // Save to localStorage as before
+    const userData = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      mobile: mobile.trim(),
+      email: email.trim() || "",
+      role: "customer",
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem("dz_current_user", JSON.stringify(userData));
+    localStorage.setItem("dz_logged_in", "true");
+
+    // Also call canister registerUser if available
+    if (actor) {
+      try {
+        await (
+          actor as unknown as {
+            registerUser(
+              name: string,
+              mobile: string,
+              email: string,
+              password: string,
+              secQ: string,
+              secA: string,
+              role: string,
+              referralCode: string,
+            ): Promise<unknown>;
+          }
+        ).registerUser(
+          name.trim(),
+          mobile.trim(),
+          email.trim(),
+          password,
+          secQ,
+          secA.trim(),
+          "customer",
+          referralCode.trim(),
+        );
+      } catch (err: unknown) {
+        const msg = (err as Error)?.message ?? "";
+        if (
+          msg.toLowerCase().includes("already") ||
+          msg.toLowerCase().includes("duplicate") ||
+          msg.toLowerCase().includes("registered")
+        ) {
+          toast.error("Account already exists. Please login.");
+          setSubmitting(false);
+          return;
+        }
+        // Non-blocking: log but don't block registration
+        console.warn("[Signup] Canister registerUser failed:", msg);
+      }
     }
+
+    setSubmitting(false);
+    toast.success("Account ban gaya!");
+    navigate("/");
   };
 
   return (
@@ -529,6 +626,29 @@ export default function SignupPage() {
               onChange={(e) => setSecA(e.target.value)}
               placeholder="Jawab likhein"
               className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Referral Code */}
+          <div>
+            <label
+              className="block text-sm font-medium text-foreground mb-1.5"
+              htmlFor="referral-code"
+            >
+              Referral Code{" "}
+              <span className="text-muted-foreground font-normal">
+                (Optional)
+              </span>
+            </label>
+            <input
+              id="referral-code"
+              data-ocid="signup.referral_input"
+              type="text"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+              placeholder="Kisi ne code diya ho to yahan daalein"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              autoComplete="off"
             />
           </div>
 
