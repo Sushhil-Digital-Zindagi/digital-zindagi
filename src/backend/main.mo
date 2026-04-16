@@ -156,7 +156,7 @@ persistent actor {
     cpagripApiKey       = "";
     cloudinaryCloudName = "dquyiiu7o";
     cloudinaryApiKey    = "199372638334688";
-    cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
+    cloudinaryApiSecret = "-bMdmPrWDfdfSsj8LckbC-4zmvg";
     ludoEnabled         = true;
     rewardsEnabled      = true;
     gameEnabled         = true;
