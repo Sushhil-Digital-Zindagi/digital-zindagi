@@ -109,9 +109,9 @@ persistent actor {
   var nextWithdrawalId  = 1;
   var nextReceiptId     = 1;
   var offerPortalConfig : OPTypes.OfferPortalConfig = {
-    isEnabled            = false;
-    cpaLeadWebhookSecret = "";
-    cpagripApiKey        = "";
+    isEnabled            = true;
+    cpaLeadWebhookSecret = "94a62430d750275ae067986c120c2884";
+    cpagripApiKey        = "914ebf2f2ed06fd6da511be81d502acd";
     adminProfitPct       = 60;
     userProfitPct        = 40;
   };
@@ -148,17 +148,17 @@ persistent actor {
     referralLevel3Pct   = 1;
     referralLevel4Pct   = 0.5;
     referralLevel5Pct   = 0.25;
-    upiId               = "";
+    upiId               = "9670746954@ybl";
     upiQrCodeUrl        = "";
     razorpayKeyId       = "";
     razorpayKeySecret   = "";
     pointsPerAd         = 10;
     redemptionRate      = 100;
     minWithdrawal       = 50;
-    cpagripApiKey       = "";
+    cpagripApiKey       = "914ebf2f2ed06fd6da511be81d502acd";
     cloudinaryCloudName = "dquyiiu7o";
     cloudinaryApiKey    = "199372638334688";
-    cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
+    cloudinaryApiSecret = "-bMdmPrWDfdfSsj8LckbC-4zmvg";
     ludoEnabled         = true;
     rewardsEnabled      = true;
     gameEnabled         = true;
