@@ -165,7 +165,7 @@ persistent actor {
     udhaarBookEnabled   = true;
   };
   // Separate stable vars for new CPAGrip fields (upgrade-safe)
-  var cpagripWebhookSecret : Text = "";
+  var cpagripWebhookSecret : Text = "94a62430d750275ae067986c120c2884";
   var cpagripOfferWallName : Text = "Digital Zindagi Offers";
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
