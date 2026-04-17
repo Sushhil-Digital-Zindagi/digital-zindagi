@@ -27,7 +27,7 @@ import List       "mo:core/List";
 import PCTypes    "types/payment-config";
 import PCApi      "mixins/payment-config-api";
 import ASTypes    "types/admin-settings";
-import Migration  "migration";
+
 
 
 
@@ -36,7 +36,7 @@ import Migration  "migration";
 
 
 
-(with migration = Migration.run)
+
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -140,6 +140,8 @@ persistent actor {
   };
 
   // ── Unified Admin Settings state ──────────────────────────────────────────
+  // NOTE: cpagripWebhookSecret and cpagripOfferWallName are stored separately
+  // to maintain stable upgrade compatibility (added after initial deployment).
   var adminSettings : ASTypes.AdminSettings = {
     referralLevel1Pct   = 5;
     referralLevel2Pct   = 2;
@@ -162,6 +164,9 @@ persistent actor {
     gameEnabled         = true;
     udhaarBookEnabled   = true;
   };
+  // Separate stable vars for new CPAGrip fields (upgrade-safe)
+  var cpagripWebhookSecret : Text = "";
+  var cpagripOfferWallName : Text = "Digital Zindagi Offers";
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -2274,17 +2279,64 @@ persistent actor {
 
   /// Return all admin settings — readable by any caller so the frontend can
   /// apply toggles and rates without an admin auth round-trip.
-  public query func getAdminSettings() : async ASTypes.AdminSettings {
-    adminSettings;
+  public query func getAdminSettings() : async ASTypes.AdminSettingsExtended {
+    {
+      referralLevel1Pct   = adminSettings.referralLevel1Pct;
+      referralLevel2Pct   = adminSettings.referralLevel2Pct;
+      referralLevel3Pct   = adminSettings.referralLevel3Pct;
+      referralLevel4Pct   = adminSettings.referralLevel4Pct;
+      referralLevel5Pct   = adminSettings.referralLevel5Pct;
+      upiId               = adminSettings.upiId;
+      upiQrCodeUrl        = adminSettings.upiQrCodeUrl;
+      razorpayKeyId       = adminSettings.razorpayKeyId;
+      razorpayKeySecret   = adminSettings.razorpayKeySecret;
+      pointsPerAd         = adminSettings.pointsPerAd;
+      redemptionRate      = adminSettings.redemptionRate;
+      minWithdrawal       = adminSettings.minWithdrawal;
+      cpagripApiKey       = adminSettings.cpagripApiKey;
+      cpagripWebhookSecret = cpagripWebhookSecret;
+      cpagripOfferWallName = cpagripOfferWallName;
+      cloudinaryCloudName = adminSettings.cloudinaryCloudName;
+      cloudinaryApiKey    = adminSettings.cloudinaryApiKey;
+      cloudinaryApiSecret = adminSettings.cloudinaryApiSecret;
+      ludoEnabled         = adminSettings.ludoEnabled;
+      rewardsEnabled      = adminSettings.rewardsEnabled;
+      gameEnabled         = adminSettings.gameEnabled;
+      udhaarBookEnabled   = adminSettings.udhaarBookEnabled;
+    };
   };
 
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
-  public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettings) : async Bool {
+  public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettingsExtended) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Admin only");
     };
-    adminSettings := settings;
+    adminSettings := {
+      referralLevel1Pct   = settings.referralLevel1Pct;
+      referralLevel2Pct   = settings.referralLevel2Pct;
+      referralLevel3Pct   = settings.referralLevel3Pct;
+      referralLevel4Pct   = settings.referralLevel4Pct;
+      referralLevel5Pct   = settings.referralLevel5Pct;
+      upiId               = settings.upiId;
+      upiQrCodeUrl        = settings.upiQrCodeUrl;
+      razorpayKeyId       = settings.razorpayKeyId;
+      razorpayKeySecret   = settings.razorpayKeySecret;
+      pointsPerAd         = settings.pointsPerAd;
+      redemptionRate      = settings.redemptionRate;
+      minWithdrawal       = settings.minWithdrawal;
+      cpagripApiKey       = settings.cpagripApiKey;
+      cloudinaryCloudName = settings.cloudinaryCloudName;
+      cloudinaryApiKey    = settings.cloudinaryApiKey;
+      cloudinaryApiSecret = settings.cloudinaryApiSecret;
+      ludoEnabled         = settings.ludoEnabled;
+      rewardsEnabled      = settings.rewardsEnabled;
+      gameEnabled         = settings.gameEnabled;
+      udhaarBookEnabled   = settings.udhaarBookEnabled;
+    };
+    // Save new CPAGrip fields to their separate stable vars
+    cpagripWebhookSecret := settings.cpagripWebhookSecret;
+    cpagripOfferWallName := settings.cpagripOfferWallName;
     // Mirror payment fields into paymentConfig for backward compat
     paymentConfig := {
       razorpayKeyId     = settings.razorpayKeyId;
@@ -2358,6 +2410,20 @@ persistent actor {
     };
     adminSettings := { adminSettings with cpagripApiKey = apiKey };
     offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
+    true;
+  };
+
+  /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
+  /// Both fields are persisted in separate stable vars so they survive reloads.
+  public shared ({ caller }) func updateCpagripSettings(
+    webhookSecret : Text,
+    offerWallName : Text,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    cpagripWebhookSecret := webhookSecret;
+    cpagripOfferWallName := offerWallName;
     true;
   };
 

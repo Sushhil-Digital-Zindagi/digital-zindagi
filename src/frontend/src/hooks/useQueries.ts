@@ -2773,7 +2773,7 @@ export function useCloudinaryConfig() {
 // ADMIN SETTINGS (AdminSettings struct — cloudinary/referral/etc.)
 // =====================================================================
 
-import type { AdminSettings as BackendAdminSettings } from "../backend.d.ts";
+import type { AdminSettingsExtended as BackendAdminSettings } from "../backend.d.ts";
 
 const ADMIN_SETTINGS_LS_KEY = "dz_admin_settings_cache";
 
@@ -2856,6 +2856,10 @@ export function useUpdateAdminSettings() {
         redemptionRate: current.redemptionRate ?? 100n,
         udhaarBookEnabled: current.udhaarBookEnabled ?? true,
         cloudinaryApiSecret: current.cloudinaryApiSecret ?? "",
+        // New CPAGrip fields — both present in AdminSettingsExtended
+        cpagripWebhookSecret: current.cpagripWebhookSecret ?? "",
+        cpagripOfferWallName:
+          current.cpagripOfferWallName ?? "Digital Zindagi Offers",
         ...settings,
       };
       await (

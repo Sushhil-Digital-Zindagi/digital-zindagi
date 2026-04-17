@@ -21,17 +21,43 @@ type LoginMode = "mobile" | "email";
 const SUPER_ADMIN_ALT_EMAIL = "sushilkumar12022@gmail.com";
 
 function getLoginErrorMessage(err: unknown): string {
-  const msg = (err as Error)?.message ?? "";
+  const msg =
+    (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
   const lowerMsg = msg.toLowerCase();
+
+  // ic0.trap / Reject code 5 = wrong password in ICP canister
   if (
-    lowerMsg.includes("agenterror") ||
-    lowerMsg.includes("fetch") ||
-    lowerMsg.includes("network") ||
-    lowerMsg.includes("connect") ||
-    lowerMsg.includes("timeout")
+    lowerMsg.includes("ic0.trap") ||
+    lowerMsg.includes("reject code: 5") ||
+    lowerMsg.includes("reject code 5") ||
+    lowerMsg.includes("canister trapped") ||
+    lowerMsg.includes("trapped explicitly")
   ) {
-    return "Connection error. Please check your internet and try again.";
+    return "Incorrect password, please try again";
   }
+
+  // Canister ID pattern (ends with -cai)
+  if (/-[a-z0-9]+-cai/i.test(msg)) {
+    return "Connection error, please try again";
+  }
+
+  if (
+    lowerMsg.includes("failed to fetch") ||
+    lowerMsg.includes("networkerror") ||
+    lowerMsg.includes("network error") ||
+    lowerMsg.includes("agenterror")
+  ) {
+    return "Backend से connect नहीं हो पा रहा, थोड़ा wait करके retry करें";
+  }
+
+  if (lowerMsg.includes("timeout") || lowerMsg.includes("timed out")) {
+    return "Connection timeout — please try again";
+  }
+
+  if (lowerMsg.includes("connect") || lowerMsg.includes("fetch")) {
+    return "Backend से connect नहीं हो पा रहा, थोड़ा wait करके retry करें";
+  }
+
   if (
     lowerMsg.includes("not found") ||
     lowerMsg.includes("invalid") ||
@@ -39,9 +65,28 @@ function getLoginErrorMessage(err: unknown): string {
     lowerMsg.includes("incorrect") ||
     lowerMsg.includes("mismatch")
   ) {
-    return "Email or password is incorrect.";
+    return "Incorrect password, please try again";
   }
-  return "Login failed. Please try again in a moment.";
+
+  return "Something went wrong, please try again";
+}
+
+/** Wraps a promise with a 30-second timeout */
+function withTimeout<T>(promise: Promise<T>, ms = 30_000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "timeout: Connection is taking too long — please try again",
+            ),
+          ),
+        ms,
+      ),
+    ),
+  ]);
 }
 
 export default function LoginPage() {
@@ -202,7 +247,7 @@ export default function LoginPage() {
         return;
       }
 
-      const user = await actor.login(mobile.trim(), hash);
+      const user = await withTimeout(actor.login(mobile.trim(), hash));
 
       login({
         userId: user.id,

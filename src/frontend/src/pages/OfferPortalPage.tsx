@@ -56,6 +56,60 @@ function formatRupees(amount: bigint): string {
   return `₹${(Number(amount) / 100).toFixed(2)}`;
 }
 
+/** Convert any backend error to a clean user-friendly message */
+function getOfferErrorMessage(
+  err: unknown,
+  defaultMsg = "Something went wrong, please try again",
+): string {
+  const raw =
+    (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+
+  // ic0.trap / Reject code 5 = wrong password in ICP canister
+  if (
+    lower.includes("ic0.trap") ||
+    lower.includes("reject code: 5") ||
+    lower.includes("reject code 5") ||
+    lower.includes("canister trapped") ||
+    lower.includes("trapped explicitly")
+  ) {
+    return "Incorrect password, please try again";
+  }
+
+  // Canister ID in message (ends with -cai)
+  if (/-[a-z0-9]+-cai/i.test(raw)) {
+    return "Connection error, please try again";
+  }
+
+  if (lower.includes("failed to fetch") || lower.includes("networkerror")) {
+    return "Backend से connect नहीं हो पा रहा — थोड़ा wait करें";
+  }
+
+  if (lower.includes("timeout") || lower.includes("timed out")) {
+    return "Connection timeout — please try again";
+  }
+
+  // Already-registered is detected in caller — but sanitize here too
+  if (
+    lower.includes("already") ||
+    lower.includes("exists") ||
+    lower.includes("registered")
+  ) {
+    return "User already registered — Login karein";
+  }
+
+  // Anything with raw canister/actor jargon
+  if (
+    lower.includes("actor") ||
+    lower.includes("canister") ||
+    lower.includes("method not found")
+  ) {
+    return "Service temporarily unavailable. Please try again.";
+  }
+
+  return defaultMsg;
+}
+
 type View = "landing" | "login" | "signup" | "dashboard" | "redeem";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
@@ -428,11 +482,7 @@ function LoginView({
           onSuccess();
         },
         onError: (err) => {
-          setErrorMsg(
-            err instanceof Error
-              ? err.message
-              : "Email ya password galat hai / Wrong credentials",
-          );
+          setErrorMsg(getOfferErrorMessage(err, "Email ya password galat hai"));
         },
       },
     );
@@ -605,15 +655,17 @@ function SignupView({
           onSuccess();
         },
         onError: (err) => {
-          const msg =
-            err instanceof Error
-              ? err.message
-              : "Account banana fail hua. Dobara try karein.";
+          const msg = getOfferErrorMessage(
+            err,
+            "Account banana fail hua. Dobara try karein.",
+          );
           // Show toast (not red error) if user already exists
           const isAlreadyRegistered =
             msg.toLowerCase().includes("already") ||
-            msg.toLowerCase().includes("exists") ||
-            msg.toLowerCase().includes("registered");
+            (err instanceof Error &&
+              ((err.message ?? "").toLowerCase().includes("already") ||
+                (err.message ?? "").toLowerCase().includes("exists") ||
+                (err.message ?? "").toLowerCase().includes("registered")));
           if (isAlreadyRegistered) {
             toast.error("User already registered — Login karein");
             setErrorMsg("");

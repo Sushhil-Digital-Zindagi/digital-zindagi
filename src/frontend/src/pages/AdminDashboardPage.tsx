@@ -11054,9 +11054,14 @@ function OfferSystemToggleTab() {
 function OfferApiKeysTab() {
   const { actor } = useActor();
   const updateCpagripApiKey = useUpdateCpagripApiKey();
+  const updateAdminSettings = useUpdateAdminSettings();
+  const { data: adminSettingsData } = useGetAdminSettings();
   const [offerWallName, setOfferWallName] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
+  const [cpagripWebhookSecret, setCpagripWebhookSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
+  const [showCpagripWebhookSecret, setShowCpagripWebhookSecret] =
+    useState(false);
   const [cpagripApiKey, setCpagripApiKey] = useState("");
   const [showCpagripKey, setShowCpagripKey] = useState(false);
   const [fast2smsKey, setFast2smsKey] = useState("");
@@ -11064,6 +11069,20 @@ function OfferApiKeysTab() {
   const [showSmsKey, setShowSmsKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  // Hydrate CPAGrip fields from AdminSettings when data arrives
+  useEffect(() => {
+    if (!adminSettingsData) return;
+    const s = adminSettingsData as typeof adminSettingsData & {
+      cpagripWebhookSecret?: string;
+      cpagripOfferWallName?: string;
+    };
+    if (s.cpagripWebhookSecret !== undefined)
+      setCpagripWebhookSecret(s.cpagripWebhookSecret);
+    if (s.cpagripOfferWallName !== undefined)
+      setOfferWallName(s.cpagripOfferWallName);
+    if (s.cpagripApiKey !== undefined) setCpagripApiKey(s.cpagripApiKey);
+  }, [adminSettingsData]);
 
   useEffect(() => {
     const load = async () => {
@@ -11081,10 +11100,10 @@ function OfferApiKeysTab() {
           ).getOfferPortalConfig();
           setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
         }
-        // Load CPAGrip API key — prefer canister AppSettings, fallback to localStorage
+        // Load CPAGrip API key fallback from localStorage
         const storedCpagripKey =
           localStorage.getItem("dz_cpagrip_api_key") ?? "";
-        setCpagripApiKey(storedCpagripKey);
+        setCpagripApiKey((prev) => prev || storedCpagripKey);
         if (actor && "getSmsConfig" in actor) {
           const sms = await (
             actor as unknown as {
@@ -11105,6 +11124,7 @@ function OfferApiKeysTab() {
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actor]);
 
   const canisterId =
@@ -11126,6 +11146,7 @@ function OfferApiKeysTab() {
             getOfferPortalConfig: () => Promise<{
               isEnabled: boolean;
               cpaLeadWebhookSecret: string;
+              cpagripApiKey: string;
               adminProfitPct: bigint;
               userProfitPct: bigint;
             }>;
@@ -11136,6 +11157,7 @@ function OfferApiKeysTab() {
             updateOfferPortalConfig: (
               e: boolean,
               s: string,
+              k: string,
               a: bigint,
               u: bigint,
             ) => Promise<boolean>;
@@ -11143,6 +11165,7 @@ function OfferApiKeysTab() {
         ).updateOfferPortalConfig(
           cfg.isEnabled,
           webhookSecret.trim(),
+          cpagripApiKey.trim(),
           cfg.adminProfitPct ?? BigInt(60),
           cfg.userProfitPct ?? BigInt(40),
         );
@@ -11152,12 +11175,14 @@ function OfferApiKeysTab() {
             getOfferPortalConfig: () => Promise<{
               isEnabled: boolean;
               cpaLeadWebhookSecret: string;
+              cpagripApiKey: string;
               adminProfitPct: bigint;
               userProfitPct: bigint;
             }>;
           }
         ).getOfferPortalConfig();
         setWebhookSecret(updated.cpaLeadWebhookSecret ?? "");
+        setCpagripApiKey(updated.cpagripApiKey ?? "");
       }
       if (actor && "updateSmsConfig" in actor) {
         await (
@@ -11186,7 +11211,15 @@ function OfferApiKeysTab() {
       }
       // Save CPAGrip API key to canister AND localStorage
       await updateCpagripApiKey.mutateAsync(cpagripApiKey);
-      toast.success("Settings Updated Successfully");
+      // Save CPAGrip Webhook Secret Key and Offer Wall Name to AdminSettings
+      // These new fields are typed as extra properties beyond the base AdminSettings
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (updateAdminSettings.mutateAsync as (s: any) => Promise<void>)({
+        cpagripApiKey: cpagripApiKey.trim(),
+        cpagripWebhookSecret: cpagripWebhookSecret.trim(),
+        cpagripOfferWallName: offerWallName.trim(),
+      });
+      toast.success("Settings Updated Successfully ✅");
     } catch {
       toast.error("Failed to save. Please try again.");
     } finally {
@@ -11204,33 +11237,6 @@ function OfferApiKeysTab() {
   return (
     <div className="space-y-5">
       {/* Offer Wall Name */}
-      <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-3">
-        <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
-          🌐 Offer Wall Name
-        </h3>
-        <div>
-          <label
-            htmlFor="offer-wall-name"
-            className="block text-sm font-medium text-foreground mb-1.5"
-          >
-            Offer Wall ka Naam (sirf reference ke liye)
-          </label>
-          <input
-            id="offer-wall-name"
-            data-ocid="offer.offer_wall_name_input"
-            type="text"
-            value={offerWallName}
-            onChange={(e) => setOfferWallName(e.target.value)}
-            placeholder="e.g. CPALead, CPAGrip, AdWork Media, OGAds"
-            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Yeh field sirf aapki reference ke liye hai — Admin Panel mein dikhta
-            hai taaki aap jaanein kaun sa Offer Wall configured hai.
-          </p>
-        </div>
-      </div>
-
       {/* Postback URL Info */}
       <div
         className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2"
@@ -11317,7 +11323,7 @@ function OfferApiKeysTab() {
       {/* CPAGrip API Key */}
       <div className="bg-white rounded-2xl border border-border shadow-card p-5 space-y-4">
         <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
-          🔑 CPAGrip API Key
+          🔑 CPAGrip Settings
         </h3>
         <div>
           <label
@@ -11347,6 +11353,61 @@ function OfferApiKeysTab() {
           <p className="text-xs text-muted-foreground mt-1">
             CPAGrip account ke API key ko yahan paste karein. Automatic offer
             fetching ke liye use hoga.
+          </p>
+        </div>
+
+        {/* CPAGrip Webhook Secret Key */}
+        <div>
+          <label
+            htmlFor="offer-cpagrip-webhook-secret"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            CPAGrip Webhook Secret Key
+          </label>
+          <div className="relative">
+            <input
+              id="offer-cpagrip-webhook-secret"
+              data-ocid="offer.cpagrip_webhook_secret_input"
+              type={showCpagripWebhookSecret ? "text" : "password"}
+              value={cpagripWebhookSecret}
+              onChange={(e) => setCpagripWebhookSecret(e.target.value)}
+              placeholder="CPAGrip webhook secret key"
+              className="w-full border border-border rounded-xl px-4 py-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowCpagripWebhookSecret((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium"
+            >
+              {showCpagripWebhookSecret ? "Hide" : "Show"}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            CPAGrip ke postback settings mein jo secret key set ki ho — wahi
+            yahan save karein.
+          </p>
+        </div>
+
+        {/* Offer Wall Name */}
+        <div>
+          <label
+            htmlFor="offer-wall-name-cpagrip"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Offer Wall Name
+          </label>
+          <input
+            id="offer-wall-name-cpagrip"
+            data-ocid="offer.offer_wall_name_cpagrip_input"
+            type="text"
+            value={offerWallName}
+            onChange={(e) => setOfferWallName(e.target.value)}
+            placeholder="e.g. CPAGrip, CPALead, AdWork Media"
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Offer Wall ka naam (sirf reference ke liye — Admin Panel mein dikhta
+            hai).
           </p>
         </div>
       </div>

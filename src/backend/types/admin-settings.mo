@@ -2,8 +2,9 @@
 // All Admin Panel configurable values stored in the canister.
 module {
 
-  /// All admin-controllable settings in one record.
-  /// Stored in a single stable var so one atomic update covers all fields.
+  /// Legacy AdminSettings type — compatible with previously deployed canister.
+  /// Does NOT include cpagripWebhookSecret or cpagripOfferWallName (added as
+  /// separate stable vars in main.mo to avoid upgrade compatibility errors).
   public type AdminSettings = {
     // ── Referral / MLM rates ──────────────────────────────────────────────
     referralLevel1Pct : Nat;   // default 5
@@ -36,6 +37,33 @@ module {
     rewardsEnabled    : Bool;
     gameEnabled       : Bool;
     udhaarBookEnabled : Bool;
+  };
+
+  /// Extended settings returned to clients — includes the new CPAGrip fields
+  /// that are stored as separate stable vars in main.mo for upgrade compatibility.
+  public type AdminSettingsExtended = {
+    referralLevel1Pct    : Nat;
+    referralLevel2Pct    : Nat;
+    referralLevel3Pct    : Nat;
+    referralLevel4Pct    : Float;
+    referralLevel5Pct    : Float;
+    upiId                : Text;
+    upiQrCodeUrl         : Text;
+    razorpayKeyId        : Text;
+    razorpayKeySecret    : Text;
+    pointsPerAd          : Nat;
+    redemptionRate       : Nat;
+    minWithdrawal        : Nat;
+    cpagripApiKey        : Text;
+    cpagripWebhookSecret : Text;
+    cpagripOfferWallName : Text;
+    cloudinaryCloudName  : Text;
+    cloudinaryApiKey     : Text;
+    cloudinaryApiSecret  : Text;
+    ludoEnabled          : Bool;
+    rewardsEnabled       : Bool;
+    gameEnabled          : Bool;
+    udhaarBookEnabled    : Bool;
   };
 
 };

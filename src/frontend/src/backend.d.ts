@@ -83,6 +83,30 @@ export interface NewsItem {
     imageUrl: string;
     category: string;
 }
+export interface AdminSettingsExtended {
+    pointsPerAd: bigint;
+    cpagripOfferWallName: string;
+    cloudinaryApiKey: string;
+    cpagripApiKey: string;
+    razorpayKeyId: string;
+    razorpayKeySecret: string;
+    gameEnabled: boolean;
+    referralLevel1Pct: bigint;
+    referralLevel2Pct: bigint;
+    referralLevel3Pct: bigint;
+    referralLevel4Pct: number;
+    referralLevel5Pct: number;
+    minWithdrawal: bigint;
+    upiQrCodeUrl: string;
+    rewardsEnabled: boolean;
+    upiId: string;
+    cloudinaryCloudName: string;
+    ludoEnabled: boolean;
+    cpagripWebhookSecret: string;
+    redemptionRate: bigint;
+    udhaarBookEnabled: boolean;
+    cloudinaryApiSecret: string;
+}
 export interface ScrapRate {
     id: bigint;
     ratePerKg: number;
@@ -253,28 +277,6 @@ export interface OfferUser {
     passwordHash: string;
     totalEarnings: bigint;
     tier1Earnings: bigint;
-}
-export interface AdminSettings {
-    pointsPerAd: bigint;
-    cloudinaryApiKey: string;
-    cpagripApiKey: string;
-    razorpayKeyId: string;
-    razorpayKeySecret: string;
-    gameEnabled: boolean;
-    referralLevel1Pct: bigint;
-    referralLevel2Pct: bigint;
-    referralLevel3Pct: bigint;
-    referralLevel4Pct: number;
-    referralLevel5Pct: number;
-    minWithdrawal: bigint;
-    upiQrCodeUrl: string;
-    rewardsEnabled: boolean;
-    upiId: string;
-    cloudinaryCloudName: string;
-    ludoEnabled: boolean;
-    redemptionRate: bigint;
-    udhaarBookEnabled: boolean;
-    cloudinaryApiSecret: string;
 }
 export interface CustomSection {
     id: bigint;
@@ -512,7 +514,7 @@ export interface backendInterface {
      * / Return all admin settings — readable by any caller so the frontend can
      * / apply toggles and rates without an admin auth round-trip.
      */
-    getAdminSettings(): Promise<AdminSettings>;
+    getAdminSettings(): Promise<AdminSettingsExtended>;
     getAllProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return all recharge transactions (master log) — admin only.
@@ -772,7 +774,7 @@ export interface backendInterface {
      * / Replace ALL admin settings in one atomic call — admin only.
      * / All existing field values are overwritten with the supplied record.
      */
-    updateAdminSettings(settings: AdminSettings): Promise<boolean>;
+    updateAdminSettings(settings: AdminSettingsExtended): Promise<boolean>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     /**
@@ -785,6 +787,11 @@ export interface backendInterface {
      * / Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
      */
     updateCpagripApiKey(apiKey: string): Promise<boolean>;
+    /**
+     * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
+     * / Both fields are persisted in separate stable vars so they survive reloads.
+     */
+    updateCpagripSettings(webhookSecret: string, offerWallName: string): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;

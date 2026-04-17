@@ -17,8 +17,9 @@ export interface AdminConfig {
   'mobile' : MobileNumber,
   'qrCodeBlobId' : ExternalBlob,
 }
-export interface AdminSettings {
+export interface AdminSettingsExtended {
   'pointsPerAd' : bigint,
+  'cpagripOfferWallName' : string,
   'cloudinaryApiKey' : string,
   'cpagripApiKey' : string,
   'razorpayKeyId' : string,
@@ -35,6 +36,7 @@ export interface AdminSettings {
   'upiId' : string,
   'cloudinaryCloudName' : string,
   'ludoEnabled' : boolean,
+  'cpagripWebhookSecret' : string,
   'redemptionRate' : bigint,
   'udhaarBookEnabled' : boolean,
   'cloudinaryApiSecret' : string,
@@ -521,7 +523,7 @@ export interface _SERVICE {
    * / Return all admin settings — readable by any caller so the frontend can
    * / apply toggles and rates without an admin auth round-trip.
    */
-  'getAdminSettings' : ActorMethod<[], AdminSettings>,
+  'getAdminSettings' : ActorMethod<[], AdminSettingsExtended>,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return all recharge transactions (master log) — admin only.
@@ -781,7 +783,7 @@ export interface _SERVICE {
    * / Replace ALL admin settings in one atomic call — admin only.
    * / All existing field values are overwritten with the supplied record.
    */
-  'updateAdminSettings' : ActorMethod<[AdminSettings], boolean>,
+  'updateAdminSettings' : ActorMethod<[AdminSettingsExtended], boolean>,
   'updateAppSettings' : ActorMethod<[string], undefined>,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
@@ -797,6 +799,11 @@ export interface _SERVICE {
    * / Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
    */
   'updateCpagripApiKey' : ActorMethod<[string], boolean>,
+  /**
+   * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
+   * / Both fields are persisted in separate stable vars so they survive reloads.
+   */
+  'updateCpagripSettings' : ActorMethod<[string, string], boolean>,
   'updateCustomCode' : ActorMethod<
     [
       bigint,

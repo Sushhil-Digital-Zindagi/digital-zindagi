@@ -154,8 +154,9 @@ export const AdminConfig = IDL.Record({
   'mobile' : MobileNumber,
   'qrCodeBlobId' : ExternalBlob,
 });
-export const AdminSettings = IDL.Record({
+export const AdminSettingsExtended = IDL.Record({
   'pointsPerAd' : IDL.Nat,
+  'cpagripOfferWallName' : IDL.Text,
   'cloudinaryApiKey' : IDL.Text,
   'cpagripApiKey' : IDL.Text,
   'razorpayKeyId' : IDL.Text,
@@ -172,6 +173,7 @@ export const AdminSettings = IDL.Record({
   'upiId' : IDL.Text,
   'cloudinaryCloudName' : IDL.Text,
   'ludoEnabled' : IDL.Bool,
+  'cpagripWebhookSecret' : IDL.Text,
   'redemptionRate' : IDL.Nat,
   'udhaarBookEnabled' : IDL.Bool,
   'cloudinaryApiSecret' : IDL.Text,
@@ -544,7 +546,7 @@ export const idlService = IDL.Service({
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAdminAuditLog' : IDL.Func([IDL.Nat], [IDL.Vec(AuditLogEntry)], ['query']),
   'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
-  'getAdminSettings' : IDL.Func([], [AdminSettings], ['query']),
+  'getAdminSettings' : IDL.Func([], [AdminSettingsExtended], ['query']),
   'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAllRechargeTransactions' : IDL.Func(
       [],
@@ -757,7 +759,7 @@ export const idlService = IDL.Service({
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
   'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
-  'updateAdminSettings' : IDL.Func([AdminSettings], [IDL.Bool], []),
+  'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
   'updateAppSettings' : IDL.Func([IDL.Text], [], []),
   'updateCategory' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
@@ -770,6 +772,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
+  'updateCpagripSettings' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   'updateCustomCode' : IDL.Func(
       [
         IDL.Nat,
@@ -1029,8 +1032,9 @@ export const idlFactory = ({ IDL }) => {
     'mobile' : MobileNumber,
     'qrCodeBlobId' : ExternalBlob,
   });
-  const AdminSettings = IDL.Record({
+  const AdminSettingsExtended = IDL.Record({
     'pointsPerAd' : IDL.Nat,
+    'cpagripOfferWallName' : IDL.Text,
     'cloudinaryApiKey' : IDL.Text,
     'cpagripApiKey' : IDL.Text,
     'razorpayKeyId' : IDL.Text,
@@ -1047,6 +1051,7 @@ export const idlFactory = ({ IDL }) => {
     'upiId' : IDL.Text,
     'cloudinaryCloudName' : IDL.Text,
     'ludoEnabled' : IDL.Bool,
+    'cpagripWebhookSecret' : IDL.Text,
     'redemptionRate' : IDL.Nat,
     'udhaarBookEnabled' : IDL.Bool,
     'cloudinaryApiSecret' : IDL.Text,
@@ -1420,7 +1425,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
-    'getAdminSettings' : IDL.Func([], [AdminSettings], ['query']),
+    'getAdminSettings' : IDL.Func([], [AdminSettingsExtended], ['query']),
     'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAllRechargeTransactions' : IDL.Func(
         [],
@@ -1641,7 +1646,7 @@ export const idlFactory = ({ IDL }) => {
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
     'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
-    'updateAdminSettings' : IDL.Func([AdminSettings], [IDL.Bool], []),
+    'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
     'updateAppSettings' : IDL.Func([IDL.Text], [], []),
     'updateCategory' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
@@ -1654,6 +1659,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'updateCpagripSettings' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     'updateCustomCode' : IDL.Func(
         [
           IDL.Nat,

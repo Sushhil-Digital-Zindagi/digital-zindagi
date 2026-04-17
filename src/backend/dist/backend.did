@@ -389,12 +389,14 @@ type ApprovalStatus =
    pending;
    rejected;
  };
-type AdminSettings = 
+type AdminSettingsExtended = 
  record {
    cloudinaryApiKey: text;
    cloudinaryApiSecret: text;
    cloudinaryCloudName: text;
    cpagripApiKey: text;
+   cpagripOfferWallName: text;
+   cpagripWebhookSecret: text;
    gameEnabled: bool;
    ludoEnabled: bool;
    minWithdrawal: nat;
@@ -525,7 +527,7 @@ service : {
   getAdminConfig: () -> (opt AdminConfig) query;
   /// Return all admin settings — readable by any caller so the frontend can
   /// apply toggles and rates without an admin auth round-trip.
-  getAdminSettings: () -> (AdminSettings) query;
+  getAdminSettings: () -> (AdminSettingsExtended) query;
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
   getAllRechargeTransactions: () -> (vec RechargeTransaction) query;
@@ -707,7 +709,7 @@ service : {
   updateAdminConfig: (newConfig: AdminConfig) -> ();
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
-  updateAdminSettings: (settings: AdminSettings) -> (bool);
+  updateAdminSettings: (settings: AdminSettingsExtended) -> (bool);
   updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
@@ -718,6 +720,9 @@ service : {
   /// Save the CPAGrip API key in canister state — admin only.
   /// Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
   updateCpagripApiKey: (apiKey: text) -> (bool);
+  /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
+  /// Both fields are persisted in separate stable vars so they survive reloads.
+  updateCpagripSettings: (webhookSecret: text, offerWallName: text) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool, title: text, subtitle1: text,
    subtitle2: text, alignment: text, layoutStyle: text) -> (bool);
