@@ -22,23 +22,21 @@ function getSignupErrorMessage(err: unknown): string {
     (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
   const lowerMsg = msg.toLowerCase();
 
-  // ic0.trap or canister errors — never expose raw details
-  if (
-    lowerMsg.includes("ic0.trap") ||
-    lowerMsg.includes("reject code") ||
-    lowerMsg.includes("canister trapped")
-  ) {
-    return "Service temporarily unavailable. Please try again.";
-  }
-
   if (
     lowerMsg.includes("already exists") ||
     lowerMsg.includes("duplicate") ||
-    lowerMsg.includes("already registered")
+    lowerMsg.includes("already registered") ||
+    lowerMsg.includes("already_registered")
   ) {
-    return "Account already exists. Please login.";
+    return "यह email/number पहले से registered है";
+  }
+  if (lowerMsg.includes("invalid") || lowerMsg.includes("missing")) {
+    return "कृपया सभी fields सही से भरें";
   }
   if (
+    lowerMsg.includes("ic0.trap") ||
+    lowerMsg.includes("reject code") ||
+    lowerMsg.includes("canister trapped") ||
     lowerMsg.includes("method not found") ||
     lowerMsg.includes("canister") ||
     lowerMsg.includes("actor")
@@ -52,15 +50,29 @@ function getSignupErrorMessage(err: unknown): string {
     lowerMsg.includes("connect") ||
     lowerMsg.includes("timeout")
   ) {
-    return "Connection error. Please check your internet.";
+    return "Backend connect नहीं हो पा रहा, कृपया दोबारा try करें";
   }
-  return "Registration failed. Please try again.";
+  return "Registration में problem आई, कृपया दोबारा try करें";
 }
+
+import { UserRole } from "../backend";
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
-import { SUPER_ADMIN_EMAIL } from "../contexts/AuthContext";
+import { SUPER_ADMIN_EMAIL, hashPassword } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import { useAdminConfig, useCategories } from "../hooks/useQueries";
 import { Link, useNavigate } from "../lib/router";
+
+// Typed interface for the registerUser canister call
+interface ActorWithRegister {
+  registerUser(
+    name: string,
+    mobile: string,
+    passwordHash: string,
+    role: UserRole,
+    securityQuestion: string,
+    securityAnswer: string,
+  ): Promise<void>;
+}
 
 const SECURITY_QUESTIONS = [
   "Best Friend Ka Naam",
@@ -76,28 +88,17 @@ const DEFAULT_CATEGORY_LIST = ALL_CATEGORIES.map((c) => ({
   emoji: c.emoji,
 }));
 
-function saveProviderToLocalStorage(provider: {
-  id: string;
-  name: string;
-  mobile: string;
-  category: string;
-  planType: string;
-  status: string;
-  createdAt: string;
-  email: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-}) {
-  const existing: (typeof provider)[] = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("dz_providers") ?? "[]");
-    } catch {
-      return [];
-    }
-  })();
-  existing.push(provider);
-  localStorage.setItem("dz_providers", JSON.stringify(existing));
+// Timeout wrapper for backend calls (30 seconds)
+function withTimeout<T>(promise: Promise<T>, ms = 30000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("timeout: backend connect नहीं हो पा रहा")),
+        ms,
+      ),
+    ),
+  ]);
 }
 
 export default function SignupPage() {
@@ -156,17 +157,15 @@ export default function SignupPage() {
   };
 
   const { data: adminConfig } = useAdminConfig();
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
   const navigate = useNavigate();
 
   // ── Dynamic categories from canister (polls every 2s) ──────────────────
   const { data: canisterCategories, isLoading: catsLoading } = useCategories();
   const categories: { name: string; emoji: string }[] = (() => {
-    // If canister returned data, use it directly (admin-managed source of truth)
     if (canisterCategories && canisterCategories.length > 0) {
       return canisterCategories.map((c) => ({ name: c.name, emoji: c.emoji }));
     }
-    // Fallback: merge defaults with any localStorage-approved categories
     try {
       const extra = JSON.parse(
         localStorage.getItem("dz_approved_categories") ?? "[]",
@@ -237,92 +236,69 @@ export default function SignupPage() {
     if (!validate()) return;
     setPendingPlanType(planType);
     if (planType === "free") {
-      // Must show ads consent before completing
       setAdsConsentChecked(false);
       setShowAdsConsentModal(true);
     } else {
-      // Show subscription payment confirmation
       setShowSubscriptionModal(true);
     }
   };
 
+  // FIX: Backend call is now BLOCKING — success only after canister confirms
   const completeProviderRegistration = async (
     planType: "pending_premium" | "free",
   ) => {
+    if (!actor) {
+      toast.error(
+        isFetching
+          ? "Backend load ho raha hai, ek moment wait karein..."
+          : "Backend connect nahi ho pa raha, refresh karein",
+      );
+      return;
+    }
+
     setSubmitting(true);
     setShowAdsConsentModal(false);
     setShowSubscriptionModal(false);
 
-    const providerData = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      mobile: mobile.trim(),
-      category,
-      planType,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      email: email.trim() || "",
-      address: "",
-      lat: shopLat ?? undefined,
-      lng: shopLng ?? undefined,
-    };
-
     try {
-      saveProviderToLocalStorage(providerData);
-    } catch (err) {
-      toast.error(getSignupErrorMessage(err));
-      setSubmitting(false);
-      return;
-    }
+      // Hash password before sending to backend
+      const passwordHash = await hashPassword(password);
 
-    // Call canister registerUser if available (non-blocking)
-    if (actor) {
-      try {
-        await (
-          actor as unknown as {
-            registerUser(
-              name: string,
-              mobile: string,
-              email: string,
-              password: string,
-              secQ: string,
-              secA: string,
-              role: string,
-              referralCode: string,
-            ): Promise<unknown>;
-          }
-        ).registerUser(
+      // BLOCKING canister call — await confirmation before proceeding
+      await withTimeout(
+        (actor as unknown as ActorWithRegister).registerUser(
           name.trim(),
           mobile.trim(),
-          email.trim(),
-          password,
+          passwordHash,
+          UserRole.provider,
           secQ,
           secA.trim(),
-          "provider",
-          referralCode.trim(),
-        );
-      } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? "";
-        if (
-          msg.toLowerCase().includes("already") ||
-          msg.toLowerCase().includes("duplicate") ||
-          msg.toLowerCase().includes("registered")
-        ) {
-          // Already registered is ok — proceed with registration flow
-          console.info("[Signup] Provider already in canister, continuing...");
-        } else {
-          // Non-blocking: warn but don't stop the flow
-          console.warn("[Signup] Canister registerUser failed:", msg);
-        }
-      }
-    }
+        ),
+      );
 
-    setSubmitting(false);
-    if (planType === "pending_premium") {
+      // Backend confirmed — now show success
       setRegistrationSuccess(true);
-    } else {
-      toast.success("Registration Successful! Aap ab listed hain. 🎉");
-      navigate("/provider/dashboard");
+    } catch (err: unknown) {
+      const msg = getSignupErrorMessage(err);
+      // Check for "already exists" — treat as success for provider (they can still proceed)
+      const rawMsg =
+        (err as Error)?.message ?? (typeof err === "string" ? err : "");
+      const isAlreadyExists =
+        rawMsg.toLowerCase().includes("already") ||
+        rawMsg.toLowerCase().includes("duplicate") ||
+        rawMsg.toLowerCase().includes("registered");
+
+      if (isAlreadyExists && planType === "pending_premium") {
+        // Provider already registered — still show pending approval screen
+        setRegistrationSuccess(true);
+      } else if (isAlreadyExists) {
+        toast.error("यह mobile number पहले से registered है। Login करें।");
+      } else {
+        toast.error(msg);
+        // Stay on form — no navigation, no green screen
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -348,64 +324,52 @@ export default function SignupPage() {
       return;
     }
 
-    setSubmitting(true);
-    // Save to localStorage as before
-    const userData = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      mobile: mobile.trim(),
-      email: email.trim() || "",
-      role: "customer",
-      createdAt: new Date().toISOString(),
-    };
-    localStorage.setItem("dz_current_user", JSON.stringify(userData));
-    localStorage.setItem("dz_logged_in", "true");
-
-    // Also call canister registerUser if available
-    if (actor) {
-      try {
-        await (
-          actor as unknown as {
-            registerUser(
-              name: string,
-              mobile: string,
-              email: string,
-              password: string,
-              secQ: string,
-              secA: string,
-              role: string,
-              referralCode: string,
-            ): Promise<unknown>;
-          }
-        ).registerUser(
-          name.trim(),
-          mobile.trim(),
-          email.trim(),
-          password,
-          secQ,
-          secA.trim(),
-          "customer",
-          referralCode.trim(),
-        );
-      } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? "";
-        if (
-          msg.toLowerCase().includes("already") ||
-          msg.toLowerCase().includes("duplicate") ||
-          msg.toLowerCase().includes("registered")
-        ) {
-          toast.error("Account already exists. Please login.");
-          setSubmitting(false);
-          return;
-        }
-        // Non-blocking: log but don't block registration
-        console.warn("[Signup] Canister registerUser failed:", msg);
-      }
+    if (!actor) {
+      toast.error(
+        isFetching
+          ? "Backend load ho raha hai, ek moment wait karein..."
+          : "Backend connect nahi ho pa raha, refresh karein",
+      );
+      return;
     }
 
-    setSubmitting(false);
-    toast.success("Account ban gaya!");
-    setRegistrationSuccess(true);
+    setSubmitting(true);
+
+    try {
+      // Hash password before sending to backend
+      const passwordHash = await hashPassword(password);
+
+      // BLOCKING canister call — await confirmation
+      await withTimeout(
+        (actor as unknown as ActorWithRegister).registerUser(
+          name.trim(),
+          mobile.trim(),
+          passwordHash,
+          UserRole.customer,
+          secQ,
+          secA.trim(),
+        ),
+      );
+
+      // Backend confirmed — now show success
+      setRegistrationSuccess(true);
+    } catch (err: unknown) {
+      const rawMsg =
+        (err as Error)?.message ?? (typeof err === "string" ? err : "");
+      const isAlreadyExists =
+        rawMsg.toLowerCase().includes("already") ||
+        rawMsg.toLowerCase().includes("duplicate") ||
+        rawMsg.toLowerCase().includes("registered");
+
+      if (isAlreadyExists) {
+        toast.error("यह email/number पहले से registered है। Login करें।");
+      } else {
+        toast.error(getSignupErrorMessage(err));
+        // Stay on form — no freeze, no green screen
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -771,8 +735,14 @@ export default function SignupPage() {
                     onClick={() => handleProviderSubmit("pending_premium")}
                     className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60 text-sm"
                   >
-                    <Crown size={15} />
-                    Subscription Lege
+                    {submitting ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Crown size={15} />
+                    )}
+                    {submitting
+                      ? "Register Ho Raha Hai..."
+                      : "Subscription Lege"}
                   </button>
 
                   {/* Ads Dekhe — Free */}
@@ -783,8 +753,12 @@ export default function SignupPage() {
                     onClick={() => handleProviderSubmit("free")}
                     className="w-full bg-slate-100 text-slate-700 border border-slate-300 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 text-sm"
                   >
-                    <Tv2 size={15} />
-                    Ads Dekhe
+                    {submitting ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Tv2 size={15} />
+                    )}
+                    {submitting ? "..." : "Ads Dekhe"}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-1.5">
@@ -796,13 +770,14 @@ export default function SignupPage() {
                   </p>
                 </div>
 
-                {/* Success message area */}
+                {/* Loading indicator */}
                 {submitting && (
                   <div
                     data-ocid="signup.loading_state"
-                    className="mt-3 text-center text-sm text-primary font-medium"
+                    className="mt-3 flex items-center justify-center gap-2 text-sm text-primary font-medium"
                   >
-                    Registration ho raha hai...
+                    <Loader2 size={14} className="animate-spin" />
+                    Backend mein register ho raha hai, please wait...
                   </div>
                 )}
               </div>
@@ -813,6 +788,7 @@ export default function SignupPage() {
                 disabled={submitting}
                 className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
               >
+                {submitting && <Loader2 size={16} className="animate-spin" />}
                 {submitting ? "Account Ban Raha Hai..." : "Account Banao"}
               </button>
             )}
@@ -893,7 +869,7 @@ export default function SignupPage() {
               </div>
               <button
                 type="button"
-                disabled={!adsConsentChecked}
+                disabled={!adsConsentChecked || submitting}
                 onClick={() => {
                   if (!adsConsentChecked) {
                     toast.error("Ads policy accept karna zaroori hai");
@@ -901,9 +877,12 @@ export default function SignupPage() {
                   }
                   completeProviderRegistration("free");
                 }}
-                className="w-full bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-40 text-sm"
+                className="w-full bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-40 text-sm flex items-center justify-center gap-2"
               >
-                Swikar Karein aur Register Ho
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                {submitting
+                  ? "Register Ho Raha Hai..."
+                  : "Swikar Karein aur Register Ho"}
               </button>
               <button
                 type="button"
@@ -987,10 +966,14 @@ export default function SignupPage() {
               )}
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => completeProviderRegistration("pending_premium")}
-                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm"
+                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                ✅ Payment Ho Gayi — Continue Karein
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                {submitting
+                  ? "Register Ho Raha Hai..."
+                  : "✅ Payment Ho Gayi — Continue Karein"}
               </button>
               <p className="text-xs text-center text-muted-foreground">
                 Payment screenshot agle step mein upload karein

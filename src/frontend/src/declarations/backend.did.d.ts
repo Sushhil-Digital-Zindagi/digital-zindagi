@@ -411,6 +411,11 @@ export interface _SERVICE {
     [string, string, string, string, string, string],
     bigint
   >,
+  /**
+   * / Add a manager by mobile number — admin only.
+   * / Managers have restricted access (News, Jobs, Videos).
+   */
+  'addManager' : ActorMethod<[string], boolean>,
   'addNews' : ActorMethod<[string, string, string, string, string], bigint>,
   'addScrapRate' : ActorMethod<[string, number, number], bigint>,
   'addServiceRate' : ActorMethod<[bigint, ServiceRate], undefined>,
@@ -524,6 +529,34 @@ export interface _SERVICE {
    * / apply toggles and rates without an admin auth round-trip.
    */
   'getAdminSettings' : ActorMethod<[], AdminSettingsExtended>,
+  /**
+   * / Return the current AdMob configuration — admin only.
+   */
+  'getAdmobConfig' : ActorMethod<
+    [],
+    {
+      'rewardedUnitId' : string,
+      'appId' : string,
+      'ludoBannerId' : string,
+      'ludoInterstitialId' : string,
+      'interstitialId' : string,
+      'bannerUnitId' : string,
+    }
+  >,
+  /**
+   * / Return AdMob unit IDs that are safe for the frontend to use — public.
+   * / The App ID is intentionally omitted (only needed native-side).
+   */
+  'getAdmobConfigPublic' : ActorMethod<
+    [],
+    {
+      'rewardedUnitId' : string,
+      'ludoBannerId' : string,
+      'ludoInterstitialId' : string,
+      'interstitialId' : string,
+      'bannerUnitId' : string,
+    }
+  >,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return all recharge transactions (master log) — admin only.
@@ -559,10 +592,21 @@ export interface _SERVICE {
    * / Return the full content-locker configuration (all features).
    */
   'getContentLockerConfig' : ActorMethod<[], ContentLockerConfig>,
+  /**
+   * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+   */
+  'getCpagripSettings' : ActorMethod<
+    [],
+    { 'webhookSecret' : string, 'offerWallName' : string, 'apiKey' : string }
+  >,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
+  /**
+   * / Get all managers — admin only.
+   */
+  'getManagers' : ActorMethod<[], Array<string>>,
   /**
    * / Get Offer Portal transaction history for a user.
    */
@@ -697,6 +741,10 @@ export interface _SERVICE {
   'initiateRecharge' : ActorMethod<[string, string, string, number], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
+  /**
+   * / Check if a given mobile number belongs to a manager — public.
+   */
+  'isManager' : ActorMethod<[string], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'login' : ActorMethod<[MobileNumber, string], User>,
   /**
@@ -736,7 +784,8 @@ export interface _SERVICE {
   >,
   'registerUser' : ActorMethod<
     [string, MobileNumber, string, UserRole, string, string],
-    undefined
+    { 'ok' : null } |
+      { 'err' : string }
   >,
   'rejectProvider' : ActorMethod<[bigint], undefined>,
   /**
@@ -747,6 +796,10 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  /**
+   * / Remove a manager by mobile number — admin only.
+   */
+  'removeManager' : ActorMethod<[string], boolean>,
   'removeShopPhoto' : ActorMethod<[bigint, string], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
   /**
@@ -784,6 +837,13 @@ export interface _SERVICE {
    * / All existing field values are overwritten with the supplied record.
    */
   'updateAdminSettings' : ActorMethod<[AdminSettingsExtended], boolean>,
+  /**
+   * / Update AdMob configuration — admin only.
+   */
+  'updateAdmobConfig' : ActorMethod<
+    [string, string, string, string, string, string],
+    boolean
+  >,
   'updateAppSettings' : ActorMethod<[string], undefined>,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
@@ -803,7 +863,7 @@ export interface _SERVICE {
    * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
    * / Both fields are persisted in separate stable vars so they survive reloads.
    */
-  'updateCpagripSettings' : ActorMethod<[string, string], boolean>,
+  'updateCpagripSettings' : ActorMethod<[string, string, string], boolean>,
   'updateCustomCode' : ActorMethod<
     [
       bigint,

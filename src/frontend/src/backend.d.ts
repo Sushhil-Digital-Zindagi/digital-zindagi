@@ -402,6 +402,11 @@ export interface backendInterface {
     addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<bigint>;
     addCustomSection(name: string, heading: string, placement: string, buttons: string): Promise<bigint>;
     addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
+    /**
+     * / Add a manager by mobile number — admin only.
+     * / Managers have restricted access (News, Jobs, Videos).
+     */
+    addManager(mobile: string): Promise<boolean>;
     addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
     addScrapRate(itemName: string, ratePerKg: number, ratePerGram: number): Promise<bigint>;
     addServiceRate(userId: bigint, newRate: ServiceRate): Promise<void>;
@@ -515,6 +520,28 @@ export interface backendInterface {
      * / apply toggles and rates without an admin auth round-trip.
      */
     getAdminSettings(): Promise<AdminSettingsExtended>;
+    /**
+     * / Return the current AdMob configuration — admin only.
+     */
+    getAdmobConfig(): Promise<{
+        rewardedUnitId: string;
+        appId: string;
+        ludoBannerId: string;
+        ludoInterstitialId: string;
+        interstitialId: string;
+        bannerUnitId: string;
+    }>;
+    /**
+     * / Return AdMob unit IDs that are safe for the frontend to use — public.
+     * / The App ID is intentionally omitted (only needed native-side).
+     */
+    getAdmobConfigPublic(): Promise<{
+        rewardedUnitId: string;
+        ludoBannerId: string;
+        ludoInterstitialId: string;
+        interstitialId: string;
+        bannerUnitId: string;
+    }>;
     getAllProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return all recharge transactions (master log) — admin only.
@@ -550,10 +577,22 @@ export interface backendInterface {
      * / Return the full content-locker configuration (all features).
      */
     getContentLockerConfig(): Promise<ContentLockerConfig>;
+    /**
+     * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+     */
+    getCpagripSettings(): Promise<{
+        webhookSecret: string;
+        offerWallName: string;
+        apiKey: string;
+    }>;
     getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
     getJobs(): Promise<Array<JobItem>>;
+    /**
+     * / Get all managers — admin only.
+     */
+    getManagers(): Promise<Array<string>>;
     /**
      * / Get Offer Portal transaction history for a user.
      */
@@ -686,6 +725,10 @@ export interface backendInterface {
     initiateRecharge(mobile: string, operator: string, circle: string, amount: number): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
+    /**
+     * / Check if a given mobile number belongs to a manager — public.
+     */
+    isManager(mobile: string): Promise<boolean>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     login(mobile: MobileNumber, passwordHash: string): Promise<User>;
     /**
@@ -724,7 +767,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<void>;
+    registerUser(name: string, mobile: MobileNumber, passwordHash: string, role: UserRole, securityQuestion: string, securityAnswer: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     rejectProvider(userId: bigint): Promise<void>;
     /**
      * / Remove a locked feature by id — admin only.
@@ -736,6 +785,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Remove a manager by mobile number — admin only.
+     */
+    removeManager(mobile: string): Promise<boolean>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
     requestApproval(): Promise<void>;
     /**
@@ -775,6 +828,10 @@ export interface backendInterface {
      * / All existing field values are overwritten with the supplied record.
      */
     updateAdminSettings(settings: AdminSettingsExtended): Promise<boolean>;
+    /**
+     * / Update AdMob configuration — admin only.
+     */
+    updateAdmobConfig(appId: string, bannerUnitId: string, interstitialId: string, ludoBannerId: string, ludoInterstitialId: string, rewardedUnitId: string): Promise<boolean>;
     updateAppSettings(json: string): Promise<void>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     /**
@@ -791,7 +848,7 @@ export interface backendInterface {
      * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
      * / Both fields are persisted in separate stable vars so they survive reloads.
      */
-    updateCpagripSettings(webhookSecret: string, offerWallName: string): Promise<boolean>;
+    updateCpagripSettings(apiKey: string, webhookSecret: string, offerWallName: string): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;

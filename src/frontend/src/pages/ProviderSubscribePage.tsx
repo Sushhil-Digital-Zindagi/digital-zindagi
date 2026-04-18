@@ -375,12 +375,10 @@ export default function ProviderSubscribePage() {
     setUploadProgress(0);
     try {
       toast.loading("Uploading to cloud...", { id: "upload-progress" });
-      // Upload to Cloudinary
+      // Upload to Cloudinary — always use canister config, no localStorage fallback
       const config_cld = cloudinaryConfig ?? {
-        cloudName:
-          localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
-        apiKey:
-          localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
+        cloudName: "dquyiiu7o",
+        apiKey: "199372638334688",
       };
       const secureUrl = await uploadToCloudinary(fileToUpload, config_cld, {
         folder: "digital-zindagi/payment-screenshots",

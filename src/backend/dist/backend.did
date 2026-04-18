@@ -443,6 +443,9 @@ service : {
    text) -> (nat);
   addJob: (title: text, department: text, location: text, lastDate: text,
    applyLink: text, category: text) -> (nat);
+  /// Add a manager by mobile number — admin only.
+  /// Managers have restricted access (News, Jobs, Videos).
+  addManager: (mobile: text) -> (bool);
   addNews: (title: text, summary: text, imageUrl: text, link: text, category:
    text) -> (nat);
   addScrapRate: (itemName: text, ratePerKg: float64, ratePerGram: float64) ->
@@ -528,6 +531,26 @@ service : {
   /// Return all admin settings — readable by any caller so the frontend can
   /// apply toggles and rates without an admin auth round-trip.
   getAdminSettings: () -> (AdminSettingsExtended) query;
+  /// Return the current AdMob configuration — admin only.
+  getAdmobConfig: () ->
+   (record {
+      appId: text;
+      bannerUnitId: text;
+      interstitialId: text;
+      ludoBannerId: text;
+      ludoInterstitialId: text;
+      rewardedUnitId: text;
+    }) query;
+  /// Return AdMob unit IDs that are safe for the frontend to use — public.
+  /// The App ID is intentionally omitted (only needed native-side).
+  getAdmobConfigPublic: () ->
+   (record {
+      bannerUnitId: text;
+      interstitialId: text;
+      ludoBannerId: text;
+      ludoInterstitialId: text;
+      rewardedUnitId: text;
+    }) query;
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
   getAllRechargeTransactions: () -> (vec RechargeTransaction) query;
@@ -557,10 +580,19 @@ service : {
   getCommissionConfig: () -> (CommissionConfig) query;
   /// Return the full content-locker configuration (all features).
   getContentLockerConfig: () -> (ContentLockerConfig) query;
+  /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+  getCpagripSettings: () ->
+   (record {
+      apiKey: text;
+      offerWallName: text;
+      webhookSecret: text;
+    }) query;
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
   getJobs: () -> (vec JobItem) query;
+  /// Get all managers — admin only.
+  getManagers: () -> (vec text) query;
   /// Get Offer Portal transaction history for a user.
   getMyOfferTransactions: (offerUserId: nat) -> (vec OfferTransaction) query;
   /// Get withdrawal requests for an Offer Portal user.
@@ -650,6 +682,8 @@ service : {
    float64) -> (nat);
   isCallerAdmin: () -> (bool) query;
   isCallerApproved: () -> (bool) query;
+  /// Check if a given mobile number belongs to a manager — public.
+  isManager: (mobile: text) -> (bool) query;
   listApprovals: () -> (vec UserApprovalInfo) query;
   login: (mobile: MobileNumber, passwordHash: text) -> (User);
   /// Login to the Offer Portal.
@@ -677,13 +711,19 @@ service : {
                    ok: OfferUser;
                  });
   registerUser: (name: text, mobile: MobileNumber, passwordHash: text, role:
-   UserRole, securityQuestion: text, securityAnswer: text) -> ();
+   UserRole, securityQuestion: text, securityAnswer: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   rejectProvider: (userId: nat) -> ();
   /// Remove a locked feature by id — admin only.
   removeLockedFeature: (featureId: text) -> (variant {
                                                err: text;
                                                ok;
                                              });
+  /// Remove a manager by mobile number — admin only.
+  removeManager: (mobile: text) -> (bool);
   removeShopPhoto: (userId: nat, blobId: text) -> ();
   requestApproval: () -> ();
   /// Submit a UPI withdrawal request from the Offer Portal.
@@ -710,6 +750,10 @@ service : {
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
   updateAdminSettings: (settings: AdminSettingsExtended) -> (bool);
+  /// Update AdMob configuration — admin only.
+  updateAdmobConfig: (appId: text, bannerUnitId: text, interstitialId: 
+   text, ludoBannerId: text, ludoInterstitialId: text, rewardedUnitId:
+   text) -> (bool);
   updateAppSettings: (json: text) -> ();
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
@@ -722,7 +766,8 @@ service : {
   updateCpagripApiKey: (apiKey: text) -> (bool);
   /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
   /// Both fields are persisted in separate stable vars so they survive reloads.
-  updateCpagripSettings: (webhookSecret: text, offerWallName: text) -> (bool);
+  updateCpagripSettings: (apiKey: text, webhookSecret: text, offerWallName:
+   text) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool, title: text, subtitle1: text,
    subtitle2: text, alignment: text, layoutStyle: text) -> (bool);

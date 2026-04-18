@@ -184,9 +184,48 @@ export function useProvidersPendingApproval() {
     queryKey: ["providersPendingApproval"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getProvidersPendingApproval();
+      try {
+        // Primary: fetch from the dedicated pending-approval endpoint
+        const pending = await actor.getProvidersPendingApproval();
+
+        // Also fetch ALL providers and merge any unapproved ones that may have been
+        // missed by the backend filter (e.g. those without a payment screenshot)
+        let allProviders: ProviderProfile[] = [];
+        try {
+          allProviders = await actor.getAllProviders();
+        } catch {
+          // non-critical — ignore if this call fails
+        }
+
+        // Combine: include providers where approvalStatus is pending OR
+        // subscriptionStatus is pending OR not yet in the pending list
+        const pendingIds = new Set(pending.map((p) => p.userId.toString()));
+        const extraUnapproved = allProviders.filter((p) => {
+          if (pendingIds.has(p.userId.toString())) return false;
+          const approvalStatus =
+            typeof p.approvalStatus === "object"
+              ? Object.keys(p.approvalStatus as object)[0]
+              : String(p.approvalStatus ?? "");
+          const subStatus =
+            typeof p.subscriptionStatus === "object"
+              ? Object.keys(p.subscriptionStatus as object)[0]
+              : String(p.subscriptionStatus ?? "");
+          return (
+            approvalStatus === "pending" ||
+            approvalStatus === "Pending" ||
+            subStatus === "pending" ||
+            subStatus === "Pending"
+          );
+        });
+
+        return [...pending, ...extraUnapproved];
+      } catch {
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    refetchInterval: 5000,
+    staleTime: 3000,
   });
 }
 
@@ -2879,6 +2918,111 @@ export function useUpdateAdminSettings() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["adminSettings"] });
       qc.invalidateQueries({ queryKey: ["cloudinaryConfig"] });
+    },
+  });
+}
+
+// =====================================================================
+// CPAGRIP SETTINGS HOOKS (dedicated canister methods)
+// =====================================================================
+
+const CPAGRIP_SETTINGS_LS_KEY = "dz_cpagrip_settings_cache";
+
+/** Fetch CPAGrip settings via dedicated backend method. Falls back to adminSettings cache. */
+export function useGetCpagripSettings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<{
+    apiKey: string;
+    webhookSecret: string;
+    offerWallName: string;
+  }>({
+    queryKey: ["cpagripSettings"],
+    queryFn: async () => {
+      const fallback = {
+        apiKey: localStorage.getItem("dz_cpagrip_api_key") ?? "",
+        webhookSecret: "",
+        offerWallName: "Digital Zindagi Offers",
+      };
+      if (!actor) return fallback;
+      try {
+        const data = await (
+          actor as unknown as {
+            getCpagripSettings: () => Promise<{
+              apiKey: string;
+              webhookSecret: string;
+              offerWallName: string;
+            }>;
+          }
+        ).getCpagripSettings();
+        localStorage.setItem(CPAGRIP_SETTINGS_LS_KEY, JSON.stringify(data));
+        if (data.apiKey)
+          localStorage.setItem("dz_cpagrip_api_key", data.apiKey);
+        return data;
+      } catch {
+        try {
+          const cached = localStorage.getItem(CPAGRIP_SETTINGS_LS_KEY);
+          if (cached)
+            return JSON.parse(cached) as {
+              apiKey: string;
+              webhookSecret: string;
+              offerWallName: string;
+            };
+        } catch {
+          /* ignore */
+        }
+        return fallback;
+      }
+    },
+    enabled: !isFetching,
+    staleTime: 30 * 1000,
+  });
+}
+
+/** Mutation: update CPAGrip settings atomically via dedicated backend method. */
+export function useUpdateCpagripSettings() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      apiKey,
+      webhookSecret,
+      offerWallName,
+    }: {
+      apiKey: string;
+      webhookSecret: string;
+      offerWallName: string;
+    }) => {
+      // Update API key via existing hook path (writes to canister + localStorage)
+      localStorage.setItem("dz_cpagrip_api_key", apiKey.trim());
+      if (!actor) return;
+      try {
+        // Update all three CPAGrip fields atomically via dedicated method
+        await (
+          actor as unknown as {
+            updateCpagripSettings: (
+              apiKey: string,
+              webhookSecret: string,
+              offerWallName: string,
+            ) => Promise<boolean>;
+          }
+        ).updateCpagripSettings(
+          apiKey.trim(),
+          webhookSecret.trim(),
+          offerWallName.trim(),
+        );
+        // Cache all locally
+        localStorage.setItem(
+          CPAGRIP_SETTINGS_LS_KEY,
+          JSON.stringify({ apiKey, webhookSecret, offerWallName }),
+        );
+      } catch {
+        // localStorage already updated — canister will sync on next poll
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cpagripSettings"] });
+      qc.invalidateQueries({ queryKey: ["adminSettings"] });
+      qc.invalidateQueries({ queryKey: ["appSettings"] });
     },
   });
 }

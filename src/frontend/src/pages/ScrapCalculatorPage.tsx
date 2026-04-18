@@ -47,7 +47,16 @@ function saveRate(itemName: string, rate: string) {
 function getAdminRates(): { lohaa: string; kaagaz: string; taamba: string } {
   try {
     const stored = JSON.parse(localStorage.getItem("dz_scrap_rates") ?? "{}");
-    if (stored.lohaa || stored.kaagaz || stored.taamba) return stored;
+    // Support both legacy short keys and new canister-format keys
+    const lohaa = stored.lohaa ?? stored["Lohaa (Iron)"];
+    const kaagaz = stored.kaagaz ?? stored["Kaagaz (Paper)"];
+    const taamba = stored.taamba ?? stored["Taamba (Copper)"];
+    if (lohaa || kaagaz || taamba)
+      return {
+        lohaa: lohaa ?? "25",
+        kaagaz: kaagaz ?? "8",
+        taamba: taamba ?? "450",
+      };
   } catch {}
   return { lohaa: "25", kaagaz: "8", taamba: "450" };
 }

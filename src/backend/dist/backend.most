@@ -327,6 +327,12 @@ actor {
       upiId : Text;
       upiQrCodeUrl : Text
     };
+  stable var admobAppId : Text;
+  stable var admobBannerUnitId : Text;
+  stable var admobInterstitialId : Text;
+  stable var admobLudoBannerId : Text;
+  stable var admobLudoInterstitialId : Text;
+  stable var admobRewardedUnitId : Text;
   stable var appSettingsJson : Text;
   stable approvalState :
     {
@@ -376,6 +382,12 @@ actor {
     {
       var root : Node__46230540<Text, LockedFeature__872303456>;
       var size : Nat__490723111
+    };
+  stable var managers :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Text]];
+      var elementIndex : Nat__490723111
     };
   stable var newsItems :
     {

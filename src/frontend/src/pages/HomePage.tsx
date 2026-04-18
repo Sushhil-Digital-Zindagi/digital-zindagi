@@ -894,23 +894,37 @@ export default function HomePage() {
           (c) => c.enabled && c.placement === placement,
         );
         for (const entry of codes) {
-          if (el.querySelector(`#dz-custom-code-${entry.id}`)) continue;
-          const wrapper = document.createElement("div");
-          wrapper.id = `dz-custom-code-${entry.id}`;
-          wrapper.className = "custom-code-block w-full";
-          wrapper.innerHTML = sanitizeHtml(entry.code);
-          const scripts = wrapper.querySelectorAll("script");
-          for (const oldScript of Array.from(scripts)) {
-            const newScript = document.createElement("script");
-            if ((oldScript as HTMLScriptElement).src) {
-              newScript.src = (oldScript as HTMLScriptElement).src;
-            } else {
-              newScript.textContent = oldScript.textContent;
+          try {
+            if (el.querySelector(`#dz-custom-code-${entry.id}`)) continue;
+            const wrapper = document.createElement("div");
+            wrapper.id = `dz-custom-code-${entry.id}`;
+            wrapper.className = "custom-code-block w-full";
+            wrapper.innerHTML = sanitizeHtml(entry.code);
+            const scripts = wrapper.querySelectorAll("script");
+            for (const oldScript of Array.from(scripts)) {
+              try {
+                const newScript = document.createElement("script");
+                if ((oldScript as HTMLScriptElement).src) {
+                  newScript.src = (oldScript as HTMLScriptElement).src;
+                } else {
+                  newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+                oldScript.remove();
+              } catch (scriptErr) {
+                console.warn(
+                  `[CustomCode] Script inject failed for ${entry.id}:`,
+                  scriptErr,
+                );
+              }
             }
-            document.body.appendChild(newScript);
-            oldScript.remove();
+            el.appendChild(wrapper);
+          } catch (entryErr) {
+            console.warn(
+              `[CustomCode] Block inject failed for ${entry.id}:`,
+              entryErr,
+            );
           }
-          el.appendChild(wrapper);
         }
         // Mirror to aliases after injection
         const aliasIds =
@@ -920,8 +934,12 @@ export default function HomePage() {
               ? ["home-middle-container", "home-middle-custom-code"]
               : ["home-bottom-container", "home-bottom-custom-code"];
         for (const aliasId of aliasIds) {
-          const alias = document.getElementById(aliasId);
-          if (alias) alias.innerHTML = el.innerHTML;
+          try {
+            const alias = document.getElementById(aliasId);
+            if (alias) alias.innerHTML = el.innerHTML;
+          } catch {
+            // ignore alias mirror failures
+          }
         }
       }
     }, 250);

@@ -109,9 +109,9 @@ persistent actor {
   var nextWithdrawalId  = 1;
   var nextReceiptId     = 1;
   var offerPortalConfig : OPTypes.OfferPortalConfig = {
-    isEnabled            = true;
-    cpaLeadWebhookSecret = "94a62430d750275ae067986c120c2884";
-    cpagripApiKey        = "914ebf2f2ed06fd6da511be81d502acd";
+    isEnabled            = false;
+    cpaLeadWebhookSecret = "";
+    cpagripApiKey        = "";
     adminProfitPct       = 60;
     userProfitPct        = 40;
   };
@@ -148,28 +148,39 @@ persistent actor {
     referralLevel3Pct   = 1;
     referralLevel4Pct   = 0.5;
     referralLevel5Pct   = 0.25;
-    upiId               = "9670746954@ybl";
+    upiId               = "";
     upiQrCodeUrl        = "";
     razorpayKeyId       = "";
     razorpayKeySecret   = "";
     pointsPerAd         = 10;
     redemptionRate      = 100;
     minWithdrawal       = 50;
-    cpagripApiKey       = "914ebf2f2ed06fd6da511be81d502acd";
+    cpagripApiKey       = "";
     cloudinaryCloudName = "dquyiiu7o";
     cloudinaryApiKey    = "199372638334688";
-    cloudinaryApiSecret = "-bMdmPrWDfdfSsj8LckbC-4zmvg";
+    cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
     ludoEnabled         = true;
     rewardsEnabled      = true;
     gameEnabled         = true;
     udhaarBookEnabled   = true;
   };
   // Separate stable vars for new CPAGrip fields (upgrade-safe)
-  var cpagripWebhookSecret : Text = "94a62430d750275ae067986c120c2884";
+  var cpagripWebhookSecret : Text = "";
   var cpagripOfferWallName : Text = "Digital Zindagi Offers";
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
+
+  // ── AdMob Configuration state ─────────────────────────────────────────────
+  var admobAppId           : Text = "";
+  var admobBannerUnitId    : Text = "";
+  var admobInterstitialId  : Text = "";
+  var admobLudoBannerId    : Text = "";
+  var admobLudoInterstitialId : Text = "";
+  var admobRewardedUnitId  : Text = "";
+
+  // ── Manager list state ────────────────────────────────────────────────────
+  var managers = List.empty<Text>(); // List of mobile numbers granted manager role
 
   // Dynamic Custom Sections state
   var customSections = Map.empty<Nat, CustomSection>();
@@ -499,12 +510,14 @@ persistent actor {
     role : UserRole,
     securityQuestion : Text,
     securityAnswer : Text,
-  ) : async () {
+  ) : async { #ok; #err : Text } {
+    // Return a clean error result instead of trapping — frontend shows a toast
     if (users.containsKey(mobile)) {
-      Runtime.trap("User already exists");
+      return #err("already_registered");
     };
+    let userId = nextUserId;
     let user : User = {
-      id = nextUserId;
+      id = userId;
       name;
       mobile;
       passwordHash;
@@ -513,13 +526,14 @@ persistent actor {
       securityAnswer;
       createdAt = Time.now();
     };
+    // Persist all data before returning #ok
     users.add(mobile, user);
-    userIdToPrincipal.add(nextUserId, caller);
-    principalToUserId.add(caller, nextUserId);
+    userIdToPrincipal.add(userId, caller);
+    principalToUserId.add(caller, userId);
 
     // Create user profile for AccessControl integration
     let userProfile : UserProfile = {
-      userId = nextUserId;
+      userId;
       name;
       mobile;
       role;
@@ -533,7 +547,7 @@ persistent actor {
 
     if (role == #provider) {
       let providerProfile : ProviderProfile = {
-        userId = user.id;
+        userId;
         shopName = name;
         description = "";
         address = "";
@@ -549,8 +563,9 @@ persistent actor {
         photos = [];
         planType = #pending;
       };
-      providerProfiles.add(user.id, providerProfile);
+      providerProfiles.add(userId, providerProfile);
     };
+    #ok;
   };
 
   public query ({ caller }) func getUserById(userId : Nat) : async ?User {
@@ -898,9 +913,10 @@ persistent actor {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can view pending approvals");
     };
+    // Return ALL providers with approvalStatus == #pending regardless of screenshot
     providerProfiles.values().toArray().filter(
       func(profile : ProviderProfile) : Bool { 
-        profile.paymentScreenshotBlobId != null and profile.subscriptionStatus == #pending 
+        profile.approvalStatus == #pending
       }
     );
   };
@@ -910,9 +926,10 @@ persistent actor {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can view pending approvals");
     };
+    // Return ALL providers with approvalStatus == #pending regardless of screenshot
     providerProfiles.values().toArray().filter(
       func(profile : ProviderProfile) : Bool { 
-        profile.paymentScreenshotBlobId != null and profile.subscriptionStatus == #pending 
+        profile.approvalStatus == #pending
       }
     );
   };
@@ -965,7 +982,7 @@ persistent actor {
           subscriptionPlan = plan;
           subscriptionExpiry = expiry;
           paymentScreenshotBlobId = profile.paymentScreenshotBlobId;
-          approvalStatus = profile.approvalStatus;
+          approvalStatus = #approved;
           upiId = profile.upiId;
           qrCodeBlobId = profile.qrCodeBlobId;
           photos = profile.photos;
@@ -994,7 +1011,7 @@ persistent actor {
           subscriptionPlan = profile.subscriptionPlan;
           subscriptionExpiry = profile.subscriptionExpiry;
           paymentScreenshotBlobId = profile.paymentScreenshotBlobId;
-          approvalStatus = profile.approvalStatus;
+          approvalStatus = #rejected;
           upiId = profile.upiId;
           qrCodeBlobId = profile.qrCodeBlobId;
           photos = profile.photos;
@@ -2416,15 +2433,143 @@ persistent actor {
   /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
   /// Both fields are persisted in separate stable vars so they survive reloads.
   public shared ({ caller }) func updateCpagripSettings(
+    apiKey        : Text,
     webhookSecret : Text,
     offerWallName : Text,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Admin only");
     };
+    adminSettings := { adminSettings with cpagripApiKey = apiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
     cpagripWebhookSecret := webhookSecret;
     cpagripOfferWallName := offerWallName;
     true;
+  };
+
+  /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+  public shared query ({ caller }) func getCpagripSettings() : async { apiKey : Text; webhookSecret : Text; offerWallName : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    {
+      apiKey        = adminSettings.cpagripApiKey;
+      webhookSecret = cpagripWebhookSecret;
+      offerWallName = cpagripOfferWallName;
+    };
+  };
+
+  // ── AdMob Configuration ───────────────────────────────────────────────────
+
+  /// Return the current AdMob configuration — admin only.
+  public shared query ({ caller }) func getAdmobConfig() : async {
+    appId              : Text;
+    bannerUnitId       : Text;
+    interstitialId     : Text;
+    ludoBannerId       : Text;
+    ludoInterstitialId : Text;
+    rewardedUnitId     : Text;
+  } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    {
+      appId              = admobAppId;
+      bannerUnitId       = admobBannerUnitId;
+      interstitialId     = admobInterstitialId;
+      ludoBannerId       = admobLudoBannerId;
+      ludoInterstitialId = admobLudoInterstitialId;
+      rewardedUnitId     = admobRewardedUnitId;
+    };
+  };
+
+  /// Return AdMob unit IDs that are safe for the frontend to use — public.
+  /// The App ID is intentionally omitted (only needed native-side).
+  public query func getAdmobConfigPublic() : async {
+    bannerUnitId       : Text;
+    interstitialId     : Text;
+    ludoBannerId       : Text;
+    ludoInterstitialId : Text;
+    rewardedUnitId     : Text;
+  } {
+    {
+      bannerUnitId       = admobBannerUnitId;
+      interstitialId     = admobInterstitialId;
+      ludoBannerId       = admobLudoBannerId;
+      ludoInterstitialId = admobLudoInterstitialId;
+      rewardedUnitId     = admobRewardedUnitId;
+    };
+  };
+
+  /// Update AdMob configuration — admin only.
+  public shared ({ caller }) func updateAdmobConfig(
+    appId              : Text,
+    bannerUnitId       : Text,
+    interstitialId     : Text,
+    ludoBannerId       : Text,
+    ludoInterstitialId : Text,
+    rewardedUnitId     : Text,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    admobAppId              := appId;
+    admobBannerUnitId       := bannerUnitId;
+    admobInterstitialId     := interstitialId;
+    admobLudoBannerId       := ludoBannerId;
+    admobLudoInterstitialId := ludoInterstitialId;
+    admobRewardedUnitId     := rewardedUnitId;
+    true;
+  };
+
+  // ── Manager Management ────────────────────────────────────────────────────
+
+  /// Add a manager by mobile number — admin only.
+  /// Managers have restricted access (News, Jobs, Videos).
+  public shared ({ caller }) func addManager(mobile : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    if (mobile == "") {
+      Runtime.trap("Mobile number cannot be empty");
+    };
+    // Only add if not already in the list
+    let exists = managers.find(func(m : Text) : Bool { m == mobile });
+    switch (exists) {
+      case (?_) { false }; // already exists
+      case null {
+        managers.add(mobile);
+        true;
+      };
+    };
+  };
+
+  /// Get all managers — admin only.
+  public shared query ({ caller }) func getManagers() : async [Text] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    managers.toArray();
+  };
+
+  /// Remove a manager by mobile number — admin only.
+  public shared ({ caller }) func removeManager(mobile : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    let before = managers.size();
+    let filtered = managers.filter(func(m : Text) : Bool { m != mobile });
+    managers.clear();
+    managers.append(filtered);
+    managers.size() < before;
+  };
+
+  /// Check if a given mobile number belongs to a manager — public.
+  public query func isManager(mobile : Text) : async Bool {
+    switch (managers.find(func(m : Text) : Bool { m == mobile })) {
+      case (?_) { true };
+      case null { false };
+    };
   };
 
 };

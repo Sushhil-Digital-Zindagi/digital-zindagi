@@ -89,7 +89,7 @@ import {
   useUpdateAdminSettings,
   useUpdateAppSettings,
   useUpdateCategory,
-  useUpdateCpagripApiKey,
+  useUpdateCpagripSettings,
   useUpdateCustomCode,
   useUpdateCustomSection,
   useUpdateJob,
@@ -3580,6 +3580,9 @@ interface Manager {
 }
 
 function StaffManagement() {
+  const { actor } = useActor();
+
+  // Load full Manager objects (name, password, etc.) from localStorage; mobile list synced with canister
   const [managers, setManagers] = useState<Manager[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("dz_managers") ?? "[]");
@@ -3591,6 +3594,35 @@ function StaffManagement() {
   const [mgMobile, setMgMobile] = useState("");
   const [password, setPassword] = useState("");
   const [adding, setAdding] = useState(false);
+
+  // Sync canister managers list on mount — keep local objects, reconcile with canister mobile list
+  useEffect(() => {
+    if (!actor) return;
+    (async () => {
+      try {
+        const canisterActor = actor as unknown as {
+          getManagers: () => Promise<string[]>;
+        };
+        const mobilesFromCanister = await canisterActor.getManagers();
+        // Remove any local managers whose mobile is no longer in canister list
+        const reconciled = ((): Manager[] => {
+          try {
+            const local: Manager[] = JSON.parse(
+              localStorage.getItem("dz_managers") ?? "[]",
+            );
+            return local.filter((m) => mobilesFromCanister.includes(m.mobile));
+          } catch {
+            return [];
+          }
+        })();
+        localStorage.setItem("dz_managers", JSON.stringify(reconciled));
+        setManagers(reconciled);
+      } catch {
+        // canister unavailable — keep localStorage data
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actor]);
 
   const handleAdd = async () => {
     if (!name.trim() || !mgMobile.trim() || !password.trim()) {
@@ -3607,6 +3639,18 @@ function StaffManagement() {
         password: hash,
         createdAt: new Date().toISOString(),
       };
+      // Sync mobile to canister
+      if (actor) {
+        try {
+          await (
+            actor as unknown as {
+              addManager: (mobile: string) => Promise<boolean>;
+            }
+          ).addManager(mgMobile.trim());
+        } catch {
+          // canister unavailable — proceed with localStorage
+        }
+      }
       const updated = [...managers, newManager];
       localStorage.setItem("dz_managers", JSON.stringify(updated));
       setManagers(updated);
@@ -3614,14 +3658,27 @@ function StaffManagement() {
       setName("");
       setMgMobile("");
       setPassword("");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Add nahi ho saka");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Add nahi ho saka");
     } finally {
       setAdding(false);
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const manager = managers.find((m) => m.id === id);
+    // Remove from canister first
+    if (actor && manager) {
+      try {
+        await (
+          actor as unknown as {
+            removeManager: (mobile: string) => Promise<boolean>;
+          }
+        ).removeManager(manager.mobile);
+      } catch {
+        // canister unavailable — proceed with localStorage
+      }
+    }
     const updated = managers.filter((m) => m.id !== id);
     localStorage.setItem("dz_managers", JSON.stringify(updated));
     setManagers(updated);
@@ -3761,14 +3818,53 @@ function ChatSection() {
 }
 
 // ---- Ads Manager Section ----
+type AdmobConfigRecord = {
+  appId: string;
+  bannerUnitId: string;
+  interstitialId: string;
+  ludoBannerId: string;
+  ludoInterstitialId: string;
+  rewardedUnitId: string;
+};
+type AdmobLocalConfig = Record<string, string | boolean>;
+
+/** Map backend AdmobConfigRecord to the flat Record used by the UI */
+function admobRecordToLocal(r: AdmobConfigRecord): AdmobLocalConfig {
+  return {
+    appId: r.appId,
+    // UI key "bannerId" → backend field "bannerUnitId"
+    bannerId: r.bannerUnitId,
+    interstitialId: r.interstitialId,
+    ludoBannerId: r.ludoBannerId,
+    ludoInterstitialId: r.ludoInterstitialId,
+    rewardedUnitId: r.rewardedUnitId,
+  };
+}
+
+/** Map the flat UI config back to the canister updateAdmobConfig args */
+function localToAdmobArgs(cfg: AdmobLocalConfig) {
+  return {
+    appId: String(cfg.appId ?? ""),
+    bannerUnitId: String(cfg.bannerId ?? ""),
+    interstitialId: String(cfg.interstitialId ?? ""),
+    ludoBannerId: String(cfg.ludoBannerId ?? ""),
+    ludoInterstitialId: String(cfg.ludoInterstitialId ?? ""),
+    rewardedUnitId: String(cfg.rewardedUnitId ?? ""),
+  };
+}
+
 function AdsManager() {
-  const [config, setConfig] = useState(() => {
+  const { actor } = useActor();
+  const [config, setConfig] = useState<AdmobLocalConfig>(() => {
     try {
-      return JSON.parse(localStorage.getItem("dz_admob_config") ?? "{}");
+      return JSON.parse(
+        localStorage.getItem("dz_admob_config") ?? "{}",
+      ) as AdmobLocalConfig;
     } catch {
       return {};
     }
   });
+  const [saving, setSaving] = useState(false);
   const [customAds, setCustomAds] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("dz_custom_internal_ads") ?? "[]");
@@ -3792,11 +3888,71 @@ function AdsManager() {
   });
   const [newAdUrl, setNewAdUrl] = useState("");
 
+  // Load AdMob config from canister on mount
+  useEffect(() => {
+    if (!actor) return;
+    (async () => {
+      try {
+        const data = await (
+          actor as unknown as {
+            getAdmobConfig: () => Promise<AdmobConfigRecord>;
+          }
+        ).getAdmobConfig();
+        const localData = admobRecordToLocal(data);
+        // Preserve local-only keys (masterEnabled, bannerEnabled, interstitialEnabled)
+        setConfig((prev) => {
+          const merged: AdmobLocalConfig = { ...prev, ...localData };
+          localStorage.setItem("dz_admob_config", JSON.stringify(merged));
+          return merged;
+        });
+      } catch {
+        // canister unavailable — keep localStorage data
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actor]);
+
   const save = (key: string, val: string | boolean) => {
     const updated = { ...config, [key]: val };
     setConfig(updated);
     localStorage.setItem("dz_admob_config", JSON.stringify(updated));
     broadcastSettingsChange();
+  };
+
+  const saveToCanister = async () => {
+    if (!actor) {
+      toast.success("Settings saved locally");
+      return;
+    }
+    setSaving(true);
+    try {
+      const args = localToAdmobArgs(config);
+      await (
+        actor as unknown as {
+          updateAdmobConfig: (
+            appId: string,
+            bannerUnitId: string,
+            interstitialId: string,
+            ludoBannerId: string,
+            ludoInterstitialId: string,
+            rewardedUnitId: string,
+          ) => Promise<boolean>;
+        }
+      ).updateAdmobConfig(
+        args.appId,
+        args.bannerUnitId,
+        args.interstitialId,
+        args.ludoBannerId,
+        args.ludoInterstitialId,
+        args.rewardedUnitId,
+      );
+      toast.success("Settings Updated Successfully ✅");
+      broadcastSettingsChange();
+    } catch {
+      toast.success("Settings saved locally ✅");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const savePlacements = (updated: {
@@ -3897,13 +4053,23 @@ function AdsManager() {
               id={`admob-${key}`}
               data-ocid="admin.input"
               type="text"
-              value={config[key] ?? ""}
+              value={String(config[key] ?? "")}
               onChange={(e) => save(key, e.target.value)}
               placeholder={placeholder}
               className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
             />
           </div>
         ))}
+        <button
+          type="button"
+          data-ocid="admin.admob_save_button"
+          onClick={saveToCanister}
+          disabled={saving}
+          className="flex items-center gap-2 bg-primary text-primary-foreground text-sm font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-60 mt-2"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+          Save AdMob Settings
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-border shadow-card p-6 space-y-4">
@@ -5624,10 +5790,28 @@ function ScrapRatesSection() {
   // Suppress unused lint — hooks are called for canister wiring; mutations used in handleSave
   void deleteScrapRateMutation;
 
+  // Sync rates from canister on first load
+  useEffect(() => {
+    if (!canisterRates || canisterRates.length === 0) return;
+    const fromCanister: Record<string, string> = {};
+    for (const r of canisterRates) {
+      fromCanister[r.itemName] = String(Math.round(r.ratePerKg));
+    }
+    setRates((prev) => {
+      const merged = { ...prev, ...fromCanister };
+      localStorage.setItem("dz_scrap_rates", JSON.stringify(merged));
+      return merged;
+    });
+  }, [canisterRates]);
+
   const DEFAULT_ITEMS = [
-    { key: "lohaa", label: "लोहा (Iron)", placeholder: "₹/kg rate" },
-    { key: "kaagaz", label: "कागज (Paper)", placeholder: "₹/kg rate" },
-    { key: "taamba", label: "तांबा (Copper)", placeholder: "₹/kg rate" },
+    { key: "Lohaa (Iron)", label: "लोहा (Iron)", placeholder: "₹/kg rate" },
+    { key: "Kaagaz (Paper)", label: "कागज (Paper)", placeholder: "₹/kg rate" },
+    {
+      key: "Taamba (Copper)",
+      label: "तांबा (Copper)",
+      placeholder: "₹/kg rate",
+    },
   ];
 
   const handleSave = async () => {
@@ -11053,9 +11237,7 @@ function OfferSystemToggleTab() {
 // (B) API Keys Tab
 function OfferApiKeysTab() {
   const { actor } = useActor();
-  const updateCpagripApiKey = useUpdateCpagripApiKey();
-  const updateAdminSettings = useUpdateAdminSettings();
-  const { data: adminSettingsData } = useGetAdminSettings();
+  const updateCpagripSettings = useUpdateCpagripSettings();
   const [offerWallName, setOfferWallName] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [cpagripWebhookSecret, setCpagripWebhookSecret] = useState("");
@@ -11070,23 +11252,32 @@ function OfferApiKeysTab() {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  // Hydrate CPAGrip fields from AdminSettings when data arrives
-  useEffect(() => {
-    if (!adminSettingsData) return;
-    const s = adminSettingsData as typeof adminSettingsData & {
-      cpagripWebhookSecret?: string;
-      cpagripOfferWallName?: string;
-    };
-    if (s.cpagripWebhookSecret !== undefined)
-      setCpagripWebhookSecret(s.cpagripWebhookSecret);
-    if (s.cpagripOfferWallName !== undefined)
-      setOfferWallName(s.cpagripOfferWallName);
-    if (s.cpagripApiKey !== undefined) setCpagripApiKey(s.cpagripApiKey);
-  }, [adminSettingsData]);
-
   useEffect(() => {
     const load = async () => {
       try {
+        // Load CPAGrip settings via dedicated backend method (getCpagripSettings)
+        if (actor) {
+          try {
+            const cpagripData = await (
+              actor as unknown as {
+                getCpagripSettings: () => Promise<{
+                  apiKey: string;
+                  webhookSecret: string;
+                  offerWallName: string;
+                }>;
+              }
+            ).getCpagripSettings();
+            if (cpagripData.apiKey) setCpagripApiKey(cpagripData.apiKey);
+            if (cpagripData.webhookSecret)
+              setCpagripWebhookSecret(cpagripData.webhookSecret);
+            if (cpagripData.offerWallName)
+              setOfferWallName(cpagripData.offerWallName);
+          } catch {
+            // Fall back to localStorage cache if method not available
+            const storedKey = localStorage.getItem("dz_cpagrip_api_key") ?? "";
+            setCpagripApiKey((prev) => prev || storedKey);
+          }
+        }
         if (actor && "getOfferPortalConfig" in actor) {
           const cfg = await (
             actor as unknown as {
@@ -11100,10 +11291,6 @@ function OfferApiKeysTab() {
           ).getOfferPortalConfig();
           setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
         }
-        // Load CPAGrip API key fallback from localStorage
-        const storedCpagripKey =
-          localStorage.getItem("dz_cpagrip_api_key") ?? "";
-        setCpagripApiKey((prev) => prev || storedCpagripKey);
         if (actor && "getSmsConfig" in actor) {
           const sms = await (
             actor as unknown as {
@@ -11136,6 +11323,7 @@ function OfferApiKeysTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Save Offer Portal config (webhook secret for the generic offer wall)
       if (
         actor &&
         "getOfferPortalConfig" in actor &&
@@ -11209,16 +11397,36 @@ function OfferApiKeysTab() {
           setSenderId(smsUpdated.senderId ?? "DIGZIN");
         }
       }
-      // Save CPAGrip API key to canister AND localStorage
-      await updateCpagripApiKey.mutateAsync(cpagripApiKey);
-      // Save CPAGrip Webhook Secret Key and Offer Wall Name to AdminSettings
-      // These new fields are typed as extra properties beyond the base AdminSettings
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (updateAdminSettings.mutateAsync as (s: any) => Promise<void>)({
-        cpagripApiKey: cpagripApiKey.trim(),
-        cpagripWebhookSecret: cpagripWebhookSecret.trim(),
-        cpagripOfferWallName: offerWallName.trim(),
+
+      // Save CPAGrip settings atomically via dedicated hook (API key + webhook secret + offer wall name)
+      await updateCpagripSettings.mutateAsync({
+        apiKey: cpagripApiKey.trim(),
+        webhookSecret: cpagripWebhookSecret.trim(),
+        offerWallName: offerWallName.trim(),
       });
+
+      // Re-fetch CPAGrip to confirm actual saved values
+      if (actor) {
+        try {
+          const savedCpagrip = await (
+            actor as unknown as {
+              getCpagripSettings: () => Promise<{
+                apiKey: string;
+                webhookSecret: string;
+                offerWallName: string;
+              }>;
+            }
+          ).getCpagripSettings();
+          if (savedCpagrip.apiKey) setCpagripApiKey(savedCpagrip.apiKey);
+          if (savedCpagrip.webhookSecret)
+            setCpagripWebhookSecret(savedCpagrip.webhookSecret);
+          if (savedCpagrip.offerWallName)
+            setOfferWallName(savedCpagrip.offerWallName);
+        } catch {
+          // ignore re-fetch failure — data is already saved
+        }
+      }
+
       toast.success("Settings Updated Successfully ✅");
     } catch {
       toast.error("Failed to save. Please try again.");

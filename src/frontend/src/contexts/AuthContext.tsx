@@ -58,23 +58,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.removeItem("adminVerified");
         } else {
           const parsed = JSON.parse(stored);
-          const restored: SessionUser = {
-            ...parsed,
-            userId: BigInt(parsed.userId),
-          };
-          setUser(restored);
-          // Auto-grant admin access if Super Admin email is restored from session
-          if (
-            restored.isSuperAdmin ||
-            restored.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
-          ) {
-            sessionStorage.setItem("adminVerified", "true");
+          // Validate session has minimum required fields before restoring
+          if (!parsed.userId || !parsed.name || !parsed.role) {
+            // Malformed session — clear it
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem(SESSION_EXPIRY_KEY);
+            sessionStorage.removeItem("adminVerified");
+          } else {
+            const restored: SessionUser = {
+              ...parsed,
+              userId: BigInt(parsed.userId),
+            };
+            setUser(restored);
+            // Auto-grant admin access if Super Admin email is restored from session
+            if (
+              restored.isSuperAdmin ||
+              restored.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+            ) {
+              sessionStorage.setItem("adminVerified", "true");
+            }
+            // Refresh expiry on restore (sliding window)
+            localStorage.setItem(
+              SESSION_EXPIRY_KEY,
+              String(Date.now() + SESSION_DURATION_MS),
+            );
           }
-          // Refresh expiry on restore (sliding window)
-          localStorage.setItem(
-            SESSION_EXPIRY_KEY,
-            String(Date.now() + SESSION_DURATION_MS),
-          );
         }
       }
     } catch {
