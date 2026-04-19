@@ -826,8 +826,16 @@ export interface backendInterface {
     login(mobile: MobileNumber, passwordHash: string): Promise<User>;
     /**
      * / Login to the Offer Portal.
+     * / Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
+     * / never traps, so the frontend receives a clean error instead of ic0.trap.
      */
-    loginOfferUser(email: string, passwordHash: string): Promise<OfferUser>;
+    loginOfferUser(email: string, passwordHash: string): Promise<{
+        __kind__: "ok";
+        ok: OfferUser;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Mark a transaction as paid. Caller must own the transaction.
      */
@@ -892,6 +900,17 @@ export interface backendInterface {
      * / Request admin to top-up your wallet.  Returns the new request ID.
      */
     requestWalletTopup(amount: number, note: string): Promise<bigint>;
+    /**
+     * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
+     * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+     */
+    saveCPAGripKeys(apiKey: string, webhookSecret: string, offerWallName: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
@@ -925,7 +944,13 @@ export interface backendInterface {
      * / Update AdMob configuration — admin only.
      */
     updateAdmobConfig(appId: string, bannerUnitId: string, interstitialId: string, ludoBannerId: string, ludoInterstitialId: string, rewardedUnitId: string): Promise<boolean>;
-    updateAppSettings(json: string): Promise<void>;
+    updateAppSettings(json: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update commission config — admin only.
@@ -2641,18 +2666,24 @@ export class Backend implements backendInterface {
             return from_candid_User_n51(this._uploadFile, this._downloadFile, result);
         }
     }
-    async loginOfferUser(arg0: string, arg1: string): Promise<OfferUser> {
+    async loginOfferUser(arg0: string, arg1: string): Promise<{
+        __kind__: "ok";
+        ok: OfferUser;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
         if (this.processError) {
             try {
                 const result = await this.actor.loginOfferUser(arg0, arg1);
-                return from_candid_OfferUser_n13(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n81(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.loginOfferUser(arg0, arg1);
-            return from_candid_OfferUser_n13(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n81(this._uploadFile, this._downloadFile, result);
         }
     }
     async markUdhaarTransactionPaid(arg0: string): Promise<{
@@ -2861,6 +2892,26 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async saveCPAGripKeys(arg0: string, arg1: string, arg2: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+                return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+            return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -3021,18 +3072,24 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateAppSettings(arg0: string): Promise<void> {
+    async updateAppSettings(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateAppSettings(arg0);
-                return result;
+                return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.updateAppSettings(arg0);
-            return result;
+            return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async updateCategory(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: boolean): Promise<boolean> {

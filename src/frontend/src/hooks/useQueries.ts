@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   AdminConfig,
   AuditLogEntry,
@@ -1214,9 +1215,38 @@ export function useUpdateAppSettings() {
       }
       const merged = { ...current, ...settings };
       const json = JSON.stringify(merged);
-      await (
-        actor as unknown as { updateAppSettings(json: string): Promise<void> }
-      ).updateAppSettings(json);
+      // Backend returns {#ok; #err} — handle both variants
+      try {
+        const result = await (
+          actor as unknown as {
+            updateAppSettings(
+              json: string,
+            ): Promise<{ __kind__: string; err?: string } | undefined>;
+          }
+        ).updateAppSettings(json);
+        // Check for Result-style error from canister
+        if (
+          result &&
+          typeof result === "object" &&
+          "__kind__" in result &&
+          (result as { __kind__: string }).__kind__ === "err"
+        ) {
+          const errMsg =
+            (result as { err?: string }).err ?? "Settings save failed";
+          throw new Error(errMsg);
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        // Rethrow — caller will handle
+        throw new Error(
+          msg.toLowerCase().includes("method not found")
+            ? "Settings save nahi ho payi — admin panel reload karein"
+            : msg.toLowerCase().includes("actor not available") ||
+                msg.toLowerCase().includes("canister")
+              ? "Backend se connect nahi ho pa raha — thoda wait karein"
+              : msg,
+        );
+      }
       // Cache in localStorage after canister confirms
       localStorage.setItem(APP_SETTINGS_LS_KEY, JSON.stringify(merged));
       // Also update individual legacy localStorage keys for backward compat
@@ -2853,7 +2883,8 @@ export function useGetAdminSettings() {
       }
     },
     enabled: !isFetching,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5000, // 5 seconds — ensures canister data overwrites localStorage on every visit
+    refetchInterval: 10000, // Poll every 10 seconds for real-time sync
   });
 }
 
@@ -2978,7 +3009,7 @@ export function useGetCpagripSettings() {
   });
 }
 
-/** Mutation: update CPAGrip settings atomically via dedicated backend method. */
+/** Mutation: update CPAGrip settings atomically via saveCPAGripKeys backend method. */
 export function useUpdateCpagripSettings() {
   const { actor } = useActor();
   const qc = useQueryClient();
@@ -2992,37 +3023,39 @@ export function useUpdateCpagripSettings() {
       webhookSecret: string;
       offerWallName: string;
     }) => {
-      // Update API key via existing hook path (writes to canister + localStorage)
-      localStorage.setItem("dz_cpagrip_api_key", apiKey.trim());
-      if (!actor) return;
-      try {
-        // Update all three CPAGrip fields atomically via dedicated method
-        await (
-          actor as unknown as {
-            updateCpagripSettings: (
-              apiKey: string,
-              webhookSecret: string,
-              offerWallName: string,
-            ) => Promise<boolean>;
-          }
-        ).updateCpagripSettings(
-          apiKey.trim(),
-          webhookSecret.trim(),
-          offerWallName.trim(),
-        );
-        // Cache all locally
-        localStorage.setItem(
-          CPAGRIP_SETTINGS_LS_KEY,
-          JSON.stringify({ apiKey, webhookSecret, offerWallName }),
-        );
-      } catch {
-        // localStorage already updated — canister will sync on next poll
+      if (!actor)
+        throw new Error("Actor not available — backend connect karein");
+      // Use saveCPAGripKeys which returns a proper variant {ok} | {err: Text}
+      const result = await actor.saveCPAGripKeys(
+        apiKey.trim(),
+        webhookSecret.trim(),
+        offerWallName.trim(),
+      );
+      if ("err" in result) {
+        throw new Error(result.err || "Save failed");
       }
+      // Cache locally only after canister confirms success
+      localStorage.setItem("dz_cpagrip_api_key", apiKey.trim());
+      localStorage.setItem(
+        CPAGRIP_SETTINGS_LS_KEY,
+        JSON.stringify({
+          apiKey: apiKey.trim(),
+          webhookSecret: webhookSecret.trim(),
+          offerWallName: offerWallName.trim(),
+        }),
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cpagripSettings"] });
       qc.invalidateQueries({ queryKey: ["adminSettings"] });
       qc.invalidateQueries({ queryKey: ["appSettings"] });
+    },
+    onError: (err: unknown) => {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to save. Please try again.";
+      toast.error(msg);
     },
   });
 }

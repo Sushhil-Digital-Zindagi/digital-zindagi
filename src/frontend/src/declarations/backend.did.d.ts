@@ -749,8 +749,14 @@ export interface _SERVICE {
   'login' : ActorMethod<[MobileNumber, string], User>,
   /**
    * / Login to the Offer Portal.
+   * / Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
+   * / never traps, so the frontend receives a clean error instead of ic0.trap.
    */
-  'loginOfferUser' : ActorMethod<[string, string], OfferUser>,
+  'loginOfferUser' : ActorMethod<
+    [string, string],
+    { 'ok' : OfferUser } |
+      { 'err' : string }
+  >,
   /**
    * / Mark a transaction as paid. Caller must own the transaction.
    */
@@ -810,6 +816,15 @@ export interface _SERVICE {
    * / Request admin to top-up your wallet.  Returns the new request ID.
    */
   'requestWalletTopup' : ActorMethod<[number, string], bigint>,
+  /**
+   * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
+   * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+   */
+  'saveCPAGripKeys' : ActorMethod<
+    [string, string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchUsers' : ActorMethod<[string], Array<User>>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
@@ -844,7 +859,11 @@ export interface _SERVICE {
     [string, string, string, string, string, string],
     boolean
   >,
-  'updateAppSettings' : ActorMethod<[string], undefined>,
+  'updateAppSettings' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
     boolean

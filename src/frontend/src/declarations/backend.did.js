@@ -746,7 +746,11 @@ export const idlService = IDL.Service({
   'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
-  'loginOfferUser' : IDL.Func([IDL.Text, IDL.Text], [OfferUser], []),
+  'loginOfferUser' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
+      [],
+    ),
   'markUdhaarTransactionPaid' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
@@ -788,6 +792,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
+  'saveCPAGripKeys' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
@@ -807,7 +816,11 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
-  'updateAppSettings' : IDL.Func([IDL.Text], [], []),
+  'updateAppSettings' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'updateCategory' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
       [IDL.Bool],
@@ -1684,7 +1697,11 @@ export const idlFactory = ({ IDL }) => {
     'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
-    'loginOfferUser' : IDL.Func([IDL.Text, IDL.Text], [OfferUser], []),
+    'loginOfferUser' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
+        [],
+      ),
     'markUdhaarTransactionPaid' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
@@ -1726,6 +1743,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
+    'saveCPAGripKeys' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
@@ -1745,7 +1767,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
-    'updateAppSettings' : IDL.Func([IDL.Text], [], []),
+    'updateAppSettings' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'updateCategory' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [IDL.Bool],

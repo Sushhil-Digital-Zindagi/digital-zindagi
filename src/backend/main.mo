@@ -1561,11 +1561,12 @@ persistent actor {
     appSettingsJson;
   };
 
-  public shared ({ caller }) func updateAppSettings(json : Text) : async () {
+  public shared ({ caller }) func updateAppSettings(json : Text) : async { #ok : (); #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can update app settings");
+      return #err("Unauthorized: Only admins can update app settings");
     };
     appSettingsJson := json;
+    #ok(());
   };
 
   // ── UDHAAR BOOK ───────────────────────────────────────────────────────────
@@ -2017,11 +2018,10 @@ persistent actor {
   };
 
   /// Login to the Offer Portal.
-  public shared ({ caller }) func loginOfferUser(email : Text, passwordHash : Text) : async OPTypes.OfferUser {
-    switch (OPApi.loginOfferUser(offerUsers, email, passwordHash)) {
-      case (#ok(user)) { user };
-      case (#err(msg)) { Runtime.trap(msg) };
-    };
+  /// Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
+  /// never traps, so the frontend receives a clean error instead of ic0.trap.
+  public shared ({ caller }) func loginOfferUser(email : Text, passwordHash : Text) : async { #ok : OPTypes.OfferUser; #err : Text } {
+    OPApi.loginOfferUser(offerUsers, email, passwordHash);
   };
 
   /// Get earnings summary for an Offer Portal user.
@@ -2445,6 +2445,23 @@ persistent actor {
     cpagripWebhookSecret := webhookSecret;
     cpagripOfferWallName := offerWallName;
     true;
+  };
+
+  /// Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
+  /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+  public shared ({ caller }) func saveCPAGripKeys(
+    apiKey        : Text,
+    webhookSecret : Text,
+    offerWallName : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    adminSettings := { adminSettings with cpagripApiKey = apiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
+    cpagripWebhookSecret := webhookSecret;
+    cpagripOfferWallName := offerWallName;
+    #ok(());
   };
 
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.

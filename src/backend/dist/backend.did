@@ -687,7 +687,13 @@ service : {
   listApprovals: () -> (vec UserApprovalInfo) query;
   login: (mobile: MobileNumber, passwordHash: text) -> (User);
   /// Login to the Offer Portal.
-  loginOfferUser: (email: text, passwordHash: text) -> (OfferUser);
+  /// Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
+  /// never traps, so the frontend receives a clean error instead of ic0.trap.
+  loginOfferUser: (email: text, passwordHash: text) ->
+   (variant {
+      err: text;
+      ok: OfferUser;
+    });
   /// Mark a transaction as paid. Caller must own the transaction.
   markUdhaarTransactionPaid: (transactionId: text) ->
    (variant {
@@ -731,6 +737,13 @@ service : {
    (nat);
   /// Request admin to top-up your wallet.  Returns the new request ID.
   requestWalletTopup: (amount: float64, note: text) -> (nat);
+  /// Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
+  /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+  saveCPAGripKeys: (apiKey: text, webhookSecret: text, offerWallName:
+   text) -> (variant {
+               err: text;
+               ok;
+             });
   saveCallerUserProfile: (profile: UserProfile) -> ();
   searchUsers: (searchText: text) -> (vec User) query;
   setApproval: (user: principal, status: ApprovalStatus) -> ();
@@ -754,7 +767,10 @@ service : {
   updateAdmobConfig: (appId: text, bannerUnitId: text, interstitialId: 
    text, ludoBannerId: text, ludoInterstitialId: text, rewardedUnitId:
    text) -> (bool);
-  updateAppSettings: (json: text) -> ();
+  updateAppSettings: (json: text) -> (variant {
+                                        err: text;
+                                        ok;
+                                      });
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
   /// Update commission config — admin only.

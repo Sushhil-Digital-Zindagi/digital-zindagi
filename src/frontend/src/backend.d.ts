@@ -733,8 +733,16 @@ export interface backendInterface {
     login(mobile: MobileNumber, passwordHash: string): Promise<User>;
     /**
      * / Login to the Offer Portal.
+     * / Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
+     * / never traps, so the frontend receives a clean error instead of ic0.trap.
      */
-    loginOfferUser(email: string, passwordHash: string): Promise<OfferUser>;
+    loginOfferUser(email: string, passwordHash: string): Promise<{
+        __kind__: "ok";
+        ok: OfferUser;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Mark a transaction as paid. Caller must own the transaction.
      */
@@ -799,6 +807,17 @@ export interface backendInterface {
      * / Request admin to top-up your wallet.  Returns the new request ID.
      */
     requestWalletTopup(amount: number, note: string): Promise<bigint>;
+    /**
+     * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
+     * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+     */
+    saveCPAGripKeys(apiKey: string, webhookSecret: string, offerWallName: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchUsers(searchText: string): Promise<Array<User>>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
@@ -832,7 +851,13 @@ export interface backendInterface {
      * / Update AdMob configuration — admin only.
      */
     updateAdmobConfig(appId: string, bannerUnitId: string, interstitialId: string, ludoBannerId: string, ludoInterstitialId: string, rewardedUnitId: string): Promise<boolean>;
-    updateAppSettings(json: string): Promise<void>;
+    updateAppSettings(json: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update commission config — admin only.

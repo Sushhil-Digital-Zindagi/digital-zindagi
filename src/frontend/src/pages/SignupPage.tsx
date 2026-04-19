@@ -55,6 +55,7 @@ function getSignupErrorMessage(err: unknown): string {
   return "Registration में problem आई, कृपया दोबारा try करें";
 }
 
+import { useEffect } from "react";
 import { UserRole } from "../backend";
 import { ALL_CATEGORIES } from "../components/CategoryGrid";
 import { SUPER_ADMIN_EMAIL, hashPassword } from "../contexts/AuthContext";
@@ -159,6 +160,19 @@ export default function SignupPage() {
   const { data: adminConfig } = useAdminConfig();
   const { actor, isFetching } = useActor();
   const navigate = useNavigate();
+
+  // Auto-redirect to login 3 seconds after successful registration
+  useEffect(() => {
+    if (!registrationSuccess) return;
+    const timer = setTimeout(() => {
+      try {
+        navigate("/login");
+      } catch {
+        /* ignore navigation errors */
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [registrationSuccess, navigate]);
 
   // ── Dynamic categories from canister (polls every 2s) ──────────────────
   const { data: canisterCategories, isLoading: catsLoading } = useCategories();
@@ -406,9 +420,13 @@ export default function SignupPage() {
               to="/login"
               data-ocid="signup.login_button"
               className="block w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+              onClick={() => navigate("/login")}
             >
               Login Page पर जाएं
             </Link>
+            <p className="text-xs text-muted-foreground text-center">
+              3 seconds में automatically redirect होगा...
+            </p>
           </div>
         </motion.div>
       ) : (

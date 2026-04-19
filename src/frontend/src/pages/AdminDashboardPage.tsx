@@ -11398,7 +11398,7 @@ function OfferApiKeysTab() {
         }
       }
 
-      // Save CPAGrip settings atomically via dedicated hook (API key + webhook secret + offer wall name)
+      // Save all three CPAGrip fields atomically via saveCPAGripKeys backend method
       await updateCpagripSettings.mutateAsync({
         apiKey: cpagripApiKey.trim(),
         webhookSecret: cpagripWebhookSecret.trim(),
@@ -11408,15 +11408,7 @@ function OfferApiKeysTab() {
       // Re-fetch CPAGrip to confirm actual saved values
       if (actor) {
         try {
-          const savedCpagrip = await (
-            actor as unknown as {
-              getCpagripSettings: () => Promise<{
-                apiKey: string;
-                webhookSecret: string;
-                offerWallName: string;
-              }>;
-            }
-          ).getCpagripSettings();
+          const savedCpagrip = await actor.getCpagripSettings();
           if (savedCpagrip.apiKey) setCpagripApiKey(savedCpagrip.apiKey);
           if (savedCpagrip.webhookSecret)
             setCpagripWebhookSecret(savedCpagrip.webhookSecret);
@@ -11428,8 +11420,18 @@ function OfferApiKeysTab() {
       }
 
       toast.success("Settings Updated Successfully ✅");
-    } catch {
-      toast.error("Failed to save. Please try again.");
+    } catch (err) {
+      // Only show error toast if the hook didn't already show one
+      // (hook's onError fires for mutateAsync errors — avoid double toast
+      // by checking if error came from a non-cpagrip step)
+      const isCpagripErr =
+        err instanceof Error &&
+        (err.message.includes("Actor") ||
+          err.message.includes("Save failed") ||
+          err.message.includes("save"));
+      if (!isCpagripErr) {
+        toast.error("Failed to save. Please try again.");
+      }
     } finally {
       setSaving(false);
     }

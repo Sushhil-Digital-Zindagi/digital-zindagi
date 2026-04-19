@@ -272,12 +272,39 @@ export function useRegisterOfferUser() {
       const a = requireActor(actor);
       const hash = await sha256hex(password);
 
-      // Step 1: Register — returns new user's bigint ID
-      await a.registerOfferUser(email, hash, referralCode ?? null);
+      try {
+        // Step 1: Register — returns new user's bigint ID
+        await a.registerOfferUser(email, hash, referralCode ?? null);
+      } catch (err) {
+        const raw =
+          (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
+        const lower = raw.toLowerCase();
+        // "already registered" = user exists, treat gracefully
+        if (
+          lower.includes("already") ||
+          lower.includes("exists") ||
+          lower.includes("registered") ||
+          lower.includes("already_registered")
+        ) {
+          throw new Error("already_registered");
+        }
+        // Other errors — sanitize before throwing
+        throw new Error(
+          lower.includes("actor") ||
+            lower.includes("canister") ||
+            lower.includes("method not found")
+            ? "Service temporarily unavailable. Please try again."
+            : "Registration mein kuch problem hua, dobara try karein",
+        );
+      }
 
       // Step 2: Immediately login with same credentials (backend returns full user)
-      const raw = await a.loginOfferUser(email, hash);
-      return mapBackendOfferUser(raw);
+      try {
+        const raw = await a.loginOfferUser(email, hash);
+        return mapBackendOfferUser(raw);
+      } catch (err) {
+        throw new Error(mapOfferLoginError(err));
+      }
     },
     onSuccess: (user) => {
       // Auto-login the user after successful registration
@@ -289,16 +316,15 @@ export function useRegisterOfferUser() {
         err instanceof Error
           ? err.message
           : "Registration failed. Please try again.";
-      // Detect "already registered" error and show a friendly toast
-      const isAlreadyRegistered =
-        msg.toLowerCase().includes("already") ||
-        msg.toLowerCase().includes("exists") ||
-        msg.toLowerCase().includes("registered") ||
-        msg.includes("already_registered");
-      if (isAlreadyRegistered) {
-        toast.error("User already registered");
+      if (
+        msg === "already_registered" ||
+        msg.toLowerCase().includes("already")
+      ) {
+        toast.error("Yeh email pehle se register hai — Login karein");
       } else {
-        toast.error("Registration failed. Please try again.");
+        toast.error(
+          msg || "Registration mein kuch problem hua, dobara try karein",
+        );
       }
     },
   });
@@ -307,6 +333,65 @@ export function useRegisterOfferUser() {
 // ============================================================
 // Login
 // ============================================================
+
+/** Maps any raw backend error to a clean user-friendly message */
+function mapOfferLoginError(err: unknown): string {
+  const raw =
+    (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+
+  if (
+    lower.includes("ic0.trap") ||
+    lower.includes("reject code: 5") ||
+    lower.includes("reject code 5") ||
+    lower.includes("canister trapped") ||
+    lower.includes("trapped explicitly") ||
+    lower.includes("wrong") ||
+    lower.includes("galat") ||
+    lower.includes("invalid") ||
+    lower.includes("incorrect") ||
+    lower.includes("password") ||
+    lower.includes("mismatch")
+  ) {
+    return "Email ya password galat hai. Dobara try karein.";
+  }
+
+  if (
+    lower.includes("not found") ||
+    lower.includes("no user") ||
+    lower.includes("does not exist")
+  ) {
+    return "Yeh email register nahi hai. Pehle sign up karein.";
+  }
+
+  if (/-[a-z0-9]+-cai/i.test(raw)) {
+    return "Connection error, please try again";
+  }
+
+  if (
+    lower.includes("failed to fetch") ||
+    lower.includes("networkerror") ||
+    lower.includes("network error")
+  ) {
+    return "Backend se connect nahi ho pa raha — thoda wait karein";
+  }
+
+  if (lower.includes("timeout") || lower.includes("timed out")) {
+    return "Connection timeout — please try again";
+  }
+
+  if (
+    lower.includes("actor") ||
+    lower.includes("canister") ||
+    lower.includes("method not found")
+  ) {
+    return "Service temporarily unavailable. Please try again.";
+  }
+
+  // Last resort — never show raw technical strings
+  return "Email ya password galat hai. Dobara try karein.";
+}
+
 export function useLoginOfferUser() {
   const { actor } = useActor();
   const { login } = useOfferAuth();
@@ -321,17 +406,19 @@ export function useLoginOfferUser() {
     }): Promise<OfferUser> => {
       const a = requireActor(actor);
       const hash = await sha256hex(password);
-      const raw = await a.loginOfferUser(email, hash);
-      return mapBackendOfferUser(raw);
+      try {
+        const raw = await a.loginOfferUser(email, hash);
+        return mapBackendOfferUser(raw);
+      } catch (err) {
+        // Map all raw errors to user-friendly messages before re-throwing
+        throw new Error(mapOfferLoginError(err));
+      }
     },
     onSuccess: (user) => {
       login(user);
     },
     onError: (err) => {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Email ya password galat hai / Wrong credentials";
+      const msg = mapOfferLoginError(err);
       toast.error(msg);
     },
   });

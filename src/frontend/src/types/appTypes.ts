@@ -570,6 +570,18 @@ export interface BackendActorMethods {
   getAppSettings(): Promise<string>;
   updateAppSettings(json: string): Promise<void>;
 
+  // CPAGrip Settings
+  getCpagripSettings(): Promise<{
+    apiKey: string;
+    webhookSecret: string;
+    offerWallName: string;
+  }>;
+  saveCPAGripKeys(
+    apiKey: string,
+    webhookSecret: string,
+    offerWallName: string,
+  ): Promise<{ ok: null } | { err: string }>;
+
   // Wallet
   getMyWalletBalance?: () => Promise<number>;
   getWalletBalanceByUserId?: (userId: number) => Promise<number>;
