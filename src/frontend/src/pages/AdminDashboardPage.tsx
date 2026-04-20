@@ -681,56 +681,6 @@ function ProviderApprovals() {
   const rejectM = useRejectProvider();
   const [approveMap, setApproveMap] = useState<Record<string, string>>({});
 
-  // Local providers from localStorage (dz_providers)
-  const [localProviders, setLocalProviders] = useState<
-    {
-      id: string;
-      name: string;
-      mobile: string;
-      category: string;
-      planType: string;
-      status: string;
-      createdAt: string;
-    }[]
-  >(() => {
-    try {
-      const all = JSON.parse(localStorage.getItem("dz_providers") ?? "[]");
-      return all.filter((p: { status: string }) => p.status === "pending");
-    } catch {
-      return [];
-    }
-  });
-
-  const handleApproveLocal = (id: string) => {
-    try {
-      const all = JSON.parse(localStorage.getItem("dz_providers") ?? "[]");
-      const updated = all.map((p: { id: string; status: string }) =>
-        p.id === id ? { ...p, status: "approved" } : p,
-      );
-      localStorage.setItem("dz_providers", JSON.stringify(updated));
-      setLocalProviders(
-        updated.filter((p: { status: string }) => p.status === "pending"),
-      );
-      toast.success("Provider approve ho gaya!");
-    } catch {
-      toast.error("Error ho gaya");
-    }
-  };
-
-  const handleRejectLocal = (id: string) => {
-    try {
-      const all = JSON.parse(localStorage.getItem("dz_providers") ?? "[]");
-      const updated = all.filter((p: { id: string }) => p.id !== id);
-      localStorage.setItem("dz_providers", JSON.stringify(updated));
-      setLocalProviders(
-        updated.filter((p: { status: string }) => p.status === "pending"),
-      );
-      toast.success("Provider reject ho gaya.");
-    } catch {
-      toast.error("Error ho gaya");
-    }
-  };
-
   // Also show pending categories from managers
   const pendingCategories: { name: string; icon: string; status: string }[] =
     (() => {
@@ -839,69 +789,6 @@ function ProviderApprovals() {
                   className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 text-xs font-bold px-3 py-1.5 rounded-xl"
                 >
                   <XCircle size={13} /> Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Local Providers from Registration Form */}
-      {localProviders.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-heading font-semibold text-foreground">
-            Naye Registrations (Pending Approval)
-          </h3>
-          {localProviders.map((lp, i) => (
-            <div
-              key={lp.id}
-              data-ocid={`admin.item.local.${i + 1}`}
-              className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-foreground">
-                    {lp.name || "Name nahi diya"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    📱 {lp.mobile}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    📂 {lp.category}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Plan:{" "}
-                    {lp.planType === "pending_premium"
-                      ? "⭐ Premium (Payment Pending)"
-                      : "🆓 Free (Ads)"}
-                  </p>
-                  {lp.createdAt && (
-                    <p className="text-xs text-muted-foreground">
-                      Registered:{" "}
-                      {new Date(lp.createdAt).toLocaleDateString("hi-IN")}
-                    </p>
-                  )}
-                </div>
-                <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
-                  Pending
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  data-ocid={`admin.confirm_button.local.${i + 1}`}
-                  onClick={() => handleApproveLocal(lp.id)}
-                  className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-xl"
-                >
-                  <CheckCircle size={15} /> Approve
-                </button>
-                <button
-                  type="button"
-                  data-ocid={`admin.delete_button.local.${i + 1}`}
-                  onClick={() => handleRejectLocal(lp.id)}
-                  className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 text-sm font-semibold px-4 py-2 rounded-xl"
-                >
-                  <XCircle size={15} /> Reject
                 </button>
               </div>
             </div>
@@ -11255,7 +11142,7 @@ function OfferApiKeysTab() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Load CPAGrip settings via dedicated backend method (getCpagripSettings)
+        // FIX 1: Always load ALL 3 CPAGrip fields from getCpagripSettings(), even empty string
         if (actor) {
           try {
             const cpagripData = await (
@@ -11267,15 +11154,31 @@ function OfferApiKeysTab() {
                 }>;
               }
             ).getCpagripSettings();
-            if (cpagripData.apiKey) setCpagripApiKey(cpagripData.apiKey);
-            if (cpagripData.webhookSecret)
-              setCpagripWebhookSecret(cpagripData.webhookSecret);
-            if (cpagripData.offerWallName)
-              setOfferWallName(cpagripData.offerWallName);
+            // Always set — do NOT check for truthy so empty string overrides stale state
+            setCpagripApiKey(cpagripData.apiKey ?? "");
+            setCpagripWebhookSecret(cpagripData.webhookSecret ?? "");
+            setOfferWallName(
+              cpagripData.offerWallName ?? "Digital Zindagi Offers",
+            );
           } catch {
             // Fall back to localStorage cache if method not available
             const storedKey = localStorage.getItem("dz_cpagrip_api_key") ?? "";
-            setCpagripApiKey((prev) => prev || storedKey);
+            setCpagripApiKey(storedKey);
+            const cached = (() => {
+              try {
+                return JSON.parse(
+                  localStorage.getItem("dz_cpagrip_settings_cache") ?? "null",
+                );
+              } catch {
+                return null;
+              }
+            })();
+            if (cached) {
+              setCpagripWebhookSecret(cached.webhookSecret ?? "");
+              setOfferWallName(
+                cached.offerWallName ?? "Digital Zindagi Offers",
+              );
+            }
           }
         }
         if (actor && "getOfferPortalConfig" in actor) {
@@ -11323,7 +11226,7 @@ function OfferApiKeysTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Save Offer Portal config (webhook secret for the generic offer wall)
+      // Step 1: Save generic Offer Wall webhook secret (cpaLeadWebhookSecret field)
       if (
         actor &&
         "getOfferPortalConfig" in actor &&
@@ -11353,11 +11256,11 @@ function OfferApiKeysTab() {
         ).updateOfferPortalConfig(
           cfg.isEnabled,
           webhookSecret.trim(),
-          cpagripApiKey.trim(),
+          cfg.cpagripApiKey ?? "", // keep existing cpagripApiKey in this config unchanged
           cfg.adminProfitPct ?? BigInt(60),
           cfg.userProfitPct ?? BigInt(40),
         );
-        // Re-fetch to confirm what was actually persisted
+        // Re-fetch to confirm generic config
         const updated = await (
           actor as unknown as {
             getOfferPortalConfig: () => Promise<{
@@ -11370,8 +11273,9 @@ function OfferApiKeysTab() {
           }
         ).getOfferPortalConfig();
         setWebhookSecret(updated.cpaLeadWebhookSecret ?? "");
-        setCpagripApiKey(updated.cpagripApiKey ?? "");
       }
+
+      // Step 2: Save SMS config
       if (actor && "updateSmsConfig" in actor) {
         await (
           actor as unknown as {
@@ -11382,7 +11286,6 @@ function OfferApiKeysTab() {
             ) => Promise<boolean>;
           }
         ).updateSmsConfig(fast2smsKey.trim(), senderId.trim(), true);
-        // Re-fetch SMS config to confirm persisted value
         if ("getSmsConfig" in actor) {
           const smsUpdated = await (
             actor as unknown as {
@@ -11398,37 +11301,47 @@ function OfferApiKeysTab() {
         }
       }
 
-      // Save all three CPAGrip fields atomically via saveCPAGripKeys backend method
+      // Step 3: Save all 3 CPAGrip fields atomically via saveCPAGripKeys
+      // This is the ONLY place these 3 fields are saved — no overlap with generic offer wall
       await updateCpagripSettings.mutateAsync({
         apiKey: cpagripApiKey.trim(),
         webhookSecret: cpagripWebhookSecret.trim(),
         offerWallName: offerWallName.trim(),
       });
 
-      // Re-fetch CPAGrip to confirm actual saved values
+      // Step 4: Always re-fetch CPAGrip to display exactly what was saved in canister
       if (actor) {
         try {
-          const savedCpagrip = await actor.getCpagripSettings();
-          if (savedCpagrip.apiKey) setCpagripApiKey(savedCpagrip.apiKey);
-          if (savedCpagrip.webhookSecret)
-            setCpagripWebhookSecret(savedCpagrip.webhookSecret);
-          if (savedCpagrip.offerWallName)
-            setOfferWallName(savedCpagrip.offerWallName);
+          const savedCpagrip = await (
+            actor as unknown as {
+              getCpagripSettings: () => Promise<{
+                apiKey: string;
+                webhookSecret: string;
+                offerWallName: string;
+              }>;
+            }
+          ).getCpagripSettings();
+          // Always set — even empty string — to reflect what canister actually stored
+          setCpagripApiKey(savedCpagrip.apiKey ?? "");
+          setCpagripWebhookSecret(savedCpagrip.webhookSecret ?? "");
+          setOfferWallName(
+            savedCpagrip.offerWallName ?? "Digital Zindagi Offers",
+          );
         } catch {
-          // ignore re-fetch failure — data is already saved
+          // ignore re-fetch failure — data is already saved, cache is updated
         }
       }
 
       toast.success("Settings Updated Successfully ✅");
     } catch (err) {
-      // Only show error toast if the hook didn't already show one
-      // (hook's onError fires for mutateAsync errors — avoid double toast
-      // by checking if error came from a non-cpagrip step)
+      // The hook's onError already fired a toast for CPAGrip errors.
+      // Only show a generic error for non-CPAGrip save steps.
       const isCpagripErr =
         err instanceof Error &&
         (err.message.includes("Actor") ||
           err.message.includes("Save failed") ||
-          err.message.includes("save"));
+          err.message.includes("save") ||
+          err.message.includes("backend"));
       if (!isCpagripErr) {
         toast.error("Failed to save. Please try again.");
       }

@@ -3005,7 +3005,7 @@ export function useGetCpagripSettings() {
       }
     },
     enabled: !isFetching,
-    staleTime: 30 * 1000,
+    staleTime: 0, // always refetch fresh CPAGrip settings from canister
   });
 }
 
