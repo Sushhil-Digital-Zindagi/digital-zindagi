@@ -37,6 +37,17 @@ type VerifyKeyResult =
    err: text;
    ok: bool;
  };
+type VaultItem = 
+ record {
+   createdAt: int;
+   expiresAt: opt int;
+   id: nat;
+   isViewOnce: bool;
+   mediaUrl: text;
+   ownerId: principal;
+   title: text;
+   viewedAt: opt int;
+ };
 type UserSubscription = 
  record {
    assignedByAdmin: bool;
@@ -64,6 +75,24 @@ type UserProfile =
    role: UserRole;
    userId: nat;
  };
+type UserChatProfile = 
+ record {
+   autoReply: opt AutoReply;
+   badge: Badge;
+   bio: opt text;
+   city: opt text;
+   createdAt: int;
+   displayName: text;
+   ghostModeEnabled: bool;
+   pointsBalance: nat;
+   profilePhotoUrl: opt text;
+   referralCode: text;
+   referralCount: nat;
+   studyModeEnabled: bool;
+   studyModeSelectedChats: vec nat;
+   userId: principal;
+   username: opt text;
+ };
 type UserApprovalInfo = 
  record {
    "principal": principal;
@@ -79,6 +108,20 @@ type User =
    role: UserRole;
    securityAnswer: text;
    securityQuestion: text;
+ };
+type UpiPaymentRequest = 
+ record {
+   amount: nat;
+   createdAt: int;
+   id: nat;
+   plan: PremiumPlan;
+   status: variant {
+             approved;
+             pending;
+             rejected;
+           };
+   upiTxnRef: text;
+   userId: principal;
  };
 type UdhaarTransaction = 
  record {
@@ -120,11 +163,33 @@ type SubscriptionPlan =
    threeMonths;
    twelveMonths;
  };
+type Story = 
+ record {
+   authorId: principal;
+   createdAt: int;
+   expiresAt: int;
+   id: nat;
+   mediaUrl: opt text;
+   textContent: opt text;
+   viewerIds: vec principal;
+ };
 type SmsConfig = 
  record {
    fast2smsApiKey: text;
    isEnabled: bool;
    senderId: text;
+ };
+type ShortcutCreator = 
+ variant {
+   admin;
+   user: principal;
+ };
+type ShortcutCategory = 
+ variant {
+   business;
+   custom;
+   formula;
+   greet;
  };
 type ServiceRate = 
  record {
@@ -139,6 +204,34 @@ type ScrapRate =
    itemName: text;
    ratePerGram: float64;
    ratePerKg: float64;
+ };
+type ScheduledMessageStatus = 
+ variant {
+   cancelled;
+   pending;
+   sent;
+ };
+type ScheduledMessage = 
+ record {
+   content: text;
+   conversationId: nat;
+   id: nat;
+   scheduledAt: int;
+   senderId: principal;
+   status: ScheduledMessageStatus;
+ };
+type RewardPoints = 
+ record {
+   history: vec PointsHistoryEntry;
+   totalPoints: nat;
+   userId: principal;
+ };
+type ReferralStats = 
+ record {
+   badge: text;
+   code: text;
+   count: nat;
+   pointsEarned: nat;
  };
 type RechargeTransaction = 
  record {
@@ -193,11 +286,44 @@ type ProviderProfile =
    upiId: text;
    userId: nat;
  };
+type PremiumSubscription = 
+ record {
+   expiresAt: int;
+   isActive: bool;
+   paymentMethod: PaymentMethod;
+   plan: PremiumPlan;
+   startedAt: int;
+   stripeSubscriptionId: opt text;
+   userId: principal;
+ };
+type PremiumPrices = 
+ record {
+   annual: nat;
+   monthly: nat;
+   quarterly: nat;
+ };
+type PremiumPlan = 
+ variant {
+   annual;
+   monthly;
+   quarterly;
+ };
+type PointsHistoryEntry = 
+ record {
+   action: text;
+   at: int;
+   points: nat;
+ };
 type PlanType = 
  variant {
    free;
    pending;
    premium;
+ };
+type PaymentMethod = 
+ variant {
+   stripe;
+   upi;
  };
 type PaymentConfig = 
  record {
@@ -277,6 +403,16 @@ type OfferPortalConfig =
    isEnabled: bool;
    userProfitPct: nat;
  };
+type Note = 
+ record {
+   content: text;
+   createdAt: int;
+   id: nat;
+   ownerId: principal;
+   subject: text;
+   title: text;
+   updatedAt: int;
+ };
 type NewsItem = 
  record {
    category: text;
@@ -289,6 +425,88 @@ type NewsItem =
    title: text;
  };
 type MobileNumber = text;
+type MessageType = 
+ variant {
+   file;
+   image;
+   locked;
+   reaction;
+   reply;
+   scheduledMessage;
+   "text";
+   voiceText;
+   youtubeLink;
+ };
+type MessageStatus = 
+ variant {
+   delivered;
+   read;
+   sent;
+ };
+type MessageReaction = 
+ record {
+   emoji: text;
+   userIds: vec principal;
+ };
+type MarketListing = 
+ record {
+   category: MarketCategory;
+   city: text;
+   createdAt: int;
+   description: text;
+   expiresAt: opt int;
+   id: nat;
+   isActive: bool;
+   isFeatured: bool;
+   photoUrls: vec text;
+   price: nat;
+   sellerId: principal;
+   title: text;
+   whatsappContact: text;
+ };
+type MarketCategory = 
+ variant {
+   electronics;
+   jobs;
+   mobile;
+   other;
+   property;
+   services;
+   vehicles;
+ };
+type LockedMessageStatus = 
+ variant {
+   completed;
+   failed;
+   pending;
+ };
+type LockedMessagePayment = 
+ record {
+   amount: nat;
+   buyerId: principal;
+   createdAt: int;
+   creatorId: principal;
+   currency: text;
+   id: nat;
+   messageId: text;
+   status: LockedMessageStatus;
+   stripePaymentIntentId: opt text;
+   unlockedAt: opt int;
+   upiTxnRef: opt text;
+ };
+type LockedFileTask = 
+ record {
+   answer: text;
+   question: text;
+ };
+type LockedFile = 
+ record {
+   fileUrl: text;
+   lockType: LockType;
+   passwordHash: opt text;
+   task: opt LockedFileTask;
+   unlockedBy: vec principal;
+ };
 type LockedFeature = 
  record {
    cpaOfferLink: text;
@@ -298,6 +516,27 @@ type LockedFeature =
    isLocked: bool;
    secretKeyHash: text;
    updatedAt: int;
+ };
+type LockType = 
+ variant {
+   none;
+   password;
+   task;
+ };
+type LocalNewsItem = 
+ record {
+   content: text;
+   createdAt: int;
+   id: nat;
+   imageUrl: opt text;
+   postedBy: principal;
+   title: text;
+ };
+type LeaderboardEntry = 
+ record {
+   displayName: text;
+   points: nat;
+   userId: principal;
  };
 type JobItem = 
  record {
@@ -337,12 +576,91 @@ type CustomCode =
    subtitle2: text;
    title: text;
  };
+type CreatorEarningsSummary = 
+ record {
+   payments: vec LockedMessagePayment;
+   pendingPayouts: nat;
+   totalEarnings: nat;
+ };
+type Conversation = 
+ record {
+   adminIds: vec principal;
+   createdAt: int;
+   groupName: opt text;
+   groupPhotoUrl: opt text;
+   id: nat;
+   isGroup: bool;
+   lastMessageAt: int;
+   lastMessageId: opt nat;
+   participantIds: vec principal;
+ };
 type ContentLockerConfig = record {features: vec LockedFeature;};
 type CommissionConfig = 
  record {
    adminSharePct: float64;
    globalCommissionPct: float64;
    retailerSharePct: float64;
+ };
+type ChatStats = 
+ record {
+   activeChats: nat;
+   storiesPosted: nat;
+   totalMessages: nat;
+   totalUsers: nat;
+ };
+type ChatShortcut = 
+ record {
+   category: ShortcutCategory;
+   content: text;
+   createdBy: ShortcutCreator;
+   id: nat;
+   isGlobal: bool;
+   trigger: text;
+ };
+type ChatMessage = 
+ record {
+   content: text;
+   conversationId: nat;
+   createdAt: int;
+   deletedForEveryoneAt: opt int;
+   deletedForSenderAt: opt int;
+   id: nat;
+   isLocked: bool;
+   isVanish: bool;
+   lockCurrency: opt text;
+   lockPrice: opt nat;
+   lockedFile: opt LockedFile;
+   mediaUrl: opt text;
+   messageType: MessageType;
+   reactions: vec MessageReaction;
+   replyToId: opt nat;
+   scheduledAt: opt int;
+   senderId: principal;
+   status: MessageStatus;
+   unlockedBy: vec principal;
+ };
+type ChatAdminSettings = 
+ record {
+   autoReplyEnabled: bool;
+   broadcastEnabled: bool;
+   chatEnabled: bool;
+   ghostModeEnabled: bool;
+   openAiApiKey: text;
+   payToUnlockEnabled: bool;
+   pointsPerLogin: nat;
+   pointsPerMessage: nat;
+   pointsPerReferral: nat;
+   pointsPerStory: nat;
+   referralEnabled: bool;
+   rewardPointsEnabled: bool;
+   schedulingEnabled: bool;
+   shortcutsEnabled: bool;
+   storiesEnabled: bool;
+   stripePublishableKey: text;
+   stripeSecretKey: text;
+   studyModeEnabled: bool;
+   vanishModeEnabled: bool;
+   voiceToTextEnabled: bool;
  };
 type Category = 
  record {
@@ -361,6 +679,20 @@ type Banner =
    linkUrl: text;
    subtitle: text;
    title: text;
+ };
+type Badge = 
+ variant {
+   bronze;
+   diamond;
+   gold;
+   none;
+   silver;
+ };
+type AutoReply = 
+ record {
+   isEnabled: bool;
+   messages: vec text;
+   userId: principal;
  };
 type AuditLogEntry = 
  record {
@@ -433,9 +765,26 @@ service : {
    (_ImmutableObjectStorageRefillResult);
   _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
   _initializeAccessControl: () -> ();
+  activateStripePremium: (plan: PremiumPlan, stripeSubscriptionId: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   addBanner: (title: text, subtitle: text, imageUrl: text, linkUrl: text,
    displayOrder: nat) -> (nat);
   addCategory: (name: text, emoji: text, color: text) -> (nat);
+  addChatGroupMembers: (conversationId: nat, memberIds: vec principal) ->
+   (bool);
+  addChatPersonalShortcut: (trigger: text, content: text, category: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  addChatVaultItem: (mediaUrl: text, title: text, isViewOnce: bool,
+   expiresAt: opt int) -> (variant {
+                             err: text;
+                             ok: nat;
+                           });
   addCustomCode: (name: text, code: text, btnLabel: text, icon: text,
    placement: text, title: text, subtitle1: text, subtitle2: text, alignment:
    text, layoutStyle: text) -> (nat);
@@ -468,6 +817,16 @@ service : {
     });
   addVideo: (title: text, videoUrl: text, thumbnailUrl: text, platform: 
    text, category: text) -> (nat);
+  adminAddChatShortcut: (trigger: text, content: text, category: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  adminAddNewsItem: (title: text, content: text, imageUrl: opt text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
   /// Directly add or deduct balance for any user — admin only.
   adminAdjustWallet: (userId: nat, amount: float64, isAdd: bool, _note:
    text) -> (bool);
@@ -478,16 +837,44 @@ service : {
                err: text;
                ok: int;
              });
+  adminApproveUpiPremium: (requestId: nat) -> (variant {
+                                                 err: text;
+                                                 ok;
+                                               });
+  /// Approve a UPI unlock request — admin only.
+  adminApproveUpiUnlock: (paymentId: nat) -> (variant {
+                                                err: text;
+                                                ok;
+                                              });
   /// Manually assign or revoke a subscription for a user — admin only.
   adminAssignSubscription: (userId: text, durationDays: nat, action: 
    text) -> (variant {
                err: text;
                ok;
              });
+  adminBroadcastChatMessage: (content: text) -> (bool);
+  adminDeleteChatShortcut: (id: nat) -> (bool);
+  adminDeleteNewsItem: (id: nat) -> (variant {
+                                       err: text;
+                                       ok;
+                                     });
+  adminGetChatStats: () -> (ChatStats) query;
+  adminGetUpiPremiumRequests: () -> (vec UpiPaymentRequest) query;
+  /// Return all pending UPI unlock requests — admin only.
+  adminGetUpiUnlockRequests: () -> (vec LockedMessagePayment) query;
   /// List all Offer Portal users — admin only.
   adminListOfferUsers: () -> (vec OfferUser) query;
   /// List all pending withdrawal requests — admin only.
   adminListPendingWithdrawals: () -> (vec OfferWithdrawal) query;
+  adminRejectUpiPremium: (requestId: nat) -> (variant {
+                                                err: text;
+                                                ok;
+                                              });
+  /// Reject a UPI unlock request — admin only.
+  adminRejectUpiUnlock: (paymentId: nat) -> (variant {
+                                               err: text;
+                                               ok;
+                                             });
   /// Resolve a withdrawal request (approve/reject/paid) — admin only.
   adminResolveWithdrawal: (id: nat, newStatus:
    variant {
@@ -495,16 +882,57 @@ service : {
      paid;
      rejected;
    }, adminNote: opt text) -> (bool);
+  adminSeedChatDemoData: () -> (bool);
+  adminSetPremiumPrices: (monthly: nat, quarterly: nat, annual: nat) ->
+   (variant {
+      err: text;
+      ok;
+    });
   approveProvider: (userId: nat, plan: SubscriptionPlan) -> ();
   /// Approve or reject a topup request.  On approval, funds are credited — admin only.
   approveTopupRequest: (requestId: nat, approve: bool) -> (bool);
   assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
+  awardChatPoints: (action: text, points: nat) -> (bool);
+  cancelChatScheduledMessage: (id: nat) -> (bool);
   changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
+  cleanupExpiredChatStories: () -> (nat);
+  cleanupExpiredChatVaultItems: () -> (nat);
+  /// Submit a UPI transaction reference for admin approval to unlock a message.
+  confirmUpiUnlock: (messageId: nat, upiTxnRef: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  createChatGroup: (name: text, memberIds: vec principal, photoUrl:
+   opt text) -> (variant {
+                   err: text;
+                   ok: nat;
+                 });
+  createListing: (title: text, description: text, price: nat, category:
+   MarketCategory, city: text, photoUrls: vec text, whatsappContact: 
+   text) -> (variant {
+               err: text;
+               ok: nat;
+             });
+  /// Create a Stripe PaymentIntent for a locked message and return clientSecret.
+  createUnlockPaymentIntent: (messageId: nat) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   deleteBanner: (bannerId: nat) -> ();
   deleteCategory: (id: nat) -> (bool);
+  deleteChatMessage: (messageId: nat, deleteForEveryone: bool) -> (bool);
+  deleteChatNote: (id: nat) -> (bool);
+  deleteChatShortcut: (id: nat) -> (bool);
+  deleteChatVaultItem: (id: nat) -> (bool);
   deleteCustomCode: (id: nat) -> (bool);
   deleteCustomSection: (id: nat) -> (bool);
   deleteJob: (id: nat) -> (bool);
+  deleteListing: (id: nat) -> (variant {
+                                 err: text;
+                                 ok;
+                               });
   deleteNews: (id: nat) -> (bool);
   deleteScrapRate: (id: nat) -> (bool);
   deleteServiceRate: (userId: nat, rateName: text) -> ();
@@ -521,9 +949,19 @@ service : {
   deleteVideo: (id: nat) -> (bool);
   editBanner: (bannerId: nat, title: text, subtitle: text, imageUrl: 
    text, linkUrl: text, active: bool, displayOrder: nat) -> ();
+  featureListing: (id: nat) -> (variant {
+                                  err: text;
+                                  ok;
+                                });
   forgotPassword: (mobile: MobileNumber, securityAnswer: text,
    newPasswordHash: text) -> ();
+  forwardChatMessage: (messageId: nat, toConversationId: nat) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
   getActiveBanners: () -> (vec Banner) query;
+  getActiveChatStories: () -> (vec Story) query;
   getActiveProviders: () -> (vec ProviderProfile) query;
   /// Return the most recent `limit` audit log entries — admin only.
   getAdminAuditLog: (limit: nat) -> (vec AuditLogEntry) query;
@@ -570,6 +1008,13 @@ service : {
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole__1) query;
   getCategories: () -> (vec Category) query;
+  getChatAdminSettings: () -> (ChatAdminSettings) query;
+  getChatNotes: () -> (vec Note) query;
+  getChatPointsLeaderboard: () -> (vec LeaderboardEntry) query;
+  getChatScheduledMessages: () -> (vec ScheduledMessage) query;
+  getChatShortcuts: () -> (vec ChatShortcut) query;
+  getChatUserProfile: (userId: principal) -> (opt UserChatProfile) query;
+  getChatVaultItems: () -> (vec VaultItem) query;
   /// Return Cloudinary cloud name and API key — public query.
   /// The API secret is NEVER returned; it stays server-side only.
   getCloudinaryConfig: () -> (record {
@@ -580,6 +1025,8 @@ service : {
   getCommissionConfig: () -> (CommissionConfig) query;
   /// Return the full content-locker configuration (all features).
   getContentLockerConfig: () -> (ContentLockerConfig) query;
+  getConversationMessages: (conversationId: nat, limit: nat, before:
+   opt nat) -> (vec ChatMessage) query;
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
   getCpagripSettings: () ->
    (record {
@@ -587,12 +1034,23 @@ service : {
       offerWallName: text;
       webhookSecret: text;
     }) query;
+  /// Return the caller's pay-to-unlock creator earnings.
+  getCreatorEarnings: () -> (CreatorEarningsSummary) query;
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
   getJobs: () -> (vec JobItem) query;
+  getListings: (city: opt text, category: opt MarketCategory) ->
+   (vec MarketListing) query;
+  getLockedFileUrl: (messageId: nat) -> (opt text) query;
   /// Get all managers — admin only.
   getManagers: () -> (vec text) query;
+  getMyChatConversations: () -> (vec Conversation) query;
+  getMyChatPoints: () -> (RewardPoints) query;
+  getMyChatProfile: () -> (opt UserChatProfile) query;
+  getMyChatReferralCode: () -> (text) query;
+  getMyChatReferralStats: () -> (ReferralStats) query;
+  getMyListings: () -> (vec MarketListing) query;
   /// Get Offer Portal transaction history for a user.
   getMyOfferTransactions: (offerUserId: nat) -> (vec OfferTransaction) query;
   /// Get withdrawal requests for an Offer Portal user.
@@ -601,11 +1059,13 @@ service : {
   getMyRechargeHistory: () -> (vec RechargeTransaction) query;
   /// Get all receipts for the calling user.
   getMyRechargeReceipts: () -> (vec RechargeReceipt) query;
+  getMySubscription: () -> (opt PremiumSubscription) query;
   /// Return all topup requests submitted by the caller.
   getMyTopupRequests: () -> (vec WalletTopupRequest) query;
   /// Return the caller's wallet balance (0.0 if no wallet yet).
   getMyWalletBalance: () -> (float64) query;
   getNews: () -> (vec NewsItem) query;
+  getNewsItems: () -> (vec LocalNewsItem) query;
   /// Get earnings summary for an Offer Portal user.
   getOfferEarningsSummary: (offerUserId: nat) ->
    (record {
@@ -630,6 +1090,11 @@ service : {
       isEnabled: bool;
       userProfitPct: nat;
     }) query;
+  getOrCreateChatConversation: (otherUserId: principal) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
   getOrderById: (orderId: nat) -> (opt Order) query;
   getOrdersByStatus: (userId: nat, status: text) -> (vec Order) query;
   /// Returns the current payment configuration.
@@ -637,6 +1102,7 @@ service : {
   getPaymentConfig: () -> (PaymentConfig) query;
   /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
   getPendingApprovals: () -> (vec ProviderProfile) query;
+  getPremiumPlans: () -> (PremiumPrices) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
   getProviderProfile: (userId: nat) -> (opt ProviderProfile) query;
   getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
@@ -684,6 +1150,8 @@ service : {
   isCallerApproved: () -> (bool) query;
   /// Check if a given mobile number belongs to a manager — public.
   isManager: (mobile: text) -> (bool) query;
+  isPremiumUser: (userId: opt principal) -> (bool) query;
+  leaveChatGroup: (conversationId: nat) -> (bool);
   listApprovals: () -> (vec UserApprovalInfo) query;
   login: (mobile: MobileNumber, passwordHash: text) -> (User);
   /// Login to the Offer Portal.
@@ -694,6 +1162,7 @@ service : {
       err: text;
       ok: OfferUser;
     });
+  markMessagesRead: (conversationId: nat) -> (bool);
   /// Mark a transaction as paid. Caller must own the transaction.
   markUdhaarTransactionPaid: (transactionId: text) ->
    (variant {
@@ -702,10 +1171,17 @@ service : {
     });
   placeOrder: (providerId: nat, customerName: text, description: text,
    orderType: text, imageUrl: opt text) -> (nat);
+  postChatStory: (mediaUrl: opt text, textContent: opt text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  processChatReferralSignup: (referralCode: text) -> (bool);
   /// Process a CPALead postback: verify secret, split profit, credit earnings.
   /// Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
   processCpaLeadPostback: (offerUserId: nat, grossAmount: nat, webhookSecret:
    text) -> (bool);
+  reactToChatMessage: (messageId: nat, emoji: text) -> (bool);
   /// Refund a Failed recharge — restores netCost to user wallet — admin only.
   refundRecharge: (txId: nat) -> (bool);
   /// Register a new Offer Portal user (isolated from main user DB).
@@ -723,6 +1199,7 @@ service : {
       ok;
     });
   rejectProvider: (userId: nat) -> ();
+  removeChatGroupMember: (conversationId: nat, memberId: principal) -> (bool);
   /// Remove a locked feature by id — admin only.
   removeLockedFeature: (featureId: text) -> (variant {
                                                err: text;
@@ -731,6 +1208,11 @@ service : {
   /// Remove a manager by mobile number — admin only.
   removeManager: (mobile: text) -> (bool);
   removeShopPhoto: (userId: nat, blobId: text) -> ();
+  replyToChatStory: (storyId: nat, message: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
   requestApproval: () -> ();
   /// Submit a UPI withdrawal request from the Offer Portal.
   requestOfferWithdrawal: (offerUserId: nat, upiId: text, amount: nat) ->
@@ -745,8 +1227,40 @@ service : {
                ok;
              });
   saveCallerUserProfile: (profile: UserProfile) -> ();
+  saveChatNote: (title: text, content: text, subject: text) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  scheduleChatMessage: (conversationId: nat, content: text, scheduledAt:
+   int) -> (variant {
+              err: text;
+              ok: nat;
+            });
+  searchChatUsers: (searchQuery: text) -> (vec UserChatProfile) query;
   searchUsers: (searchText: text) -> (vec User) query;
+  sendLockedMessage: (conversationId: nat, fileUrl: text, lockType: LockType,
+   passwordHash: opt text, task: opt LockedFileTask) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  sendMessage: (conversationId: nat, content: text, messageType: MessageType,
+   mediaUrl: opt text, replyToId: opt nat, isVanish: bool) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  /// Send a pay-to-unlock message. Receivers must pay lockPrice to read content.
+  sendPayToUnlockMessage: (conversationId: nat, content: text, lockPrice:
+   nat, currency: text) -> (variant {
+                              err: text;
+                              ok: nat;
+                            });
   setApproval: (user: principal, status: ApprovalStatus) -> ();
+  setChatAutoReply: (enabled: bool, messages: vec text) -> (bool);
+  setChatGhostMode: (enabled: bool) -> (bool);
+  setChatStudyMode: (enabled: bool, selectedChats: vec nat) -> (bool);
   /// Create or update a locked feature — admin only.
   setLockedFeature: (featureName: text, cpaOfferLink: text, secretKey:
    text) -> (variant {
@@ -758,7 +1272,26 @@ service : {
   setPlanType: (userId: nat, planType: PlanType) -> ();
   /// Enable or disable the recharge service — admin only.
   setRechargeServiceEnabled: (enabled: bool) -> (bool);
+  submitUpiPremiumRequest: (plan: PremiumPlan, upiTxnRef: text, amount:
+   nat) -> (variant {
+              err: text;
+              ok: nat;
+            });
+  /// Summarize last 50 messages or last 24h messages for a conversation.
+  /// Uses OpenAI via HTTP outcall — API key configured in Chat Admin Settings.
+  summarizeChatMessages: (conversationId: nat, mode:
+   variant {
+     last24h;
+     last50;
+   }) -> (variant {
+            err: text;
+            ok: text;
+          });
   toggleCustomSection: (id: nat, enabled: bool) -> (bool);
+  unlockMessage: (messageId: nat, attempt: text) -> (variant {
+                                                       err: text;
+                                                       ok;
+                                                     });
   updateAdminConfig: (newConfig: AdminConfig) -> ();
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
@@ -773,6 +1306,11 @@ service : {
                                       });
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
+  updateChatAdminSettings: (settings: ChatAdminSettings) -> (bool);
+  updateChatGroupInfo: (conversationId: nat, name: opt text, photoUrl:
+   opt text) -> (bool);
+  updateChatNote: (id: nat, title: opt text, content: opt text, subject:
+   opt text) -> (bool);
   /// Update commission config — admin only.
   /// Validates: retailerPct + adminPct must equal globalPct.
   updateCommissionConfig: (globalPct: float64, retailerPct: float64,
@@ -792,9 +1330,17 @@ service : {
   updateJob: (id: nat, title: text, department: text, location: text,
    lastDate: text, applyLink: text, category: text, enabled: bool) -> (
    bool);
+  updateListing: (id: nat, title: opt text, description: opt text, price:
+   opt nat, city: opt text, photoUrls: opt vec text, whatsappContact:
+   opt text) -> (variant {
+                   err: text;
+                   ok;
+                 });
   /// Update only Ludo / Rewards settings — admin only.
   updateLudoSettings: (ludoEnabled: bool, rewardsEnabled: bool, pointsPerAd:
    nat, redemptionRate: nat, minWithdrawal: nat) -> (bool);
+  updateMyChatProfile: (displayName: opt text, bio: opt text, city: opt text,
+   profilePhotoUrl: opt text) -> (bool);
   updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
    text, category: text, enabled: bool) -> (bool);
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
@@ -847,6 +1393,14 @@ service : {
    platform: text, category: text, enabled: bool) -> (bool);
   uploadPaymentScreenshot: (userId: nat, blobId: text) -> ();
   verifyAdminPin: (pinHash: text) -> (bool) query;
+  /// Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
+  verifyStripeUnlock: (messageId: nat, paymentIntentId: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   /// User-facing: verify a plain-text unlock key for a named feature.
   verifyUnlockKey: (featureName: text, userKey: text) -> (VerifyKeyResult);
+  viewChatStory: (storyId: nat) -> (bool);
+  viewChatVaultItem: (id: nat) -> (opt VaultItem);
 }

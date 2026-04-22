@@ -85,6 +85,10 @@ export default {
         "ludo-dice": "0 8px 24px rgba(8, 8, 8, 0.25), inset -2px -2px 4px rgba(224, 215, 200, 0.15), inset 2px 2px 4px rgba(255, 255, 255, 0.2)",
         "ludo-token": "0 6px 16px rgba(8, 8, 8, 0.35), inset -1px -1px 3px rgba(8, 8, 8, 0.2), inset 1px 1px 2px rgba(112, 160, 127, 0.1)",
         "ludo-gold": "inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 2px rgba(140, 128, 96, 0.3), 0 4px 12px rgba(184, 134, 11, 0.25)",
+        "chat-bubble-sender": "0 2px 8px 0 rgba(15, 90, 72, 0.18), 0 1px 3px 0 rgba(15, 90, 72, 0.12)",
+        "chat-bubble-receiver": "0 2px 8px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)",
+        "chat-unread": "0 0 0 3px rgba(53, 114, 84, 0.15), 0 0 8px rgba(53, 114, 84, 0.2)",
+        "chat-story-ring": "0 0 0 2px rgba(184, 134, 11, 0.8), 0 0 8px rgba(184, 134, 11, 0.3)",
       },
       keyframes: {
         "accordion-down": {
@@ -131,6 +135,18 @@ export default {
           "0%, 100%": { boxShadow: "inset 0 1px 0 oklch(0.95 0.04 100 / 0.5), 0 4px 12px oklch(0.72 0.16 80 / 0.25)" },
           "50%": { boxShadow: "inset 0 1px 0 oklch(0.95 0.04 100 / 0.8), 0 6px 16px oklch(0.72 0.16 80 / 0.35)" },
         },
+        "message-fade": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "badge-pulse": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)" },
+        },
+        "story-ring-glow": {
+          "0%, 100%": { boxShadow: "0 0 0 2px oklch(0.70 0.15 80), 0 0 8px oklch(0.70 0.15 80 / 0.3)" },
+          "50%": { boxShadow: "0 0 0 4px oklch(0.70 0.15 80 / 0.5), 0 0 12px oklch(0.70 0.15 80 / 0.5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -143,6 +159,9 @@ export default {
         "ludo-dice-roll": "ludo-dice-roll 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         "ludo-pawn-jump": "ludo-pawn-jump 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "ludo-gold-shimmer": "ludo-gold-shimmer 2s ease-in-out infinite",
+        "message-fade": "message-fade 0.3s ease-out",
+        "badge-pulse": "badge-pulse 1s ease-in-out infinite",
+        "story-ring-glow": "story-ring-glow 2s ease-in-out infinite",
       },
     },
   },

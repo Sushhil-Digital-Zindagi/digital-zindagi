@@ -27,9 +27,13 @@ import List       "mo:core/List";
 import PCTypes    "types/payment-config";
 import PCApi      "mixins/payment-config-api";
 import ASTypes    "types/admin-settings";
-
-
-
+import ChatTypes  "types/chat";
+import ChatApi    "mixins/chat-api";
+import MktTypes   "types/marketplace";
+import MktApi     "mixins/marketplace-api";
+import PremTypes  "types/premium";
+import PremApi    "mixins/premium-api";
+import Migration  "migration";
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
@@ -37,6 +41,7 @@ import ASTypes    "types/admin-settings";
 
 
 
+(with migration = Migration.run)
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -182,6 +187,62 @@ persistent actor {
   // ── Manager list state ────────────────────────────────────────────────────
   var managers = List.empty<Text>(); // List of mobile numbers granted manager role
 
+  // ── Chat domain state ─────────────────────────────────────────────────────
+  var chatMessages      = Map.empty<Nat, ChatTypes.ChatMessage>();
+  var chatConversations = Map.empty<Nat, ChatTypes.Conversation>();
+  var chatStories       = Map.empty<Nat, ChatTypes.Story>();
+  var chatProfiles      = Map.empty<Principal, ChatTypes.UserChatProfile>();
+  var chatShortcuts     = Map.empty<Nat, ChatTypes.ChatShortcut>();
+  var chatScheduled     = Map.empty<Nat, ChatTypes.ScheduledMessage>();
+  var chatVault         = Map.empty<Nat, ChatTypes.VaultItem>();
+  var chatNotes         = Map.empty<Nat, ChatTypes.Note>();
+  var chatPoints        = Map.empty<Principal, ChatTypes.RewardPoints>();
+  var chatPayments      = Map.empty<Nat, ChatTypes.LockedMessagePayment>();
+  // Admin settings stored in a List<ChatAdminSettings> of size 1 for mutability in mixins
+  let chatAdminSettingsStore : List.List<ChatTypes.ChatAdminSettings> = List.singleton<ChatTypes.ChatAdminSettings>({
+    chatEnabled          = true;
+    ghostModeEnabled     = true;
+    vanishModeEnabled    = true;
+    storiesEnabled       = true;
+    schedulingEnabled    = true;
+    autoReplyEnabled     = true;
+    voiceToTextEnabled   = true;
+    shortcutsEnabled     = true;
+    studyModeEnabled     = true;
+    rewardPointsEnabled  = true;
+    referralEnabled      = true;
+    broadcastEnabled     = true;
+    pointsPerMessage     = 1;
+    pointsPerLogin       = 10;
+    pointsPerStory       = 5;
+    pointsPerReferral    = 50;
+    openAiApiKey         = "";
+    payToUnlockEnabled   = false;
+    stripePublishableKey = "";
+    stripeSecretKey      = "";
+  });
+  var nextChatMessageId      : Nat = 0;
+  var nextChatConversationId : Nat = 0;
+  var nextChatStoryId        : Nat = 0;
+  var nextChatShortcutId     : Nat = 0;
+  var nextChatScheduledMsgId : Nat = 0;
+  var nextChatVaultItemId    : Nat = 0;
+  var nextChatNoteId         : Nat = 0;
+  var nextChatPaymentId      : Nat = 0;
+  var chatDemoDataSeeded     : Bool = false;
+
+  // ── Marketplace domain state ───────────────────────────────────────────────
+  var marketListings  = Map.empty<Nat, MktTypes.MarketListing>();
+  var marketNewsItems = Map.empty<Nat, MktTypes.LocalNewsItem>();
+  var nextMarketListingId : Nat = 1;
+  var nextMarketNewsId    : Nat = 1;
+
+  // ── Premium domain state ───────────────────────────────────────────────────
+  var premiumSubscriptions = Map.empty<Principal, PremTypes.PremiumSubscription>();
+  var premiumUpiRequests   = Map.empty<Nat, PremTypes.UpiPaymentRequest>();
+  let premiumPricesStore   : List.List<PremTypes.PremiumPrices> = List.empty<PremTypes.PremiumPrices>();
+  var nextPremiumUpiReqId  : Nat = 1;
+
   // Dynamic Custom Sections state
   var customSections = Map.empty<Nat, CustomSection>();
   var nextCustomSectionId = 1;
@@ -195,6 +256,34 @@ persistent actor {
   include MixinAuthorization(accessControlState);
 
   let approvalState = UserApproval.initState(accessControlState);
+
+  // Build the chat state bundle for ChatApi calls
+  let chatState : ChatApi.ChatState = {
+    messages      = chatMessages;
+    conversations = chatConversations;
+    stories       = chatStories;
+    shortcuts     = chatShortcuts;
+    profiles      = chatProfiles;
+    points        = chatPoints;
+    scheduled     = chatScheduled;
+    vault         = chatVault;
+    notes         = chatNotes;
+    adminSettings = chatAdminSettingsStore;
+    payments      = chatPayments;
+  };
+
+  // Build the marketplace state bundle
+  let marketState : MktApi.MarketState = {
+    listings  = marketListings;
+    newsItems = marketNewsItems;
+  };
+
+  // Build the premium state bundle
+  let premiumState : PremApi.PremiumState = {
+    subscriptions = premiumSubscriptions;
+    upiRequests   = premiumUpiRequests;
+    pricesStore   = premiumPricesStore;
+  };
 
   // Type Definitions
   type UserRole = {
@@ -2587,6 +2676,687 @@ persistent actor {
       case (?_) { true };
       case null { false };
     };
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── CHAT MODULE ───────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Chat Messages ──────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func sendMessage(
+    conversationId : Nat,
+    content        : Text,
+    messageType    : ChatTypes.MessageType,
+    mediaUrl       : ?Text,
+    replyToId      : ?Nat,
+    isVanish       : Bool,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.sendMessage(chatState, nextChatMessageId, caller, conversationId, content, messageType, mediaUrl, replyToId, isVanish);
+    nextChatMessageId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func getConversationMessages(
+    conversationId : Nat,
+    limit          : Nat,
+    before         : ?Nat,
+  ) : async [ChatTypes.ChatMessage] {
+    ChatApi.getConversationMessages(chatState, caller, conversationId, limit, before);
+  };
+
+  public shared ({ caller }) func markMessagesRead(conversationId : Nat) : async Bool {
+    ChatApi.markMessagesRead(chatState, caller, conversationId);
+  };
+
+  public shared ({ caller }) func deleteChatMessage(
+    messageId         : Nat,
+    deleteForEveryone : Bool,
+  ) : async Bool {
+    ChatApi.deleteMessage(chatState, caller, messageId, deleteForEveryone);
+  };
+
+  public shared ({ caller }) func forwardChatMessage(
+    messageId        : Nat,
+    toConversationId : Nat,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.forwardMessage(chatState, nextChatMessageId, caller, messageId, toConversationId);
+    nextChatMessageId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func reactToChatMessage(messageId : Nat, emoji : Text) : async Bool {
+    ChatApi.reactToMessage(chatState, caller, messageId, emoji);
+  };
+
+  // ── Scheduled messages ────────────────────────────────────────────────────
+
+  public shared ({ caller }) func scheduleChatMessage(
+    conversationId : Nat,
+    content        : Text,
+    scheduledAt    : Int,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.scheduleMessage(chatState, nextChatScheduledMsgId, caller, conversationId, content, scheduledAt);
+    nextChatScheduledMsgId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func getChatScheduledMessages() : async [ChatTypes.ScheduledMessage] {
+    ChatApi.getScheduledMessages(chatState, caller);
+  };
+
+  public shared ({ caller }) func cancelChatScheduledMessage(id : Nat) : async Bool {
+    ChatApi.cancelScheduledMessage(chatState, caller, id);
+  };
+
+  // ── Conversations ──────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func getOrCreateChatConversation(
+    otherUserId : Principal,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.getOrCreateConversation(chatState, nextChatConversationId, caller, otherUserId);
+    nextChatConversationId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func getMyChatConversations() : async [ChatTypes.Conversation] {
+    ChatApi.getMyConversations(chatState, caller);
+  };
+
+  public shared ({ caller }) func createChatGroup(
+    name      : Text,
+    memberIds : [Principal],
+    photoUrl  : ?Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.createGroup(chatState, nextChatConversationId, caller, name, memberIds, photoUrl);
+    nextChatConversationId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func addChatGroupMembers(
+    conversationId : Nat,
+    memberIds      : [Principal],
+  ) : async Bool {
+    ChatApi.addGroupMembers(chatState, caller, conversationId, memberIds);
+  };
+
+  public shared ({ caller }) func removeChatGroupMember(
+    conversationId : Nat,
+    memberId       : Principal,
+  ) : async Bool {
+    ChatApi.removeGroupMember(chatState, caller, conversationId, memberId);
+  };
+
+  public shared ({ caller }) func leaveChatGroup(conversationId : Nat) : async Bool {
+    ChatApi.leaveGroup(chatState, caller, conversationId);
+  };
+
+  public shared ({ caller }) func updateChatGroupInfo(
+    conversationId : Nat,
+    name           : ?Text,
+    photoUrl       : ?Text,
+  ) : async Bool {
+    ChatApi.updateGroupInfo(chatState, caller, conversationId, name, photoUrl);
+  };
+
+  // ── Stories ────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func postChatStory(
+    mediaUrl    : ?Text,
+    textContent : ?Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.postStory(chatState, nextChatStoryId, caller, mediaUrl, textContent);
+    nextChatStoryId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query func getActiveChatStories() : async [ChatTypes.Story] {
+    ChatApi.getActiveStories(chatState);
+  };
+
+  public shared ({ caller }) func viewChatStory(storyId : Nat) : async Bool {
+    ChatApi.viewStory(chatState, caller, storyId);
+  };
+
+  public shared ({ caller }) func replyToChatStory(
+    storyId : Nat,
+    message : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newMsgId, newConvId) = ChatApi.replyToStory(chatState, nextChatMessageId, nextChatConversationId, caller, storyId, message);
+    nextChatMessageId := newMsgId;
+    nextChatConversationId := newConvId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  // ── User Chat Profile ──────────────────────────────────────────────────────
+
+  public query ({ caller }) func getMyChatProfile() : async ?ChatTypes.UserChatProfile {
+    ChatApi.getChatProfile(chatState, caller);
+  };
+
+  public shared ({ caller }) func updateMyChatProfile(
+    displayName     : ?Text,
+    bio             : ?Text,
+    city            : ?Text,
+    profilePhotoUrl : ?Text,
+  ) : async Bool {
+    ChatApi.updateChatProfile(chatState, caller, displayName, bio, city, profilePhotoUrl);
+  };
+
+  public shared ({ caller }) func setChatGhostMode(enabled : Bool) : async Bool {
+    ChatApi.setGhostMode(chatState, caller, enabled);
+  };
+
+  public shared ({ caller }) func setChatStudyMode(
+    enabled       : Bool,
+    selectedChats : [Nat],
+  ) : async Bool {
+    ChatApi.setStudyMode(chatState, caller, enabled, selectedChats);
+  };
+
+  public shared ({ caller }) func setChatAutoReply(enabled : Bool, messages : [Text]) : async Bool {
+    ChatApi.setAutoReply(chatState, caller, enabled, messages);
+  };
+
+  public query func getChatUserProfile(userId : Principal) : async ?ChatTypes.UserChatProfile {
+    ChatApi.getUserChatProfile(chatState, userId);
+  };
+
+  public query func searchChatUsers(searchQuery : Text) : async [ChatTypes.UserChatProfile] {
+    ChatApi.searchChatUsers(chatState, searchQuery);
+  };
+
+  // ── Shortcuts ──────────────────────────────────────────────────────────────
+
+  public query ({ caller }) func getChatShortcuts() : async [ChatTypes.ChatShortcut] {
+    ChatApi.getShortcuts(chatState, caller);
+  };
+
+  public shared ({ caller }) func addChatPersonalShortcut(
+    trigger  : Text,
+    content  : Text,
+    category : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.addPersonalShortcut(chatState, nextChatShortcutId, caller, trigger, content, category);
+    nextChatShortcutId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func deleteChatShortcut(id : Nat) : async Bool {
+    ChatApi.deleteShortcut(chatState, caller, id, false);
+  };
+
+  public shared ({ caller }) func adminAddChatShortcut(
+    trigger  : Text,
+    content  : Text,
+    category : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let (result, newId) = ChatApi.adminAddShortcut(chatState, nextChatShortcutId, trigger, content, category);
+    nextChatShortcutId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func adminDeleteChatShortcut(id : Nat) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) { return false };
+    ChatApi.deleteShortcut(chatState, caller, id, true);
+  };
+
+  // ── Vault ──────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func addChatVaultItem(
+    mediaUrl   : Text,
+    title      : Text,
+    isViewOnce : Bool,
+    expiresAt  : ?Int,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.addVaultItem(chatState, nextChatVaultItemId, caller, mediaUrl, title, isViewOnce, expiresAt);
+    nextChatVaultItemId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func getChatVaultItems() : async [ChatTypes.VaultItem] {
+    ChatApi.getVaultItems(chatState, caller);
+  };
+
+  public shared ({ caller }) func viewChatVaultItem(id : Nat) : async ?ChatTypes.VaultItem {
+    ChatApi.viewVaultItem(chatState, caller, id);
+  };
+
+  public shared ({ caller }) func deleteChatVaultItem(id : Nat) : async Bool {
+    ChatApi.deleteVaultItem(chatState, caller, id);
+  };
+
+  // ── Notes ──────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func saveChatNote(
+    title   : Text,
+    content : Text,
+    subject : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.saveNote(chatState, nextChatNoteId, caller, title, content, subject);
+    nextChatNoteId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func getChatNotes() : async [ChatTypes.Note] {
+    ChatApi.getNotes(chatState, caller);
+  };
+
+  public shared ({ caller }) func updateChatNote(
+    id      : Nat,
+    title   : ?Text,
+    content : ?Text,
+    subject : ?Text,
+  ) : async Bool {
+    ChatApi.updateNote(chatState, caller, id, title, content, subject);
+  };
+
+  public shared ({ caller }) func deleteChatNote(id : Nat) : async Bool {
+    ChatApi.deleteNote(chatState, caller, id);
+  };
+
+  // ── Rewards & Referrals ───────────────────────────────────────────────────
+
+  public query ({ caller }) func getMyChatPoints() : async ChatTypes.RewardPoints {
+    ChatApi.getMyPoints(chatState, caller);
+  };
+
+  public shared ({ caller }) func awardChatPoints(action : Text, points : Nat) : async Bool {
+    ChatApi.awardPoints(chatState, caller, action, points);
+  };
+
+  public query func getChatPointsLeaderboard() : async [ChatTypes.LeaderboardEntry] {
+    ChatApi.getPointsLeaderboard(chatState);
+  };
+
+  public query ({ caller }) func getMyChatReferralCode() : async Text {
+    ChatApi.getMyReferralCode(chatState, caller);
+  };
+
+  public query ({ caller }) func getMyChatReferralStats() : async ChatTypes.ReferralStats {
+    ChatApi.getReferralStats(chatState, caller);
+  };
+
+  public shared ({ caller }) func processChatReferralSignup(referralCode : Text) : async Bool {
+    ChatApi.processReferralSignup(chatState, caller, referralCode);
+  };
+
+  // ── Admin Chat Controls ────────────────────────────────────────────────────
+
+  public query func getChatAdminSettings() : async ChatTypes.ChatAdminSettings {
+    ChatApi.getChatAdminSettings(chatState);
+  };
+
+  public shared ({ caller }) func updateChatAdminSettings(
+    settings : ChatTypes.ChatAdminSettings,
+  ) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) { return false };
+    ChatApi.updateChatAdminSettings(chatState, settings);
+  };
+
+  public shared ({ caller }) func adminBroadcastChatMessage(content : Text) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) { return false };
+    let (result, newId) = ChatApi.adminBroadcastMessage(chatState, nextChatMessageId, caller, content);
+    nextChatMessageId := newId;
+    result;
+  };
+
+  public query ({ caller }) func adminGetChatStats() : async ChatTypes.ChatStats {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return { totalUsers = 0; activeChats = 0; totalMessages = 0; storiesPosted = 0 };
+    };
+    ChatApi.adminGetChatStats(chatState);
+  };
+
+  public shared ({ caller }) func adminSeedChatDemoData() : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) { return false };
+    if (chatDemoDataSeeded) { return false };
+    let (result, newMsgId, newConvId, newStoryId, newSCId) = ChatApi.adminSeedDemoData(
+      chatState,
+      nextChatMessageId,
+      nextChatConversationId,
+      nextChatStoryId,
+      nextChatShortcutId,
+      chatDemoDataSeeded,
+    );
+    nextChatMessageId      := newMsgId;
+    nextChatConversationId := newConvId;
+    nextChatStoryId        := newStoryId;
+    nextChatShortcutId     := newSCId;
+    chatDemoDataSeeded     := true;
+    result;
+  };
+
+  // ── Cleanup ────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func cleanupExpiredChatStories() : async Nat {
+    ChatApi.cleanupExpiredStories(chatState);
+  };
+
+  public shared ({ caller }) func cleanupExpiredChatVaultItems() : async Nat {
+    ChatApi.cleanupExpiredVaultItems(chatState);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Key-Locker (Chat)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  public shared ({ caller }) func sendLockedMessage(
+    conversationId : Nat,
+    fileUrl        : Text,
+    lockType       : ChatTypes.LockType,
+    passwordHash   : ?Text,
+    task           : ?ChatTypes.LockedFileTask,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.sendLockedMessage(
+      chatState, nextChatMessageId, caller,
+      conversationId, fileUrl, lockType, passwordHash, task,
+    );
+    nextChatMessageId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func unlockMessage(
+    messageId : Nat,
+    attempt   : Text,
+  ) : async { #ok : (); #err : Text } {
+    ChatApi.unlockMessage(chatState, caller, messageId, attempt);
+  };
+
+  public query ({ caller }) func getLockedFileUrl(messageId : Nat) : async ?Text {
+    ChatApi.getLockedFileUrl(chatState, caller, messageId);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // AI Chat Summary
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /// Summarize last 50 messages or last 24h messages for a conversation.
+  /// Uses OpenAI via HTTP outcall — API key configured in Chat Admin Settings.
+  public shared ({ caller }) func summarizeChatMessages(
+    conversationId : Nat,
+    mode           : { #last50; #last24h },
+  ) : async { #ok : Text; #err : Text } {
+    await ChatApi.summarizeChatMessages(chatState, conversationId, mode);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Pay-to-Unlock Messages
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /// Send a pay-to-unlock message. Receivers must pay lockPrice to read content.
+  public shared ({ caller }) func sendPayToUnlockMessage(
+    conversationId : Nat,
+    content        : Text,
+    lockPrice      : Nat,
+    currency       : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.sendPayToUnlockMessage(
+      chatState, nextChatMessageId, caller, conversationId, content, lockPrice, currency,
+    );
+    nextChatMessageId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  /// Create a Stripe PaymentIntent for a locked message and return clientSecret.
+  public shared ({ caller }) func createUnlockPaymentIntent(
+    messageId : Nat,
+  ) : async { #ok : Text; #err : Text } {
+    let (result, newId) = await ChatApi.createUnlockPaymentIntent(
+      chatState, nextChatPaymentId, caller, messageId,
+    );
+    nextChatPaymentId := newId;
+    switch (result) {
+      case (#ok(secret)) { #ok(secret) };
+      case (#err(e))     { #err(e) };
+    };
+  };
+
+  /// Submit a UPI transaction reference for admin approval to unlock a message.
+  public shared ({ caller }) func confirmUpiUnlock(
+    messageId : Nat,
+    upiTxnRef : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = ChatApi.confirmUpiUnlock(
+      chatState, nextChatPaymentId, caller, messageId, upiTxnRef,
+    );
+    nextChatPaymentId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  /// Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
+  public shared ({ caller }) func verifyStripeUnlock(
+    messageId       : Nat,
+    paymentIntentId : Text,
+  ) : async { #ok; #err : Text } {
+    await ChatApi.verifyStripeUnlock(chatState, caller, messageId, paymentIntentId);
+  };
+
+  /// Return the caller's pay-to-unlock creator earnings.
+  public query ({ caller }) func getCreatorEarnings() : async ChatTypes.CreatorEarningsSummary {
+    ChatApi.getCreatorEarnings(chatState, caller);
+  };
+
+  /// Return all pending UPI unlock requests — admin only.
+  public query ({ caller }) func adminGetUpiUnlockRequests() : async [ChatTypes.LockedMessagePayment] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    ChatApi.adminGetUpiUnlockRequests(chatState);
+  };
+
+  /// Approve a UPI unlock request — admin only.
+  public shared ({ caller }) func adminApproveUpiUnlock(paymentId : Nat) : async { #ok; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    ChatApi.adminApproveUpiUnlock(chatState, paymentId);
+  };
+
+  /// Reject a UPI unlock request — admin only.
+  public shared ({ caller }) func adminRejectUpiUnlock(paymentId : Nat) : async { #ok; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    ChatApi.adminRejectUpiUnlock(chatState, paymentId);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Marketplace
+  // ══════════════════════════════════════════════════════════════════════════
+
+  public shared ({ caller }) func createListing(
+    title           : Text,
+    description     : Text,
+    price           : Nat,
+    category        : MktTypes.MarketCategory,
+    city            : Text,
+    photoUrls       : [Text],
+    whatsappContact : Text,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = MktApi.createListing(
+      marketState, nextMarketListingId, caller,
+      title, description, price, category, city, photoUrls, whatsappContact,
+    );
+    nextMarketListingId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query func getListings(
+    city     : ?Text,
+    category : ?MktTypes.MarketCategory,
+  ) : async [MktTypes.MarketListing] {
+    MktApi.getListings(marketState, city, category);
+  };
+
+  public query ({ caller }) func getMyListings() : async [MktTypes.MarketListing] {
+    MktApi.getMyListings(marketState, caller);
+  };
+
+  public shared ({ caller }) func updateListing(
+    id              : Nat,
+    title           : ?Text,
+    description     : ?Text,
+    price           : ?Nat,
+    city            : ?Text,
+    photoUrls       : ?[Text],
+    whatsappContact : ?Text,
+  ) : async { #ok : (); #err : Text } {
+    MktApi.updateListing(marketState, caller, id, title, description, price, city, photoUrls, whatsappContact);
+  };
+
+  public shared ({ caller }) func deleteListing(id : Nat) : async { #ok : (); #err : Text } {
+    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
+    MktApi.deleteListing(marketState, caller, id, isAdmin);
+  };
+
+  public shared ({ caller }) func featureListing(id : Nat) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    MktApi.featureListing(marketState, id);
+  };
+
+  public query func getNewsItems() : async [MktTypes.LocalNewsItem] {
+    MktApi.getNewsItems(marketState);
+  };
+
+  public shared ({ caller }) func adminAddNewsItem(
+    title    : Text,
+    content  : Text,
+    imageUrl : ?Text,
+  ) : async { #ok : Nat; #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let (result, newId) = MktApi.adminAddNewsItem(marketState, nextMarketNewsId, caller, title, content, imageUrl);
+    nextMarketNewsId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public shared ({ caller }) func adminDeleteNewsItem(id : Nat) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    MktApi.adminDeleteNewsItem(marketState, id);
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Premium System
+  // ══════════════════════════════════════════════════════════════════════════
+
+  public query ({ caller }) func isPremiumUser(userId : ?Principal) : async Bool {
+    let target = switch (userId) { case null { caller }; case (?u) { u } };
+    PremApi.isPremiumUser(premiumState, target);
+  };
+
+  public query ({ caller }) func getMySubscription() : async ?PremTypes.PremiumSubscription {
+    PremApi.getMySubscription(premiumState, caller);
+  };
+
+  public query func getPremiumPlans() : async PremTypes.PremiumPrices {
+    PremApi.getPremiumPrices(premiumState);
+  };
+
+  public shared ({ caller }) func activateStripePremium(
+    plan                 : PremTypes.PremiumPlan,
+    stripeSubscriptionId : Text,
+  ) : async { #ok : (); #err : Text } {
+    PremApi.activateStripePremium(premiumState, caller, plan, stripeSubscriptionId);
+  };
+
+  public shared ({ caller }) func submitUpiPremiumRequest(
+    plan      : PremTypes.PremiumPlan,
+    upiTxnRef : Text,
+    amount    : Nat,
+  ) : async { #ok : Nat; #err : Text } {
+    let (result, newId) = PremApi.submitUpiPremiumRequest(
+      premiumState, nextPremiumUpiReqId, caller, plan, upiTxnRef, amount,
+    );
+    nextPremiumUpiReqId := newId;
+    switch (result) {
+      case (#ok(id)) { #ok(id) };
+      case (#err(e)) { #err(e) };
+    };
+  };
+
+  public query ({ caller }) func adminGetUpiPremiumRequests() : async [PremTypes.UpiPaymentRequest] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    PremApi.adminGetUpiPremiumRequests(premiumState);
+  };
+
+  public shared ({ caller }) func adminApproveUpiPremium(requestId : Nat) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    PremApi.adminApproveUpiPremium(premiumState, requestId);
+  };
+
+  public shared ({ caller }) func adminRejectUpiPremium(requestId : Nat) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    PremApi.adminRejectUpiPremium(premiumState, requestId);
+  };
+
+  public shared ({ caller }) func adminSetPremiumPrices(monthly : Nat, quarterly : Nat, annual : Nat) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    PremApi.adminSetPremiumPrices(premiumState, monthly, quarterly, annual);
   };
 
 };

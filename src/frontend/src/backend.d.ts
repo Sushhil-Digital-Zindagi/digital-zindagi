@@ -19,7 +19,11 @@ export interface ServiceRate {
     description: string;
     price: bigint;
 }
-export type MobileNumber = string;
+export interface LeaderboardEntry {
+    displayName: string;
+    userId: Principal;
+    points: bigint;
+}
 export interface ContentLockerConfig {
     features: Array<LockedFeature>;
 }
@@ -41,6 +45,258 @@ export interface RechargeApiConfig {
     responseParam: string;
     apiKey: string;
     apiUrl: string;
+}
+export interface ReferralStats {
+    code: string;
+    count: bigint;
+    pointsEarned: bigint;
+    badge: string;
+}
+export interface OfferPortalConfig {
+    cpaLeadWebhookSecret: string;
+    cpagripApiKey: string;
+    adminProfitPct: bigint;
+    isEnabled: boolean;
+    userProfitPct: bigint;
+}
+export interface CreatorEarningsSummary {
+    payments: Array<LockedMessagePayment>;
+    pendingPayouts: bigint;
+    totalEarnings: bigint;
+}
+export interface ChatStats {
+    totalMessages: bigint;
+    storiesPosted: bigint;
+    activeChats: bigint;
+    totalUsers: bigint;
+}
+export interface AutoReply {
+    messages: Array<string>;
+    userId: Principal;
+    isEnabled: boolean;
+}
+export type ShortcutCreator = {
+    __kind__: "admin";
+    admin: null;
+} | {
+    __kind__: "user";
+    user: Principal;
+};
+export interface ChatMessage {
+    id: bigint;
+    lockPrice?: bigint;
+    status: MessageStatus;
+    content: string;
+    unlockedBy: Array<Principal>;
+    deletedForEveryoneAt?: bigint;
+    lockedFile?: LockedFile;
+    createdAt: bigint;
+    deletedForSenderAt?: bigint;
+    mediaUrl?: string;
+    messageType: MessageType;
+    conversationId: bigint;
+    lockCurrency?: string;
+    isVanish: boolean;
+    isLocked: boolean;
+    replyToId?: bigint;
+    reactions: Array<MessageReaction>;
+    senderId: Principal;
+    scheduledAt?: bigint;
+}
+export interface Note {
+    id: bigint;
+    title: string;
+    content: string;
+    subject: string;
+    ownerId: Principal;
+    createdAt: bigint;
+    updatedAt: bigint;
+}
+export interface JobItem {
+    id: bigint;
+    title: string;
+    applyLink: string;
+    createdAt: bigint;
+    enabled: boolean;
+    category: string;
+    department: string;
+    lastDate: string;
+    location: string;
+}
+export interface RechargeReceipt {
+    id: bigint;
+    txnId: bigint;
+    netCost: bigint;
+    userId: bigint;
+    operator: string;
+    generatedAt: bigint;
+    circle: string;
+    referenceId: string;
+    commission: bigint;
+    mobile: string;
+    amount: bigint;
+}
+export interface LockedFileTask {
+    question: string;
+    answer: string;
+}
+export interface MarketListing {
+    id: bigint;
+    title: string;
+    photoUrls: Array<string>;
+    expiresAt?: bigint;
+    city: string;
+    createdAt: bigint;
+    description: string;
+    isActive: boolean;
+    whatsappContact: string;
+    isFeatured: boolean;
+    category: MarketCategory;
+    sellerId: Principal;
+    price: bigint;
+}
+export interface UdhaarTransaction {
+    id: string;
+    status: string;
+    transactionType: string;
+    shopId: string;
+    date: string;
+    note: string;
+    createdAt: bigint;
+    customerId: string;
+    amount: number;
+}
+export interface Story {
+    id: bigint;
+    expiresAt: bigint;
+    viewerIds: Array<Principal>;
+    authorId: Principal;
+    createdAt: bigint;
+    mediaUrl?: string;
+    textContent?: string;
+}
+export interface AuditLogEntry {
+    id: string;
+    action: AuditAction;
+    note: string;
+    timestamp: bigint;
+    adminEmail: string;
+    amount?: bigint;
+    targetUserId: string;
+}
+export interface UdhaarCustomer {
+    id: string;
+    shopId: string;
+    name: string;
+    createdAt: bigint;
+    address: string;
+    mobile: string;
+}
+export interface PointsHistoryEntry {
+    at: bigint;
+    action: string;
+    points: bigint;
+}
+export interface Order {
+    id: bigint;
+    customerName: string;
+    status: string;
+    createdAt: bigint;
+    description: string;
+    orderType: string;
+    imageUrl?: string;
+    customerId: bigint;
+    providerId: bigint;
+}
+export interface OfferTransaction {
+    id: bigint;
+    status: Variant_pending_reversed_credited;
+    offerUserId: bigint;
+    createdAt: bigint;
+    description: string;
+    txType: Variant_manualCredit_referralBonus_cpalead;
+    amount: bigint;
+}
+export interface ChatAdminSettings {
+    voiceToTextEnabled: boolean;
+    storiesEnabled: boolean;
+    payToUnlockEnabled: boolean;
+    chatEnabled: boolean;
+    vanishModeEnabled: boolean;
+    referralEnabled: boolean;
+    autoReplyEnabled: boolean;
+    pointsPerMessage: bigint;
+    stripeSecretKey: string;
+    pointsPerLogin: bigint;
+    shortcutsEnabled: boolean;
+    pointsPerReferral: bigint;
+    pointsPerStory: bigint;
+    rewardPointsEnabled: boolean;
+    ghostModeEnabled: boolean;
+    stripePublishableKey: string;
+    schedulingEnabled: boolean;
+    studyModeEnabled: boolean;
+    openAiApiKey: string;
+    broadcastEnabled: boolean;
+}
+export interface Banner {
+    id: bigint;
+    title: string;
+    active: boolean;
+    linkUrl: string;
+    displayOrder: bigint;
+    imageUrl: string;
+    subtitle: string;
+}
+export interface LockedMessagePayment {
+    id: bigint;
+    status: LockedMessageStatus;
+    unlockedAt?: bigint;
+    messageId: string;
+    createdAt: bigint;
+    creatorId: Principal;
+    upiTxnRef?: string;
+    currency: string;
+    buyerId: Principal;
+    stripePaymentIntentId?: string;
+    amount: bigint;
+}
+export interface CustomSection {
+    id: bigint;
+    placement: string;
+    name: string;
+    createdAt: bigint;
+    heading: string;
+    enabled: boolean;
+    buttons: string;
+}
+export interface Conversation {
+    id: bigint;
+    lastMessageAt: bigint;
+    lastMessageId?: bigint;
+    isGroup: boolean;
+    adminIds: Array<Principal>;
+    createdAt: bigint;
+    groupPhotoUrl?: string;
+    participantIds: Array<Principal>;
+    groupName?: string;
+}
+export type MobileNumber = string;
+export interface UserProfile {
+    userId: bigint;
+    name: string;
+    role: UserRole;
+    mobile: MobileNumber;
+}
+export interface VaultItem {
+    id: bigint;
+    isViewOnce: boolean;
+    title: string;
+    expiresAt?: bigint;
+    ownerId: Principal;
+    createdAt: bigint;
+    mediaUrl: string;
+    viewedAt?: bigint;
 }
 export interface OfferWithdrawal {
     id: bigint;
@@ -66,13 +322,6 @@ export interface CustomCode {
     subtitle1: string;
     subtitle2: string;
 }
-export interface OfferPortalConfig {
-    cpaLeadWebhookSecret: string;
-    cpagripApiKey: string;
-    adminProfitPct: bigint;
-    isEnabled: boolean;
-    userProfitPct: bigint;
-}
 export interface NewsItem {
     id: bigint;
     title: string;
@@ -82,6 +331,31 @@ export interface NewsItem {
     summary: string;
     imageUrl: string;
     category: string;
+}
+export interface LocalNewsItem {
+    id: bigint;
+    title: string;
+    postedBy: Principal;
+    content: string;
+    createdAt: bigint;
+    imageUrl?: string;
+}
+export interface UserChatProfile {
+    bio?: string;
+    referralCode: string;
+    username?: string;
+    displayName: string;
+    city?: string;
+    userId: Principal;
+    createdAt: bigint;
+    referralCount: bigint;
+    ghostModeEnabled: boolean;
+    badge: Badge;
+    studyModeEnabled: boolean;
+    pointsBalance: bigint;
+    profilePhotoUrl?: string;
+    autoReply?: AutoReply;
+    studyModeSelectedChats: Array<bigint>;
 }
 export interface AdminSettingsExtended {
     pointsPerAd: bigint;
@@ -114,6 +388,15 @@ export interface ScrapRate {
     ratePerGram: number;
     itemName: string;
 }
+export interface PremiumSubscription {
+    startedAt: bigint;
+    paymentMethod: PaymentMethod;
+    expiresAt: bigint;
+    stripeSubscriptionId?: string;
+    userId: Principal;
+    plan: PremiumPlan;
+    isActive: boolean;
+}
 export interface Category {
     id: bigint;
     name: string;
@@ -127,29 +410,13 @@ export interface PaymentConfig {
     upiVpa: string;
     qrCodeUrl: string;
 }
-export interface JobItem {
+export interface ChatShortcut {
     id: bigint;
-    title: string;
-    applyLink: string;
-    createdAt: bigint;
-    enabled: boolean;
-    category: string;
-    department: string;
-    lastDate: string;
-    location: string;
-}
-export interface RechargeReceipt {
-    id: bigint;
-    txnId: bigint;
-    netCost: bigint;
-    userId: bigint;
-    operator: string;
-    generatedAt: bigint;
-    circle: string;
-    referenceId: string;
-    commission: bigint;
-    mobile: string;
-    amount: bigint;
+    isGlobal: boolean;
+    content: string;
+    trigger: string;
+    createdBy: ShortcutCreator;
+    category: ShortcutCategory;
 }
 export interface WalletTopupRequest {
     id: bigint;
@@ -180,43 +447,13 @@ export interface VideoItem {
     category: string;
     videoUrl: string;
 }
-export interface UdhaarTransaction {
-    id: string;
-    status: string;
-    transactionType: string;
-    shopId: string;
-    date: string;
-    note: string;
-    createdAt: bigint;
-    customerId: string;
-    amount: number;
-}
-export interface UdhaarCustomer {
-    id: string;
-    shopId: string;
-    name: string;
-    createdAt: bigint;
-    address: string;
-    mobile: string;
-}
-export interface Order {
+export interface UpiPaymentRequest {
     id: bigint;
-    customerName: string;
-    status: string;
+    status: Variant_pending_approved_rejected;
+    userId: Principal;
     createdAt: bigint;
-    description: string;
-    orderType: string;
-    imageUrl?: string;
-    customerId: bigint;
-    providerId: bigint;
-}
-export interface OfferTransaction {
-    id: bigint;
-    status: Variant_pending_reversed_credited;
-    offerUserId: bigint;
-    createdAt: bigint;
-    description: string;
-    txType: Variant_manualCredit_referralBonus_cpalead;
+    plan: PremiumPlan;
+    upiTxnRef: string;
     amount: bigint;
 }
 export interface LockedFeature {
@@ -232,6 +469,18 @@ export interface UserApprovalInfo {
     status: ApprovalStatus;
     principal: Principal;
 }
+export interface ScheduledMessage {
+    id: bigint;
+    status: ScheduledMessageStatus;
+    content: string;
+    conversationId: bigint;
+    senderId: Principal;
+    scheduledAt: bigint;
+}
+export interface MessageReaction {
+    userIds: Array<Principal>;
+    emoji: string;
+}
 export interface RechargeTransaction {
     id: bigint;
     status: string;
@@ -243,24 +492,6 @@ export interface RechargeTransaction {
     commission: number;
     mobile: string;
     amount: number;
-}
-export interface Banner {
-    id: bigint;
-    title: string;
-    active: boolean;
-    linkUrl: string;
-    displayOrder: bigint;
-    imageUrl: string;
-    subtitle: string;
-}
-export interface AuditLogEntry {
-    id: string;
-    action: AuditAction;
-    note: string;
-    timestamp: bigint;
-    adminEmail: string;
-    amount?: bigint;
-    targetUserId: string;
 }
 export interface OfferUser {
     id: bigint;
@@ -278,14 +509,15 @@ export interface OfferUser {
     totalEarnings: bigint;
     tier1Earnings: bigint;
 }
-export interface CustomSection {
-    id: bigint;
-    placement: string;
-    name: string;
-    createdAt: bigint;
-    heading: string;
-    enabled: boolean;
-    buttons: string;
+export interface RewardPoints {
+    userId: Principal;
+    history: Array<PointsHistoryEntry>;
+    totalPoints: bigint;
+}
+export interface PremiumPrices {
+    annual: bigint;
+    quarterly: bigint;
+    monthly: bigint;
 }
 export interface CommissionConfig {
     retailerSharePct: number;
@@ -304,18 +536,12 @@ export interface SubscriptionPricing {
     twelveMonthPrice: bigint;
     oneMonthPrice: bigint;
 }
-export interface AdminConfig {
-    email: string;
-    adminName: string;
-    upiId: string;
-    mobile: MobileNumber;
-    qrCodeBlobId: ExternalBlob;
-}
-export interface UserProfile {
-    userId: bigint;
-    name: string;
-    role: UserRole;
-    mobile: MobileNumber;
+export interface LockedFile {
+    unlockedBy: Array<Principal>;
+    task?: LockedFileTask;
+    lockType: LockType;
+    passwordHash?: string;
+    fileUrl: string;
 }
 export interface ProviderProfile {
     userId: bigint;
@@ -334,10 +560,12 @@ export interface ProviderProfile {
     planType: PlanType;
     photos: Array<string>;
 }
-export enum ApprovalStatus {
-    pending = "pending",
-    approved = "approved",
-    rejected = "rejected"
+export interface AdminConfig {
+    email: string;
+    adminName: string;
+    upiId: string;
+    mobile: MobileNumber;
+    qrCodeBlobId: ExternalBlob;
 }
 export enum AuditAction {
     SubscriptionRevoke = "SubscriptionRevoke",
@@ -349,10 +577,72 @@ export enum AuditAction {
     FeatureUnlock = "FeatureUnlock",
     FeatureLock = "FeatureLock"
 }
+export enum Badge {
+    bronze = "bronze",
+    gold = "gold",
+    none = "none",
+    diamond = "diamond",
+    silver = "silver"
+}
+export enum LockType {
+    password = "password",
+    none = "none",
+    task = "task"
+}
+export enum LockedMessageStatus {
+    pending = "pending",
+    completed = "completed",
+    failed = "failed"
+}
+export enum MarketCategory {
+    vehicles = "vehicles",
+    other = "other",
+    jobs = "jobs",
+    property = "property",
+    mobile = "mobile",
+    services = "services",
+    electronics = "electronics"
+}
+export enum MessageStatus {
+    read = "read",
+    sent = "sent",
+    delivered = "delivered"
+}
+export enum MessageType {
+    voiceText = "voiceText",
+    youtubeLink = "youtubeLink",
+    file = "file",
+    text = "text",
+    locked = "locked",
+    scheduledMessage = "scheduledMessage",
+    image = "image",
+    reply = "reply",
+    reaction = "reaction"
+}
+export enum PaymentMethod {
+    upi = "upi",
+    stripe = "stripe"
+}
 export enum PlanType {
     pending = "pending",
     premium = "premium",
     free = "free"
+}
+export enum PremiumPlan {
+    annual = "annual",
+    quarterly = "quarterly",
+    monthly = "monthly"
+}
+export enum ScheduledMessageStatus {
+    cancelled = "cancelled",
+    pending = "pending",
+    sent = "sent"
+}
+export enum ShortcutCategory {
+    custom = "custom",
+    greet = "greet",
+    business = "business",
+    formula = "formula"
 }
 export enum SubscriptionPlan {
     twelveMonths = "twelveMonths",
@@ -375,6 +665,10 @@ export enum UserRole__1 {
     user = "user",
     guest = "guest"
 }
+export enum Variant_last50_last24h {
+    last50 = "last50",
+    last24h = "last24h"
+}
 export enum Variant_manualCredit_referralBonus_cpalead {
     manualCredit = "manualCredit",
     referralBonus = "referralBonus",
@@ -382,6 +676,11 @@ export enum Variant_manualCredit_referralBonus_cpalead {
 }
 export enum Variant_paid_approved_rejected {
     paid = "paid",
+    approved = "approved",
+    rejected = "rejected"
+}
+export enum Variant_pending_approved_rejected {
+    pending = "pending",
     approved = "approved",
     rejected = "rejected"
 }
@@ -397,8 +696,30 @@ export enum Variant_pending_reversed_credited {
     credited = "credited"
 }
 export interface backendInterface {
+    activateStripePremium(plan: PremiumPlan, stripeSubscriptionId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     addBanner(title: string, subtitle: string, imageUrl: string, linkUrl: string, displayOrder: bigint): Promise<bigint>;
     addCategory(name: string, emoji: string, color: string): Promise<bigint>;
+    addChatGroupMembers(conversationId: bigint, memberIds: Array<Principal>): Promise<boolean>;
+    addChatPersonalShortcut(trigger: string, content: string, category: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    addChatVaultItem(mediaUrl: string, title: string, isViewOnce: boolean, expiresAt: bigint | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     addCustomCode(name: string, code: string, btnLabel: string, icon: string, placement: string, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<bigint>;
     addCustomSection(name: string, heading: string, placement: string, buttons: string): Promise<bigint>;
     addJob(title: string, department: string, location: string, lastDate: string, applyLink: string, category: string): Promise<bigint>;
@@ -433,6 +754,20 @@ export interface backendInterface {
         err: string;
     }>;
     addVideo(title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string): Promise<bigint>;
+    adminAddChatShortcut(trigger: string, content: string, category: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    adminAddNewsItem(title: string, content: string, imageUrl: string | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Directly add or deduct balance for any user — admin only.
      */
@@ -448,6 +783,23 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    adminApproveUpiPremium(requestId: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Approve a UPI unlock request — admin only.
+     */
+    adminApproveUpiUnlock(paymentId: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Manually assign or revoke a subscription for a user — admin only.
      */
@@ -458,6 +810,21 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    adminBroadcastChatMessage(content: string): Promise<boolean>;
+    adminDeleteChatShortcut(id: bigint): Promise<boolean>;
+    adminDeleteNewsItem(id: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    adminGetChatStats(): Promise<ChatStats>;
+    adminGetUpiPremiumRequests(): Promise<Array<UpiPaymentRequest>>;
+    /**
+     * / Return all pending UPI unlock requests — admin only.
+     */
+    adminGetUpiUnlockRequests(): Promise<Array<LockedMessagePayment>>;
     /**
      * / List all Offer Portal users — admin only.
      */
@@ -466,22 +833,96 @@ export interface backendInterface {
      * / List all pending withdrawal requests — admin only.
      */
     adminListPendingWithdrawals(): Promise<Array<OfferWithdrawal>>;
+    adminRejectUpiPremium(requestId: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Reject a UPI unlock request — admin only.
+     */
+    adminRejectUpiUnlock(paymentId: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Resolve a withdrawal request (approve/reject/paid) — admin only.
      */
     adminResolveWithdrawal(id: bigint, newStatus: Variant_paid_approved_rejected, adminNote: string | null): Promise<boolean>;
+    adminSeedChatDemoData(): Promise<boolean>;
+    adminSetPremiumPrices(monthly: bigint, quarterly: bigint, annual: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     approveProvider(userId: bigint, plan: SubscriptionPlan): Promise<void>;
     /**
      * / Approve or reject a topup request.  On approval, funds are credited — admin only.
      */
     approveTopupRequest(requestId: bigint, approve: boolean): Promise<boolean>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
+    awardChatPoints(action: string, points: bigint): Promise<boolean>;
+    cancelChatScheduledMessage(id: bigint): Promise<boolean>;
     changeAdminPin(currentPinHash: string, newPinHash: string): Promise<void>;
+    cleanupExpiredChatStories(): Promise<bigint>;
+    cleanupExpiredChatVaultItems(): Promise<bigint>;
+    /**
+     * / Submit a UPI transaction reference for admin approval to unlock a message.
+     */
+    confirmUpiUnlock(messageId: bigint, upiTxnRef: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    createChatGroup(name: string, memberIds: Array<Principal>, photoUrl: string | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    createListing(title: string, description: string, price: bigint, category: MarketCategory, city: string, photoUrls: Array<string>, whatsappContact: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Create a Stripe PaymentIntent for a locked message and return clientSecret.
+     */
+    createUnlockPaymentIntent(messageId: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     deleteBanner(bannerId: bigint): Promise<void>;
     deleteCategory(id: bigint): Promise<boolean>;
+    deleteChatMessage(messageId: bigint, deleteForEveryone: boolean): Promise<boolean>;
+    deleteChatNote(id: bigint): Promise<boolean>;
+    deleteChatShortcut(id: bigint): Promise<boolean>;
+    deleteChatVaultItem(id: bigint): Promise<boolean>;
     deleteCustomCode(id: bigint): Promise<boolean>;
     deleteCustomSection(id: bigint): Promise<boolean>;
     deleteJob(id: bigint): Promise<boolean>;
+    deleteListing(id: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     deleteNews(id: bigint): Promise<boolean>;
     deleteScrapRate(id: bigint): Promise<boolean>;
     deleteServiceRate(userId: bigint, rateName: string): Promise<void>;
@@ -507,8 +948,23 @@ export interface backendInterface {
     }>;
     deleteVideo(id: bigint): Promise<boolean>;
     editBanner(bannerId: bigint, title: string, subtitle: string, imageUrl: string, linkUrl: string, active: boolean, displayOrder: bigint): Promise<void>;
+    featureListing(id: bigint): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     forgotPassword(mobile: MobileNumber, securityAnswer: string, newPasswordHash: string): Promise<void>;
+    forwardChatMessage(messageId: bigint, toConversationId: bigint): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getActiveBanners(): Promise<Array<Banner>>;
+    getActiveChatStories(): Promise<Array<Story>>;
     getActiveProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return the most recent `limit` audit log entries — admin only.
@@ -561,6 +1017,13 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
     getCategories(): Promise<Array<Category>>;
+    getChatAdminSettings(): Promise<ChatAdminSettings>;
+    getChatNotes(): Promise<Array<Note>>;
+    getChatPointsLeaderboard(): Promise<Array<LeaderboardEntry>>;
+    getChatScheduledMessages(): Promise<Array<ScheduledMessage>>;
+    getChatShortcuts(): Promise<Array<ChatShortcut>>;
+    getChatUserProfile(userId: Principal): Promise<UserChatProfile | null>;
+    getChatVaultItems(): Promise<Array<VaultItem>>;
     /**
      * / Return Cloudinary cloud name and API key — public query.
      * / The API secret is NEVER returned; it stays server-side only.
@@ -577,6 +1040,7 @@ export interface backendInterface {
      * / Return the full content-locker configuration (all features).
      */
     getContentLockerConfig(): Promise<ContentLockerConfig>;
+    getConversationMessages(conversationId: bigint, limit: bigint, before: bigint | null): Promise<Array<ChatMessage>>;
     /**
      * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
      */
@@ -585,14 +1049,26 @@ export interface backendInterface {
         offerWallName: string;
         apiKey: string;
     }>;
+    /**
+     * / Return the caller's pay-to-unlock creator earnings.
+     */
+    getCreatorEarnings(): Promise<CreatorEarningsSummary>;
     getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
     getJobs(): Promise<Array<JobItem>>;
+    getListings(city: string | null, category: MarketCategory | null): Promise<Array<MarketListing>>;
+    getLockedFileUrl(messageId: bigint): Promise<string | null>;
     /**
      * / Get all managers — admin only.
      */
     getManagers(): Promise<Array<string>>;
+    getMyChatConversations(): Promise<Array<Conversation>>;
+    getMyChatPoints(): Promise<RewardPoints>;
+    getMyChatProfile(): Promise<UserChatProfile | null>;
+    getMyChatReferralCode(): Promise<string>;
+    getMyChatReferralStats(): Promise<ReferralStats>;
+    getMyListings(): Promise<Array<MarketListing>>;
     /**
      * / Get Offer Portal transaction history for a user.
      */
@@ -609,6 +1085,7 @@ export interface backendInterface {
      * / Get all receipts for the calling user.
      */
     getMyRechargeReceipts(): Promise<Array<RechargeReceipt>>;
+    getMySubscription(): Promise<PremiumSubscription | null>;
     /**
      * / Return all topup requests submitted by the caller.
      */
@@ -618,6 +1095,7 @@ export interface backendInterface {
      */
     getMyWalletBalance(): Promise<number>;
     getNews(): Promise<Array<NewsItem>>;
+    getNewsItems(): Promise<Array<LocalNewsItem>>;
     /**
      * / Get earnings summary for an Offer Portal user.
      */
@@ -646,6 +1124,13 @@ export interface backendInterface {
         isEnabled: boolean;
         userProfitPct: bigint;
     }>;
+    getOrCreateChatConversation(otherUserId: Principal): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getOrderById(orderId: bigint): Promise<Order | null>;
     getOrdersByStatus(userId: bigint, status: string): Promise<Array<Order>>;
     /**
@@ -657,6 +1142,7 @@ export interface backendInterface {
      * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
      */
     getPendingApprovals(): Promise<Array<ProviderProfile>>;
+    getPremiumPlans(): Promise<PremiumPrices>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
     getProviderProfile(userId: bigint): Promise<ProviderProfile | null>;
     getProvidersByCategory(category: string): Promise<Array<ProviderProfile>>;
@@ -729,6 +1215,8 @@ export interface backendInterface {
      * / Check if a given mobile number belongs to a manager — public.
      */
     isManager(mobile: string): Promise<boolean>;
+    isPremiumUser(userId: Principal | null): Promise<boolean>;
+    leaveChatGroup(conversationId: bigint): Promise<boolean>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     login(mobile: MobileNumber, passwordHash: string): Promise<User>;
     /**
@@ -743,6 +1231,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    markMessagesRead(conversationId: bigint): Promise<boolean>;
     /**
      * / Mark a transaction as paid. Caller must own the transaction.
      */
@@ -754,11 +1243,20 @@ export interface backendInterface {
         err: string;
     }>;
     placeOrder(providerId: bigint, customerName: string, description: string, orderType: string, imageUrl: string | null): Promise<bigint>;
+    postChatStory(mediaUrl: string | null, textContent: string | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    processChatReferralSignup(referralCode: string): Promise<boolean>;
     /**
      * / Process a CPALead postback: verify secret, split profit, credit earnings.
      * / Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
      */
     processCpaLeadPostback(offerUserId: bigint, grossAmount: bigint, webhookSecret: string): Promise<boolean>;
+    reactToChatMessage(messageId: bigint, emoji: string): Promise<boolean>;
     /**
      * / Refund a Failed recharge — restores netCost to user wallet — admin only.
      */
@@ -783,6 +1281,7 @@ export interface backendInterface {
         err: string;
     }>;
     rejectProvider(userId: bigint): Promise<void>;
+    removeChatGroupMember(conversationId: bigint, memberId: Principal): Promise<boolean>;
     /**
      * / Remove a locked feature by id — admin only.
      */
@@ -798,6 +1297,13 @@ export interface backendInterface {
      */
     removeManager(mobile: string): Promise<boolean>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
+    replyToChatStory(storyId: bigint, message: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     requestApproval(): Promise<void>;
     /**
      * / Submit a UPI withdrawal request from the Offer Portal.
@@ -819,8 +1325,50 @@ export interface backendInterface {
         err: string;
     }>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveChatNote(title: string, content: string, subject: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    scheduleChatMessage(conversationId: bigint, content: string, scheduledAt: bigint): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    searchChatUsers(searchQuery: string): Promise<Array<UserChatProfile>>;
     searchUsers(searchText: string): Promise<Array<User>>;
+    sendLockedMessage(conversationId: bigint, fileUrl: string, lockType: LockType, passwordHash: string | null, task: LockedFileTask | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    sendMessage(conversationId: bigint, content: string, messageType: MessageType, mediaUrl: string | null, replyToId: bigint | null, isVanish: boolean): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Send a pay-to-unlock message. Receivers must pay lockPrice to read content.
+     */
+    sendPayToUnlockMessage(conversationId: bigint, content: string, lockPrice: bigint, currency: string): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
+    setChatAutoReply(enabled: boolean, messages: Array<string>): Promise<boolean>;
+    setChatGhostMode(enabled: boolean): Promise<boolean>;
+    setChatStudyMode(enabled: boolean, selectedChats: Array<bigint>): Promise<boolean>;
     /**
      * / Create or update a locked feature — admin only.
      */
@@ -840,7 +1388,32 @@ export interface backendInterface {
      * / Enable or disable the recharge service — admin only.
      */
     setRechargeServiceEnabled(enabled: boolean): Promise<boolean>;
+    submitUpiPremiumRequest(plan: PremiumPlan, upiTxnRef: string, amount: bigint): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Summarize last 50 messages or last 24h messages for a conversation.
+     * / Uses OpenAI via HTTP outcall — API key configured in Chat Admin Settings.
+     */
+    summarizeChatMessages(conversationId: bigint, mode: Variant_last50_last24h): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     toggleCustomSection(id: bigint, enabled: boolean): Promise<boolean>;
+    unlockMessage(messageId: bigint, attempt: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateAdminConfig(newConfig: AdminConfig): Promise<void>;
     /**
      * / Replace ALL admin settings in one atomic call — admin only.
@@ -859,6 +1432,9 @@ export interface backendInterface {
         err: string;
     }>;
     updateCategory(id: bigint, name: string, emoji: string, color: string, enabled: boolean): Promise<boolean>;
+    updateChatAdminSettings(settings: ChatAdminSettings): Promise<boolean>;
+    updateChatGroupInfo(conversationId: bigint, name: string | null, photoUrl: string | null): Promise<boolean>;
+    updateChatNote(id: bigint, title: string | null, content: string | null, subject: string | null): Promise<boolean>;
     /**
      * / Update commission config — admin only.
      * / Validates: retailerPct + adminPct must equal globalPct.
@@ -877,10 +1453,18 @@ export interface backendInterface {
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
+    updateListing(id: bigint, title: string | null, description: string | null, price: bigint | null, city: string | null, photoUrls: Array<string> | null, whatsappContact: string | null): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Update only Ludo / Rewards settings — admin only.
      */
     updateLudoSettings(ludoEnabled: boolean, rewardsEnabled: boolean, pointsPerAd: bigint, redemptionRate: bigint, minWithdrawal: bigint): Promise<boolean>;
+    updateMyChatProfile(displayName: string | null, bio: string | null, city: string | null, profilePhotoUrl: string | null): Promise<boolean>;
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
@@ -945,7 +1529,19 @@ export interface backendInterface {
     uploadPaymentScreenshot(userId: bigint, blobId: string): Promise<void>;
     verifyAdminPin(pinHash: string): Promise<boolean>;
     /**
+     * / Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
+     */
+    verifyStripeUnlock(messageId: bigint, paymentIntentId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
      * / User-facing: verify a plain-text unlock key for a named feature.
      */
     verifyUnlockKey(featureName: string, userKey: string): Promise<VerifyKeyResult>;
+    viewChatStory(storyId: bigint): Promise<boolean>;
+    viewChatVaultItem(id: bigint): Promise<VaultItem | null>;
 }

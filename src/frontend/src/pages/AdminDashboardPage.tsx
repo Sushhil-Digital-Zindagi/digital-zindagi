@@ -38,6 +38,7 @@ import { ExternalBlob } from "../backend";
 import DeliveryAdminPanel from "../components/DeliveryAdminPanel";
 import EarningDashboardComponent from "../components/EarningDashboard";
 import VideoPlayer from "../components/VideoPlayer";
+import ChatAdminPanel from "../components/chat/ChatAdminPanel";
 import { hashPassword, useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
 import {
@@ -164,7 +165,8 @@ type AdminSection =
   | "providerApprovalsMgr"
   | "walletManagement"
   | "contentLocker"
-  | "paymentConfig";
+  | "paymentConfig"
+  | "chatModule";
 
 const DEFAULT_EMERALD = "#059669";
 
@@ -13731,6 +13733,12 @@ export default function AdminDashboardPage() {
       icon: <span>💳</span>,
       groupHeader: "💳 Payment Gateway",
     },
+    {
+      key: "chatModule" as AdminSection,
+      label: "💬 Chat Module",
+      icon: <MessageCircle size={18} />,
+      groupHeader: "💬 Chat System",
+    },
   ];
 
   const NAV_ITEMS = isManager
@@ -13837,6 +13845,8 @@ export default function AdminDashboardPage() {
         return <ContentLockerSection />;
       case "paymentConfig" as AdminSection:
         return <PaymentConfigSection />;
+      case "chatModule" as AdminSection:
+        return <ChatAdminPanel />;
       default:
         return <UserManagement />;
     }

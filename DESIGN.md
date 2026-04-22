@@ -1,116 +1,146 @@
-# Design Brief — Digital Zindagi + Real Human Game Module + Ludo Premium
+# Design Brief — Digital Zindagi: Chat Module + Gaming Ecosystem
 
 ## Direction
-Brutalist cinematic post-apocalyptic action game integrated into emerald/gold branded PWA. Dark, gritty, high-contrast aesthetic. Game arena: chaos (burning wrecks, skeletons, fire). Game HUD: surgical precision (sharp-corner UI, gold/emerald chrome, bone-white critical text). **Ludo Module**: Luxury gaming UI inspired by Ludo King. Premium, sophisticated board with crystal glass finish, soft gradients, royal gold frame, and realistic 3D token effects. Portrait orientation only.
+Premium super-app UI blending professional messaging (WhatsApp-adjacent but sophisticated) with gaming aesthetics. Chat prioritizes clarity and speed; gaming modules emphasize cinematic drama (Ludo luxury, action game intensity). Emerald green heritage color anchors professionalism; gold accents signal premium features and rewards. Dark/light mode supports all-day usage. **No Caffeine branding anywhere.**
 
 ## Tone
-Theatrical intensity for action game. **Ludo**: Elegant restraint. Zero UI fluff. Environmental storytelling through visual horror (ruins, fire, mortality) balanced by sleek tactical HUD. Brand colors weaponized, not softened: emerald as military/tactical, gold as premium/authority. **Ludo**: Deep emerald + polished gold. Crystal clarity. Professional gaming experience, not prototype.
+Chat: fast, clean, conversational, accessible. Gaming: theatrical, immersive, reward-focused. Unifies under one emerald/gold brand identity — "Digital Zindagi."
 
 ## Differentiation
-Chaos environment + surgical UI = player feels both overwhelmed and in control. Full-bleed homepage hero with massive cinematic background positions game as flagship attraction. Bone-white text + gold highlights cut through dark UI for clarity. **Ludo**: Premium board finish mimics Ludo King. Glossy 3D dice, realistic pawn shadows, smooth animations, royal center frame. Every surface has depth—gradients, layered shadows, glass effects.
+Chat UI adapts WhatsApp's trusted patterns but embeds emerging social features (Stories, Ghost Mode, Vanish Messages, Referral Badges). Gaming UI splits between brutalist action (Real Human Game) and luxury leisure (Ludo). All modules share the same color system and typography so switching between chat, games, and marketplace feels cohesive. Golden accents reserve for earned achievements (referral badges, premium features, active stories).
 
-## Color Palette (OKLCH)
+## Color Palette (OKLCH) — Unified System
 
 | Role | OKLCH | Purpose |
 |---|---|---|
-| Primary | 0.35 0.11 160 | Deep emerald, tactical, heritage |
-| Accent (Game Gold) | 0.70 0.15 80 | CTA buttons, critical UI, premium feel |
-| Fire/Warning | 0.65 0.22 50 | Environment fire, danger states, intensity |
-| Dark Shadow | 0.05 0.01 0 | HUD backgrounds, near-black for clarity |
-| Bone White | 0.97 0.01 100 | Critical text, health bars, stark readability |
-| **Ludo Board Light** | **0.98 0.02 90** | **Board background gradient base** |
-| **Ludo Board Dark** | **0.92 0.03 80** | **Board gradient shadow, depth** |
-| **Ludo Gold Primary** | **0.72 0.16 80** | **Frame, buttons, branding** |
-| **Ludo Token Emerald** | **0.32 0.1 162** | **Home zone, player accent** |
-| **Ludo Token Sapphire** | **0.35 0.12 285** | **Player 2 token color** |
-| **Ludo Token Coral** | **0.48 0.15 20** | **Player 3 token color** |
-| **Ludo Token Amber** | **0.58 0.14 68** | **Player 4 token color** |
+| **Chat Sender Bubble** | **0.35 0.11 160** | Deep emerald, continuity with brand |
+| **Chat Receiver Bubble (Light)** | **0.96 0.005 150** | Near-white, soft contrast |
+| **Chat Receiver Bubble (Dark)** | **0.18 0.01 150** | Dark gray in dark mode |
+| **Chat Timestamp** | **0.52 0.02 150** | Muted gray-green |
+| **Chat Unread Badge** | **0.35 0.11 160** | Emerald, matches sender bubble |
+| **Story Ring Gold** | **0.70 0.15 80** | Premium accent, active indicator |
+| **Ghost Mode Indicator** | **0.52 0.02 150** | Soft muted (privacy mode) |
+| **Vanish Timer** | **0.65 0.22 50** | Warm orange-red for urgency |
+| **Voice Mic (Active)** | **0.70 0.15 80** | Gold, premium voice feature |
+| **Badge: Gold** | **0.72 0.16 80** | Top referrers, premium feature |
+| **Badge: Silver** | **0.85 0.03 100** | Mid-tier achievers |
+| **Badge: Bronze** | **0.65 0.12 50** | Warm bronze for bronze tier |
+| **Vault Dark** | **0.08 0.01 0** | Near-black premium vault lock |
+| **Vault Gold** | **0.72 0.16 80** | Gold frame on vault UI |
+| **@Mention Highlight** | **0.85 0.15 155** | Soft emerald highlight for tags |
 
 ## Typography
 
 | Tier | Font | Use Case |
 |---|---|---|
-| Display | Figtree 700–900 | Game HUD labels, homepage hero CTA, Ludo title |
-| Body | PlusJakartaSans 400–600 | Game UI text, score/status, info panels, Ludo turn indicators |
-| Mono | System mono | Debug/admin only |
+| Display | Figtree 700–900 | Chat headers, story names, badge labels |
+| Body | PlusJakartaSans 400–600 | Message text, timestamps, user info, UI labels |
+| Mono | System | Admin debug only |
 
 ## Elevation & Depth
-HUD panels: sharp 1px borders (`game-hud-bg` = near-black bg + gold border), no soft shadows. Fire elements: glow effects (`box-shadow: 0 0 20px oklch(0.65 0.22 50 / 0.4)`). Hero section: layered cinematic background with gradient overlay. **Ludo**: Layered shadows—outer (depth), inset (glass effect), subtle highlights. Board: soft cream-to-warm-gold gradients (135°). Dice: radial sphere gradient. Tokens: realistic drop shadows (6px blur). All surfaces polished, no flat colors.
+Chat bubbles: 2px blur shadow, subtle depth. Story rings: gold gradient stroke (3px) with subtle outer glow. Badges: radial gradient overlays on avatars. Ghost mode icon: semi-transparent overlay. Vanish timer: animated pulsing countdown. Vault: near-black bg with gold 1px border, PIN pad glass effect. All surfaces smooth, no flat colors.
 
 ## Structural Zones
 
 | Zone | Treatment |
 |---|---|
-| Header | Emerald gradient, logo + install button, no game chrome |
-| Game Arena Section (Homepage) | Full-width cinematic background, centered large "PLAY REAL HUMAN" gold CTA button, 240px min-height |
-| Game HUD (In-Game) | Near-black semi-transparent panels with 1px gold borders, Figtree labels, bone-white numbers |
-| **Ludo Header** | **Emerald gradient bar with gold Digital Zindagi logo, turn player info** |
-| **Ludo Board** | **Crystal glass finish, rounded corners (20px), soft gradients, centered royal gold frame with profile photo** |
-| **Ludo Dice** | **Glossy 3D effect, rounded 12px, premium shadows, smooth 0.8s roll animation** |
-| **Ludo Token Zones** | **Radial gradient spheres per player color, realistic shadows, smooth jump animations (0.6s)** |
-| Footer | Emerald gradient, consistent with header, AdMob banner space |
+| **Chat Header** | Emerald gradient bar, user profile + ghost mode toggle, active story indicator |
+| **Chat Bubble (Sender)** | Emerald bg, white text, right-aligned, tail pointer, 18px radius (sharp corner on tail) |
+| **Chat Bubble (Receiver)** | Light gray bg (light mode) / dark gray (dark mode), dark text, left-aligned, tail pointer |
+| **Story Ring** | 3px gold gradient border on circular avatar, subtle glow on active stories |
+| **Unread Badge** | Circular emerald badge (20x20px) with white count, positioned top-right on chat row |
+| **Bottom Navigation** | 5 items (Home, Chats, Stories, Market, Profile), emerald active indicator, mobile-first |
+| **Message List Row** | Avatar + name, last message preview (truncated), timestamp right, unread badge if needed |
+| **Ghost Mode Indicator** | Small ghost icon in header (semi-transparent), shows privacy status |
+| **Vanish Timer** | Countdown in message bubble corner, pulsing red timer, auto-fade after 10s |
+| **Referral Badges** | Bronze/Silver/Gold overlays on profile avatar, layered radial gradients |
+| **Media Vault** | Dark premium folder UI, gold lock icon, PIN pad with numbers, glass effect |
 
 ## Spacing & Rhythm
-Game HUD: compact (8px padding, 4px gaps) for readability at small scales. Homepage hero: generous (32px horizontal gutters, 64px vertical breathing room). Card radius: homepage 12px (`rounded-lg`), game UI 0–2px (sharp, tactical). **Ludo**: Balanced spacing around board (32px gutters), dice area above board (16px gap), token zones 20px radius corners.
+Chat: compact (12px padding on bubbles, 8px gaps between messages). Message list: 16px row height, 12px horizontal gutters. Story rings: 56px diameter on mobile, 4px gap within avatar circle. Bottom nav: 56px height, 44x44px tap targets. Badges: 24px diameter, positioned top-right of avatar with -8px offset. Vault: centered modal, 40px padding, PIN pad 64x64px buttons.
 
 ## Component Patterns
-- **CTA Buttons** (Game): `.game-cta-gold` — gradient gold, box-shadow glow, border accent, hover elevation
-- **HUD Panels**: `.game-hud-bg` — near-black bg + gold 1px border, high-contrast text
-- **Fire Elements**: `.game-fire-glow` — orange/red gradient with inset highlight + outer glow shadow
-- **Text Hierarchy**: Figtree 700 for labels, bone-white, all-caps for urgency; PlusJakartaSans 400 for secondary
-- **Ludo Board**: `.ludo-board-premium` — soft gradient, inset + outer shadows, glass border
-- **Ludo Dice**: `.ludo-dice-premium` — radial sphere, multi-layered shadows, 0.8s roll animation
-- **Ludo Tokens**: `.ludo-token-[color]` — radial gradients per player, 6px drop shadows, arc jump animation
-- **Ludo Gold Frame**: `.ludo-gold-frame` — gradient frame, subtle shimmer animation (2s), profile photo center
+- **Chat Bubble (Sender)**: `.chat-bubble-sender` — emerald bg, white text, tail on bottom-left
+- **Chat Bubble (Receiver)**: `.chat-bubble-receiver` — light gray bg, dark text, tail on bottom-right, adapts in dark mode
+- **Unread Badge**: `.chat-unread-badge` — emerald circle, white count, shadow emphasis
+- **Story Ring**: `.chat-story-ring` — gold gradient 3px border, 50% border-radius, animate with `.animate-story-ring-glow`
+- **Ghost Mode**: `.chat-ghost-indicator` — muted color, 70% opacity, ghost icon SVG
+- **Vanish Timer**: `.chat-vanish-timer` — red/orange text, pulsing animation (1s loop)
+- **Voice Mic**: `.chat-voice-mic` — gold color, animate with `.animate-glow-pulse` (2.5s)
+- **Mention Highlight**: `.chat-mention-highlight` — soft emerald bg (15% opacity), bold text
+- **Referral Badges** (Gold/Silver/Bronze): `.chat-badge-{gold|silver|bronze}` — radial gradient, positioned absolute on avatar corner
 
 ## Animations & Motion
-Game: sharp cuts, no ease-out on impacts. Ludo: smooth, fluid, premium feel.
 
 | Animation | Duration | Easing | Purpose |
 |---|---|---|---|
-| Dice Roll | 0.8s | cubic-bezier(0.25, 0.46, 0.45, 0.94) | Realistic multi-axis tumble |
-| Pawn Jump | 0.6s | cubic-bezier(0.34, 1.56, 0.64, 1) | Arc landing, elastic bounce |
-| Gold Shimmer | 2s | ease-in-out infinite | Frame subtle glow pulse |
+| Message Fade | 0.3s | ease-out | New message appearance |
+| Badge Pulse | 1s | ease-in-out infinite | Referral badge attention |
+| Story Ring Glow | 2s | ease-in-out infinite | Active story indicator pulse |
+| Vanish Timer | 0.5s | pulse infinite | Countdown urgency (message auto-delete) |
+| Voice Mic Glow | 2.5s | ease-in-out infinite | Recording indicator (reuses `glow-pulse`) |
+| Unread Bounce | 0.6s | bounce | New message arrives (optional, polish) |
 
 ## Responsive Behavior
-Game: full viewport minus header/footer. Ludo: **Portrait-only orientation enforced** (mobile gaming standard). Board scales to fill safe area proportionally. Dice & tokens maintain 1:1 aspect, scale with board. Touch targets minimum 44x44px (accessibility). No horizontal scroll. Viewport lock active.
+Mobile-first: 360px minimum width. Bottom navigation sticky at viewport base. Chat bubbles scale to content, max 85% viewport width. Story rings maintain 1:1 aspect ratio, scale responsively. Avatars 40x40px min (chat row), 56x56px (story/profile). Touch targets 44x44px minimum. Dark/light mode toggle in settings, persists in session. No horizontal scroll. Orientation: primarily portrait, supports landscape with UI reflow.
 
 ## Anti-Patterns Avoided
-- No flat colors — all surfaces have gradients or layered shadows
-- No hard angles on tokens or dice — min 8px border-radius
-- No prototype look — every element polished with depth cues
-- No heavy shadows — professional restraint over cartoonish effects
-- No portrait orientation errors — landscape lock prevented for Ludo gaming UX
+- No flat colors — all chat bubbles and badges use gradients or layered shadows
+- No bold shadows on bubbles — restraint preserves readability
+- No emoji-heavy UI — emerald/gold/white palette remains sophisticated
+- No prototype-looking vault lock — premium glass effect with pin pad
+- No missing dark mode support — all tokens adapt for night mode
+- No hard-coded hex colors — all values use CSS custom properties
 
-## Key Design Tokens Used (Ludo)
-- `--ludo-board-light`, `--ludo-board-dark` → gradient base
-- `--ludo-gold-primary`, `--ludo-gold-light` → branding & frames
-- `--ludo-token-shadow` → realistic pawn depth
-- `--ludo-emerald-accent`, `--ludo-sapphire-token`, `--ludo-coral-token`, `--ludo-amber-token` → player identities
-- Utility classes: `.ludo-board-premium`, `.ludo-dice-premium`, `.ludo-token-emerald/sapphire/coral/amber`, `.ludo-gold-frame`
-- Animations: `.animate-ludo-dice-roll`, `.animate-ludo-pawn-jump`, `.animate-ludo-gold-shimmer`
-- Box shadows: `shadow-ludo-board`, `shadow-ludo-dice`, `shadow-ludo-token`, `shadow-ludo-gold`
+## Key Design Tokens Used (Chat Module)
+
+**CSS Custom Properties:**
+- `--chat-bubble-sender`, `--chat-bubble-receiver`, `--chat-text-sender`, `--chat-text-receiver`
+- `--chat-story-ring-gold`, `--chat-timestamp`, `--chat-unread-badge`
+- `--chat-ghost-mode`, `--chat-vanish-timer`, `--chat-voice-mic`
+- `--chat-badge-gold`, `--chat-badge-silver`, `--chat-badge-bronze`
+- `--chat-vault-dark`, `--chat-vault-gold`, `--chat-mention-highlight`
+
+**Utility Classes:**
+- `.chat-bubble-sender`, `.chat-bubble-receiver` — message bubble styling
+- `.chat-story-ring` — active story avatar ring
+- `.chat-unread-badge` — notification count circle
+- `.chat-ghost-indicator` — privacy mode icon
+- `.chat-vanish-timer` — pulsing countdown
+- `.chat-voice-mic` — gold recording indicator
+- `.chat-badge-{gold|silver|bronze}` — referral tier badges
+- `.chat-vault-dark` — premium vault container
+- `.chat-mention-highlight` — @mention text styling
+
+**Animations:**
+- `.animate-message-fade` — message list entry (0.3s)
+- `.animate-badge-pulse` — badge arrival (1s infinite)
+- `.animate-story-ring-glow` — active story glow (2s infinite)
+- `.animate-glow-pulse` — voice mic (2.5s, reused from ludo)
+
+**Box Shadows:**
+- `shadow-chat-bubble-sender` — emerald bubble depth
+- `shadow-chat-bubble-receiver` — receiver bubble depth
+- `shadow-chat-unread` — badge emphasis
+- `shadow-chat-story-ring` — story ring halo
 
 ## Implementation Notes
-- All colors use OKLCH (no hex/rgb mixins)
-- Animations defined in tailwind.config.js keyframes, consumed via Tailwind utility classes
-- Box shadows in tailwind config as `ludo-board`, `ludo-dice`, `ludo-token`, `ludo-gold`
-- Portrait orientation lock: CSS @media (prefers-portrait) + JS window.matchMedia listener
-- No Three.js — pure CSS + Canvas 2D for game logic (performance optimized for mobile)
-- Ludo board: 15x15 grid, cells 40-50px on mobile, responsive scaling
-- Tokens: 28-32px diameter on mobile, scale proportionally
-- Dice: 60x60px standard, CSS transforms for roll animation
-
-## Motion
-- `glow-pulse`: 2.5s infinite, gold accent glow on interactive game elements (buttons, collectibles)
-- `fire-flicker`: 0.15s infinite, simulates fire intensity in environment elements
-- `fade-in`: 0.4s ease-out, HUD panel reveal on game start
+- OKLCH only — no hex/rgb mixing
+- All chat bubbles use consistent tail styling (border-radius manipulation or SVG)
+- Story rings: CSS `border-image` gradient or SVG stroke (recommended: SVG for smoother gradient)
+- Badges: positioned `absolute` on avatar corner with transform-origin
+- Vault: modal overlay, PIN pad buttons 64x64px, glass effect via `backdrop-filter: blur(10px)` + semi-transparent bg
+- Message polling: 3–5 second refresh for real-time feel (native websockets not available on platform)
+- Voice-to-text: Web Speech API for Hindi/Hinglish support
+- No video upload — video share via YouTube link only
+- File share: up to 20MB via object-storage extension, Key-Locker optional feature
 
 ## Constraints
-- No soft shadows in game UI (clarity over softness)
-- Bone-white reserved for critical info (health, score, CTA text) — avoid for secondary info
-- Gold accent max 20% of UI area — reserve for focus/CTAs
-- Hero section image must be high-quality cinematic (generated preview locked in)
+- Emerald primary (`0.35 0.11 160`) — unchanged from app identity
+- Gold accent reserved for premium features (stories, badges, referral, voice) — max 15% UI area
+- Chat bubbles: no transparency on bubble bg (solid color for readability)
+- Dark mode: all text must maintain WCAG AA contrast (4.5:1 ratio)
+- Portrait orientation prioritized for mobile chat UX
 
 ## Signature Detail
-**"A burning empire rises from ruins."** The game's visual identity is defined by the contrast: an utterly chaotic, burning, skeletal environment rendered in vivid fire colors, anchored by a surgical, high-contrast HUD in emerald/gold/white. This tension (destruction + control) makes the game feel both intense and playable. No gradient bloat, no neon overload — precision theatrical lighting.
+**"Emerald trust, gold achievement."** Chat UI earns user trust through clarity and speed (clean bubbles, clear timestamps, obvious read status). Gaming and social features (stories, badges, referral) celebrate achievement with gold accents, creating a reward loop that makes the app feel progressive. The combination of professional messaging + playful social + premium gaming makes Digital Zindagi feel like a super-app, not a toolkit.

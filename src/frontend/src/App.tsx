@@ -16,6 +16,9 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminPinPage from "./pages/AdminPinPage";
 import AgeCalculatorPage from "./pages/AgeCalculatorPage";
 import CategoryPage from "./pages/CategoryPage";
+import ChatConversationPage from "./pages/ChatConversationPage";
+import ChatPage from "./pages/ChatPage";
+import ChatProfilePage from "./pages/ChatProfilePage";
 import ChoosePlanPage from "./pages/ChoosePlanPage";
 import DeliveryAppPage from "./pages/DeliveryAppPage";
 import DeliveryOrderPage from "./pages/DeliveryOrderPage";
@@ -28,11 +31,13 @@ import JobsPage from "./pages/JobsPage";
 import LoginPage from "./pages/LoginPage";
 import ManagerDashboardPage from "./pages/ManagerDashboardPage";
 import ManagerLoginPage from "./pages/ManagerLoginPage";
+import MarketplacePage from "./pages/MarketplacePage";
 import MobileRechargePage from "./pages/MobileRechargePage";
 import NewsPage from "./pages/NewsPage";
 import OfferPortalPage from "./pages/OfferPortalPage";
 import OrdersPage from "./pages/OrdersPage";
 import PercentageCalculatorPage from "./pages/PercentageCalculatorPage";
+import PremiumPage from "./pages/PremiumPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
 import ProviderProfilePage from "./pages/ProviderProfilePage";
@@ -41,6 +46,7 @@ import RewardsWalletPage from "./pages/RewardsWalletPage";
 import ScrapCalculatorPage from "./pages/ScrapCalculatorPage";
 import SearchPage from "./pages/SearchPage";
 import SignupPage from "./pages/SignupPage";
+import StoriesPage from "./pages/StoriesPage";
 import TermsPage from "./pages/TermsPage";
 import UdhaarBookPage from "./pages/UdhaarBookPage";
 import WalletTransactionsPage from "./pages/WalletTransactionsPage";
@@ -115,6 +121,16 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/game" element={<GameComingSoonPage />} />
+        {/* Chat Module — Option 3 in sidebar */}
+        <Route path="/chat" element={<ChatPage />} />
+        <Route
+          path="/chat/:conversationId"
+          element={<ChatConversationPage />}
+        />
+        <Route path="/chat/profile" element={<ChatProfilePage />} />
+        <Route path="/chat/market" element={<MarketplacePage />} />
+        <Route path="/chat/premium" element={<PremiumPage />} />
+        <Route path="/stories" element={<StoriesPage />} />
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/provider/:userId" element={<ProviderProfilePage />} />
         <Route path="/privacy" element={<PrivacyPage />} />

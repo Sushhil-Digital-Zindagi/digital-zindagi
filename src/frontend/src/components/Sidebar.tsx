@@ -5,6 +5,7 @@ import {
   Home,
   LogIn,
   LogOut,
+  MessageCircle,
   Settings,
   Share2,
   ShoppingBag,
@@ -42,6 +43,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     );
   });
 
+  // Chat visibility — controlled by Admin toggle (dz_chat_enabled), default true
+  const [showChat, setShowChat] = useState<boolean>(() => {
+    const chatEnabled = localStorage.getItem("dz_chat_enabled");
+    return chatEnabled === null || chatEnabled === "true";
+  });
+
   useEffect(() => {
     const syncVisibility = () => {
       const gameVal = localStorage.getItem("dz_game_visible");
@@ -49,6 +56,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setShowGame(
         (gameVal === null || gameVal === "true") && ludoVal !== "false",
       );
+      const chatVal = localStorage.getItem("dz_chat_enabled");
+      setShowChat(chatVal === null || chatVal === "true");
     };
 
     // Listen to real-time broadcast from Admin Panel
@@ -109,6 +118,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     { to: "/", label: t("home"), icon: <Home size={18} /> },
     ...(showGame
       ? [{ to: "/game", label: "🎮 Game", icon: <Gamepad2 size={18} /> }]
+      : []),
+    // Chat — Option 3 in sidebar (after Home, after Game)
+    ...(showChat
+      ? [{ to: "/chat", label: "💬 Chat", icon: <MessageCircle size={18} /> }]
       : []),
     ...(user
       ? [

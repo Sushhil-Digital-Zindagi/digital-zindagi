@@ -19,6 +19,11 @@ export const _ImmutableObjectStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const PremiumPlan = IDL.Variant({
+  'annual' : IDL.Null,
+  'quarterly' : IDL.Null,
+  'monthly' : IDL.Null,
+});
 export const ServiceRate = IDL.Record({
   'name' : IDL.Text,
   'description' : IDL.Text,
@@ -42,6 +47,43 @@ export const UdhaarTransaction = IDL.Record({
   'createdAt' : IDL.Int,
   'customerId' : IDL.Text,
   'amount' : IDL.Float64,
+});
+export const ChatStats = IDL.Record({
+  'totalMessages' : IDL.Nat,
+  'storiesPosted' : IDL.Nat,
+  'activeChats' : IDL.Nat,
+  'totalUsers' : IDL.Nat,
+});
+export const UpiPaymentRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  }),
+  'userId' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'plan' : PremiumPlan,
+  'upiTxnRef' : IDL.Text,
+  'amount' : IDL.Nat,
+});
+export const LockedMessageStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+  'failed' : IDL.Null,
+});
+export const LockedMessagePayment = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : LockedMessageStatus,
+  'unlockedAt' : IDL.Opt(IDL.Int),
+  'messageId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'creatorId' : IDL.Principal,
+  'upiTxnRef' : IDL.Opt(IDL.Text),
+  'currency' : IDL.Text,
+  'buyerId' : IDL.Principal,
+  'stripePaymentIntentId' : IDL.Opt(IDL.Text),
+  'amount' : IDL.Nat,
 });
 export const OfferUser = IDL.Record({
   'id' : IDL.Nat,
@@ -84,6 +126,15 @@ export const UserRole__1 = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const MarketCategory = IDL.Variant({
+  'vehicles' : IDL.Null,
+  'other' : IDL.Null,
+  'jobs' : IDL.Null,
+  'property' : IDL.Null,
+  'mobile' : IDL.Null,
+  'services' : IDL.Null,
+  'electronics' : IDL.Null,
+});
 export const MobileNumber = IDL.Text;
 export const Banner = IDL.Record({
   'id' : IDL.Nat,
@@ -93,6 +144,15 @@ export const Banner = IDL.Record({
   'displayOrder' : IDL.Nat,
   'imageUrl' : IDL.Text,
   'subtitle' : IDL.Text,
+});
+export const Story = IDL.Record({
+  'id' : IDL.Nat,
+  'expiresAt' : IDL.Int,
+  'viewerIds' : IDL.Vec(IDL.Principal),
+  'authorId' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'mediaUrl' : IDL.Opt(IDL.Text),
+  'textContent' : IDL.Opt(IDL.Text),
 });
 export const ApprovalStatus = IDL.Variant({
   'pending' : IDL.Null,
@@ -227,6 +287,112 @@ export const Category = IDL.Record({
   'emoji' : IDL.Text,
   'enabled' : IDL.Bool,
 });
+export const ChatAdminSettings = IDL.Record({
+  'voiceToTextEnabled' : IDL.Bool,
+  'storiesEnabled' : IDL.Bool,
+  'payToUnlockEnabled' : IDL.Bool,
+  'chatEnabled' : IDL.Bool,
+  'vanishModeEnabled' : IDL.Bool,
+  'referralEnabled' : IDL.Bool,
+  'autoReplyEnabled' : IDL.Bool,
+  'pointsPerMessage' : IDL.Nat,
+  'stripeSecretKey' : IDL.Text,
+  'pointsPerLogin' : IDL.Nat,
+  'shortcutsEnabled' : IDL.Bool,
+  'pointsPerReferral' : IDL.Nat,
+  'pointsPerStory' : IDL.Nat,
+  'rewardPointsEnabled' : IDL.Bool,
+  'ghostModeEnabled' : IDL.Bool,
+  'stripePublishableKey' : IDL.Text,
+  'schedulingEnabled' : IDL.Bool,
+  'studyModeEnabled' : IDL.Bool,
+  'openAiApiKey' : IDL.Text,
+  'broadcastEnabled' : IDL.Bool,
+});
+export const Note = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'content' : IDL.Text,
+  'subject' : IDL.Text,
+  'ownerId' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'updatedAt' : IDL.Int,
+});
+export const LeaderboardEntry = IDL.Record({
+  'displayName' : IDL.Text,
+  'userId' : IDL.Principal,
+  'points' : IDL.Nat,
+});
+export const ScheduledMessageStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
+  'pending' : IDL.Null,
+  'sent' : IDL.Null,
+});
+export const ScheduledMessage = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ScheduledMessageStatus,
+  'content' : IDL.Text,
+  'conversationId' : IDL.Nat,
+  'senderId' : IDL.Principal,
+  'scheduledAt' : IDL.Int,
+});
+export const ShortcutCreator = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Principal,
+});
+export const ShortcutCategory = IDL.Variant({
+  'custom' : IDL.Null,
+  'greet' : IDL.Null,
+  'business' : IDL.Null,
+  'formula' : IDL.Null,
+});
+export const ChatShortcut = IDL.Record({
+  'id' : IDL.Nat,
+  'isGlobal' : IDL.Bool,
+  'content' : IDL.Text,
+  'trigger' : IDL.Text,
+  'createdBy' : ShortcutCreator,
+  'category' : ShortcutCategory,
+});
+export const Badge = IDL.Variant({
+  'bronze' : IDL.Null,
+  'gold' : IDL.Null,
+  'none' : IDL.Null,
+  'diamond' : IDL.Null,
+  'silver' : IDL.Null,
+});
+export const AutoReply = IDL.Record({
+  'messages' : IDL.Vec(IDL.Text),
+  'userId' : IDL.Principal,
+  'isEnabled' : IDL.Bool,
+});
+export const UserChatProfile = IDL.Record({
+  'bio' : IDL.Opt(IDL.Text),
+  'referralCode' : IDL.Text,
+  'username' : IDL.Opt(IDL.Text),
+  'displayName' : IDL.Text,
+  'city' : IDL.Opt(IDL.Text),
+  'userId' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'referralCount' : IDL.Nat,
+  'ghostModeEnabled' : IDL.Bool,
+  'badge' : Badge,
+  'studyModeEnabled' : IDL.Bool,
+  'pointsBalance' : IDL.Nat,
+  'profilePhotoUrl' : IDL.Opt(IDL.Text),
+  'autoReply' : IDL.Opt(AutoReply),
+  'studyModeSelectedChats' : IDL.Vec(IDL.Nat),
+});
+export const VaultItem = IDL.Record({
+  'id' : IDL.Nat,
+  'isViewOnce' : IDL.Bool,
+  'title' : IDL.Text,
+  'expiresAt' : IDL.Opt(IDL.Int),
+  'ownerId' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'mediaUrl' : IDL.Text,
+  'viewedAt' : IDL.Opt(IDL.Int),
+});
 export const CommissionConfig = IDL.Record({
   'retailerSharePct' : IDL.Float64,
   'adminSharePct' : IDL.Float64,
@@ -243,6 +409,68 @@ export const LockedFeature = IDL.Record({
 });
 export const ContentLockerConfig = IDL.Record({
   'features' : IDL.Vec(LockedFeature),
+});
+export const MessageStatus = IDL.Variant({
+  'read' : IDL.Null,
+  'sent' : IDL.Null,
+  'delivered' : IDL.Null,
+});
+export const LockedFileTask = IDL.Record({
+  'question' : IDL.Text,
+  'answer' : IDL.Text,
+});
+export const LockType = IDL.Variant({
+  'password' : IDL.Null,
+  'none' : IDL.Null,
+  'task' : IDL.Null,
+});
+export const LockedFile = IDL.Record({
+  'unlockedBy' : IDL.Vec(IDL.Principal),
+  'task' : IDL.Opt(LockedFileTask),
+  'lockType' : LockType,
+  'passwordHash' : IDL.Opt(IDL.Text),
+  'fileUrl' : IDL.Text,
+});
+export const MessageType = IDL.Variant({
+  'voiceText' : IDL.Null,
+  'youtubeLink' : IDL.Null,
+  'file' : IDL.Null,
+  'text' : IDL.Null,
+  'locked' : IDL.Null,
+  'scheduledMessage' : IDL.Null,
+  'image' : IDL.Null,
+  'reply' : IDL.Null,
+  'reaction' : IDL.Null,
+});
+export const MessageReaction = IDL.Record({
+  'userIds' : IDL.Vec(IDL.Principal),
+  'emoji' : IDL.Text,
+});
+export const ChatMessage = IDL.Record({
+  'id' : IDL.Nat,
+  'lockPrice' : IDL.Opt(IDL.Nat),
+  'status' : MessageStatus,
+  'content' : IDL.Text,
+  'unlockedBy' : IDL.Vec(IDL.Principal),
+  'deletedForEveryoneAt' : IDL.Opt(IDL.Int),
+  'lockedFile' : IDL.Opt(LockedFile),
+  'createdAt' : IDL.Int,
+  'deletedForSenderAt' : IDL.Opt(IDL.Int),
+  'mediaUrl' : IDL.Opt(IDL.Text),
+  'messageType' : MessageType,
+  'conversationId' : IDL.Nat,
+  'lockCurrency' : IDL.Opt(IDL.Text),
+  'isVanish' : IDL.Bool,
+  'isLocked' : IDL.Bool,
+  'replyToId' : IDL.Opt(IDL.Nat),
+  'reactions' : IDL.Vec(MessageReaction),
+  'senderId' : IDL.Principal,
+  'scheduledAt' : IDL.Opt(IDL.Int),
+});
+export const CreatorEarningsSummary = IDL.Record({
+  'payments' : IDL.Vec(LockedMessagePayment),
+  'pendingPayouts' : IDL.Nat,
+  'totalEarnings' : IDL.Nat,
 });
 export const CustomCode = IDL.Record({
   'id' : IDL.Nat,
@@ -289,6 +517,48 @@ export const JobItem = IDL.Record({
   'lastDate' : IDL.Text,
   'location' : IDL.Text,
 });
+export const MarketListing = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'photoUrls' : IDL.Vec(IDL.Text),
+  'expiresAt' : IDL.Opt(IDL.Int),
+  'city' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'description' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'whatsappContact' : IDL.Text,
+  'isFeatured' : IDL.Bool,
+  'category' : MarketCategory,
+  'sellerId' : IDL.Principal,
+  'price' : IDL.Nat,
+});
+export const Conversation = IDL.Record({
+  'id' : IDL.Nat,
+  'lastMessageAt' : IDL.Int,
+  'lastMessageId' : IDL.Opt(IDL.Nat),
+  'isGroup' : IDL.Bool,
+  'adminIds' : IDL.Vec(IDL.Principal),
+  'createdAt' : IDL.Int,
+  'groupPhotoUrl' : IDL.Opt(IDL.Text),
+  'participantIds' : IDL.Vec(IDL.Principal),
+  'groupName' : IDL.Opt(IDL.Text),
+});
+export const PointsHistoryEntry = IDL.Record({
+  'at' : IDL.Int,
+  'action' : IDL.Text,
+  'points' : IDL.Nat,
+});
+export const RewardPoints = IDL.Record({
+  'userId' : IDL.Principal,
+  'history' : IDL.Vec(PointsHistoryEntry),
+  'totalPoints' : IDL.Nat,
+});
+export const ReferralStats = IDL.Record({
+  'code' : IDL.Text,
+  'count' : IDL.Nat,
+  'pointsEarned' : IDL.Nat,
+  'badge' : IDL.Text,
+});
 export const OfferTransaction = IDL.Record({
   'id' : IDL.Nat,
   'status' : IDL.Variant({
@@ -319,6 +589,19 @@ export const RechargeReceipt = IDL.Record({
   'mobile' : IDL.Text,
   'amount' : IDL.Nat,
 });
+export const PaymentMethod = IDL.Variant({
+  'upi' : IDL.Null,
+  'stripe' : IDL.Null,
+});
+export const PremiumSubscription = IDL.Record({
+  'startedAt' : IDL.Int,
+  'paymentMethod' : PaymentMethod,
+  'expiresAt' : IDL.Int,
+  'stripeSubscriptionId' : IDL.Opt(IDL.Text),
+  'userId' : IDL.Principal,
+  'plan' : PremiumPlan,
+  'isActive' : IDL.Bool,
+});
 export const NewsItem = IDL.Record({
   'id' : IDL.Nat,
   'title' : IDL.Text,
@@ -328,6 +611,14 @@ export const NewsItem = IDL.Record({
   'summary' : IDL.Text,
   'imageUrl' : IDL.Text,
   'category' : IDL.Text,
+});
+export const LocalNewsItem = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'postedBy' : IDL.Principal,
+  'content' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'imageUrl' : IDL.Opt(IDL.Text),
 });
 export const OfferPortalConfig = IDL.Record({
   'cpaLeadWebhookSecret' : IDL.Text,
@@ -341,6 +632,11 @@ export const PaymentConfig = IDL.Record({
   'razorpayKeySecret' : IDL.Text,
   'upiVpa' : IDL.Text,
   'qrCodeUrl' : IDL.Text,
+});
+export const PremiumPrices = IDL.Record({
+  'annual' : IDL.Nat,
+  'quarterly' : IDL.Nat,
+  'monthly' : IDL.Nat,
 });
 export const RechargeApiConfig = IDL.Record({
   'autoRefundEnabled' : IDL.Bool,
@@ -420,12 +716,32 @@ export const idlService = IDL.Service({
     ),
   '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControl' : IDL.Func([], [], []),
+  'activateStripePremium' : IDL.Func(
+      [PremiumPlan, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'addBanner' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
       [IDL.Nat],
       [],
     ),
   'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'addChatGroupMembers' : IDL.Func(
+      [IDL.Nat, IDL.Vec(IDL.Principal)],
+      [IDL.Bool],
+      [],
+    ),
+  'addChatPersonalShortcut' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'addChatVaultItem' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Int)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'addCustomCode' : IDL.Func(
       [
         IDL.Text,
@@ -480,6 +796,16 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'adminAddChatShortcut' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminAddNewsItem' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'adminAdjustWallet' : IDL.Func(
       [IDL.Nat, IDL.Float64, IDL.Bool, IDL.Text],
       [IDL.Bool],
@@ -490,16 +816,54 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
       [],
     ),
+  'adminApproveUpiPremium' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminApproveUpiUnlock' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'adminAssignSubscription' : IDL.Func(
       [IDL.Text, IDL.Nat, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
+    ),
+  'adminBroadcastChatMessage' : IDL.Func([IDL.Text], [IDL.Bool], []),
+  'adminDeleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'adminDeleteNewsItem' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminGetChatStats' : IDL.Func([], [ChatStats], ['query']),
+  'adminGetUpiPremiumRequests' : IDL.Func(
+      [],
+      [IDL.Vec(UpiPaymentRequest)],
+      ['query'],
+    ),
+  'adminGetUpiUnlockRequests' : IDL.Func(
+      [],
+      [IDL.Vec(LockedMessagePayment)],
+      ['query'],
     ),
   'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
   'adminListPendingWithdrawals' : IDL.Func(
       [],
       [IDL.Vec(OfferWithdrawal)],
       ['query'],
+    ),
+  'adminRejectUpiPremium' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminRejectUpiUnlock' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
     ),
   'adminResolveWithdrawal' : IDL.Func(
       [
@@ -514,15 +878,62 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
+  'adminSeedChatDemoData' : IDL.Func([], [IDL.Bool], []),
+  'adminSetPremiumPrices' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
   'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+  'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+  'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
+  'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
+  'confirmUpiUnlock' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'createChatGroup' : IDL.Func(
+      [IDL.Text, IDL.Vec(IDL.Principal), IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'createListing' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        MarketCategory,
+        IDL.Text,
+        IDL.Vec(IDL.Text),
+        IDL.Text,
+      ],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'createUnlockPaymentIntent' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteBanner' : IDL.Func([IDL.Nat], [], []),
   'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteChatMessage' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
+  'deleteChatNote' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteListing' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
@@ -542,8 +953,19 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'featureListing' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'forgotPassword' : IDL.Func([MobileNumber, IDL.Text, IDL.Text], [], []),
+  'forwardChatMessage' : IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
+  'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAdminAuditLog' : IDL.Func([IDL.Nat], [IDL.Vec(AuditLogEntry)], ['query']),
   'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
@@ -601,6 +1023,25 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'getChatAdminSettings' : IDL.Func([], [ChatAdminSettings], ['query']),
+  'getChatNotes' : IDL.Func([], [IDL.Vec(Note)], ['query']),
+  'getChatPointsLeaderboard' : IDL.Func(
+      [],
+      [IDL.Vec(LeaderboardEntry)],
+      ['query'],
+    ),
+  'getChatScheduledMessages' : IDL.Func(
+      [],
+      [IDL.Vec(ScheduledMessage)],
+      ['query'],
+    ),
+  'getChatShortcuts' : IDL.Func([], [IDL.Vec(ChatShortcut)], ['query']),
+  'getChatUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserChatProfile)],
+      ['query'],
+    ),
+  'getChatVaultItems' : IDL.Func([], [IDL.Vec(VaultItem)], ['query']),
   'getCloudinaryConfig' : IDL.Func(
       [],
       [IDL.Record({ 'cloudName' : IDL.Text, 'apiKey' : IDL.Text })],
@@ -608,6 +1049,11 @@ export const idlService = IDL.Service({
     ),
   'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
   'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
+  'getConversationMessages' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Nat)],
+      [IDL.Vec(ChatMessage)],
+      ['query'],
+    ),
   'getCpagripSettings' : IDL.Func(
       [],
       [
@@ -619,11 +1065,24 @@ export const idlService = IDL.Service({
       ],
       ['query'],
     ),
+  'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
   'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+  'getListings' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(MarketCategory)],
+      [IDL.Vec(MarketListing)],
+      ['query'],
+    ),
+  'getLockedFileUrl' : IDL.Func([IDL.Nat], [IDL.Opt(IDL.Text)], ['query']),
   'getManagers' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+  'getMyChatConversations' : IDL.Func([], [IDL.Vec(Conversation)], ['query']),
+  'getMyChatPoints' : IDL.Func([], [RewardPoints], ['query']),
+  'getMyChatProfile' : IDL.Func([], [IDL.Opt(UserChatProfile)], ['query']),
+  'getMyChatReferralCode' : IDL.Func([], [IDL.Text], ['query']),
+  'getMyChatReferralStats' : IDL.Func([], [ReferralStats], ['query']),
+  'getMyListings' : IDL.Func([], [IDL.Vec(MarketListing)], ['query']),
   'getMyOfferTransactions' : IDL.Func(
       [IDL.Nat],
       [IDL.Vec(OfferTransaction)],
@@ -640,9 +1099,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getMyRechargeReceipts' : IDL.Func([], [IDL.Vec(RechargeReceipt)], ['query']),
+  'getMySubscription' : IDL.Func([], [IDL.Opt(PremiumSubscription)], ['query']),
   'getMyTopupRequests' : IDL.Func([], [IDL.Vec(WalletTopupRequest)], ['query']),
   'getMyWalletBalance' : IDL.Func([], [IDL.Float64], ['query']),
   'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
+  'getNewsItems' : IDL.Func([], [IDL.Vec(LocalNewsItem)], ['query']),
   'getOfferEarningsSummary' : IDL.Func(
       [IDL.Nat],
       [
@@ -671,6 +1132,11 @@ export const idlService = IDL.Service({
       ],
       ['query'],
     ),
+  'getOrCreateChatConversation' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
   'getOrdersByStatus' : IDL.Func(
       [IDL.Nat, IDL.Text],
@@ -679,6 +1145,7 @@ export const idlService = IDL.Service({
     ),
   'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
   'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+  'getPremiumPlans' : IDL.Func([], [PremiumPrices], ['query']),
   'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getProviderProfile' : IDL.Func(
       [IDL.Nat],
@@ -744,6 +1211,8 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+  'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
+  'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
   'loginOfferUser' : IDL.Func(
@@ -751,6 +1220,7 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
       [],
     ),
+  'markMessagesRead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'markUdhaarTransactionPaid' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
@@ -761,11 +1231,18 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'postChatStory' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'processChatReferralSignup' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'processCpaLeadPostback' : IDL.Func(
       [IDL.Nat, IDL.Nat, IDL.Text],
       [IDL.Bool],
       [],
     ),
+  'reactToChatMessage' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
   'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'registerOfferUser' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
@@ -778,6 +1255,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+  'removeChatGroupMember' : IDL.Func([IDL.Nat, IDL.Principal], [IDL.Bool], []),
   'removeLockedFeature' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -785,6 +1263,11 @@ export const idlService = IDL.Service({
     ),
   'removeManager' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'replyToChatStory' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'requestApproval' : IDL.Func([], [], []),
   'requestOfferWithdrawal' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Nat],
@@ -798,8 +1281,48 @@ export const idlService = IDL.Service({
       [],
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveChatNote' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'scheduleChatMessage' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Int],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'searchChatUsers' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(UserChatProfile)],
+      ['query'],
+    ),
   'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
+  'sendLockedMessage' : IDL.Func(
+      [IDL.Nat, IDL.Text, LockType, IDL.Opt(IDL.Text), IDL.Opt(LockedFileTask)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'sendMessage' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        MessageType,
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Nat),
+        IDL.Bool,
+      ],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'sendPayToUnlockMessage' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+  'setChatAutoReply' : IDL.Func([IDL.Bool, IDL.Vec(IDL.Text)], [IDL.Bool], []),
+  'setChatGhostMode' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+  'setChatStudyMode' : IDL.Func([IDL.Bool, IDL.Vec(IDL.Nat)], [IDL.Bool], []),
   'setLockedFeature' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -808,7 +1331,22 @@ export const idlService = IDL.Service({
   'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+  'submitUpiPremiumRequest' : IDL.Func(
+      [PremiumPlan, IDL.Text, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'summarizeChatMessages' : IDL.Func(
+      [IDL.Nat, IDL.Variant({ 'last50' : IDL.Null, 'last24h' : IDL.Null })],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
+  'unlockMessage' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
   'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
   'updateAdmobConfig' : IDL.Func(
@@ -823,6 +1361,17 @@ export const idlService = IDL.Service({
     ),
   'updateCategory' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
+  'updateChatAdminSettings' : IDL.Func([ChatAdminSettings], [IDL.Bool], []),
+  'updateChatGroupInfo' : IDL.Func(
+      [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+      [IDL.Bool],
+      [],
+    ),
+  'updateChatNote' : IDL.Func(
+      [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
       [IDL.Bool],
       [],
     ),
@@ -874,8 +1423,31 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
+  'updateListing' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Vec(IDL.Text)),
+        IDL.Opt(IDL.Text),
+      ],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'updateLudoSettings' : IDL.Func(
       [IDL.Bool, IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
+      [IDL.Bool],
+      [],
+    ),
+  'updateMyChatProfile' : IDL.Func(
+      [
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+      ],
       [IDL.Bool],
       [],
     ),
@@ -944,7 +1516,14 @@ export const idlService = IDL.Service({
     ),
   'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+  'verifyStripeUnlock' : IDL.Func(
+      [IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'verifyUnlockKey' : IDL.Func([IDL.Text, IDL.Text], [VerifyKeyResult], []),
+  'viewChatStory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'viewChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Opt(VaultItem)], []),
 });
 
 export const idlInitArgs = [];
@@ -960,6 +1539,11 @@ export const idlFactory = ({ IDL }) => {
   const _ImmutableObjectStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const PremiumPlan = IDL.Variant({
+    'annual' : IDL.Null,
+    'quarterly' : IDL.Null,
+    'monthly' : IDL.Null,
   });
   const ServiceRate = IDL.Record({
     'name' : IDL.Text,
@@ -984,6 +1568,43 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'customerId' : IDL.Text,
     'amount' : IDL.Float64,
+  });
+  const ChatStats = IDL.Record({
+    'totalMessages' : IDL.Nat,
+    'storiesPosted' : IDL.Nat,
+    'activeChats' : IDL.Nat,
+    'totalUsers' : IDL.Nat,
+  });
+  const UpiPaymentRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'approved' : IDL.Null,
+      'rejected' : IDL.Null,
+    }),
+    'userId' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'plan' : PremiumPlan,
+    'upiTxnRef' : IDL.Text,
+    'amount' : IDL.Nat,
+  });
+  const LockedMessageStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+    'failed' : IDL.Null,
+  });
+  const LockedMessagePayment = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : LockedMessageStatus,
+    'unlockedAt' : IDL.Opt(IDL.Int),
+    'messageId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'creatorId' : IDL.Principal,
+    'upiTxnRef' : IDL.Opt(IDL.Text),
+    'currency' : IDL.Text,
+    'buyerId' : IDL.Principal,
+    'stripePaymentIntentId' : IDL.Opt(IDL.Text),
+    'amount' : IDL.Nat,
   });
   const OfferUser = IDL.Record({
     'id' : IDL.Nat,
@@ -1026,6 +1647,15 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const MarketCategory = IDL.Variant({
+    'vehicles' : IDL.Null,
+    'other' : IDL.Null,
+    'jobs' : IDL.Null,
+    'property' : IDL.Null,
+    'mobile' : IDL.Null,
+    'services' : IDL.Null,
+    'electronics' : IDL.Null,
+  });
   const MobileNumber = IDL.Text;
   const Banner = IDL.Record({
     'id' : IDL.Nat,
@@ -1035,6 +1665,15 @@ export const idlFactory = ({ IDL }) => {
     'displayOrder' : IDL.Nat,
     'imageUrl' : IDL.Text,
     'subtitle' : IDL.Text,
+  });
+  const Story = IDL.Record({
+    'id' : IDL.Nat,
+    'expiresAt' : IDL.Int,
+    'viewerIds' : IDL.Vec(IDL.Principal),
+    'authorId' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'mediaUrl' : IDL.Opt(IDL.Text),
+    'textContent' : IDL.Opt(IDL.Text),
   });
   const ApprovalStatus = IDL.Variant({
     'pending' : IDL.Null,
@@ -1169,6 +1808,112 @@ export const idlFactory = ({ IDL }) => {
     'emoji' : IDL.Text,
     'enabled' : IDL.Bool,
   });
+  const ChatAdminSettings = IDL.Record({
+    'voiceToTextEnabled' : IDL.Bool,
+    'storiesEnabled' : IDL.Bool,
+    'payToUnlockEnabled' : IDL.Bool,
+    'chatEnabled' : IDL.Bool,
+    'vanishModeEnabled' : IDL.Bool,
+    'referralEnabled' : IDL.Bool,
+    'autoReplyEnabled' : IDL.Bool,
+    'pointsPerMessage' : IDL.Nat,
+    'stripeSecretKey' : IDL.Text,
+    'pointsPerLogin' : IDL.Nat,
+    'shortcutsEnabled' : IDL.Bool,
+    'pointsPerReferral' : IDL.Nat,
+    'pointsPerStory' : IDL.Nat,
+    'rewardPointsEnabled' : IDL.Bool,
+    'ghostModeEnabled' : IDL.Bool,
+    'stripePublishableKey' : IDL.Text,
+    'schedulingEnabled' : IDL.Bool,
+    'studyModeEnabled' : IDL.Bool,
+    'openAiApiKey' : IDL.Text,
+    'broadcastEnabled' : IDL.Bool,
+  });
+  const Note = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'content' : IDL.Text,
+    'subject' : IDL.Text,
+    'ownerId' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'updatedAt' : IDL.Int,
+  });
+  const LeaderboardEntry = IDL.Record({
+    'displayName' : IDL.Text,
+    'userId' : IDL.Principal,
+    'points' : IDL.Nat,
+  });
+  const ScheduledMessageStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
+    'pending' : IDL.Null,
+    'sent' : IDL.Null,
+  });
+  const ScheduledMessage = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ScheduledMessageStatus,
+    'content' : IDL.Text,
+    'conversationId' : IDL.Nat,
+    'senderId' : IDL.Principal,
+    'scheduledAt' : IDL.Int,
+  });
+  const ShortcutCreator = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Principal,
+  });
+  const ShortcutCategory = IDL.Variant({
+    'custom' : IDL.Null,
+    'greet' : IDL.Null,
+    'business' : IDL.Null,
+    'formula' : IDL.Null,
+  });
+  const ChatShortcut = IDL.Record({
+    'id' : IDL.Nat,
+    'isGlobal' : IDL.Bool,
+    'content' : IDL.Text,
+    'trigger' : IDL.Text,
+    'createdBy' : ShortcutCreator,
+    'category' : ShortcutCategory,
+  });
+  const Badge = IDL.Variant({
+    'bronze' : IDL.Null,
+    'gold' : IDL.Null,
+    'none' : IDL.Null,
+    'diamond' : IDL.Null,
+    'silver' : IDL.Null,
+  });
+  const AutoReply = IDL.Record({
+    'messages' : IDL.Vec(IDL.Text),
+    'userId' : IDL.Principal,
+    'isEnabled' : IDL.Bool,
+  });
+  const UserChatProfile = IDL.Record({
+    'bio' : IDL.Opt(IDL.Text),
+    'referralCode' : IDL.Text,
+    'username' : IDL.Opt(IDL.Text),
+    'displayName' : IDL.Text,
+    'city' : IDL.Opt(IDL.Text),
+    'userId' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'referralCount' : IDL.Nat,
+    'ghostModeEnabled' : IDL.Bool,
+    'badge' : Badge,
+    'studyModeEnabled' : IDL.Bool,
+    'pointsBalance' : IDL.Nat,
+    'profilePhotoUrl' : IDL.Opt(IDL.Text),
+    'autoReply' : IDL.Opt(AutoReply),
+    'studyModeSelectedChats' : IDL.Vec(IDL.Nat),
+  });
+  const VaultItem = IDL.Record({
+    'id' : IDL.Nat,
+    'isViewOnce' : IDL.Bool,
+    'title' : IDL.Text,
+    'expiresAt' : IDL.Opt(IDL.Int),
+    'ownerId' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'mediaUrl' : IDL.Text,
+    'viewedAt' : IDL.Opt(IDL.Int),
+  });
   const CommissionConfig = IDL.Record({
     'retailerSharePct' : IDL.Float64,
     'adminSharePct' : IDL.Float64,
@@ -1185,6 +1930,68 @@ export const idlFactory = ({ IDL }) => {
   });
   const ContentLockerConfig = IDL.Record({
     'features' : IDL.Vec(LockedFeature),
+  });
+  const MessageStatus = IDL.Variant({
+    'read' : IDL.Null,
+    'sent' : IDL.Null,
+    'delivered' : IDL.Null,
+  });
+  const LockedFileTask = IDL.Record({
+    'question' : IDL.Text,
+    'answer' : IDL.Text,
+  });
+  const LockType = IDL.Variant({
+    'password' : IDL.Null,
+    'none' : IDL.Null,
+    'task' : IDL.Null,
+  });
+  const LockedFile = IDL.Record({
+    'unlockedBy' : IDL.Vec(IDL.Principal),
+    'task' : IDL.Opt(LockedFileTask),
+    'lockType' : LockType,
+    'passwordHash' : IDL.Opt(IDL.Text),
+    'fileUrl' : IDL.Text,
+  });
+  const MessageType = IDL.Variant({
+    'voiceText' : IDL.Null,
+    'youtubeLink' : IDL.Null,
+    'file' : IDL.Null,
+    'text' : IDL.Null,
+    'locked' : IDL.Null,
+    'scheduledMessage' : IDL.Null,
+    'image' : IDL.Null,
+    'reply' : IDL.Null,
+    'reaction' : IDL.Null,
+  });
+  const MessageReaction = IDL.Record({
+    'userIds' : IDL.Vec(IDL.Principal),
+    'emoji' : IDL.Text,
+  });
+  const ChatMessage = IDL.Record({
+    'id' : IDL.Nat,
+    'lockPrice' : IDL.Opt(IDL.Nat),
+    'status' : MessageStatus,
+    'content' : IDL.Text,
+    'unlockedBy' : IDL.Vec(IDL.Principal),
+    'deletedForEveryoneAt' : IDL.Opt(IDL.Int),
+    'lockedFile' : IDL.Opt(LockedFile),
+    'createdAt' : IDL.Int,
+    'deletedForSenderAt' : IDL.Opt(IDL.Int),
+    'mediaUrl' : IDL.Opt(IDL.Text),
+    'messageType' : MessageType,
+    'conversationId' : IDL.Nat,
+    'lockCurrency' : IDL.Opt(IDL.Text),
+    'isVanish' : IDL.Bool,
+    'isLocked' : IDL.Bool,
+    'replyToId' : IDL.Opt(IDL.Nat),
+    'reactions' : IDL.Vec(MessageReaction),
+    'senderId' : IDL.Principal,
+    'scheduledAt' : IDL.Opt(IDL.Int),
+  });
+  const CreatorEarningsSummary = IDL.Record({
+    'payments' : IDL.Vec(LockedMessagePayment),
+    'pendingPayouts' : IDL.Nat,
+    'totalEarnings' : IDL.Nat,
   });
   const CustomCode = IDL.Record({
     'id' : IDL.Nat,
@@ -1231,6 +2038,48 @@ export const idlFactory = ({ IDL }) => {
     'lastDate' : IDL.Text,
     'location' : IDL.Text,
   });
+  const MarketListing = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'photoUrls' : IDL.Vec(IDL.Text),
+    'expiresAt' : IDL.Opt(IDL.Int),
+    'city' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'description' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'whatsappContact' : IDL.Text,
+    'isFeatured' : IDL.Bool,
+    'category' : MarketCategory,
+    'sellerId' : IDL.Principal,
+    'price' : IDL.Nat,
+  });
+  const Conversation = IDL.Record({
+    'id' : IDL.Nat,
+    'lastMessageAt' : IDL.Int,
+    'lastMessageId' : IDL.Opt(IDL.Nat),
+    'isGroup' : IDL.Bool,
+    'adminIds' : IDL.Vec(IDL.Principal),
+    'createdAt' : IDL.Int,
+    'groupPhotoUrl' : IDL.Opt(IDL.Text),
+    'participantIds' : IDL.Vec(IDL.Principal),
+    'groupName' : IDL.Opt(IDL.Text),
+  });
+  const PointsHistoryEntry = IDL.Record({
+    'at' : IDL.Int,
+    'action' : IDL.Text,
+    'points' : IDL.Nat,
+  });
+  const RewardPoints = IDL.Record({
+    'userId' : IDL.Principal,
+    'history' : IDL.Vec(PointsHistoryEntry),
+    'totalPoints' : IDL.Nat,
+  });
+  const ReferralStats = IDL.Record({
+    'code' : IDL.Text,
+    'count' : IDL.Nat,
+    'pointsEarned' : IDL.Nat,
+    'badge' : IDL.Text,
+  });
   const OfferTransaction = IDL.Record({
     'id' : IDL.Nat,
     'status' : IDL.Variant({
@@ -1261,6 +2110,16 @@ export const idlFactory = ({ IDL }) => {
     'mobile' : IDL.Text,
     'amount' : IDL.Nat,
   });
+  const PaymentMethod = IDL.Variant({ 'upi' : IDL.Null, 'stripe' : IDL.Null });
+  const PremiumSubscription = IDL.Record({
+    'startedAt' : IDL.Int,
+    'paymentMethod' : PaymentMethod,
+    'expiresAt' : IDL.Int,
+    'stripeSubscriptionId' : IDL.Opt(IDL.Text),
+    'userId' : IDL.Principal,
+    'plan' : PremiumPlan,
+    'isActive' : IDL.Bool,
+  });
   const NewsItem = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
@@ -1270,6 +2129,14 @@ export const idlFactory = ({ IDL }) => {
     'summary' : IDL.Text,
     'imageUrl' : IDL.Text,
     'category' : IDL.Text,
+  });
+  const LocalNewsItem = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'postedBy' : IDL.Principal,
+    'content' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'imageUrl' : IDL.Opt(IDL.Text),
   });
   const OfferPortalConfig = IDL.Record({
     'cpaLeadWebhookSecret' : IDL.Text,
@@ -1283,6 +2150,11 @@ export const idlFactory = ({ IDL }) => {
     'razorpayKeySecret' : IDL.Text,
     'upiVpa' : IDL.Text,
     'qrCodeUrl' : IDL.Text,
+  });
+  const PremiumPrices = IDL.Record({
+    'annual' : IDL.Nat,
+    'quarterly' : IDL.Nat,
+    'monthly' : IDL.Nat,
   });
   const RechargeApiConfig = IDL.Record({
     'autoRefundEnabled' : IDL.Bool,
@@ -1359,12 +2231,32 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControl' : IDL.Func([], [], []),
+    'activateStripePremium' : IDL.Func(
+        [PremiumPlan, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'addBanner' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [IDL.Nat],
         [],
       ),
     'addCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'addChatGroupMembers' : IDL.Func(
+        [IDL.Nat, IDL.Vec(IDL.Principal)],
+        [IDL.Bool],
+        [],
+      ),
+    'addChatPersonalShortcut' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'addChatVaultItem' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Int)],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'addCustomCode' : IDL.Func(
         [
           IDL.Text,
@@ -1419,6 +2311,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'adminAddChatShortcut' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminAddNewsItem' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'adminAdjustWallet' : IDL.Func(
         [IDL.Nat, IDL.Float64, IDL.Bool, IDL.Text],
         [IDL.Bool],
@@ -1429,16 +2331,54 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
         [],
       ),
+    'adminApproveUpiPremium' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminApproveUpiUnlock' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'adminAssignSubscription' : IDL.Func(
         [IDL.Text, IDL.Nat, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
+      ),
+    'adminBroadcastChatMessage' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'adminDeleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'adminDeleteNewsItem' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminGetChatStats' : IDL.Func([], [ChatStats], ['query']),
+    'adminGetUpiPremiumRequests' : IDL.Func(
+        [],
+        [IDL.Vec(UpiPaymentRequest)],
+        ['query'],
+      ),
+    'adminGetUpiUnlockRequests' : IDL.Func(
+        [],
+        [IDL.Vec(LockedMessagePayment)],
+        ['query'],
       ),
     'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
     'adminListPendingWithdrawals' : IDL.Func(
         [],
         [IDL.Vec(OfferWithdrawal)],
         ['query'],
+      ),
+    'adminRejectUpiPremium' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminRejectUpiUnlock' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
       ),
     'adminResolveWithdrawal' : IDL.Func(
         [
@@ -1453,15 +2393,62 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'adminSeedChatDemoData' : IDL.Func([], [IDL.Bool], []),
+    'adminSetPremiumPrices' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
     'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+    'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+    'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
+    'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
+    'confirmUpiUnlock' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'createChatGroup' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Principal), IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'createListing' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          MarketCategory,
+          IDL.Text,
+          IDL.Vec(IDL.Text),
+          IDL.Text,
+        ],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'createUnlockPaymentIntent' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteBanner' : IDL.Func([IDL.Nat], [], []),
     'deleteCategory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteChatMessage' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
+    'deleteChatNote' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteListing' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
@@ -1481,8 +2468,19 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'featureListing' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'forgotPassword' : IDL.Func([MobileNumber, IDL.Text, IDL.Text], [], []),
+    'forwardChatMessage' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
+    'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
     'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAdminAuditLog' : IDL.Func(
         [IDL.Nat],
@@ -1544,6 +2542,25 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'getChatAdminSettings' : IDL.Func([], [ChatAdminSettings], ['query']),
+    'getChatNotes' : IDL.Func([], [IDL.Vec(Note)], ['query']),
+    'getChatPointsLeaderboard' : IDL.Func(
+        [],
+        [IDL.Vec(LeaderboardEntry)],
+        ['query'],
+      ),
+    'getChatScheduledMessages' : IDL.Func(
+        [],
+        [IDL.Vec(ScheduledMessage)],
+        ['query'],
+      ),
+    'getChatShortcuts' : IDL.Func([], [IDL.Vec(ChatShortcut)], ['query']),
+    'getChatUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserChatProfile)],
+        ['query'],
+      ),
+    'getChatVaultItems' : IDL.Func([], [IDL.Vec(VaultItem)], ['query']),
     'getCloudinaryConfig' : IDL.Func(
         [],
         [IDL.Record({ 'cloudName' : IDL.Text, 'apiKey' : IDL.Text })],
@@ -1551,6 +2568,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCommissionConfig' : IDL.Func([], [CommissionConfig], ['query']),
     'getContentLockerConfig' : IDL.Func([], [ContentLockerConfig], ['query']),
+    'getConversationMessages' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Nat)],
+        [IDL.Vec(ChatMessage)],
+        ['query'],
+      ),
     'getCpagripSettings' : IDL.Func(
         [],
         [
@@ -1562,11 +2584,24 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
     'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+    'getListings' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(MarketCategory)],
+        [IDL.Vec(MarketListing)],
+        ['query'],
+      ),
+    'getLockedFileUrl' : IDL.Func([IDL.Nat], [IDL.Opt(IDL.Text)], ['query']),
     'getManagers' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getMyChatConversations' : IDL.Func([], [IDL.Vec(Conversation)], ['query']),
+    'getMyChatPoints' : IDL.Func([], [RewardPoints], ['query']),
+    'getMyChatProfile' : IDL.Func([], [IDL.Opt(UserChatProfile)], ['query']),
+    'getMyChatReferralCode' : IDL.Func([], [IDL.Text], ['query']),
+    'getMyChatReferralStats' : IDL.Func([], [ReferralStats], ['query']),
+    'getMyListings' : IDL.Func([], [IDL.Vec(MarketListing)], ['query']),
     'getMyOfferTransactions' : IDL.Func(
         [IDL.Nat],
         [IDL.Vec(OfferTransaction)],
@@ -1587,6 +2622,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(RechargeReceipt)],
         ['query'],
       ),
+    'getMySubscription' : IDL.Func(
+        [],
+        [IDL.Opt(PremiumSubscription)],
+        ['query'],
+      ),
     'getMyTopupRequests' : IDL.Func(
         [],
         [IDL.Vec(WalletTopupRequest)],
@@ -1594,6 +2634,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMyWalletBalance' : IDL.Func([], [IDL.Float64], ['query']),
     'getNews' : IDL.Func([], [IDL.Vec(NewsItem)], ['query']),
+    'getNewsItems' : IDL.Func([], [IDL.Vec(LocalNewsItem)], ['query']),
     'getOfferEarningsSummary' : IDL.Func(
         [IDL.Nat],
         [
@@ -1622,6 +2663,11 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getOrCreateChatConversation' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'getOrderById' : IDL.Func([IDL.Nat], [IDL.Opt(Order)], ['query']),
     'getOrdersByStatus' : IDL.Func(
         [IDL.Nat, IDL.Text],
@@ -1630,6 +2676,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
     'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+    'getPremiumPlans' : IDL.Func([], [PremiumPrices], ['query']),
     'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getProviderProfile' : IDL.Func(
         [IDL.Nat],
@@ -1695,6 +2742,8 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
+    'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
     'loginOfferUser' : IDL.Func(
@@ -1702,6 +2751,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
         [],
       ),
+    'markMessagesRead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'markUdhaarTransactionPaid' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
@@ -1712,11 +2762,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'postChatStory' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'processChatReferralSignup' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'processCpaLeadPostback' : IDL.Func(
         [IDL.Nat, IDL.Nat, IDL.Text],
         [IDL.Bool],
         [],
       ),
+    'reactToChatMessage' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'refundRecharge' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'registerOfferUser' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
@@ -1729,6 +2786,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+    'removeChatGroupMember' : IDL.Func(
+        [IDL.Nat, IDL.Principal],
+        [IDL.Bool],
+        [],
+      ),
     'removeLockedFeature' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -1736,6 +2798,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'removeManager' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'replyToChatStory' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'requestApproval' : IDL.Func([], [], []),
     'requestOfferWithdrawal' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Nat],
@@ -1749,8 +2816,58 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveChatNote' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'scheduleChatMessage' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Int],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'searchChatUsers' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(UserChatProfile)],
+        ['query'],
+      ),
     'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
+    'sendLockedMessage' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          LockType,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(LockedFileTask),
+        ],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'sendMessage' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          MessageType,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Nat),
+          IDL.Bool,
+        ],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'sendPayToUnlockMessage' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+    'setChatAutoReply' : IDL.Func(
+        [IDL.Bool, IDL.Vec(IDL.Text)],
+        [IDL.Bool],
+        [],
+      ),
+    'setChatGhostMode' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+    'setChatStudyMode' : IDL.Func([IDL.Bool, IDL.Vec(IDL.Nat)], [IDL.Bool], []),
     'setLockedFeature' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -1759,7 +2876,22 @@ export const idlFactory = ({ IDL }) => {
     'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+    'submitUpiPremiumRequest' : IDL.Func(
+        [PremiumPlan, IDL.Text, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'summarizeChatMessages' : IDL.Func(
+        [IDL.Nat, IDL.Variant({ 'last50' : IDL.Null, 'last24h' : IDL.Null })],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'toggleCustomSection' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
+    'unlockMessage' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
     'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
     'updateAdmobConfig' : IDL.Func(
@@ -1774,6 +2906,17 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateCategory' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
+    'updateChatAdminSettings' : IDL.Func([ChatAdminSettings], [IDL.Bool], []),
+    'updateChatGroupInfo' : IDL.Func(
+        [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Bool],
+        [],
+      ),
+    'updateChatNote' : IDL.Func(
+        [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Bool],
         [],
       ),
@@ -1825,8 +2968,31 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'updateListing' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Vec(IDL.Text)),
+          IDL.Opt(IDL.Text),
+        ],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'updateLudoSettings' : IDL.Func(
         [IDL.Bool, IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
+    'updateMyChatProfile' : IDL.Func(
+        [
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+        ],
         [IDL.Bool],
         [],
       ),
@@ -1899,7 +3065,14 @@ export const idlFactory = ({ IDL }) => {
       ),
     'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'verifyStripeUnlock' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'verifyUnlockKey' : IDL.Func([IDL.Text, IDL.Text], [VerifyKeyResult], []),
+    'viewChatStory' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'viewChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Opt(VaultItem)], []),
   });
 };
 

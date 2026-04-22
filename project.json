@@ -1,31 +1,30 @@
 {
-  "overview": "Digital Zindagi is a premium multi-vendor marketplace and professional super-app for India. It includes a full Admin Control Panel, Provider management, Recharge Business System, Offer Portal with 3-tier MLM referral commissions, Udhaar Book, Ludo game, Video Gallery, and a Custom Code Manager for homepage customization — all branded exclusively as Digital Zindagi.",
+  "overview": "Digital Zindagi is a premium multi-vendor super-app for India with a complete WhatsApp-like chat system, white-label branding, recharge business, offer portal, Ludo game, Udhaar Book, video gallery, and admin control panel — all powered by ICP canister storage.",
   "features": [
-    "3-tier MLM referral commission system (5%/2%/1%) with Earnings Dashboard",
-    "Custom Code Manager with Title/Subtitle fields, compact buttons, and flexible Left/Right/Top/Bottom placement",
-    "Grid and stacked layout control for homepage custom code sections",
-    "White-label Digital Zindagi branding — all third-party branding removed",
-    "Universal real-time sync across Admin Panel, Caffeine preview, and Vercel",
-    "Provider registration green screen fix with smooth navigation",
-    "Toast notifications for user-friendly error handling",
-    "Recharge Business System with wallet and commission engine",
-    "Offer Portal with isolated login/signup and earnings dashboard",
-    "Udhaar Book provider-specific customer ledger",
-    "Ludo game ecosystem with rewards wallet",
-    "Multi-role access: Super Admin, Manager, Provider, Customer"
+    "WhatsApp-like Chat (1-to-1 & group)",
+    "Ghost Mode & Vanish Mode messages",
+    "Stories with 24-hour auto-delete",
+    "Message scheduling & auto-reply",
+    "Voice-to-text in Hindi/Hinglish",
+    "Reward points & referral badges",
+    "Mobile Recharge Business System",
+    "Offer Portal with commission split",
+    "Udhaar Book provider ledger",
+    "Ludo Game with rewards",
+    "Video Gallery",
+    "Admin Control Panel",
+    "White-label Digital Zindagi branding only"
   ],
-  "category": "marketplace",
+  "category": "social",
   "tags": [
-    "marketplace",
-    "india",
+    "chat",
     "super-app",
-    "referral",
-    "mlm",
+    "india",
+    "whatsapp-like",
     "recharge",
-    "wallet",
-    "admin-panel",
+    "ludo",
     "pwa",
-    "hindi"
+    "white-label"
   ],
-  "last_updated": "2026-04-15T05:02:03.891Z"
+  "last_updated": "2026-04-21T03:25:11.771Z"
 }

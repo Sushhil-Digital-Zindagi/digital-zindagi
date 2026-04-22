@@ -61,6 +61,16 @@ export interface AuditLogEntry {
   'amount' : [] | [bigint],
   'targetUserId' : string,
 }
+export interface AutoReply {
+  'messages' : Array<string>,
+  'userId' : Principal,
+  'isEnabled' : boolean,
+}
+export type Badge = { 'bronze' : null } |
+  { 'gold' : null } |
+  { 'none' : null } |
+  { 'diamond' : null } |
+  { 'silver' : null };
 export interface Banner {
   'id' : bigint,
   'title' : string,
@@ -77,12 +87,85 @@ export interface Category {
   'emoji' : string,
   'enabled' : boolean,
 }
+export interface ChatAdminSettings {
+  'voiceToTextEnabled' : boolean,
+  'storiesEnabled' : boolean,
+  'payToUnlockEnabled' : boolean,
+  'chatEnabled' : boolean,
+  'vanishModeEnabled' : boolean,
+  'referralEnabled' : boolean,
+  'autoReplyEnabled' : boolean,
+  'pointsPerMessage' : bigint,
+  'stripeSecretKey' : string,
+  'pointsPerLogin' : bigint,
+  'shortcutsEnabled' : boolean,
+  'pointsPerReferral' : bigint,
+  'pointsPerStory' : bigint,
+  'rewardPointsEnabled' : boolean,
+  'ghostModeEnabled' : boolean,
+  'stripePublishableKey' : string,
+  'schedulingEnabled' : boolean,
+  'studyModeEnabled' : boolean,
+  'openAiApiKey' : string,
+  'broadcastEnabled' : boolean,
+}
+export interface ChatMessage {
+  'id' : bigint,
+  'lockPrice' : [] | [bigint],
+  'status' : MessageStatus,
+  'content' : string,
+  'unlockedBy' : Array<Principal>,
+  'deletedForEveryoneAt' : [] | [bigint],
+  'lockedFile' : [] | [LockedFile],
+  'createdAt' : bigint,
+  'deletedForSenderAt' : [] | [bigint],
+  'mediaUrl' : [] | [string],
+  'messageType' : MessageType,
+  'conversationId' : bigint,
+  'lockCurrency' : [] | [string],
+  'isVanish' : boolean,
+  'isLocked' : boolean,
+  'replyToId' : [] | [bigint],
+  'reactions' : Array<MessageReaction>,
+  'senderId' : Principal,
+  'scheduledAt' : [] | [bigint],
+}
+export interface ChatShortcut {
+  'id' : bigint,
+  'isGlobal' : boolean,
+  'content' : string,
+  'trigger' : string,
+  'createdBy' : ShortcutCreator,
+  'category' : ShortcutCategory,
+}
+export interface ChatStats {
+  'totalMessages' : bigint,
+  'storiesPosted' : bigint,
+  'activeChats' : bigint,
+  'totalUsers' : bigint,
+}
 export interface CommissionConfig {
   'retailerSharePct' : number,
   'adminSharePct' : number,
   'globalCommissionPct' : number,
 }
 export interface ContentLockerConfig { 'features' : Array<LockedFeature> }
+export interface Conversation {
+  'id' : bigint,
+  'lastMessageAt' : bigint,
+  'lastMessageId' : [] | [bigint],
+  'isGroup' : boolean,
+  'adminIds' : Array<Principal>,
+  'createdAt' : bigint,
+  'groupPhotoUrl' : [] | [string],
+  'participantIds' : Array<Principal>,
+  'groupName' : [] | [string],
+}
+export interface CreatorEarningsSummary {
+  'payments' : Array<LockedMessagePayment>,
+  'pendingPayouts' : bigint,
+  'totalEarnings' : bigint,
+}
 export interface CustomCode {
   'id' : bigint,
   'title' : string,
@@ -118,6 +201,22 @@ export interface JobItem {
   'lastDate' : string,
   'location' : string,
 }
+export interface LeaderboardEntry {
+  'displayName' : string,
+  'userId' : Principal,
+  'points' : bigint,
+}
+export interface LocalNewsItem {
+  'id' : bigint,
+  'title' : string,
+  'postedBy' : Principal,
+  'content' : string,
+  'createdAt' : bigint,
+  'imageUrl' : [] | [string],
+}
+export type LockType = { 'password' : null } |
+  { 'none' : null } |
+  { 'task' : null };
 export interface LockedFeature {
   'id' : string,
   'createdAt' : bigint,
@@ -127,6 +226,68 @@ export interface LockedFeature {
   'isLocked' : boolean,
   'featureName' : string,
 }
+export interface LockedFile {
+  'unlockedBy' : Array<Principal>,
+  'task' : [] | [LockedFileTask],
+  'lockType' : LockType,
+  'passwordHash' : [] | [string],
+  'fileUrl' : string,
+}
+export interface LockedFileTask { 'question' : string, 'answer' : string }
+export interface LockedMessagePayment {
+  'id' : bigint,
+  'status' : LockedMessageStatus,
+  'unlockedAt' : [] | [bigint],
+  'messageId' : string,
+  'createdAt' : bigint,
+  'creatorId' : Principal,
+  'upiTxnRef' : [] | [string],
+  'currency' : string,
+  'buyerId' : Principal,
+  'stripePaymentIntentId' : [] | [string],
+  'amount' : bigint,
+}
+export type LockedMessageStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'failed' : null };
+export type MarketCategory = { 'vehicles' : null } |
+  { 'other' : null } |
+  { 'jobs' : null } |
+  { 'property' : null } |
+  { 'mobile' : null } |
+  { 'services' : null } |
+  { 'electronics' : null };
+export interface MarketListing {
+  'id' : bigint,
+  'title' : string,
+  'photoUrls' : Array<string>,
+  'expiresAt' : [] | [bigint],
+  'city' : string,
+  'createdAt' : bigint,
+  'description' : string,
+  'isActive' : boolean,
+  'whatsappContact' : string,
+  'isFeatured' : boolean,
+  'category' : MarketCategory,
+  'sellerId' : Principal,
+  'price' : bigint,
+}
+export interface MessageReaction {
+  'userIds' : Array<Principal>,
+  'emoji' : string,
+}
+export type MessageStatus = { 'read' : null } |
+  { 'sent' : null } |
+  { 'delivered' : null };
+export type MessageType = { 'voiceText' : null } |
+  { 'youtubeLink' : null } |
+  { 'file' : null } |
+  { 'text' : null } |
+  { 'locked' : null } |
+  { 'scheduledMessage' : null } |
+  { 'image' : null } |
+  { 'reply' : null } |
+  { 'reaction' : null };
 export type MobileNumber = string;
 export interface NewsItem {
   'id' : bigint,
@@ -137,6 +298,15 @@ export interface NewsItem {
   'summary' : string,
   'imageUrl' : string,
   'category' : string,
+}
+export interface Note {
+  'id' : bigint,
+  'title' : string,
+  'content' : string,
+  'subject' : string,
+  'ownerId' : Principal,
+  'createdAt' : bigint,
+  'updatedAt' : bigint,
 }
 export interface OfferPortalConfig {
   'cpaLeadWebhookSecret' : string,
@@ -204,9 +374,33 @@ export interface PaymentConfig {
   'upiVpa' : string,
   'qrCodeUrl' : string,
 }
+export type PaymentMethod = { 'upi' : null } |
+  { 'stripe' : null };
 export type PlanType = { 'pending' : null } |
   { 'premium' : null } |
   { 'free' : null };
+export interface PointsHistoryEntry {
+  'at' : bigint,
+  'action' : string,
+  'points' : bigint,
+}
+export type PremiumPlan = { 'annual' : null } |
+  { 'quarterly' : null } |
+  { 'monthly' : null };
+export interface PremiumPrices {
+  'annual' : bigint,
+  'quarterly' : bigint,
+  'monthly' : bigint,
+}
+export interface PremiumSubscription {
+  'startedAt' : bigint,
+  'paymentMethod' : PaymentMethod,
+  'expiresAt' : bigint,
+  'stripeSubscriptionId' : [] | [string],
+  'userId' : Principal,
+  'plan' : PremiumPlan,
+  'isActive' : boolean,
+}
 export interface ProviderProfile {
   'userId' : bigint,
   'subscriptionExpiry' : [] | [bigint],
@@ -256,6 +450,28 @@ export interface RechargeTransaction {
   'mobile' : string,
   'amount' : number,
 }
+export interface ReferralStats {
+  'code' : string,
+  'count' : bigint,
+  'pointsEarned' : bigint,
+  'badge' : string,
+}
+export interface RewardPoints {
+  'userId' : Principal,
+  'history' : Array<PointsHistoryEntry>,
+  'totalPoints' : bigint,
+}
+export interface ScheduledMessage {
+  'id' : bigint,
+  'status' : ScheduledMessageStatus,
+  'content' : string,
+  'conversationId' : bigint,
+  'senderId' : Principal,
+  'scheduledAt' : bigint,
+}
+export type ScheduledMessageStatus = { 'cancelled' : null } |
+  { 'pending' : null } |
+  { 'sent' : null };
 export interface ScrapRate {
   'id' : bigint,
   'ratePerKg' : number,
@@ -268,10 +484,25 @@ export interface ServiceRate {
   'description' : string,
   'price' : bigint,
 }
+export type ShortcutCategory = { 'custom' : null } |
+  { 'greet' : null } |
+  { 'business' : null } |
+  { 'formula' : null };
+export type ShortcutCreator = { 'admin' : null } |
+  { 'user' : Principal };
 export interface SmsConfig {
   'fast2smsApiKey' : string,
   'isEnabled' : boolean,
   'senderId' : string,
+}
+export interface Story {
+  'id' : bigint,
+  'expiresAt' : bigint,
+  'viewerIds' : Array<Principal>,
+  'authorId' : Principal,
+  'createdAt' : bigint,
+  'mediaUrl' : [] | [string],
+  'textContent' : [] | [string],
 }
 export type SubscriptionPlan = { 'twelveMonths' : null } |
   { 'threeMonths' : null } |
@@ -304,6 +535,17 @@ export interface UdhaarTransaction {
   'customerId' : string,
   'amount' : number,
 }
+export interface UpiPaymentRequest {
+  'id' : bigint,
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : null },
+  'userId' : Principal,
+  'createdAt' : bigint,
+  'plan' : PremiumPlan,
+  'upiTxnRef' : string,
+  'amount' : bigint,
+}
 export interface User {
   'id' : bigint,
   'name' : string,
@@ -317,6 +559,23 @@ export interface User {
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
+}
+export interface UserChatProfile {
+  'bio' : [] | [string],
+  'referralCode' : string,
+  'username' : [] | [string],
+  'displayName' : string,
+  'city' : [] | [string],
+  'userId' : Principal,
+  'createdAt' : bigint,
+  'referralCount' : bigint,
+  'ghostModeEnabled' : boolean,
+  'badge' : Badge,
+  'studyModeEnabled' : boolean,
+  'pointsBalance' : bigint,
+  'profilePhotoUrl' : [] | [string],
+  'autoReply' : [] | [AutoReply],
+  'studyModeSelectedChats' : Array<bigint>,
 }
 export interface UserProfile {
   'userId' : bigint,
@@ -336,6 +595,16 @@ export interface UserSubscription {
   'endDate' : bigint,
   'userId' : string,
   'startDate' : bigint,
+}
+export interface VaultItem {
+  'id' : bigint,
+  'isViewOnce' : boolean,
+  'title' : string,
+  'expiresAt' : [] | [bigint],
+  'ownerId' : Principal,
+  'createdAt' : bigint,
+  'mediaUrl' : string,
+  'viewedAt' : [] | [bigint],
 }
 export type VerifyKeyResult = { 'ok' : boolean } |
   { 'err' : string };
@@ -389,8 +658,24 @@ export interface _SERVICE {
   >,
   '_immutableObjectStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
+  'activateStripePremium' : ActorMethod<
+    [PremiumPlan, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'addBanner' : ActorMethod<[string, string, string, string, bigint], bigint>,
   'addCategory' : ActorMethod<[string, string, string], bigint>,
+  'addChatGroupMembers' : ActorMethod<[bigint, Array<Principal>], boolean>,
+  'addChatPersonalShortcut' : ActorMethod<
+    [string, string, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'addChatVaultItem' : ActorMethod<
+    [string, string, boolean, [] | [bigint]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'addCustomCode' : ActorMethod<
     [
       string,
@@ -438,6 +723,16 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
+  'adminAddChatShortcut' : ActorMethod<
+    [string, string, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'adminAddNewsItem' : ActorMethod<
+    [string, string, [] | [string]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   /**
    * / Directly add or deduct balance for any user — admin only.
    */
@@ -451,6 +746,19 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'adminApproveUpiPremium' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
+   * / Approve a UPI unlock request — admin only.
+   */
+  'adminApproveUpiUnlock' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   /**
    * / Manually assign or revoke a subscription for a user — admin only.
    */
@@ -459,6 +767,19 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'adminBroadcastChatMessage' : ActorMethod<[string], boolean>,
+  'adminDeleteChatShortcut' : ActorMethod<[bigint], boolean>,
+  'adminDeleteNewsItem' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'adminGetChatStats' : ActorMethod<[], ChatStats>,
+  'adminGetUpiPremiumRequests' : ActorMethod<[], Array<UpiPaymentRequest>>,
+  /**
+   * / Return all pending UPI unlock requests — admin only.
+   */
+  'adminGetUpiUnlockRequests' : ActorMethod<[], Array<LockedMessagePayment>>,
   /**
    * / List all Offer Portal users — admin only.
    */
@@ -467,6 +788,19 @@ export interface _SERVICE {
    * / List all pending withdrawal requests — admin only.
    */
   'adminListPendingWithdrawals' : ActorMethod<[], Array<OfferWithdrawal>>,
+  'adminRejectUpiPremium' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
+   * / Reject a UPI unlock request — admin only.
+   */
+  'adminRejectUpiUnlock' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   /**
    * / Resolve a withdrawal request (approve/reject/paid) — admin only.
    */
@@ -480,18 +814,59 @@ export interface _SERVICE {
     ],
     boolean
   >,
+  'adminSeedChatDemoData' : ActorMethod<[], boolean>,
+  'adminSetPremiumPrices' : ActorMethod<
+    [bigint, bigint, bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'approveProvider' : ActorMethod<[bigint, SubscriptionPlan], undefined>,
   /**
    * / Approve or reject a topup request.  On approval, funds are credited — admin only.
    */
   'approveTopupRequest' : ActorMethod<[bigint, boolean], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
+  'awardChatPoints' : ActorMethod<[string, bigint], boolean>,
+  'cancelChatScheduledMessage' : ActorMethod<[bigint], boolean>,
   'changeAdminPin' : ActorMethod<[string, string], undefined>,
+  'cleanupExpiredChatStories' : ActorMethod<[], bigint>,
+  'cleanupExpiredChatVaultItems' : ActorMethod<[], bigint>,
+  /**
+   * / Submit a UPI transaction reference for admin approval to unlock a message.
+   */
+  'confirmUpiUnlock' : ActorMethod<
+    [bigint, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'createChatGroup' : ActorMethod<
+    [string, Array<Principal>, [] | [string]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'createListing' : ActorMethod<
+    [string, string, bigint, MarketCategory, string, Array<string>, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  /**
+   * / Create a Stripe PaymentIntent for a locked message and return clientSecret.
+   */
+  'createUnlockPaymentIntent' : ActorMethod<
+    [bigint],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'deleteBanner' : ActorMethod<[bigint], undefined>,
   'deleteCategory' : ActorMethod<[bigint], boolean>,
+  'deleteChatMessage' : ActorMethod<[bigint, boolean], boolean>,
+  'deleteChatNote' : ActorMethod<[bigint], boolean>,
+  'deleteChatShortcut' : ActorMethod<[bigint], boolean>,
+  'deleteChatVaultItem' : ActorMethod<[bigint], boolean>,
   'deleteCustomCode' : ActorMethod<[bigint], boolean>,
   'deleteCustomSection' : ActorMethod<[bigint], boolean>,
   'deleteJob' : ActorMethod<[bigint], boolean>,
+  'deleteListing' : ActorMethod<[bigint], { 'ok' : null } | { 'err' : string }>,
   'deleteNews' : ActorMethod<[bigint], boolean>,
   'deleteScrapRate' : ActorMethod<[bigint], boolean>,
   'deleteServiceRate' : ActorMethod<[bigint, string], undefined>,
@@ -516,8 +891,19 @@ export interface _SERVICE {
     [bigint, string, string, string, string, boolean, bigint],
     undefined
   >,
+  'featureListing' : ActorMethod<
+    [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'forgotPassword' : ActorMethod<[MobileNumber, string, string], undefined>,
+  'forwardChatMessage' : ActorMethod<
+    [bigint, bigint],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getActiveBanners' : ActorMethod<[], Array<Banner>>,
+  'getActiveChatStories' : ActorMethod<[], Array<Story>>,
   'getActiveProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return the most recent `limit` audit log entries — admin only.
@@ -576,6 +962,13 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getCategories' : ActorMethod<[], Array<Category>>,
+  'getChatAdminSettings' : ActorMethod<[], ChatAdminSettings>,
+  'getChatNotes' : ActorMethod<[], Array<Note>>,
+  'getChatPointsLeaderboard' : ActorMethod<[], Array<LeaderboardEntry>>,
+  'getChatScheduledMessages' : ActorMethod<[], Array<ScheduledMessage>>,
+  'getChatShortcuts' : ActorMethod<[], Array<ChatShortcut>>,
+  'getChatUserProfile' : ActorMethod<[Principal], [] | [UserChatProfile]>,
+  'getChatVaultItems' : ActorMethod<[], Array<VaultItem>>,
   /**
    * / Return Cloudinary cloud name and API key — public query.
    * / The API secret is NEVER returned; it stays server-side only.
@@ -592,6 +985,10 @@ export interface _SERVICE {
    * / Return the full content-locker configuration (all features).
    */
   'getContentLockerConfig' : ActorMethod<[], ContentLockerConfig>,
+  'getConversationMessages' : ActorMethod<
+    [bigint, bigint, [] | [bigint]],
+    Array<ChatMessage>
+  >,
   /**
    * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
    */
@@ -599,14 +996,29 @@ export interface _SERVICE {
     [],
     { 'webhookSecret' : string, 'offerWallName' : string, 'apiKey' : string }
   >,
+  /**
+   * / Return the caller's pay-to-unlock creator earnings.
+   */
+  'getCreatorEarnings' : ActorMethod<[], CreatorEarningsSummary>,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
+  'getListings' : ActorMethod<
+    [[] | [string], [] | [MarketCategory]],
+    Array<MarketListing>
+  >,
+  'getLockedFileUrl' : ActorMethod<[bigint], [] | [string]>,
   /**
    * / Get all managers — admin only.
    */
   'getManagers' : ActorMethod<[], Array<string>>,
+  'getMyChatConversations' : ActorMethod<[], Array<Conversation>>,
+  'getMyChatPoints' : ActorMethod<[], RewardPoints>,
+  'getMyChatProfile' : ActorMethod<[], [] | [UserChatProfile]>,
+  'getMyChatReferralCode' : ActorMethod<[], string>,
+  'getMyChatReferralStats' : ActorMethod<[], ReferralStats>,
+  'getMyListings' : ActorMethod<[], Array<MarketListing>>,
   /**
    * / Get Offer Portal transaction history for a user.
    */
@@ -623,6 +1035,7 @@ export interface _SERVICE {
    * / Get all receipts for the calling user.
    */
   'getMyRechargeReceipts' : ActorMethod<[], Array<RechargeReceipt>>,
+  'getMySubscription' : ActorMethod<[], [] | [PremiumSubscription]>,
   /**
    * / Return all topup requests submitted by the caller.
    */
@@ -632,6 +1045,7 @@ export interface _SERVICE {
    */
   'getMyWalletBalance' : ActorMethod<[], number>,
   'getNews' : ActorMethod<[], Array<NewsItem>>,
+  'getNewsItems' : ActorMethod<[], Array<LocalNewsItem>>,
   /**
    * / Get earnings summary for an Offer Portal user.
    */
@@ -666,6 +1080,11 @@ export interface _SERVICE {
       'userProfitPct' : bigint,
     }
   >,
+  'getOrCreateChatConversation' : ActorMethod<
+    [Principal],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getOrderById' : ActorMethod<[bigint], [] | [Order]>,
   'getOrdersByStatus' : ActorMethod<[bigint, string], Array<Order>>,
   /**
@@ -677,6 +1096,7 @@ export interface _SERVICE {
    * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
    */
   'getPendingApprovals' : ActorMethod<[], Array<ProviderProfile>>,
+  'getPremiumPlans' : ActorMethod<[], PremiumPrices>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
   'getProviderProfile' : ActorMethod<[bigint], [] | [ProviderProfile]>,
   'getProvidersByCategory' : ActorMethod<[string], Array<ProviderProfile>>,
@@ -745,6 +1165,8 @@ export interface _SERVICE {
    * / Check if a given mobile number belongs to a manager — public.
    */
   'isManager' : ActorMethod<[string], boolean>,
+  'isPremiumUser' : ActorMethod<[[] | [Principal]], boolean>,
+  'leaveChatGroup' : ActorMethod<[bigint], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'login' : ActorMethod<[MobileNumber, string], User>,
   /**
@@ -757,6 +1179,7 @@ export interface _SERVICE {
     { 'ok' : OfferUser } |
       { 'err' : string }
   >,
+  'markMessagesRead' : ActorMethod<[bigint], boolean>,
   /**
    * / Mark a transaction as paid. Caller must own the transaction.
    */
@@ -769,11 +1192,18 @@ export interface _SERVICE {
     [bigint, string, string, string, [] | [string]],
     bigint
   >,
+  'postChatStory' : ActorMethod<
+    [[] | [string], [] | [string]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'processChatReferralSignup' : ActorMethod<[string], boolean>,
   /**
    * / Process a CPALead postback: verify secret, split profit, credit earnings.
    * / Also triggers 3-tier MLM referral commissions (5%/2%/1%) to ancestors.
    */
   'processCpaLeadPostback' : ActorMethod<[bigint, bigint, string], boolean>,
+  'reactToChatMessage' : ActorMethod<[bigint, string], boolean>,
   /**
    * / Refund a Failed recharge — restores netCost to user wallet — admin only.
    */
@@ -794,6 +1224,7 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'rejectProvider' : ActorMethod<[bigint], undefined>,
+  'removeChatGroupMember' : ActorMethod<[bigint, Principal], boolean>,
   /**
    * / Remove a locked feature by id — admin only.
    */
@@ -807,6 +1238,11 @@ export interface _SERVICE {
    */
   'removeManager' : ActorMethod<[string], boolean>,
   'removeShopPhoto' : ActorMethod<[bigint, string], undefined>,
+  'replyToChatStory' : ActorMethod<
+    [bigint, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'requestApproval' : ActorMethod<[], undefined>,
   /**
    * / Submit a UPI withdrawal request from the Offer Portal.
@@ -826,8 +1262,40 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveChatNote' : ActorMethod<
+    [string, string, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'scheduleChatMessage' : ActorMethod<
+    [bigint, string, bigint],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'searchChatUsers' : ActorMethod<[string], Array<UserChatProfile>>,
   'searchUsers' : ActorMethod<[string], Array<User>>,
+  'sendLockedMessage' : ActorMethod<
+    [bigint, string, LockType, [] | [string], [] | [LockedFileTask]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'sendMessage' : ActorMethod<
+    [bigint, string, MessageType, [] | [string], [] | [bigint], boolean],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  /**
+   * / Send a pay-to-unlock message. Receivers must pay lockPrice to read content.
+   */
+  'sendPayToUnlockMessage' : ActorMethod<
+    [bigint, string, bigint, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
+  'setChatAutoReply' : ActorMethod<[boolean, Array<string>], boolean>,
+  'setChatGhostMode' : ActorMethod<[boolean], boolean>,
+  'setChatStudyMode' : ActorMethod<[boolean, Array<bigint>], boolean>,
   /**
    * / Create or update a locked feature — admin only.
    */
@@ -845,7 +1313,26 @@ export interface _SERVICE {
    * / Enable or disable the recharge service — admin only.
    */
   'setRechargeServiceEnabled' : ActorMethod<[boolean], boolean>,
+  'submitUpiPremiumRequest' : ActorMethod<
+    [PremiumPlan, string, bigint],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  /**
+   * / Summarize last 50 messages or last 24h messages for a conversation.
+   * / Uses OpenAI via HTTP outcall — API key configured in Chat Admin Settings.
+   */
+  'summarizeChatMessages' : ActorMethod<
+    [bigint, { 'last50' : null } | { 'last24h' : null }],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'toggleCustomSection' : ActorMethod<[bigint, boolean], boolean>,
+  'unlockMessage' : ActorMethod<
+    [bigint, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'updateAdminConfig' : ActorMethod<[AdminConfig], undefined>,
   /**
    * / Replace ALL admin settings in one atomic call — admin only.
@@ -866,6 +1353,15 @@ export interface _SERVICE {
   >,
   'updateCategory' : ActorMethod<
     [bigint, string, string, string, boolean],
+    boolean
+  >,
+  'updateChatAdminSettings' : ActorMethod<[ChatAdminSettings], boolean>,
+  'updateChatGroupInfo' : ActorMethod<
+    [bigint, [] | [string], [] | [string]],
+    boolean
+  >,
+  'updateChatNote' : ActorMethod<
+    [bigint, [] | [string], [] | [string], [] | [string]],
     boolean
   >,
   /**
@@ -908,11 +1404,28 @@ export interface _SERVICE {
     [bigint, string, string, string, string, string, string, boolean],
     boolean
   >,
+  'updateListing' : ActorMethod<
+    [
+      bigint,
+      [] | [string],
+      [] | [string],
+      [] | [bigint],
+      [] | [string],
+      [] | [Array<string>],
+      [] | [string],
+    ],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   /**
    * / Update only Ludo / Rewards settings — admin only.
    */
   'updateLudoSettings' : ActorMethod<
     [boolean, boolean, bigint, bigint, bigint],
+    boolean
+  >,
+  'updateMyChatProfile' : ActorMethod<
+    [[] | [string], [] | [string], [] | [string], [] | [string]],
     boolean
   >,
   'updateNews' : ActorMethod<
@@ -994,9 +1507,19 @@ export interface _SERVICE {
   'uploadPaymentScreenshot' : ActorMethod<[bigint, string], undefined>,
   'verifyAdminPin' : ActorMethod<[string], boolean>,
   /**
+   * / Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
+   */
+  'verifyStripeUnlock' : ActorMethod<
+    [bigint, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
    * / User-facing: verify a plain-text unlock key for a named feature.
    */
   'verifyUnlockKey' : ActorMethod<[string, string], VerifyKeyResult>,
+  'viewChatStory' : ActorMethod<[bigint], boolean>,
+  'viewChatVaultItem' : ActorMethod<[bigint], [] | [VaultItem]>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
