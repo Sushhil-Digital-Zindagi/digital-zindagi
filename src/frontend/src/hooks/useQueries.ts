@@ -2957,9 +2957,7 @@ export function useUpdateAdminSettings() {
 // CPAGRIP SETTINGS HOOKS (dedicated canister methods)
 // =====================================================================
 
-const CPAGRIP_SETTINGS_LS_KEY = "dz_cpagrip_settings_cache";
-
-/** Fetch CPAGrip settings via dedicated backend method. Falls back to adminSettings cache. */
+/** Fetch CPAGrip settings via dedicated backend method. No localStorage fallback — canister is source of truth. */
 export function useGetCpagripSettings() {
   const { actor, isFetching } = useActor();
   return useQuery<{
@@ -2969,12 +2967,13 @@ export function useGetCpagripSettings() {
   }>({
     queryKey: ["cpagripSettings"],
     queryFn: async () => {
-      const fallback = {
-        apiKey: localStorage.getItem("dz_cpagrip_api_key") ?? "",
+      // On canister failure, return empty — never show stale cached data
+      const empty = {
+        apiKey: "",
         webhookSecret: "",
         offerWallName: "Digital Zindagi Offers",
       };
-      if (!actor) return fallback;
+      if (!actor) return empty;
       try {
         const data = await (
           actor as unknown as {
@@ -2985,23 +2984,10 @@ export function useGetCpagripSettings() {
             }>;
           }
         ).getCpagripSettings();
-        localStorage.setItem(CPAGRIP_SETTINGS_LS_KEY, JSON.stringify(data));
-        if (data.apiKey)
-          localStorage.setItem("dz_cpagrip_api_key", data.apiKey);
         return data;
       } catch {
-        try {
-          const cached = localStorage.getItem(CPAGRIP_SETTINGS_LS_KEY);
-          if (cached)
-            return JSON.parse(cached) as {
-              apiKey: string;
-              webhookSecret: string;
-              offerWallName: string;
-            };
-        } catch {
-          /* ignore */
-        }
-        return fallback;
+        // Canister error — reset to empty, never show stale values
+        return empty;
       }
     },
     enabled: !isFetching,
@@ -3034,16 +3020,7 @@ export function useUpdateCpagripSettings() {
       if ("err" in result) {
         throw new Error(result.err || "Save failed");
       }
-      // Cache locally only after canister confirms success
-      localStorage.setItem("dz_cpagrip_api_key", apiKey.trim());
-      localStorage.setItem(
-        CPAGRIP_SETTINGS_LS_KEY,
-        JSON.stringify({
-          apiKey: apiKey.trim(),
-          webhookSecret: webhookSecret.trim(),
-          offerWallName: offerWallName.trim(),
-        }),
-      );
+      // Canister is source of truth — do NOT cache to localStorage
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cpagripSettings"] });

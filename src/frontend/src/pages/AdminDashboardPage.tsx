@@ -2333,6 +2333,8 @@ function AdminSettings() {
   const { data: toggles } = useAllToggles();
   const updateToggle = useUpdateToggle();
   const { actor } = useActor();
+  const { data: appSettingsData } = useAppSettings();
+  const updateAppSettingsMutation = useUpdateAppSettings();
   const [adminName, setAdminName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
@@ -2389,10 +2391,15 @@ function AdminSettings() {
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [confirmAdminPassword, setConfirmAdminPassword] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
-  const [adminMobileProfile, setAdminMobileProfile] = useState(
-    () => localStorage.getItem("dz_admin_mobile") ?? "",
-  );
+  const [adminMobileProfile, setAdminMobileProfile] = useState(() => "");
   const [mobileSaving, setMobileSaving] = useState(false);
+
+  // Sync mobile from canister when appSettings loads
+  useEffect(() => {
+    if (appSettingsData?.contactPhone) {
+      setAdminMobileProfile(appSettingsData.contactPhone);
+    }
+  }, [appSettingsData?.contactPhone]);
 
   // Social Links State
   const [socialLinks, setSocialLinks] = useState(() => {
@@ -2899,13 +2906,18 @@ function AdminSettings() {
             type="button"
             data-ocid="admin.save_button"
             disabled={mobileSaving}
-            onClick={() => {
+            onClick={async () => {
               setMobileSaving(true);
-              setTimeout(() => {
-                localStorage.setItem("dz_admin_mobile", adminMobileProfile);
+              try {
+                await updateAppSettingsMutation.mutateAsync({
+                  contactPhone: adminMobileProfile.trim(),
+                });
                 toast.success("Mobile number save ho gaya!");
+              } catch {
+                toast.error("Mobile save nahi ho saka, dobara try karein");
+              } finally {
                 setMobileSaving(false);
-              }, 300);
+              }
             }}
             className="bg-primary text-primary-foreground font-bold px-5 py-2.5 rounded-xl hover:opacity-90 flex items-center gap-2 text-sm disabled:opacity-60"
           >
@@ -10998,11 +11010,12 @@ function OfferSystemToggleTab() {
         "getOfferPortalConfig" in actor &&
         "updateOfferPortalConfig" in actor
       ) {
-        const cfg = await (
+        const toggleResult = await (
           actor as unknown as {
             getOfferPortalConfig: () => Promise<{
               isEnabled: boolean;
               cpaLeadWebhookSecret: string;
+              cpagripApiKey: string;
               adminProfitPct: bigint;
               userProfitPct: bigint;
             }>;
@@ -11013,17 +11026,21 @@ function OfferSystemToggleTab() {
             updateOfferPortalConfig: (
               e: boolean,
               s: string,
+              k: string,
               a: bigint,
               u: bigint,
-            ) => Promise<boolean>;
+            ) => Promise<
+              { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
+            >;
           }
         ).updateOfferPortalConfig(
           next,
-          cfg.cpaLeadWebhookSecret ?? "",
-          cfg.adminProfitPct ?? BigInt(60),
-          cfg.userProfitPct ?? BigInt(40),
+          toggleResult.cpaLeadWebhookSecret ?? "",
+          toggleResult.cpagripApiKey ?? "",
+          toggleResult.adminProfitPct ?? BigInt(60),
+          toggleResult.userProfitPct ?? BigInt(40),
         );
-        if (ok === false) {
+        if ("err" in ok) {
           toast.error("Setting save nahi ho saki");
           return;
         }
@@ -11163,24 +11180,10 @@ function OfferApiKeysTab() {
               cpagripData.offerWallName ?? "Digital Zindagi Offers",
             );
           } catch {
-            // Fall back to localStorage cache if method not available
-            const storedKey = localStorage.getItem("dz_cpagrip_api_key") ?? "";
-            setCpagripApiKey(storedKey);
-            const cached = (() => {
-              try {
-                return JSON.parse(
-                  localStorage.getItem("dz_cpagrip_settings_cache") ?? "null",
-                );
-              } catch {
-                return null;
-              }
-            })();
-            if (cached) {
-              setCpagripWebhookSecret(cached.webhookSecret ?? "");
-              setOfferWallName(
-                cached.offerWallName ?? "Digital Zindagi Offers",
-              );
-            }
+            // CPAGrip method not available on canister — show empty fields, don't use stale cache
+            setCpagripApiKey("");
+            setCpagripWebhookSecret("");
+            setOfferWallName("Digital Zindagi Offers");
           }
         }
         if (actor && "getOfferPortalConfig" in actor) {
@@ -11226,6 +11229,14 @@ function OfferApiKeysTab() {
   const postbackUrl = `https://${canisterId}.icp0.io/cpalead-postback`;
 
   const handleSave = async () => {
+    // Capture current values before async ops — state reads inside closures can be stale
+    const savedWebhookSecret = webhookSecret.trim();
+    const savedCpagripApiKey = cpagripApiKey.trim();
+    const savedCpagripWebhookSecret = cpagripWebhookSecret.trim();
+    const savedOfferWallName = offerWallName.trim();
+    const savedFast2smsKey = fast2smsKey.trim();
+    const savedSenderId = senderId.trim();
+
     setSaving(true);
     try {
       // Step 1: Save generic Offer Wall webhook secret (cpaLeadWebhookSecret field)
@@ -11253,11 +11264,13 @@ function OfferApiKeysTab() {
               k: string,
               a: bigint,
               u: bigint,
-            ) => Promise<boolean>;
+            ) => Promise<
+              { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
+            >;
           }
         ).updateOfferPortalConfig(
           cfg.isEnabled,
-          webhookSecret.trim(),
+          savedWebhookSecret,
           cfg.cpagripApiKey ?? "", // keep existing cpagripApiKey in this config unchanged
           cfg.adminProfitPct ?? BigInt(60),
           cfg.userProfitPct ?? BigInt(40),
@@ -11287,7 +11300,7 @@ function OfferApiKeysTab() {
               e: boolean,
             ) => Promise<boolean>;
           }
-        ).updateSmsConfig(fast2smsKey.trim(), senderId.trim(), true);
+        ).updateSmsConfig(savedFast2smsKey, savedSenderId, true);
         if ("getSmsConfig" in actor) {
           const smsUpdated = await (
             actor as unknown as {
@@ -11306,15 +11319,15 @@ function OfferApiKeysTab() {
       // Step 3: Save all 3 CPAGrip fields atomically via saveCPAGripKeys
       // This is the ONLY place these 3 fields are saved — no overlap with generic offer wall
       await updateCpagripSettings.mutateAsync({
-        apiKey: cpagripApiKey.trim(),
-        webhookSecret: cpagripWebhookSecret.trim(),
-        offerWallName: offerWallName.trim(),
+        apiKey: savedCpagripApiKey,
+        webhookSecret: savedCpagripWebhookSecret,
+        offerWallName: savedOfferWallName,
       });
 
-      // Step 4: Always re-fetch CPAGrip to display exactly what was saved in canister
+      // Step 4: Always re-fetch CPAGrip to verify what was actually persisted in canister
       if (actor) {
         try {
-          const savedCpagrip = await (
+          const verifiedData = await (
             actor as unknown as {
               getCpagripSettings: () => Promise<{
                 apiKey: string;
@@ -11323,30 +11336,40 @@ function OfferApiKeysTab() {
               }>;
             }
           ).getCpagripSettings();
-          // Always set — even empty string — to reflect what canister actually stored
-          setCpagripApiKey(savedCpagrip.apiKey ?? "");
-          setCpagripWebhookSecret(savedCpagrip.webhookSecret ?? "");
+          // Always update state from canister — never from stale local values
+          setCpagripApiKey(verifiedData.apiKey ?? "");
+          setCpagripWebhookSecret(verifiedData.webhookSecret ?? "");
           setOfferWallName(
-            savedCpagrip.offerWallName ?? "Digital Zindagi Offers",
+            verifiedData.offerWallName || "Digital Zindagi Offers",
           );
+          // Verify all 3 fields actually persisted (use captured pre-save values)
+          const verifyFailed =
+            (savedCpagripApiKey &&
+              verifiedData.apiKey !== savedCpagripApiKey) ||
+            (savedCpagripWebhookSecret &&
+              verifiedData.webhookSecret !== savedCpagripWebhookSecret) ||
+            (savedOfferWallName &&
+              verifiedData.offerWallName !== savedOfferWallName);
+          if (verifyFailed) {
+            toast.warning("Save nahi hua, please try again");
+            return;
+          }
         } catch {
-          // ignore re-fetch failure — data is already saved, cache is updated
+          // Re-fetch failed — canister save succeeded, just can't verify right now
         }
       }
 
       toast.success("Settings Updated Successfully ✅");
     } catch (err) {
-      // The hook's onError already fired a toast for CPAGrip errors.
-      // Only show a generic error for non-CPAGrip save steps.
-      const isCpagripErr =
-        err instanceof Error &&
-        (err.message.includes("Actor") ||
-          err.message.includes("Save failed") ||
-          err.message.includes("save") ||
-          err.message.includes("backend"));
-      if (!isCpagripErr) {
-        toast.error("Failed to save. Please try again.");
-      }
+      // Reset to empty on canister error — never show stale cached data
+      setCpagripApiKey("");
+      setCpagripWebhookSecret("");
+      setOfferWallName("Digital Zindagi Offers");
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to save. Please try again.";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -11671,11 +11694,12 @@ function OfferProfitMarginTab() {
         "getOfferPortalConfig" in actor &&
         "updateOfferPortalConfig" in actor
       ) {
-        const cfg = await (
+        const profitCfg = await (
           actor as unknown as {
             getOfferPortalConfig: () => Promise<{
               isEnabled: boolean;
               cpaLeadWebhookSecret: string;
+              cpagripApiKey: string;
               adminProfitPct: bigint;
               userProfitPct: bigint;
             }>;
@@ -11686,13 +11710,17 @@ function OfferProfitMarginTab() {
             updateOfferPortalConfig: (
               e: boolean,
               s: string,
+              k: string,
               a: bigint,
               u: bigint,
-            ) => Promise<boolean>;
+            ) => Promise<
+              { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
+            >;
           }
         ).updateOfferPortalConfig(
-          cfg.isEnabled,
-          cfg.cpaLeadWebhookSecret ?? "",
+          profitCfg.isEnabled,
+          profitCfg.cpaLeadWebhookSecret ?? "",
+          profitCfg.cpagripApiKey ?? "",
           BigInt(Number(adminPct)),
           BigInt(Number(userPct)),
         );

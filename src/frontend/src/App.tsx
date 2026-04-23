@@ -108,6 +108,32 @@ function AppRoutes() {
     }
     // Run auto-cleanup on app load — purges old orders/chats only
     runAutoCleanup();
+
+    // Global unhandled promise rejection handler — prevent blank screens
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Prevent unhandled rejections from crashing the page
+      event.preventDefault();
+      const reason = event.reason;
+      const msg =
+        reason instanceof Error ? reason.message : String(reason ?? "");
+      // Only log to console silently — never show raw errors to users
+      if (
+        msg.toLowerCase().includes("ic0.trap") ||
+        msg.toLowerCase().includes("canister") ||
+        msg.toLowerCase().includes("reject code")
+      ) {
+        console.warn("[Digital Zindagi] Backend call failed silently:", msg);
+      } else {
+        console.warn("[Digital Zindagi] Unhandled rejection:", msg);
+      }
+    };
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    return () => {
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection,
+      );
+    };
   }, []);
 
   return (

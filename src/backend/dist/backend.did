@@ -1080,6 +1080,18 @@ service : {
     }) query;
   /// Get Offer Portal global config — admin only.
   getOfferPortalConfig: () -> (OfferPortalConfig) query;
+  /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
+  /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+  getOfferPortalConfigFull: () ->
+   (record {
+      adminProfitPct: nat;
+      cpaLeadWebhookSecret: text;
+      cpagripApiKey: text;
+      cpagripOfferWallName: text;
+      cpagripWebhookSecret: text;
+      isEnabled: bool;
+      userProfitPct: nat;
+    }) query;
   /// Get Offer Portal global config — public (no auth required).
   /// Returns the config so any visitor can check whether the portal is enabled
   /// before showing the login/signup UI.  Webhook secrets are NOT included
@@ -1153,7 +1165,11 @@ service : {
   isPremiumUser: (userId: opt principal) -> (bool) query;
   leaveChatGroup: (conversationId: nat) -> (bool);
   listApprovals: () -> (vec UserApprovalInfo) query;
-  login: (mobile: MobileNumber, passwordHash: text) -> (User);
+  login: (mobile: MobileNumber, passwordHash: text) ->
+   (variant {
+      err: text;
+      ok: User;
+    });
   /// Login to the Offer Portal.
   /// Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
   /// never traps, so the frontend receives a clean error instead of ic0.trap.
@@ -1344,9 +1360,11 @@ service : {
   updateNews: (id: nat, title: text, summary: text, imageUrl: text, link:
    text, category: text, enabled: bool) -> (bool);
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  /// Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
   /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   updateOfferPortalConfig: (isEnabled: bool, cpaLeadWebhookSecret: text,
-   cpagripApiKey: text, adminProfitPct: nat, userProfitPct: nat) ->
+   cpagripApiKey: text, adminProfitPct: nat, userProfitPct: nat,
+   newWebhookSecret: text, newOfferWallName: text) ->
    (variant {
       err: text;
       ok: bool;

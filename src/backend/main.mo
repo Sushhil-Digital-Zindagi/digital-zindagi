@@ -33,7 +33,7 @@ import MktTypes   "types/marketplace";
 import MktApi     "mixins/marketplace-api";
 import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
-import Migration  "migration";
+
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
@@ -41,7 +41,7 @@ import Migration  "migration";
 
 
 
-(with migration = Migration.run)
+
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -671,9 +671,9 @@ persistent actor {
     users.get(mobile);
   };
 
-  public shared ({ caller }) func login(mobile : MobileNumber, passwordHash : Text) : async User {
+  public shared ({ caller }) func login(mobile : MobileNumber, passwordHash : Text) : async { #ok : User; #err : Text } {
     switch (users.get(mobile)) {
-      case (null) { Runtime.trap("User not found") };
+      case (null) { #err("User not found") };
       case (?user) {
         if (user.passwordHash == passwordHash) {
           // Update principal mapping on login
@@ -692,9 +692,9 @@ persistent actor {
           // Assign role in AccessControl system
           AccessControl.assignRole(accessControlState, caller, caller, #user);
 
-          user;
+          #ok(user);
         } else {
-          Runtime.trap("Incorrect password");
+          #err("Incorrect password");
         };
       };
     };
@@ -2205,6 +2205,7 @@ persistent actor {
   };
 
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+  /// Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
   /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   public shared ({ caller }) func updateOfferPortalConfig(
     isEnabled            : Bool,
@@ -2212,6 +2213,8 @@ persistent actor {
     cpagripApiKey        : Text,
     adminProfitPct       : Nat,
     userProfitPct        : Nat,
+    newWebhookSecret     : Text,
+    newOfferWallName     : Text,
   ) : async { #ok : Bool; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       return #err("Unauthorized: Admin only");
@@ -2221,8 +2224,38 @@ persistent actor {
       case (#err(msg)) { #err(msg) };
       case (#ok(_))    {
         offerPortalConfig := newConfig;
+        // Persist the two extra CPAGrip fields to their separate stable vars
+        cpagripWebhookSecret := newWebhookSecret;
+        cpagripOfferWallName := newOfferWallName;
+        // Mirror cpagripApiKey into adminSettings for consistency
+        adminSettings := { adminSettings with cpagripApiKey };
         #ok(true);
       };
+    };
+  };
+
+  /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
+  /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+  public shared query ({ caller }) func getOfferPortalConfigFull() : async {
+    isEnabled            : Bool;
+    cpaLeadWebhookSecret : Text;
+    cpagripApiKey        : Text;
+    adminProfitPct       : Nat;
+    userProfitPct        : Nat;
+    cpagripWebhookSecret : Text;
+    cpagripOfferWallName : Text;
+  } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    {
+      isEnabled            = offerPortalConfig.isEnabled;
+      cpaLeadWebhookSecret = offerPortalConfig.cpaLeadWebhookSecret;
+      cpagripApiKey        = offerPortalConfig.cpagripApiKey;
+      adminProfitPct       = offerPortalConfig.adminProfitPct;
+      userProfitPct        = offerPortalConfig.userProfitPct;
+      cpagripWebhookSecret = cpagripWebhookSecret;
+      cpagripOfferWallName = cpagripOfferWallName;
     };
   };
 

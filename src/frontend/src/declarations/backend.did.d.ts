@@ -1067,6 +1067,22 @@ export interface _SERVICE {
    */
   'getOfferPortalConfig' : ActorMethod<[], OfferPortalConfig>,
   /**
+   * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
+   * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+   */
+  'getOfferPortalConfigFull' : ActorMethod<
+    [],
+    {
+      'cpaLeadWebhookSecret' : string,
+      'cpagripOfferWallName' : string,
+      'cpagripApiKey' : string,
+      'adminProfitPct' : bigint,
+      'isEnabled' : boolean,
+      'cpagripWebhookSecret' : string,
+      'userProfitPct' : bigint,
+    }
+  >,
+  /**
    * / Get Offer Portal global config — public (no auth required).
    * / Returns the config so any visitor can check whether the portal is enabled
    * / before showing the login/signup UI.  Webhook secrets are NOT included
@@ -1168,7 +1184,11 @@ export interface _SERVICE {
   'isPremiumUser' : ActorMethod<[[] | [Principal]], boolean>,
   'leaveChatGroup' : ActorMethod<[bigint], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
-  'login' : ActorMethod<[MobileNumber, string], User>,
+  'login' : ActorMethod<
+    [MobileNumber, string],
+    { 'ok' : User } |
+      { 'err' : string }
+  >,
   /**
    * / Login to the Offer Portal.
    * / Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
@@ -1434,10 +1454,11 @@ export interface _SERVICE {
   >,
   /**
    * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+   * / Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
    * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
    */
   'updateOfferPortalConfig' : ActorMethod<
-    [boolean, string, string, bigint, bigint],
+    [boolean, string, string, bigint, bigint, string, string],
     { 'ok' : boolean } |
       { 'err' : string }
   >,

@@ -1114,6 +1114,19 @@ export interface backendInterface {
      */
     getOfferPortalConfig(): Promise<OfferPortalConfig>;
     /**
+     * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
+     * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+     */
+    getOfferPortalConfigFull(): Promise<{
+        cpaLeadWebhookSecret: string;
+        cpagripOfferWallName: string;
+        cpagripApiKey: string;
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        cpagripWebhookSecret: string;
+        userProfitPct: bigint;
+    }>;
+    /**
      * / Get Offer Portal global config — public (no auth required).
      * / Returns the config so any visitor can check whether the portal is enabled
      * / before showing the login/signup UI.  Webhook secrets are NOT included
@@ -1218,7 +1231,13 @@ export interface backendInterface {
     isPremiumUser(userId: Principal | null): Promise<boolean>;
     leaveChatGroup(conversationId: bigint): Promise<boolean>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
-    login(mobile: MobileNumber, passwordHash: string): Promise<User>;
+    login(mobile: MobileNumber, passwordHash: string): Promise<{
+        __kind__: "ok";
+        ok: User;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Login to the Offer Portal.
      * / Returns #ok(OfferUser) on success or #err(reason) on bad credentials —
@@ -1468,9 +1487,10 @@ export interface backendInterface {
     updateNews(id: bigint, title: string, summary: string, imageUrl: string, link: string, category: string, enabled: boolean): Promise<boolean>;
     /**
      * / Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
+     * / Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
      * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
      */
-    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, cpagripApiKey: string, adminProfitPct: bigint, userProfitPct: bigint): Promise<{
+    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, cpagripApiKey: string, adminProfitPct: bigint, userProfitPct: bigint, newWebhookSecret: string, newOfferWallName: string): Promise<{
         __kind__: "ok";
         ok: boolean;
     } | {

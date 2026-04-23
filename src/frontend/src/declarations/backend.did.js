@@ -1121,6 +1121,21 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+  'getOfferPortalConfigFull' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'cpaLeadWebhookSecret' : IDL.Text,
+          'cpagripOfferWallName' : IDL.Text,
+          'cpagripApiKey' : IDL.Text,
+          'adminProfitPct' : IDL.Nat,
+          'isEnabled' : IDL.Bool,
+          'cpagripWebhookSecret' : IDL.Text,
+          'userProfitPct' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
   'getOfferPortalConfigPublic' : IDL.Func(
       [],
       [
@@ -1214,7 +1229,11 @@ export const idlService = IDL.Service({
   'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
   'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
-  'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
+  'login' : IDL.Func(
+      [MobileNumber, IDL.Text],
+      [IDL.Variant({ 'ok' : User, 'err' : IDL.Text })],
+      [],
+    ),
   'loginOfferUser' : IDL.Func(
       [IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
@@ -1457,7 +1476,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateOfferPortalConfig' : IDL.Func(
-      [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
+      [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
@@ -2652,6 +2671,21 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+    'getOfferPortalConfigFull' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'cpaLeadWebhookSecret' : IDL.Text,
+            'cpagripOfferWallName' : IDL.Text,
+            'cpagripApiKey' : IDL.Text,
+            'adminProfitPct' : IDL.Nat,
+            'isEnabled' : IDL.Bool,
+            'cpagripWebhookSecret' : IDL.Text,
+            'userProfitPct' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
     'getOfferPortalConfigPublic' : IDL.Func(
         [],
         [
@@ -2745,7 +2779,11 @@ export const idlFactory = ({ IDL }) => {
     'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
     'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
-    'login' : IDL.Func([MobileNumber, IDL.Text], [User], []),
+    'login' : IDL.Func(
+        [MobileNumber, IDL.Text],
+        [IDL.Variant({ 'ok' : User, 'err' : IDL.Text })],
+        [],
+      ),
     'loginOfferUser' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
@@ -3002,7 +3040,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateOfferPortalConfig' : IDL.Func(
-        [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
