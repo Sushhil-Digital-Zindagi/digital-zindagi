@@ -778,14 +778,17 @@ export interface _SERVICE {
   'adminGetUpiPremiumRequests' : ActorMethod<[], Array<UpiPaymentRequest>>,
   /**
    * / Return all pending UPI unlock requests — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'adminGetUpiUnlockRequests' : ActorMethod<[], Array<LockedMessagePayment>>,
   /**
    * / List all Offer Portal users — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'adminListOfferUsers' : ActorMethod<[], Array<OfferUser>>,
   /**
    * / List all pending withdrawal requests — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'adminListPendingWithdrawals' : ActorMethod<[], Array<OfferWithdrawal>>,
   'adminRejectUpiPremium' : ActorMethod<
@@ -907,6 +910,7 @@ export interface _SERVICE {
   'getActiveProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return the most recent `limit` audit log entries — admin only.
+   * / Returns empty array if caller is not admin (never traps).
    */
   'getAdminAuditLog' : ActorMethod<[bigint], Array<AuditLogEntry>>,
   'getAdminConfig' : ActorMethod<[], [] | [AdminConfig]>,
@@ -917,6 +921,7 @@ export interface _SERVICE {
   'getAdminSettings' : ActorMethod<[], AdminSettingsExtended>,
   /**
    * / Return the current AdMob configuration — admin only.
+   * / Returns empty strings for non-admin callers (never traps).
    */
   'getAdmobConfig' : ActorMethod<
     [],
@@ -946,16 +951,19 @@ export interface _SERVICE {
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return all recharge transactions (master log) — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'getAllRechargeTransactions' : ActorMethod<[], Array<RechargeTransaction>>,
   'getAllToggles' : ActorMethod<[], Array<[string, boolean]>>,
   /**
    * / Return all pending topup requests — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'getAllTopupRequests' : ActorMethod<[], Array<WalletTopupRequest>>,
   'getAllUsers' : ActorMethod<[], Array<User>>,
   /**
    * / Return all wallet balances as (userId, balance) pairs — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'getAllWalletBalances' : ActorMethod<[], Array<[bigint, number]>>,
   'getAppSettings' : ActorMethod<[], string>,
@@ -991,6 +999,7 @@ export interface _SERVICE {
   >,
   /**
    * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+   * / Returns empty strings for non-admin callers (never traps).
    */
   'getCpagripSettings' : ActorMethod<
     [],
@@ -1011,6 +1020,7 @@ export interface _SERVICE {
   'getLockedFileUrl' : ActorMethod<[bigint], [] | [string]>,
   /**
    * / Get all managers — admin only.
+   * / Returns empty array for non-admin callers (never traps).
    */
   'getManagers' : ActorMethod<[], Array<string>>,
   'getMyChatConversations' : ActorMethod<[], Array<Conversation>>,
@@ -1064,23 +1074,32 @@ export interface _SERVICE {
   >,
   /**
    * / Get Offer Portal global config — admin only.
+   * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
    */
-  'getOfferPortalConfig' : ActorMethod<[], OfferPortalConfig>,
+  'getOfferPortalConfig' : ActorMethod<
+    [],
+    { 'ok' : OfferPortalConfig } |
+      { 'err' : string }
+  >,
   /**
    * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
    * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+   * / Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
    */
   'getOfferPortalConfigFull' : ActorMethod<
     [],
     {
-      'cpaLeadWebhookSecret' : string,
-      'cpagripOfferWallName' : string,
-      'cpagripApiKey' : string,
-      'adminProfitPct' : bigint,
-      'isEnabled' : boolean,
-      'cpagripWebhookSecret' : string,
-      'userProfitPct' : bigint,
-    }
+        'ok' : {
+          'cpaLeadWebhookSecret' : string,
+          'cpagripOfferWallName' : string,
+          'cpagripApiKey' : string,
+          'adminProfitPct' : bigint,
+          'isEnabled' : boolean,
+          'cpagripWebhookSecret' : string,
+          'userProfitPct' : bigint,
+        }
+      } |
+      { 'err' : string }
   >,
   /**
    * / Get Offer Portal global config — public (no auth required).
@@ -1120,6 +1139,7 @@ export interface _SERVICE {
   'getRecentUsers' : ActorMethod<[], Array<User>>,
   /**
    * / Return the current recharge API config — admin only.
+   * / Returns default config for non-admin callers (never traps).
    */
   'getRechargeApiConfig' : ActorMethod<[], RechargeApiConfig>,
   /**
@@ -1133,8 +1153,9 @@ export interface _SERVICE {
   'getScrapRates' : ActorMethod<[], Array<ScrapRate>>,
   /**
    * / Get SMS (Fast2SMS) config — admin only.
+   * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
    */
-  'getSmsConfig' : ActorMethod<[], SmsConfig>,
+  'getSmsConfig' : ActorMethod<[], { 'ok' : SmsConfig } | { 'err' : string }>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
   /**
    * / Return balance for a customer. Caller must own the customer.
@@ -1168,6 +1189,7 @@ export interface _SERVICE {
   'getVideos' : ActorMethod<[], Array<VideoItem>>,
   /**
    * / Return wallet balance for any userId — admin only.
+   * / Returns 0.0 for non-admin callers (never traps).
    */
   'getWalletBalanceByUserId' : ActorMethod<[bigint], number>,
   /**
@@ -1501,8 +1523,13 @@ export interface _SERVICE {
   >,
   /**
    * / Update SMS config — admin only.
+   * / Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
    */
-  'updateSmsConfig' : ActorMethod<[string, string, boolean], boolean>,
+  'updateSmsConfig' : ActorMethod<
+    [string, string, boolean],
+    { 'ok' : boolean } |
+      { 'err' : string }
+  >,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
   'updateToggle' : ActorMethod<[string, boolean], undefined>,
   /**

@@ -10979,21 +10979,21 @@ function OfferSystemToggleTab() {
   useEffect(() => {
     const load = async () => {
       try {
-        if (actor && "getOfferPortalConfig" in actor) {
-          const cfg = await (
+        if (actor) {
+          // Use public endpoint — never traps for any caller
+          const pub = await (
             actor as unknown as {
-              getOfferPortalConfig: () => Promise<{
+              getOfferPortalConfigPublic: () => Promise<{
                 isEnabled: boolean;
-                cpaLeadWebhookSecret: string;
                 adminProfitPct: bigint;
                 userProfitPct: bigint;
               }>;
             }
-          ).getOfferPortalConfig();
-          setIsEnabled(cfg.isEnabled ?? false);
+          ).getOfferPortalConfigPublic();
+          setIsEnabled(pub.isEnabled ?? false);
         }
       } catch {
-        /* ignore */
+        /* ignore — show default OFF state */
       } finally {
         setLoading(false);
       }
@@ -11005,22 +11005,61 @@ function OfferSystemToggleTab() {
     setSaving(true);
     try {
       const next = !isEnabled;
-      if (
-        actor &&
-        "getOfferPortalConfig" in actor &&
-        "updateOfferPortalConfig" in actor
-      ) {
-        const toggleResult = await (
-          actor as unknown as {
-            getOfferPortalConfig: () => Promise<{
-              isEnabled: boolean;
-              cpaLeadWebhookSecret: string;
-              cpagripApiKey: string;
-              adminProfitPct: bigint;
-              userProfitPct: bigint;
-            }>;
+      if (actor && "updateOfferPortalConfig" in actor) {
+        // Fetch current public config to preserve existing values
+        let currentSecret = "";
+        let currentCpaKey = "";
+        let currentAdminPct = BigInt(60);
+        let currentUserPct = BigInt(40);
+        try {
+          // Try full admin config first for complete picture
+          const fullResult = await (
+            actor as unknown as {
+              getOfferPortalConfigFull: () => Promise<
+                | {
+                    __kind__: "ok";
+                    ok: {
+                      isEnabled: boolean;
+                      cpaLeadWebhookSecret: string;
+                      cpagripApiKey: string;
+                      adminProfitPct: bigint;
+                      userProfitPct: bigint;
+                    };
+                  }
+                | { __kind__: "err"; err: string }
+              >;
+            }
+          ).getOfferPortalConfigFull();
+          if (
+            fullResult &&
+            "__kind__" in fullResult &&
+            fullResult.__kind__ === "ok" &&
+            "ok" in fullResult
+          ) {
+            const full = fullResult.ok;
+            currentSecret = full.cpaLeadWebhookSecret ?? "";
+            currentCpaKey = full.cpagripApiKey ?? "";
+            currentAdminPct = full.adminProfitPct ?? BigInt(60);
+            currentUserPct = full.userProfitPct ?? BigInt(40);
           }
-        ).getOfferPortalConfig();
+        } catch {
+          // Fall back to public values if admin fetch fails
+          try {
+            const pub = await (
+              actor as unknown as {
+                getOfferPortalConfigPublic: () => Promise<{
+                  adminProfitPct: bigint;
+                  userProfitPct: bigint;
+                }>;
+              }
+            ).getOfferPortalConfigPublic();
+            currentAdminPct = pub.adminProfitPct ?? BigInt(60);
+            currentUserPct = pub.userProfitPct ?? BigInt(40);
+          } catch {
+            /* use defaults */
+          }
+        }
+
         const ok = await (
           actor as unknown as {
             updateOfferPortalConfig: (
@@ -11029,26 +11068,39 @@ function OfferSystemToggleTab() {
               k: string,
               a: bigint,
               u: bigint,
+              ws: string,
+              wn: string,
             ) => Promise<
               { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
             >;
           }
         ).updateOfferPortalConfig(
           next,
-          toggleResult.cpaLeadWebhookSecret ?? "",
-          toggleResult.cpagripApiKey ?? "",
-          toggleResult.adminProfitPct ?? BigInt(60),
-          toggleResult.userProfitPct ?? BigInt(40),
+          currentSecret,
+          currentCpaKey,
+          currentAdminPct,
+          currentUserPct,
+          "",
+          "",
         );
-        if ("err" in ok) {
+        if (
+          ok &&
+          typeof ok === "object" &&
+          "__kind__" in ok &&
+          ok.__kind__ === "err"
+        ) {
           toast.error("Setting save nahi ho saki");
           return;
         }
         setIsEnabled(next);
-        toast.success(`Offer Portal ${next ? "ACTIVE" : "BAND"} ho gaya!`);
+        toast.success(
+          `Offer Portal ${next ? "ACTIVE ✅" : "BAND ⛔"} ho gaya!`,
+        );
+      } else {
+        toast.error("Actor available nahi — please reload karein");
       }
     } catch {
-      toast.error("Setting save nahi ho saki");
+      toast.error("Setting save nahi ho saki — please try again");
     } finally {
       setSaving(false);
     }
@@ -11186,18 +11238,37 @@ function OfferApiKeysTab() {
             setOfferWallName("Digital Zindagi Offers");
           }
         }
-        if (actor && "getOfferPortalConfig" in actor) {
-          const cfg = await (
-            actor as unknown as {
-              getOfferPortalConfig: () => Promise<{
-                isEnabled: boolean;
-                cpaLeadWebhookSecret: string;
-                adminProfitPct: bigint;
-                userProfitPct: bigint;
-              }>;
+        // Load generic webhook secret from full admin config (never from admin-only trap method)
+        if (actor) {
+          try {
+            const fullResult = await (
+              actor as unknown as {
+                getOfferPortalConfigFull: () => Promise<
+                  | {
+                      __kind__: "ok";
+                      ok: {
+                        isEnabled: boolean;
+                        cpaLeadWebhookSecret: string;
+                        cpagripApiKey: string;
+                        adminProfitPct: bigint;
+                        userProfitPct: bigint;
+                      };
+                    }
+                  | { __kind__: "err"; err: string }
+                >;
+              }
+            ).getOfferPortalConfigFull();
+            if (
+              fullResult &&
+              "__kind__" in fullResult &&
+              fullResult.__kind__ === "ok" &&
+              "ok" in fullResult
+            ) {
+              setWebhookSecret(fullResult.ok.cpaLeadWebhookSecret ?? "");
             }
-          ).getOfferPortalConfig();
-          setWebhookSecret(cfg.cpaLeadWebhookSecret ?? "");
+          } catch {
+            /* not admin or method unavailable — leave field empty */
+          }
         }
         if (actor && "getSmsConfig" in actor) {
           const sms = await (
@@ -11240,22 +11311,28 @@ function OfferApiKeysTab() {
     setSaving(true);
     try {
       // Step 1: Save generic Offer Wall webhook secret (cpaLeadWebhookSecret field)
-      if (
-        actor &&
-        "getOfferPortalConfig" in actor &&
-        "updateOfferPortalConfig" in actor
-      ) {
-        const cfg = await (
-          actor as unknown as {
-            getOfferPortalConfig: () => Promise<{
-              isEnabled: boolean;
-              cpaLeadWebhookSecret: string;
-              cpagripApiKey: string;
-              adminProfitPct: bigint;
-              userProfitPct: bigint;
-            }>;
-          }
-        ).getOfferPortalConfig();
+      if (actor && "updateOfferPortalConfig" in actor) {
+        // Use public config to get isEnabled + profit pcts (never traps)
+        let currentIsEnabled = true;
+        let currentAdminPct = BigInt(60);
+        let currentUserPct = BigInt(40);
+        let currentCpaKey = savedCpagripApiKey; // use what we're saving
+        try {
+          const pub = await (
+            actor as unknown as {
+              getOfferPortalConfigPublic: () => Promise<{
+                isEnabled: boolean;
+                adminProfitPct: bigint;
+                userProfitPct: bigint;
+              }>;
+            }
+          ).getOfferPortalConfigPublic();
+          currentIsEnabled = pub.isEnabled;
+          currentAdminPct = pub.adminProfitPct ?? BigInt(60);
+          currentUserPct = pub.userProfitPct ?? BigInt(40);
+        } catch {
+          /* use defaults */
+        }
         await (
           actor as unknown as {
             updateOfferPortalConfig: (
@@ -11264,30 +11341,34 @@ function OfferApiKeysTab() {
               k: string,
               a: bigint,
               u: bigint,
+              ws: string,
+              wn: string,
             ) => Promise<
               { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
             >;
           }
         ).updateOfferPortalConfig(
-          cfg.isEnabled,
+          currentIsEnabled,
           savedWebhookSecret,
-          cfg.cpagripApiKey ?? "", // keep existing cpagripApiKey in this config unchanged
-          cfg.adminProfitPct ?? BigInt(60),
-          cfg.userProfitPct ?? BigInt(40),
+          currentCpaKey,
+          currentAdminPct,
+          currentUserPct,
+          savedCpagripWebhookSecret,
+          savedOfferWallName,
         );
-        // Re-fetch to confirm generic config
-        const updated = await (
-          actor as unknown as {
-            getOfferPortalConfig: () => Promise<{
-              isEnabled: boolean;
-              cpaLeadWebhookSecret: string;
-              cpagripApiKey: string;
-              adminProfitPct: bigint;
-              userProfitPct: bigint;
-            }>;
-          }
-        ).getOfferPortalConfig();
-        setWebhookSecret(updated.cpaLeadWebhookSecret ?? "");
+        // Re-fetch public config to confirm
+        try {
+          await (
+            actor as unknown as {
+              getOfferPortalConfigPublic: () => Promise<{
+                isEnabled: boolean;
+              }>;
+            }
+          ).getOfferPortalConfigPublic();
+        } catch {
+          /* verification failed but save succeeded */
+        }
+        setWebhookSecret(savedWebhookSecret);
       }
 
       // Step 2: Save SMS config
@@ -11659,22 +11740,22 @@ function OfferProfitMarginTab() {
   useEffect(() => {
     const load = async () => {
       try {
-        if (actor && "getOfferPortalConfig" in actor) {
-          const cfg = await (
+        if (actor) {
+          // Use public endpoint — never traps for any caller
+          const pub = await (
             actor as unknown as {
-              getOfferPortalConfig: () => Promise<{
+              getOfferPortalConfigPublic: () => Promise<{
                 isEnabled: boolean;
-                cpaLeadWebhookSecret: string;
                 adminProfitPct: bigint;
                 userProfitPct: bigint;
               }>;
             }
-          ).getOfferPortalConfig();
-          setAdminPct(String(Number(cfg.adminProfitPct ?? 60n)));
-          setUserPct(String(Number(cfg.userProfitPct ?? 40n)));
+          ).getOfferPortalConfigPublic();
+          setAdminPct(String(Number(pub.adminProfitPct ?? 60n)));
+          setUserPct(String(Number(pub.userProfitPct ?? 40n)));
         }
       } catch {
-        /* ignore */
+        /* ignore — keep defaults */
       } finally {
         setLoaded(true);
       }
@@ -11689,22 +11770,53 @@ function OfferProfitMarginTab() {
     }
     setSaving(true);
     try {
-      if (
-        actor &&
-        "getOfferPortalConfig" in actor &&
-        "updateOfferPortalConfig" in actor
-      ) {
-        const profitCfg = await (
-          actor as unknown as {
-            getOfferPortalConfig: () => Promise<{
-              isEnabled: boolean;
-              cpaLeadWebhookSecret: string;
-              cpagripApiKey: string;
-              adminProfitPct: bigint;
-              userProfitPct: bigint;
-            }>;
+      if (actor && "updateOfferPortalConfig" in actor) {
+        // Fetch current state from public endpoint (never traps)
+        let currentIsEnabled = true;
+        let currentSecret = "";
+        let currentCpaKey = "";
+        try {
+          const pub = await (
+            actor as unknown as {
+              getOfferPortalConfigPublic: () => Promise<{
+                isEnabled: boolean;
+                adminProfitPct: bigint;
+                userProfitPct: bigint;
+              }>;
+            }
+          ).getOfferPortalConfigPublic();
+          currentIsEnabled = pub.isEnabled;
+          // Try to also get webhook secret from full admin config
+          try {
+            const fullResult = await (
+              actor as unknown as {
+                getOfferPortalConfigFull: () => Promise<
+                  | {
+                      __kind__: "ok";
+                      ok: {
+                        cpaLeadWebhookSecret: string;
+                        cpagripApiKey: string;
+                      };
+                    }
+                  | { __kind__: "err"; err: string }
+                >;
+              }
+            ).getOfferPortalConfigFull();
+            if (
+              fullResult &&
+              "__kind__" in fullResult &&
+              fullResult.__kind__ === "ok" &&
+              "ok" in fullResult
+            ) {
+              currentSecret = fullResult.ok.cpaLeadWebhookSecret ?? "";
+              currentCpaKey = fullResult.ok.cpagripApiKey ?? "";
+            }
+          } catch {
+            /* not admin or method unavailable */
           }
-        ).getOfferPortalConfig();
+        } catch {
+          /* use defaults */
+        }
         await (
           actor as unknown as {
             updateOfferPortalConfig: (
@@ -11713,21 +11825,25 @@ function OfferProfitMarginTab() {
               k: string,
               a: bigint,
               u: bigint,
+              ws: string,
+              wn: string,
             ) => Promise<
               { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
             >;
           }
         ).updateOfferPortalConfig(
-          profitCfg.isEnabled,
-          profitCfg.cpaLeadWebhookSecret ?? "",
-          profitCfg.cpagripApiKey ?? "",
+          currentIsEnabled,
+          currentSecret,
+          currentCpaKey,
           BigInt(Number(adminPct)),
           BigInt(Number(userPct)),
+          "",
+          "",
         );
       }
       toast.success("Profit split save ho gaya! ✅");
     } catch {
-      toast.error("Save nahi ho saka");
+      toast.error("Save nahi ho saka — please try again");
     } finally {
       setSaving(false);
     }

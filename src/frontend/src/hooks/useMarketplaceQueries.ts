@@ -1,14 +1,17 @@
 /**
  * React Query hooks for the Likeup Marketplace module.
- * All calls go through the ICP canister actor (same pattern as useChatQueries).
+ * All calls go through the ICP canister actor.
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import type { MarketCategory as MarketCategoryType } from "../backend.d";
 import type {
   CreateListingPayload,
   MarketListing,
   NewsItem,
 } from "../types/marketplaceTypes";
+import { MarketCategory } from "../types/marketplaceTypes";
 import { useActor } from "./useActor";
 
 function asActor(
@@ -34,6 +37,12 @@ function lsWrite<T>(key: string, data: T): void {
   }
 }
 
+// Map frontend category key to backend MarketCategory enum
+function mapCategory(category: string | undefined): MarketCategoryType | null {
+  if (!category || category === MarketCategory.all) return null;
+  return category as MarketCategoryType;
+}
+
 // ---- Read Hooks ----
 
 export function useListings(city?: string, category?: string) {
@@ -44,12 +53,14 @@ export function useListings(city?: string, category?: string) {
     queryFn: async () => {
       if (!actor) return lsRead<MarketListing[]>(cacheKey, []);
       try {
-        const data = (await asActor(actor).getListings(
-          city ?? "",
-          category ?? "",
-        )) as MarketListing[];
-        lsWrite(cacheKey, data);
-        return data;
+        // Backend: getListings(city: string | null, category: MarketCategory | null)
+        const data = await asActor(actor).getListings(
+          city?.trim() ? city.trim() : null,
+          mapCategory(category),
+        );
+        const result = (data ?? []) as MarketListing[];
+        lsWrite(cacheKey, result);
+        return result;
       } catch {
         return lsRead<MarketListing[]>(cacheKey, []);
       }
@@ -67,9 +78,11 @@ export function useMyListings() {
     queryFn: async () => {
       if (!actor) return lsRead<MarketListing[]>("dz_my_listings", []);
       try {
-        const data = (await asActor(actor).getMyListings()) as MarketListing[];
-        lsWrite("dz_my_listings", data);
-        return data;
+        // Backend: getMyListings()
+        const data = await asActor(actor).getMyListings();
+        const result = (data ?? []) as MarketListing[];
+        lsWrite("dz_my_listings", result);
+        return result;
       } catch {
         return lsRead<MarketListing[]>("dz_my_listings", []);
       }
@@ -87,9 +100,11 @@ export function useNewsItems() {
     queryFn: async () => {
       if (!actor) return lsRead<NewsItem[]>("dz_market_news", []);
       try {
-        const data = (await asActor(actor).getNewsItems()) as NewsItem[];
-        lsWrite("dz_market_news", data);
-        return data;
+        // Backend: getNewsItems()
+        const data = await asActor(actor).getNewsItems();
+        const result = (data ?? []) as NewsItem[];
+        lsWrite("dz_market_news", result);
+        return result;
       } catch {
         return lsRead<NewsItem[]>("dz_market_news", []);
       }
@@ -108,11 +123,32 @@ export function useCreateListing() {
   return useMutation({
     mutationFn: async (payload: CreateListingPayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asActor(actor).createListing(payload) as Promise<MarketListing>;
+      // Backend: createListing(title, description, price: bigint, category: MarketCategory, city, photoUrls: string[], whatsappContact)
+      const result = await asActor(actor).createListing(
+        payload.title,
+        payload.description,
+        BigInt(Math.round(payload.price * 100)), // convert to paisa
+        mapCategory(payload.category) ??
+          ("other" as unknown as MarketCategoryType),
+        payload.city,
+        payload.photoUrl ? [payload.photoUrl] : [],
+        payload.whatsapp,
+      );
+      // Handle Result<bigint, string>
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Create failed");
+      }
+      return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["marketListings"] });
       qc.invalidateQueries({ queryKey: ["myMarketListings"] });
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : "Listing add nahi ho saki.",
+      );
     },
   });
 }
@@ -123,11 +159,20 @@ export function useDeleteListing() {
   return useMutation({
     mutationFn: async (listingId: string) => {
       if (!actor) throw new Error("Actor not available");
-      return asActor(actor).deleteListing(listingId);
+      // Backend: deleteListing(id: bigint)
+      const result = await asActor(actor).deleteListing(BigInt(listingId));
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Delete failed");
+      }
+      return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["marketListings"] });
       qc.invalidateQueries({ queryKey: ["myMarketListings"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Delete nahi ho saka.");
     },
   });
 }
@@ -138,16 +183,24 @@ export function useFeatureListing() {
   return useMutation({
     mutationFn: async ({
       listingId,
-      featured,
     }: {
       listingId: string;
       featured: boolean;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      return asActor(actor).featureListing(listingId, featured);
+      // Backend: featureListing(id: bigint)
+      const result = await asActor(actor).featureListing(BigInt(listingId));
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Feature failed");
+      }
+      return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["marketListings"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Feature नहीं हो सका।");
     },
   });
 }
@@ -162,10 +215,24 @@ export function useAdminAddNews() {
       imageUrl?: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      return asActor(actor).adminAddNewsItem(payload) as Promise<NewsItem>;
+      // Backend: adminAddNewsItem(title: string, content: string, imageUrl: string | null)
+      const result = await asActor(actor).adminAddNewsItem(
+        payload.title,
+        payload.content,
+        payload.imageUrl ?? null,
+      );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Add failed");
+      }
+      return result as NewsItem;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["marketNews"] });
+      toast.success("News added ✅");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "News add नहीं हुई।");
     },
   });
 }
@@ -176,10 +243,19 @@ export function useAdminDeleteNews() {
   return useMutation({
     mutationFn: async (newsId: string) => {
       if (!actor) throw new Error("Actor not available");
-      return asActor(actor).adminDeleteNewsItem(newsId);
+      // Backend: adminDeleteNewsItem(id: bigint)
+      const result = await asActor(actor).adminDeleteNewsItem(BigInt(newsId));
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Delete failed");
+      }
+      return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["marketNews"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Delete नहीं हो सका।");
     },
   });
 }

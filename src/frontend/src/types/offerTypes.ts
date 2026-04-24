@@ -62,6 +62,9 @@ export interface OfferPortalConfig {
   isEnabled: boolean;
   cpaLeadWebhookSecret: string;
   cpagripApiKey: string;
+  /** CPAGrip-specific fields — only present for admin */
+  cpagripWebhookSecret?: string;
+  cpagripOfferWallName?: string;
   adminProfitPct: bigint;
   userProfitPct: bigint;
 }

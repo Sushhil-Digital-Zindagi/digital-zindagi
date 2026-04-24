@@ -344,9 +344,9 @@ function ChatPageInner() {
 
   async function handleStartChat(userId: string) {
     try {
-      const conv = await startConv.mutateAsync(userId);
+      const convId = await startConv.mutateAsync(userId);
       setShowModal(false);
-      navigate(`/chat/${conv.id}`);
+      navigate(`/chat/${convId}`);
     } catch {
       // silently fail — will navigate when user retries
     }

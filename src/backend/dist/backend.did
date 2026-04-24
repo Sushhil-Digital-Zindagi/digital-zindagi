@@ -861,10 +861,13 @@ service : {
   adminGetChatStats: () -> (ChatStats) query;
   adminGetUpiPremiumRequests: () -> (vec UpiPaymentRequest) query;
   /// Return all pending UPI unlock requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   adminGetUpiUnlockRequests: () -> (vec LockedMessagePayment) query;
   /// List all Offer Portal users — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   adminListOfferUsers: () -> (vec OfferUser) query;
   /// List all pending withdrawal requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   adminListPendingWithdrawals: () -> (vec OfferWithdrawal) query;
   adminRejectUpiPremium: (requestId: nat) -> (variant {
                                                 err: text;
@@ -964,12 +967,14 @@ service : {
   getActiveChatStories: () -> (vec Story) query;
   getActiveProviders: () -> (vec ProviderProfile) query;
   /// Return the most recent `limit` audit log entries — admin only.
+  /// Returns empty array if caller is not admin (never traps).
   getAdminAuditLog: (limit: nat) -> (vec AuditLogEntry) query;
   getAdminConfig: () -> (opt AdminConfig) query;
   /// Return all admin settings — readable by any caller so the frontend can
   /// apply toggles and rates without an admin auth round-trip.
   getAdminSettings: () -> (AdminSettingsExtended) query;
   /// Return the current AdMob configuration — admin only.
+  /// Returns empty strings for non-admin callers (never traps).
   getAdmobConfig: () ->
    (record {
       appId: text;
@@ -991,15 +996,18 @@ service : {
     }) query;
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   getAllRechargeTransactions: () -> (vec RechargeTransaction) query;
   getAllToggles: () -> (vec record {
                               text;
                               bool;
                             }) query;
   /// Return all pending topup requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   getAllTopupRequests: () -> (vec WalletTopupRequest) query;
   getAllUsers: () -> (vec User) query;
   /// Return all wallet balances as (userId, balance) pairs — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   getAllWalletBalances: () -> (vec record {
                                      nat;
                                      float64;
@@ -1028,6 +1036,7 @@ service : {
   getConversationMessages: (conversationId: nat, limit: nat, before:
    opt nat) -> (vec ChatMessage) query;
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+  /// Returns empty strings for non-admin callers (never traps).
   getCpagripSettings: () ->
    (record {
       apiKey: text;
@@ -1044,6 +1053,7 @@ service : {
    (vec MarketListing) query;
   getLockedFileUrl: (messageId: nat) -> (opt text) query;
   /// Get all managers — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   getManagers: () -> (vec text) query;
   getMyChatConversations: () -> (vec Conversation) query;
   getMyChatPoints: () -> (RewardPoints) query;
@@ -1079,18 +1089,28 @@ service : {
       totalEarnings: nat;
     }) query;
   /// Get Offer Portal global config — admin only.
-  getOfferPortalConfig: () -> (OfferPortalConfig) query;
+  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  getOfferPortalConfig: () ->
+   (variant {
+      err: text;
+      ok: OfferPortalConfig;
+    }) query;
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+  /// Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
   getOfferPortalConfigFull: () ->
-   (record {
-      adminProfitPct: nat;
-      cpaLeadWebhookSecret: text;
-      cpagripApiKey: text;
-      cpagripOfferWallName: text;
-      cpagripWebhookSecret: text;
-      isEnabled: bool;
-      userProfitPct: nat;
+   (variant {
+      err: text;
+      ok:
+       record {
+         adminProfitPct: nat;
+         cpaLeadWebhookSecret: text;
+         cpagripApiKey: text;
+         cpagripOfferWallName: text;
+         cpagripWebhookSecret: text;
+         isEnabled: bool;
+         userProfitPct: nat;
+       };
     }) query;
   /// Get Offer Portal global config — public (no auth required).
   /// Returns the config so any visitor can check whether the portal is enabled
@@ -1121,6 +1141,7 @@ service : {
   getProvidersPendingApproval: () -> (vec ProviderProfile) query;
   getRecentUsers: () -> (vec User) query;
   /// Return the current recharge API config — admin only.
+  /// Returns default config for non-admin callers (never traps).
   getRechargeApiConfig: () -> (RechargeApiConfig) query;
   /// Get receipt for a specific recharge transaction.
   getRechargeReceipt: (txnId: nat) -> (opt RechargeReceipt) query;
@@ -1128,7 +1149,11 @@ service : {
   getRechargeServiceEnabled: () -> (bool) query;
   getScrapRates: () -> (vec ScrapRate) query;
   /// Get SMS (Fast2SMS) config — admin only.
-  getSmsConfig: () -> (SmsConfig) query;
+  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  getSmsConfig: () -> (variant {
+                         err: text;
+                         ok: SmsConfig;
+                       }) query;
   getSubscriptionPricing: () -> (opt SubscriptionPricing) query;
   /// Return balance for a customer. Caller must own the customer.
   getUdhaarBalance: (customerId: text) ->
@@ -1153,6 +1178,7 @@ service : {
   getUsersByRole: (role: UserRole) -> (vec User) query;
   getVideos: () -> (vec VideoItem) query;
   /// Return wallet balance for any userId — admin only.
+  /// Returns 0.0 for non-admin callers (never traps).
   getWalletBalanceByUserId: (userId: nat) -> (float64) query;
   /// Initiate a mobile recharge.  Auto-calculates commission; deducts netCost
   /// from caller's wallet.  Returns new transaction ID.
@@ -1390,8 +1416,12 @@ service : {
   updateScrapRate: (id: nat, itemName: text, ratePerKg: float64, ratePerGram:
    float64, enabled: bool) -> (bool);
   /// Update SMS config — admin only.
+  /// Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
   updateSmsConfig: (fast2smsApiKey: text, senderId: text, isEnabled: 
-   bool) -> (bool);
+   bool) -> (variant {
+               err: text;
+               ok: bool;
+             });
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
   updateToggle: (toggleName: text, value: bool) -> ();
   /// Update a customer. Caller must own the customer (shopId check).

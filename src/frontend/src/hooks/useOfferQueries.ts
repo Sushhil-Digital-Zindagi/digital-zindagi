@@ -91,49 +91,63 @@ function mapBackendOfferUser(raw: {
 }
 
 // ============================================================
-// Offer Portal Config — admin only, but we handle failure gracefully
-// If the actor is not admin or call fails, we default to isEnabled:true
-// so the portal is visible to regular users.
+// Offer Portal Config — uses public endpoint for non-admins.
+// Admin gets full config via getOfferPortalConfigFull (Result<T,E>).
+// Non-admin gets getOfferPortalConfigPublic (always succeeds).
 // ============================================================
 export function useOfferPortalConfig() {
   const { actor, isFetching } = useActor();
   return useQuery<OfferPortalConfig>({
     queryKey: ["offerPortalConfig"],
     queryFn: async (): Promise<OfferPortalConfig> => {
-      if (!actor) {
-        // Actor not ready yet — return undefined-ish default (isLoading stays true)
-        return {
-          isEnabled: true,
-          cpaLeadWebhookSecret: "",
-          cpagripApiKey: "",
-          adminProfitPct: 60n,
-          userProfitPct: 40n,
-        };
-      }
+      const defaultConfig: OfferPortalConfig = {
+        isEnabled: true,
+        cpaLeadWebhookSecret: "",
+        cpagripApiKey: "",
+        adminProfitPct: 60n,
+        userProfitPct: 40n,
+      };
+      if (!actor) return defaultConfig;
+
+      // Always start with the public config (never traps)
       try {
-        const raw = await (actor as AnyActor).getOfferPortalConfig();
-        return {
-          isEnabled: raw.isEnabled,
-          cpaLeadWebhookSecret: raw.cpaLeadWebhookSecret,
-          cpagripApiKey: raw.cpagripApiKey ?? "",
-          adminProfitPct: raw.adminProfitPct,
-          userProfitPct: raw.userProfitPct,
-        };
-      } catch {
-        // Non-admin users get a permission error — default to enabled so portal shows
-        return {
-          isEnabled: true,
+        const pub = await (actor as AnyActor).getOfferPortalConfigPublic();
+        const base: OfferPortalConfig = {
+          isEnabled: pub.isEnabled,
           cpaLeadWebhookSecret: "",
           cpagripApiKey: "",
-          adminProfitPct: 60n,
-          userProfitPct: 40n,
+          adminProfitPct: pub.adminProfitPct,
+          userProfitPct: pub.userProfitPct,
         };
+
+        // Try to get full admin config — only succeeds for admin
+        try {
+          const fullResult = await (
+            actor as AnyActor
+          ).getOfferPortalConfigFull();
+          if (fullResult && fullResult.__kind__ === "ok" && fullResult.ok) {
+            const full = fullResult.ok;
+            return {
+              isEnabled: full.isEnabled,
+              cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
+              cpagripApiKey: full.cpagripApiKey ?? "",
+              cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
+              cpagripOfferWallName: full.cpagripOfferWallName ?? "",
+              adminProfitPct: full.adminProfitPct,
+              userProfitPct: full.userProfitPct,
+            };
+          }
+        } catch {
+          // Non-admin — just return public info
+        }
+        return base;
+      } catch {
+        return defaultConfig;
       }
     },
     enabled: !isFetching,
     refetchInterval: 60_000,
     staleTime: 30_000,
-    // Never propagate errors to the UI
     retry: false,
   });
 }
@@ -459,7 +473,8 @@ export function useRequestOfferWithdrawal() {
 }
 
 // ============================================================
-// Admin: Update offer portal config
+// Admin: Update offer portal config — sends ALL 7 fields atomically
+// including cpagripApiKey, webhookSecret and offerWallName
 // ============================================================
 export function useUpdateOfferPortalConfig() {
   const { actor } = useActor();
@@ -469,33 +484,121 @@ export function useUpdateOfferPortalConfig() {
     mutationFn: async ({
       isEnabled,
       cpaLeadWebhookSecret,
+      cpagripApiKey,
       adminProfitPct,
       userProfitPct,
+      newWebhookSecret,
+      newOfferWallName,
     }: {
       isEnabled: boolean;
       cpaLeadWebhookSecret: string;
+      cpagripApiKey: string;
       adminProfitPct: bigint;
       userProfitPct: bigint;
+      newWebhookSecret?: string;
+      newOfferWallName?: string;
     }): Promise<boolean> => {
       const result = await requireActor(actor).updateOfferPortalConfig(
         isEnabled,
         cpaLeadWebhookSecret,
+        cpagripApiKey,
         adminProfitPct,
         userProfitPct,
+        newWebhookSecret ?? "",
+        newOfferWallName ?? "",
       );
-      // Handle either boolean or Result-like {err: string}
-      if (typeof result === "object" && result !== null && "err" in result) {
-        throw new Error(String((result as { err: string }).err));
+      if (result && typeof result === "object" && "__kind__" in result) {
+        if ((result as { __kind__: string }).__kind__ === "err") {
+          throw new Error(String((result as { err: string }).err));
+        }
+        return true;
       }
       return Boolean(result);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
-      toast.success("Offer Portal config save ho gaya ✅");
+      toast.success("Settings Updated Successfully ✅");
     },
     onError: (err) => {
       toast.error(
         err instanceof Error ? err.message : "Config save karne mein error hua",
+      );
+    },
+  });
+}
+
+// ============================================================
+// Admin: Get CPAGrip settings
+// ============================================================
+export function useGetCpagripSettings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<{
+    apiKey: string;
+    webhookSecret: string;
+    offerWallName: string;
+  }>({
+    queryKey: ["cpagripSettings"],
+    queryFn: async () => {
+      const empty = {
+        apiKey: "",
+        webhookSecret: "",
+        offerWallName: "Digital Zindagi Offers",
+      };
+      if (!actor) return empty;
+      try {
+        const data = await (actor as AnyActor).getCpagripSettings();
+        return {
+          apiKey: data.apiKey ?? "",
+          webhookSecret: data.webhookSecret ?? "",
+          offerWallName: data.offerWallName ?? "Digital Zindagi Offers",
+        };
+      } catch {
+        // Method not available or not admin — return empty defaults
+        return empty;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+// ============================================================
+// Admin: Save CPAGrip keys atomically via saveCPAGripKeys
+// ============================================================
+export function useSaveCPAGripKeys() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      apiKey,
+      webhookSecret,
+      offerWallName,
+    }: {
+      apiKey: string;
+      webhookSecret: string;
+      offerWallName: string;
+    }): Promise<void> => {
+      const result = await requireActor(actor).saveCPAGripKeys(
+        apiKey,
+        webhookSecret,
+        offerWallName,
+      );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Save failed");
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+      toast.success("Settings Updated Successfully ✅");
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to save. Please try again.",
       );
     },
   });

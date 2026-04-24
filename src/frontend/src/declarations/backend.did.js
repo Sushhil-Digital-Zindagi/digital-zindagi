@@ -1120,18 +1120,25 @@ export const idlService = IDL.Service({
       ],
       ['query'],
     ),
-  'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+  'getOfferPortalConfig' : IDL.Func(
+      [],
+      [IDL.Variant({ 'ok' : OfferPortalConfig, 'err' : IDL.Text })],
+      ['query'],
+    ),
   'getOfferPortalConfigFull' : IDL.Func(
       [],
       [
-        IDL.Record({
-          'cpaLeadWebhookSecret' : IDL.Text,
-          'cpagripOfferWallName' : IDL.Text,
-          'cpagripApiKey' : IDL.Text,
-          'adminProfitPct' : IDL.Nat,
-          'isEnabled' : IDL.Bool,
-          'cpagripWebhookSecret' : IDL.Text,
-          'userProfitPct' : IDL.Nat,
+        IDL.Variant({
+          'ok' : IDL.Record({
+            'cpaLeadWebhookSecret' : IDL.Text,
+            'cpagripOfferWallName' : IDL.Text,
+            'cpagripApiKey' : IDL.Text,
+            'adminProfitPct' : IDL.Nat,
+            'isEnabled' : IDL.Bool,
+            'cpagripWebhookSecret' : IDL.Text,
+            'userProfitPct' : IDL.Nat,
+          }),
+          'err' : IDL.Text,
         }),
       ],
       ['query'],
@@ -1186,7 +1193,11 @@ export const idlService = IDL.Service({
     ),
   'getRechargeServiceEnabled' : IDL.Func([], [IDL.Bool], ['query']),
   'getScrapRates' : IDL.Func([], [IDL.Vec(ScrapRate)], ['query']),
-  'getSmsConfig' : IDL.Func([], [SmsConfig], ['query']),
+  'getSmsConfig' : IDL.Func(
+      [],
+      [IDL.Variant({ 'ok' : SmsConfig, 'err' : IDL.Text })],
+      ['query'],
+    ),
   'getSubscriptionPricing' : IDL.Func(
       [],
       [IDL.Opt(SubscriptionPricing)],
@@ -1515,7 +1526,11 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
-  'updateSmsConfig' : IDL.Func([IDL.Text, IDL.Text, IDL.Bool], [IDL.Bool], []),
+  'updateSmsConfig' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
+      [],
+    ),
   'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
   'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'updateUdhaarCustomer' : IDL.Func(
@@ -2670,18 +2685,25 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
-    'getOfferPortalConfig' : IDL.Func([], [OfferPortalConfig], ['query']),
+    'getOfferPortalConfig' : IDL.Func(
+        [],
+        [IDL.Variant({ 'ok' : OfferPortalConfig, 'err' : IDL.Text })],
+        ['query'],
+      ),
     'getOfferPortalConfigFull' : IDL.Func(
         [],
         [
-          IDL.Record({
-            'cpaLeadWebhookSecret' : IDL.Text,
-            'cpagripOfferWallName' : IDL.Text,
-            'cpagripApiKey' : IDL.Text,
-            'adminProfitPct' : IDL.Nat,
-            'isEnabled' : IDL.Bool,
-            'cpagripWebhookSecret' : IDL.Text,
-            'userProfitPct' : IDL.Nat,
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'cpaLeadWebhookSecret' : IDL.Text,
+              'cpagripOfferWallName' : IDL.Text,
+              'cpagripApiKey' : IDL.Text,
+              'adminProfitPct' : IDL.Nat,
+              'isEnabled' : IDL.Bool,
+              'cpagripWebhookSecret' : IDL.Text,
+              'userProfitPct' : IDL.Nat,
+            }),
+            'err' : IDL.Text,
           }),
         ],
         ['query'],
@@ -2736,7 +2758,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getRechargeServiceEnabled' : IDL.Func([], [IDL.Bool], ['query']),
     'getScrapRates' : IDL.Func([], [IDL.Vec(ScrapRate)], ['query']),
-    'getSmsConfig' : IDL.Func([], [SmsConfig], ['query']),
+    'getSmsConfig' : IDL.Func(
+        [],
+        [IDL.Variant({ 'ok' : SmsConfig, 'err' : IDL.Text })],
+        ['query'],
+      ),
     'getSubscriptionPricing' : IDL.Func(
         [],
         [IDL.Opt(SubscriptionPricing)],
@@ -3081,7 +3107,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateSmsConfig' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Bool],
-        [IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
     'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),

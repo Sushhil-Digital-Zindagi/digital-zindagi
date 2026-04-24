@@ -823,14 +823,17 @@ export interface backendInterface {
     adminGetUpiPremiumRequests(): Promise<Array<UpiPaymentRequest>>;
     /**
      * / Return all pending UPI unlock requests — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     adminGetUpiUnlockRequests(): Promise<Array<LockedMessagePayment>>;
     /**
      * / List all Offer Portal users — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     adminListOfferUsers(): Promise<Array<OfferUser>>;
     /**
      * / List all pending withdrawal requests — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     adminListPendingWithdrawals(): Promise<Array<OfferWithdrawal>>;
     adminRejectUpiPremium(requestId: bigint): Promise<{
@@ -968,6 +971,7 @@ export interface backendInterface {
     getActiveProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return the most recent `limit` audit log entries — admin only.
+     * / Returns empty array if caller is not admin (never traps).
      */
     getAdminAuditLog(limit: bigint): Promise<Array<AuditLogEntry>>;
     getAdminConfig(): Promise<AdminConfig | null>;
@@ -978,6 +982,7 @@ export interface backendInterface {
     getAdminSettings(): Promise<AdminSettingsExtended>;
     /**
      * / Return the current AdMob configuration — admin only.
+     * / Returns empty strings for non-admin callers (never traps).
      */
     getAdmobConfig(): Promise<{
         rewardedUnitId: string;
@@ -1001,16 +1006,19 @@ export interface backendInterface {
     getAllProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return all recharge transactions (master log) — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     getAllRechargeTransactions(): Promise<Array<RechargeTransaction>>;
     getAllToggles(): Promise<Array<[string, boolean]>>;
     /**
      * / Return all pending topup requests — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     getAllTopupRequests(): Promise<Array<WalletTopupRequest>>;
     getAllUsers(): Promise<Array<User>>;
     /**
      * / Return all wallet balances as (userId, balance) pairs — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     getAllWalletBalances(): Promise<Array<[bigint, number]>>;
     getAppSettings(): Promise<string>;
@@ -1043,6 +1051,7 @@ export interface backendInterface {
     getConversationMessages(conversationId: bigint, limit: bigint, before: bigint | null): Promise<Array<ChatMessage>>;
     /**
      * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+     * / Returns empty strings for non-admin callers (never traps).
      */
     getCpagripSettings(): Promise<{
         webhookSecret: string;
@@ -1061,6 +1070,7 @@ export interface backendInterface {
     getLockedFileUrl(messageId: bigint): Promise<string | null>;
     /**
      * / Get all managers — admin only.
+     * / Returns empty array for non-admin callers (never traps).
      */
     getManagers(): Promise<Array<string>>;
     getMyChatConversations(): Promise<Array<Conversation>>;
@@ -1111,20 +1121,34 @@ export interface backendInterface {
     }>;
     /**
      * / Get Offer Portal global config — admin only.
+     * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
      */
-    getOfferPortalConfig(): Promise<OfferPortalConfig>;
+    getOfferPortalConfig(): Promise<{
+        __kind__: "ok";
+        ok: OfferPortalConfig;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
      * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+     * / Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
      */
     getOfferPortalConfigFull(): Promise<{
-        cpaLeadWebhookSecret: string;
-        cpagripOfferWallName: string;
-        cpagripApiKey: string;
-        adminProfitPct: bigint;
-        isEnabled: boolean;
-        cpagripWebhookSecret: string;
-        userProfitPct: bigint;
+        __kind__: "ok";
+        ok: {
+            cpaLeadWebhookSecret: string;
+            cpagripOfferWallName: string;
+            cpagripApiKey: string;
+            adminProfitPct: bigint;
+            isEnabled: boolean;
+            cpagripWebhookSecret: string;
+            userProfitPct: bigint;
+        };
+    } | {
+        __kind__: "err";
+        err: string;
     }>;
     /**
      * / Get Offer Portal global config — public (no auth required).
@@ -1163,6 +1187,7 @@ export interface backendInterface {
     getRecentUsers(): Promise<Array<User>>;
     /**
      * / Return the current recharge API config — admin only.
+     * / Returns default config for non-admin callers (never traps).
      */
     getRechargeApiConfig(): Promise<RechargeApiConfig>;
     /**
@@ -1176,8 +1201,15 @@ export interface backendInterface {
     getScrapRates(): Promise<Array<ScrapRate>>;
     /**
      * / Get SMS (Fast2SMS) config — admin only.
+     * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
      */
-    getSmsConfig(): Promise<SmsConfig>;
+    getSmsConfig(): Promise<{
+        __kind__: "ok";
+        ok: SmsConfig;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getSubscriptionPricing(): Promise<SubscriptionPricing | null>;
     /**
      * / Return balance for a customer. Caller must own the customer.
@@ -1215,6 +1247,7 @@ export interface backendInterface {
     getVideos(): Promise<Array<VideoItem>>;
     /**
      * / Return wallet balance for any userId — admin only.
+     * / Returns 0.0 for non-admin callers (never traps).
      */
     getWalletBalanceByUserId(userId: bigint): Promise<number>;
     /**
@@ -1521,8 +1554,15 @@ export interface backendInterface {
     updateScrapRate(id: bigint, itemName: string, ratePerKg: number, ratePerGram: number, enabled: boolean): Promise<boolean>;
     /**
      * / Update SMS config — admin only.
+     * / Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
      */
-    updateSmsConfig(fast2smsApiKey: string, senderId: string, isEnabled: boolean): Promise<boolean>;
+    updateSmsConfig(fast2smsApiKey: string, senderId: string, isEnabled: boolean): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateSubscriptionPricing(newPricing: SubscriptionPricing): Promise<void>;
     updateToggle(toggleName: string, value: boolean): Promise<void>;
     /**

@@ -1395,6 +1395,9 @@ export function OfferControlCenter() {
 
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
   const [webhookSecret, setWebhookSecret] = useState("");
+  const [cpagripApiKey, setCpagripApiKey] = useState("");
+  const [cpagripWebhookSecret, setCpagripWebhookSecret] = useState("");
+  const [cpagripOfferWallName, setCpagripOfferWallName] = useState("");
   const [adminPct, setAdminPct] = useState("");
   const [userPct, setUserPct] = useState("");
 
@@ -1403,6 +1406,9 @@ export function OfferControlCenter() {
   if (configRef) {
     setIsEnabled(configRef.isEnabled);
     setWebhookSecret(configRef.cpaLeadWebhookSecret);
+    setCpagripApiKey(configRef.cpagripApiKey ?? "");
+    setCpagripWebhookSecret(configRef.cpagripWebhookSecret ?? "");
+    setCpagripOfferWallName(configRef.cpagripOfferWallName ?? "");
     setAdminPct(configRef.adminProfitPct.toString());
     setUserPct(configRef.userProfitPct.toString());
   }
@@ -1417,8 +1423,11 @@ export function OfferControlCenter() {
     updateConfig.mutate({
       isEnabled: isEnabled ?? true,
       cpaLeadWebhookSecret: webhookSecret.trim(),
+      cpagripApiKey: cpagripApiKey.trim(),
       adminProfitPct: BigInt(a),
       userProfitPct: BigInt(u),
+      newWebhookSecret: cpagripWebhookSecret.trim(),
+      newOfferWallName: cpagripOfferWallName.trim(),
     });
   };
 
@@ -1489,6 +1498,64 @@ export function OfferControlCenter() {
           <p className="text-xs text-muted-foreground mt-1">
             Works with any offer wall — CPALead, CPAGrip, AdWork, OGAds etc.
           </p>
+        </div>
+
+        {/* CPAGrip-specific fields */}
+        <div className="space-y-3 border border-border/50 rounded-xl p-3 bg-muted/20">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            CPAGrip Settings
+          </p>
+          <div>
+            <label
+              htmlFor="oc-cpagrip-key"
+              className="block text-xs text-muted-foreground mb-1"
+            >
+              CPAGrip API Key
+            </label>
+            <input
+              id="oc-cpagrip-key"
+              data-ocid="offer_control.cpagrip_api_key_input"
+              type="text"
+              placeholder="CPAGrip API Key"
+              value={cpagripApiKey}
+              onChange={(e) => setCpagripApiKey(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="oc-cpagrip-webhook"
+              className="block text-xs text-muted-foreground mb-1"
+            >
+              CPAGrip Webhook Secret Key
+            </label>
+            <input
+              id="oc-cpagrip-webhook"
+              data-ocid="offer_control.cpagrip_webhook_input"
+              type="text"
+              placeholder="CPAGrip Webhook Secret"
+              value={cpagripWebhookSecret}
+              onChange={(e) => setCpagripWebhookSecret(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="oc-cpagrip-name"
+              className="block text-xs text-muted-foreground mb-1"
+            >
+              Offer Wall Name
+            </label>
+            <input
+              id="oc-cpagrip-name"
+              data-ocid="offer_control.offer_wall_name_input"
+              type="text"
+              placeholder="e.g. CPAGrip, AdWork, OGAds"
+              value={cpagripOfferWallName}
+              onChange={(e) => setCpagripOfferWallName(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+            />
+          </div>
         </div>
 
         {/* Profit Split */}

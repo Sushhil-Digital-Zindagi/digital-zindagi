@@ -339,14 +339,14 @@ export const mockBackend: backendInterface = {
     totalEarnings: BigInt(200),
     tier1Earnings: BigInt(130),
   }),
-  getOfferPortalConfig: async () => ({
+  getOfferPortalConfig: async () => ({ __kind__: "ok" as const, ok: {
     cpaLeadWebhookSecret: "",
     cpagripApiKey: "",
     adminProfitPct: BigInt(60),
     isEnabled: true,
     userProfitPct: BigInt(40),
-  }),
-  getOfferPortalConfigFull: async () => ({
+  }}),
+  getOfferPortalConfigFull: async () => ({ __kind__: "ok" as const, ok: {
     cpaLeadWebhookSecret: "",
     cpagripOfferWallName: "",
     cpagripApiKey: "",
@@ -354,7 +354,7 @@ export const mockBackend: backendInterface = {
     isEnabled: true,
     cpagripWebhookSecret: "",
     userProfitPct: BigInt(40),
-  }),
+  }}),
   getOfferPortalConfigPublic: async () => ({
     adminProfitPct: BigInt(60),
     isEnabled: true,
@@ -385,11 +385,11 @@ export const mockBackend: backendInterface = {
   getRechargeReceipt: async () => null,
   getRechargeServiceEnabled: async () => false,
   getScrapRates: async () => [],
-  getSmsConfig: async () => ({
+  getSmsConfig: async () => ({ __kind__: "ok" as const, ok: {
     fast2smsApiKey: "",
     isEnabled: false,
     senderId: "DIGZIN",
-  }),
+  }}),
   getSubscriptionPricing: async () => null,
   getUdhaarBalance: async () => ({ __kind__: "ok", ok: 1500 }),
   getUdhaarCustomers: async () => [],
@@ -489,7 +489,7 @@ export const mockBackend: backendInterface = {
   updateRechargeStatus: async () => true,
   updateReferralRates: async () => true,
   updateScrapRate: async () => true,
-  updateSmsConfig: async () => true,
+  updateSmsConfig: async () => ({ __kind__: "ok" as const, ok: true }),
   updateSubscriptionPricing: async () => undefined,
   updateToggle: async () => undefined,
   updateUdhaarCustomer: async () => ({

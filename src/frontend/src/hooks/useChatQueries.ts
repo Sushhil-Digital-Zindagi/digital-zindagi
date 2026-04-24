@@ -5,6 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   ChatAdminSettings,
   ChatMessage,
@@ -12,9 +13,7 @@ import type {
   ChatUserProfile,
   Conversation,
   CreateGroupPayload,
-  CreateMarketListingPayload,
   LeaderboardEntry,
-  MarketListing,
   Note,
   PostStoryPayload,
   ReferralStats,
@@ -24,6 +23,7 @@ import type {
   Story,
   VaultItem,
 } from "../types/chatTypes";
+import { MessageType } from "../types/chatTypes";
 import { useActor } from "./useActor";
 
 // ---- localStorage helpers (cache layer) ----
@@ -44,12 +44,22 @@ function lsWrite<T>(key: string, data: T): void {
   }
 }
 
-// Typed chat actor accessor — backend methods are called via unknown cast
-// since chat methods will be added in a future canister deployment.
+// Typed chat actor accessor
 function asChatActor(
   actor: unknown,
 ): Record<string, (...args: unknown[]) => Promise<unknown>> {
   return actor as Record<string, (...args: unknown[]) => Promise<unknown>>;
+}
+
+// Safely convert string ID to bigint
+function toBigInt(id: string | bigint | number | null | undefined): bigint {
+  if (id == null) return 0n;
+  if (typeof id === "bigint") return id;
+  try {
+    return BigInt(id);
+  } catch {
+    return 0n;
+  }
 }
 
 // =====================================================================
@@ -67,11 +77,10 @@ export function useMyConversations() {
     queryFn: async () => {
       if (!actor) return lsRead<Conversation[]>("dz_chat_conversations", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getMyChatConversations()) as Conversation[];
-        lsWrite("dz_chat_conversations", data);
-        return data;
+        const data = await asChatActor(actor).getMyChatConversations();
+        const result = (data ?? []) as Conversation[];
+        lsWrite("dz_chat_conversations", result);
+        return result;
       } catch {
         return lsRead<Conversation[]>("dz_chat_conversations", []);
       }
@@ -94,11 +103,15 @@ export function useConversationMessages(conversationId: string | null) {
     queryFn: async () => {
       if (!actor || !conversationId) return lsRead<ChatMessage[]>(cacheKey, []);
       try {
-        const data = (await asChatActor(actor).getConversationMessages(
-          conversationId,
-        )) as ChatMessage[];
-        lsWrite(cacheKey, data);
-        return data;
+        // Backend: getConversationMessages(conversationId: bigint, limit: bigint, before: bigint | null)
+        const data = await asChatActor(actor).getConversationMessages(
+          toBigInt(conversationId),
+          50n,
+          null,
+        );
+        const result = (data ?? []) as ChatMessage[];
+        lsWrite(cacheKey, result);
+        return result;
       } catch {
         return lsRead<ChatMessage[]>(cacheKey, []);
       }
@@ -118,11 +131,9 @@ export function useChatProfile() {
       if (!actor)
         return lsRead<ChatUserProfile | null>("dz_chat_profile", null);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getMyChatProfile()) as ChatUserProfile | null;
+        const data = await asChatActor(actor).getMyChatProfile();
         if (data) lsWrite("dz_chat_profile", data);
-        return data;
+        return (data ?? null) as ChatUserProfile | null;
       } catch {
         return lsRead<ChatUserProfile | null>("dz_chat_profile", null);
       }
@@ -140,11 +151,10 @@ export function useActiveStories() {
     queryFn: async () => {
       if (!actor) return lsRead<Story[]>("dz_chat_stories", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getActiveChatStories()) as Story[];
-        lsWrite("dz_chat_stories", data);
-        return data;
+        const data = await asChatActor(actor).getActiveChatStories();
+        const result = (data ?? []) as Story[];
+        lsWrite("dz_chat_stories", result);
+        return result;
       } catch {
         return lsRead<Story[]>("dz_chat_stories", []);
       }
@@ -163,11 +173,9 @@ export function useMyPoints() {
     queryFn: async () => {
       if (!actor) return lsRead<RewardPoints | null>("dz_chat_points", null);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getMyChatPoints()) as RewardPoints | null;
+        const data = await asChatActor(actor).getMyChatPoints();
         if (data) lsWrite("dz_chat_points", data);
-        return data;
+        return (data ?? null) as RewardPoints | null;
       } catch {
         return lsRead<RewardPoints | null>("dz_chat_points", null);
       }
@@ -186,11 +194,10 @@ export function usePointsLeaderboard() {
     queryFn: async () => {
       if (!actor) return lsRead<LeaderboardEntry[]>("dz_chat_leaderboard", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getChatPointsLeaderboard()) as LeaderboardEntry[];
-        lsWrite("dz_chat_leaderboard", data);
-        return data;
+        const data = await asChatActor(actor).getChatPointsLeaderboard();
+        const result = (data ?? []) as LeaderboardEntry[];
+        lsWrite("dz_chat_leaderboard", result);
+        return result;
       } catch {
         return lsRead<LeaderboardEntry[]>("dz_chat_leaderboard", []);
       }
@@ -209,11 +216,9 @@ export function useReferralStats() {
     queryFn: async () => {
       if (!actor) return lsRead<ReferralStats | null>("dz_chat_referral", null);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getMyChatReferralStats()) as ReferralStats | null;
+        const data = await asChatActor(actor).getMyChatReferralStats();
         if (data) lsWrite("dz_chat_referral", data);
-        return data;
+        return (data ?? null) as ReferralStats | null;
       } catch {
         return lsRead<ReferralStats | null>("dz_chat_referral", null);
       }
@@ -246,12 +251,10 @@ export function useChatAdminSettings() {
       if (!actor)
         return lsRead<ChatAdminSettings>("dz_chat_admin_settings", defaults);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getChatAdminSettings()) as ChatAdminSettings;
-        const merged = { ...defaults, ...data };
+        const data = await asChatActor(actor).getChatAdminSettings();
+        const merged = { ...defaults, ...(data as object) };
         lsWrite("dz_chat_admin_settings", merged);
-        return merged;
+        return merged as ChatAdminSettings;
       } catch {
         return lsRead<ChatAdminSettings>("dz_chat_admin_settings", defaults);
       }
@@ -270,11 +273,10 @@ export function useChatShortcuts() {
     queryFn: async () => {
       if (!actor) return lsRead<ChatShortcut[]>("dz_chat_shortcuts", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getChatShortcuts()) as ChatShortcut[];
-        lsWrite("dz_chat_shortcuts", data);
-        return data;
+        const data = await asChatActor(actor).getChatShortcuts();
+        const result = (data ?? []) as ChatShortcut[];
+        lsWrite("dz_chat_shortcuts", result);
+        return result;
       } catch {
         return lsRead<ChatShortcut[]>("dz_chat_shortcuts", []);
       }
@@ -292,11 +294,10 @@ export function useScheduledMessages() {
     queryFn: async () => {
       if (!actor) return lsRead<ScheduledMessage[]>("dz_chat_scheduled", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getChatScheduledMessages()) as ScheduledMessage[];
-        lsWrite("dz_chat_scheduled", data);
-        return data;
+        const data = await asChatActor(actor).getChatScheduledMessages();
+        const result = (data ?? []) as ScheduledMessage[];
+        lsWrite("dz_chat_scheduled", result);
+        return result;
       } catch {
         return lsRead<ScheduledMessage[]>("dz_chat_scheduled", []);
       }
@@ -314,11 +315,10 @@ export function useVaultItems() {
     queryFn: async () => {
       if (!actor) return lsRead<VaultItem[]>("dz_chat_vault", []);
       try {
-        const data = (await asChatActor(
-          actor,
-        ).getChatVaultItems()) as VaultItem[];
-        lsWrite("dz_chat_vault", data);
-        return data;
+        const data = await asChatActor(actor).getChatVaultItems();
+        const result = (data ?? []) as VaultItem[];
+        lsWrite("dz_chat_vault", result);
+        return result;
       } catch {
         return lsRead<VaultItem[]>("dz_chat_vault", []);
       }
@@ -336,38 +336,15 @@ export function useMyNotes() {
     queryFn: async () => {
       if (!actor) return lsRead<Note[]>("dz_chat_notes", []);
       try {
-        const data = (await asChatActor(actor).getChatNotes()) as Note[];
-        lsWrite("dz_chat_notes", data);
-        return data;
+        const data = await asChatActor(actor).getChatNotes();
+        const result = (data ?? []) as Note[];
+        lsWrite("dz_chat_notes", result);
+        return result;
       } catch {
         return lsRead<Note[]>("dz_chat_notes", []);
       }
     },
     enabled: !isFetching,
-    staleTime: 10000,
-  });
-}
-
-/** Marketplace listings with optional city/category filter. */
-export function useMarketListings(city?: string, category?: string) {
-  const { actor, isFetching } = useActor();
-  return useQuery<MarketListing[]>({
-    queryKey: ["chatMarket", city, category],
-    queryFn: async () => {
-      if (!actor) return lsRead<MarketListing[]>("dz_chat_market", []);
-      try {
-        const data = (await asChatActor(actor).getMarketListings(
-          city ?? "",
-          category ?? "",
-        )) as MarketListing[];
-        lsWrite("dz_chat_market", data);
-        return data;
-      } catch {
-        return lsRead<MarketListing[]>("dz_chat_market", []);
-      }
-    },
-    enabled: !isFetching,
-    refetchInterval: 15000,
     staleTime: 10000,
   });
 }
@@ -383,11 +360,23 @@ export function useSendMessage() {
   return useMutation({
     mutationFn: async (payload: SendMessagePayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).sendMessage(payload) as Promise<ChatMessage>;
+      // Backend: sendMessage(conversationId: bigint, content: string, messageType: MessageType, mediaUrl: string | null, replyToId: bigint | null, isVanish: boolean)
+      const result = await asChatActor(actor).sendMessage(
+        toBigInt(payload.conversationId),
+        payload.content,
+        (payload.type ?? MessageType.text) as unknown,
+        payload.mediaUrl ?? null,
+        payload.replyToId ? toBigInt(payload.replyToId) : null,
+        payload.isVanish ?? false,
+      );
+      return result as ChatMessage;
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
       qc.invalidateQueries({ queryKey: ["chatConversations"] });
+    },
+    onError: () => {
+      toast.error("Message send नहीं हुआ, दोबारा try करें");
     },
   });
 }
@@ -399,9 +388,13 @@ export function useCreateGroup() {
   return useMutation({
     mutationFn: async (payload: CreateGroupPayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).createChatGroup(
-        payload,
-      ) as Promise<Conversation>;
+      // Backend: createChatGroup(name: string, memberIds: Principal[], photoUrl: string | null)
+      const result = await asChatActor(actor).createChatGroup(
+        payload.name,
+        payload.memberIds as unknown[],
+        payload.photoUrl ?? null,
+      );
+      return result as Conversation;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatConversations"] });
@@ -416,9 +409,17 @@ export function useStartConversation() {
   return useMutation({
     mutationFn: async (targetUserId: string) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).getOrCreateChatConversation(
-        targetUserId,
-      ) as Promise<Conversation>;
+      // Backend: getOrCreateChatConversation(otherUserId: Principal)
+      const result = await asChatActor(actor).getOrCreateChatConversation(
+        targetUserId as unknown,
+      );
+      // Result is bigint (conversation ID) or Result<bigint, string>
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; ok?: unknown; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Failed");
+        return String(r.ok);
+      }
+      return String(result);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatConversations"] });
@@ -433,7 +434,12 @@ export function usePostStory() {
   return useMutation({
     mutationFn: async (payload: PostStoryPayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).postChatStory(payload) as Promise<Story>;
+      // Backend: postChatStory(mediaUrl: string | null, textContent: string | null)
+      const result = await asChatActor(actor).postChatStory(
+        payload.mediaUrl ?? null,
+        payload.content ?? null,
+      );
+      return result as Story;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatStories"] });
@@ -448,7 +454,8 @@ export function useMarkConversationRead() {
   return useMutation({
     mutationFn: async (conversationId: string) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).markMessagesRead(conversationId);
+      // Backend: markMessagesRead(conversationId: bigint)
+      return asChatActor(actor).markMessagesRead(toBigInt(conversationId));
     },
     onSuccess: (_data, conversationId) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", conversationId] });
@@ -472,7 +479,11 @@ export function useDeleteMessage() {
       forEveryone: boolean;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).deleteChatMessage(messageId, forEveryone);
+      // Backend: deleteChatMessage(messageId: bigint, deleteForEveryone: boolean)
+      return asChatActor(actor).deleteChatMessage(
+        toBigInt(messageId),
+        forEveryone,
+      );
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
@@ -495,7 +506,8 @@ export function useReactToMessage() {
       emoji: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).reactToChatMessage(messageId, emoji);
+      // Backend: reactToChatMessage(messageId: bigint, emoji: string)
+      return asChatActor(actor).reactToChatMessage(toBigInt(messageId), emoji);
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
@@ -510,7 +522,13 @@ export function useUpdateChatProfile() {
   return useMutation({
     mutationFn: async (updates: Partial<ChatUserProfile>) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).updateMyChatProfile(updates);
+      // Backend: updateMyChatProfile(displayName: string | null, bio: string | null, city: string | null, profilePhotoUrl: string | null)
+      return asChatActor(actor).updateMyChatProfile(
+        updates.name ?? null,
+        updates.bio ?? null,
+        updates.city ?? null,
+        updates.photoUrl ?? null,
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatProfile"] });
@@ -527,9 +545,13 @@ export function useScheduleMessage() {
       payload: SendMessagePayload & { scheduledAt: number },
     ) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).scheduleChatMessage(
-        payload,
-      ) as Promise<ScheduledMessage>;
+      // Backend: scheduleChatMessage(conversationId: bigint, content: string, scheduledAt: bigint)
+      const result = await asChatActor(actor).scheduleChatMessage(
+        toBigInt(payload.conversationId),
+        payload.content,
+        BigInt(payload.scheduledAt),
+      );
+      return result as ScheduledMessage;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatScheduled"] });
@@ -544,7 +566,10 @@ export function useCancelScheduledMessage() {
   return useMutation({
     mutationFn: async (scheduledMessageId: string) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).cancelChatScheduledMessage(scheduledMessageId);
+      // Backend: cancelChatScheduledMessage(id: bigint)
+      return asChatActor(actor).cancelChatScheduledMessage(
+        toBigInt(scheduledMessageId),
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatScheduled"] });
@@ -561,7 +586,14 @@ export function useAddVaultItem() {
       item: Omit<VaultItem, "id" | "userId" | "createdAt">,
     ) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).addChatVaultItem(item) as Promise<VaultItem>;
+      // Backend: addChatVaultItem(mediaUrl: string, title: string, isViewOnce: boolean, expiresAt: bigint | null)
+      const result = await asChatActor(actor).addChatVaultItem(
+        item.fileUrl ?? "",
+        item.fileName ?? "",
+        item.isViewOnce ?? false,
+        item.autoDeleteAt ? BigInt(item.autoDeleteAt) : null,
+      );
+      return result as VaultItem;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatVault"] });
@@ -578,27 +610,16 @@ export function useCreateNote() {
       note: Omit<Note, "id" | "userId" | "createdAt" | "updatedAt">,
     ) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).saveChatNote(note) as Promise<Note>;
+      // Backend: saveChatNote(title: string, content: string, subject: string)
+      const result = await asChatActor(actor).saveChatNote(
+        note.title,
+        note.content,
+        note.subject ?? "",
+      );
+      return result as Note;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatNotes"] });
-    },
-  });
-}
-
-/** Create a marketplace listing. */
-export function useCreateMarketListing() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: CreateMarketListingPayload) => {
-      if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).createMarketListing(
-        payload,
-      ) as Promise<MarketListing>;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["chatMarket"] });
     },
   });
 }
@@ -608,12 +629,17 @@ export function useUpdateChatAdminSettings() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (settings: Partial<ChatAdminSettings>) => {
+    mutationFn: async (settings: Record<string, unknown>) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).updateChatAdminSettings(settings);
+      // Backend: updateChatAdminSettings(settings: ChatAdminSettings)
+      return asChatActor(actor).updateChatAdminSettings(settings as unknown);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chatAdminSettings"] });
+      toast.success("Settings Updated Successfully ✅");
+    },
+    onError: () => {
+      toast.error("Settings save नहीं हो सकी। फिर try करें।");
     },
   });
 }
@@ -637,13 +663,25 @@ export function useSendLockedMessage() {
   return useMutation({
     mutationFn: async (payload: SendLockedMessagePayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).sendLockedMessage(
-        payload,
-      ) as Promise<ChatMessage>;
+      const { LockType } = await import("../types/chatTypes");
+      // Backend: sendLockedMessage(conversationId: bigint, fileUrl: string, lockType: LockType, passwordHash: string | null, task: LockedFileTask | null)
+      const isPassword = payload.lockType === LockType.password;
+      const isTask = payload.lockType === LockType.task;
+      const result = await asChatActor(actor).sendLockedMessage(
+        toBigInt(payload.conversationId),
+        payload.fileUrl,
+        payload.lockType as unknown,
+        isPassword ? payload.lockValue : null,
+        isTask ? { question: payload.lockValue, answer: "" } : null,
+      );
+      return result as ChatMessage;
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
       qc.invalidateQueries({ queryKey: ["chatConversations"] });
+    },
+    onError: () => {
+      toast.error("Locked file send नहीं हुई।");
     },
   });
 }
@@ -663,11 +701,25 @@ export function useUnlockMessage() {
       attempt: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).unlockMessage(messageId, attempt);
+      // Backend: unlockMessage(messageId: bigint, attempt: string)
+      const result = await asChatActor(actor).unlockMessage(
+        toBigInt(messageId),
+        attempt,
+      );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Incorrect key");
+      }
+      return result;
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
       qc.invalidateQueries({ queryKey: ["lockedFileUrl", vars.messageId] });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error ? err.message : "Incorrect key. Try again.";
+      toast.error(msg);
     },
   });
 }
@@ -675,7 +727,7 @@ export function useUnlockMessage() {
 /** Get the download URL for an unlocked file. */
 export function useGetLockedFileUrl(
   messageId: string | null,
-  conversationId: string,
+  _conversationId: string,
 ) {
   const { actor, isFetching } = useActor();
   return useQuery({
@@ -683,10 +735,11 @@ export function useGetLockedFileUrl(
     queryFn: async () => {
       if (!actor || !messageId) return null;
       try {
-        return (await asChatActor(actor).getLockedFileUrl(
-          messageId,
-          conversationId,
-        )) as string | null;
+        // Backend: getLockedFileUrl(messageId: bigint)
+        const result = await asChatActor(actor).getLockedFileUrl(
+          toBigInt(messageId),
+        );
+        return (result ?? null) as string | null;
       } catch {
         return null;
       }
@@ -709,12 +762,21 @@ interface SummarizePayload {
 export function useSummarizeChatMessages() {
   const { actor } = useActor();
   return useMutation({
-    mutationFn: async (payload: SummarizePayload) => {
+    mutationFn: async (payload: SummarizePayload): Promise<string> => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).summarizeChatMessages(
-        payload.conversationId,
-        payload.mode,
+      // Backend: summarizeChatMessages(conversationId: bigint, mode: Variant_last50_last24h)
+      const result = await asChatActor(actor).summarizeChatMessages(
+        toBigInt(payload.conversationId),
+        payload.mode as unknown,
       );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; ok?: string; err?: string };
+        if (r.__kind__ === "err") {
+          throw new Error(r.err ?? "Summary failed");
+        }
+        return r.ok ?? "";
+      }
+      return String(result ?? "");
     },
   });
 }
@@ -736,30 +798,21 @@ export function useSendPayToUnlockMessage() {
   return useMutation({
     mutationFn: async (payload: SendPayToUnlockPayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).sendPayToUnlockMessage(
-        payload,
-      ) as Promise<ChatMessage>;
+      // Backend: sendPayToUnlockMessage(conversationId: bigint, content: string, lockPrice: bigint, currency: string)
+      const result = await asChatActor(actor).sendPayToUnlockMessage(
+        toBigInt(payload.conversationId),
+        payload.content,
+        BigInt(Math.round(payload.unlockPrice * 100)), // paise
+        "INR",
+      );
+      return result as ChatMessage;
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
       qc.invalidateQueries({ queryKey: ["chatConversations"] });
     },
-  });
-}
-
-interface CreateUnlockIntentPayload {
-  messageId: string;
-  conversationId: string;
-  method: "stripe" | "upi";
-}
-
-/** Create a payment intent for unlocking a monetized message. */
-export function useCreateUnlockPaymentIntent() {
-  const { actor } = useActor();
-  return useMutation({
-    mutationFn: async (payload: CreateUnlockIntentPayload) => {
-      if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).createUnlockPaymentIntent(payload);
+    onError: () => {
+      toast.error("Locked message send नहीं हुई।");
     },
   });
 }
@@ -777,36 +830,50 @@ export function useConfirmUpiUnlock() {
   return useMutation({
     mutationFn: async (payload: ConfirmUpiUnlockPayload) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).confirmUpiUnlock(payload);
+      // Backend: confirmUpiUnlock(messageId: bigint, upiTxnRef: string)
+      const result = await asChatActor(actor).confirmUpiUnlock(
+        toBigInt(payload.messageId),
+        payload.txnRef,
+      );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; err?: string };
+        if (r.__kind__ === "err") throw new Error(r.err ?? "Submit failed");
+      }
+      return result;
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
+      toast.success("Payment submitted! Admin verification pending.");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Submit failed.");
     },
   });
 }
 
-interface VerifyStripeUnlockPayload {
-  messageId: string;
-  conversationId: string;
-  sessionId: string;
-}
-
-/** Verify a Stripe checkout session and unlock a message. */
-export function useVerifyStripeUnlock() {
+/** Create a payment intent for unlocking a monetized message. */
+export function useCreateUnlockPaymentIntent() {
   const { actor } = useActor();
-  const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: VerifyStripeUnlockPayload) => {
+    mutationFn: async ({
+      messageId,
+    }: { messageId: string; conversationId: string; method?: string }) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).verifyStripeUnlock(payload);
-    },
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: ["chatMessages", vars.conversationId] });
+      // Backend: createUnlockPaymentIntent(messageId: bigint)
+      const result = await asChatActor(actor).createUnlockPaymentIntent(
+        toBigInt(messageId),
+      );
+      if (result && typeof result === "object" && "__kind__" in result) {
+        const r = result as { __kind__: string; ok?: string; err?: string };
+        if (r.__kind__ === "err")
+          throw new Error(r.err ?? "Failed to create payment intent");
+        return r.ok ?? "";
+      }
+      return String(result ?? "");
     },
   });
 }
 
-/** Creator earnings from pay-to-unlock messages. */
 export function useCreatorEarnings() {
   const { actor, isFetching } = useActor();
   return useQuery({
@@ -837,13 +904,12 @@ export function useAdminUpiUnlockRequests() {
   return useQuery({
     queryKey: ["adminUpiUnlockRequests"],
     queryFn: async () => {
-      if (!actor) return lsRead("dz_admin_upi_requests", []);
+      if (!actor) return [];
       try {
         const data = await asChatActor(actor).adminGetUpiUnlockRequests();
-        lsWrite("dz_admin_upi_requests", data);
-        return data;
+        return (data ?? []) as unknown[];
       } catch {
-        return lsRead("dz_admin_upi_requests", []);
+        return [];
       }
     },
     enabled: !isFetching,
@@ -857,12 +923,17 @@ export function useAdminApproveUpiUnlock() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (requestId: string) => {
+    mutationFn: async (paymentId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).adminApproveUpiUnlock(requestId);
+      // Backend: adminApproveUpiUnlock(paymentId: bigint)
+      return asChatActor(actor).adminApproveUpiUnlock(paymentId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["adminUpiUnlockRequests"] });
+      toast.success("Unlock request approved ✅");
+    },
+    onError: () => {
+      toast.error("Approve नहीं हो सका।");
     },
   });
 }
@@ -872,12 +943,17 @@ export function useAdminRejectUpiUnlock() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (requestId: string) => {
+    mutationFn: async (paymentId: bigint) => {
       if (!actor) throw new Error("Actor not available");
-      return asChatActor(actor).adminRejectUpiUnlock(requestId);
+      // Backend: adminRejectUpiUnlock(paymentId: bigint)
+      return asChatActor(actor).adminRejectUpiUnlock(paymentId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["adminUpiUnlockRequests"] });
+      toast.success("Unlock request rejected.");
+    },
+    onError: () => {
+      toast.error("Reject नहीं हो सका।");
     },
   });
 }

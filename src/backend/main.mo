@@ -564,7 +564,7 @@ persistent actor {
   // New function to get all providers data
   public query ({ caller }) func getAllProviders() : async [ProviderProfile] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view all provider data");
+      return [];
     };
     providerProfiles.values().toArray();
   };
@@ -659,14 +659,14 @@ persistent actor {
 
   public query ({ caller }) func getUserById(userId : Nat) : async ?User {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can access user data by ID");
+      return null;
     };
     getUserByIdInternal(userId);
   };
 
   public query ({ caller }) func getUserByMobile(mobile : MobileNumber) : async ?User {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can access user data by mobile");
+      return null;
     };
     users.get(mobile);
   };
@@ -725,21 +725,21 @@ persistent actor {
 
   public query ({ caller }) func getAllUsers() : async [User] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can list all users");
+      return [];
     };
     users.values().toArray().sort();
   };
 
   public query ({ caller }) func getUsersByRole(role : UserRole) : async [User] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can list users by role");
+      return [];
     };
     users.values().toArray().filter(func(user : User) : Bool { user.role == role });
   };
 
   public query ({ caller }) func searchUsers(searchText : Text) : async [User] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can search users");
+      return [];
     };
     users.values().toArray().filter(
       func(user : User) : Bool {
@@ -750,7 +750,7 @@ persistent actor {
 
   public query ({ caller }) func getRecentUsers() : async [User] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view recent users");
+      return [];
     };
     let now = Time.now();
     let fortyEightHoursNanos : Nat = 48 * 60 * 60 * 1_000_000_000;
@@ -1000,7 +1000,7 @@ persistent actor {
 
   public query ({ caller }) func getProvidersPendingApproval() : async [ProviderProfile] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view pending approvals");
+      return [];
     };
     // Return ALL providers with approvalStatus == #pending regardless of screenshot
     providerProfiles.values().toArray().filter(
@@ -1013,7 +1013,7 @@ persistent actor {
   /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
   public query ({ caller }) func getPendingApprovals() : async [ProviderProfile] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view pending approvals");
+      return [];
     };
     // Return ALL providers with approvalStatus == #pending regardless of screenshot
     providerProfiles.values().toArray().filter(
@@ -1868,9 +1868,10 @@ persistent actor {
   };
 
   /// Return wallet balance for any userId — admin only.
+  /// Returns 0.0 for non-admin callers (never traps).
   public shared query ({ caller }) func getWalletBalanceByUserId(userId : Nat) : async Float {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return 0.0;
     };
     WRApi.getBalanceByUserId(walletBalances, userId);
   };
@@ -1894,9 +1895,10 @@ persistent actor {
   // ── Wallet: admin-facing ──────────────────────────────────────────────────
 
   /// Return all pending topup requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func getAllTopupRequests() : async [WRTypes.WalletTopupRequest] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     WRApi.getAllTopupRequests(topupRequests);
   };
@@ -1904,7 +1906,7 @@ persistent actor {
   /// Approve or reject a topup request.  On approval, funds are credited — admin only.
   public shared ({ caller }) func approveTopupRequest(requestId : Nat, approve : Bool) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     WRApi.resolveTopupRequest(topupRequests, walletBalances, requestId, approve);
   };
@@ -1912,15 +1914,16 @@ persistent actor {
   /// Directly add or deduct balance for any user — admin only.
   public shared ({ caller }) func adminAdjustWallet(userId : Nat, amount : Float, isAdd : Bool, _note : Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     WRApi.adminAdjust(walletBalances, userId, amount, isAdd);
   };
 
   /// Return all wallet balances as (userId, balance) pairs — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func getAllWalletBalances() : async [(Nat, Float)] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     WRApi.getAllBalances(walletBalances);
   };
@@ -1956,7 +1959,7 @@ persistent actor {
   /// SMS: if smsConfig.isEnabled, sends an alert (fire-and-forget).
   public shared ({ caller }) func updateRechargeStatus(txId : Nat, status : Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     let updated = WRApi.updateRechargeStatus(rechargeTxns, txId, status);
     if (not updated) { return false };
@@ -2007,9 +2010,10 @@ persistent actor {
   };
 
   /// Return all recharge transactions (master log) — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func getAllRechargeTransactions() : async [WRTypes.RechargeTransaction] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     WRApi.getAllRechargeTransactions(rechargeTxns);
   };
@@ -2017,7 +2021,7 @@ persistent actor {
   /// Refund a Failed recharge — restores netCost to user wallet — admin only.
   public shared ({ caller }) func refundRecharge(txId : Nat) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     WRApi.refundRecharge(rechargeTxns, walletBalances, txId);
   };
@@ -2025,9 +2029,10 @@ persistent actor {
   // ── Config: recharge API ──────────────────────────────────────────────────
 
   /// Return the current recharge API config — admin only.
+  /// Returns default config for non-admin callers (never traps).
   public shared query ({ caller }) func getRechargeApiConfig() : async WRTypes.RechargeApiConfig {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return { apiUrl = ""; apiKey = ""; responseParam = ""; isActive = false; autoRefundEnabled = false };
     };
     rechargeApiConfig;
   };
@@ -2041,7 +2046,7 @@ persistent actor {
     autoRefundEnabled : Bool,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     rechargeApiConfig := { apiUrl; apiKey; responseParam; isActive; autoRefundEnabled };
     true;
@@ -2062,13 +2067,13 @@ persistent actor {
     adminPct    : Float,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     // Allow a tiny floating-point tolerance (0.001)
     let sum  = retailerPct + adminPct;
     let diff = if (sum >= globalPct) { sum - globalPct } else { globalPct - sum };
     if (diff > 0.001) {
-      Runtime.trap("Invalid config: retailerPct + adminPct must equal globalPct");
+      return false;
     };
     commissionConfig := {
       globalCommissionPct = globalPct;
@@ -2088,7 +2093,7 @@ persistent actor {
   /// Enable or disable the recharge service — admin only.
   public shared ({ caller }) func setRechargeServiceEnabled(enabled : Bool) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     rechargeServiceEnabled := enabled;
     true;
@@ -2161,17 +2166,19 @@ persistent actor {
   // ── OFFER PORTAL — admin (🚀 OFFER CONTROL CENTER) ───────────────────────
 
   /// List all Offer Portal users — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func adminListOfferUsers() : async [OPTypes.OfferUser] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     OPApi.adminListOfferUsers(offerUsers);
   };
 
   /// List all pending withdrawal requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func adminListPendingWithdrawals() : async [OPTypes.OfferWithdrawal] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     OPApi.adminListPendingWithdrawals(offerWithdrawals);
   };
@@ -2179,17 +2186,18 @@ persistent actor {
   /// Resolve a withdrawal request (approve/reject/paid) — admin only.
   public shared ({ caller }) func adminResolveWithdrawal(id : Nat, newStatus : { #approved; #rejected; #paid }, adminNote : ?Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     OPApi.adminResolveWithdrawal(offerUsers, offerWithdrawals, id, newStatus, adminNote);
   };
 
   /// Get Offer Portal global config — admin only.
-  public shared query ({ caller }) func getOfferPortalConfig() : async OPTypes.OfferPortalConfig {
+  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  public shared query ({ caller }) func getOfferPortalConfig() : async { #ok : OPTypes.OfferPortalConfig; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return #err("Unauthorized: Admin only");
     };
-    offerPortalConfig;
+    #ok(offerPortalConfig);
   };
 
   /// Get Offer Portal global config — public (no auth required).
@@ -2236,19 +2244,23 @@ persistent actor {
 
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
+  /// Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
   public shared query ({ caller }) func getOfferPortalConfigFull() : async {
-    isEnabled            : Bool;
-    cpaLeadWebhookSecret : Text;
-    cpagripApiKey        : Text;
-    adminProfitPct       : Nat;
-    userProfitPct        : Nat;
-    cpagripWebhookSecret : Text;
-    cpagripOfferWallName : Text;
+    #ok : {
+      isEnabled            : Bool;
+      cpaLeadWebhookSecret : Text;
+      cpagripApiKey        : Text;
+      adminProfitPct       : Nat;
+      userProfitPct        : Nat;
+      cpagripWebhookSecret : Text;
+      cpagripOfferWallName : Text;
+    };
+    #err : Text;
   } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return #err("Unauthorized: Admin only");
     };
-    {
+    #ok({
       isEnabled            = offerPortalConfig.isEnabled;
       cpaLeadWebhookSecret = offerPortalConfig.cpaLeadWebhookSecret;
       cpagripApiKey        = offerPortalConfig.cpagripApiKey;
@@ -2256,26 +2268,28 @@ persistent actor {
       userProfitPct        = offerPortalConfig.userProfitPct;
       cpagripWebhookSecret = cpagripWebhookSecret;
       cpagripOfferWallName = cpagripOfferWallName;
-    };
+    });
   };
 
   // ── SMS config ────────────────────────────────────────────────────────────
 
   /// Get SMS (Fast2SMS) config — admin only.
-  public shared query ({ caller }) func getSmsConfig() : async OPTypes.SmsConfig {
+  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  public shared query ({ caller }) func getSmsConfig() : async { #ok : OPTypes.SmsConfig; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return #err("Unauthorized: Admin only");
     };
-    smsConfig;
+    #ok(smsConfig);
   };
 
   /// Update SMS config — admin only.
-  public shared ({ caller }) func updateSmsConfig(fast2smsApiKey : Text, senderId : Text, isEnabled : Bool) : async Bool {
+  /// Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
+  public shared ({ caller }) func updateSmsConfig(fast2smsApiKey : Text, senderId : Text, isEnabled : Bool) : async { #ok : Bool; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return #err("Unauthorized: Admin only");
     };
     smsConfig := { fast2smsApiKey; senderId; isEnabled };
-    true;
+    #ok(true);
   };
 
   // ── Recharge Receipts ─────────────────────────────────────────────────────
@@ -2337,11 +2351,12 @@ persistent actor {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   /// Return the most recent `limit` audit log entries — admin only.
+  /// Returns empty array if caller is not admin (never traps).
   public shared query ({ caller }) func getAdminAuditLog(
     limit : Nat,
   ) : async [AuditTypes.AuditLogEntry] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     AuditApi.getAdminAuditLog(auditLog, limit);
   };
@@ -2449,7 +2464,7 @@ persistent actor {
   /// All existing field values are overwritten with the supplied record.
   public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettingsExtended) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     adminSettings := {
       referralLevel1Pct   = settings.referralLevel1Pct;
@@ -2497,7 +2512,7 @@ persistent actor {
     minWithdrawal  : Nat,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     adminSettings := {
       adminSettings with
@@ -2519,7 +2534,7 @@ persistent actor {
     level5Pct : Float,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     adminSettings := {
       adminSettings with
@@ -2545,7 +2560,7 @@ persistent actor {
   /// Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
   public shared ({ caller }) func updateCpagripApiKey(apiKey : Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     adminSettings := { adminSettings with cpagripApiKey = apiKey };
     offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
@@ -2560,7 +2575,7 @@ persistent actor {
     offerWallName : Text,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     adminSettings := { adminSettings with cpagripApiKey = apiKey };
     offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
@@ -2587,9 +2602,10 @@ persistent actor {
   };
 
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
+  /// Returns empty strings for non-admin callers (never traps).
   public shared query ({ caller }) func getCpagripSettings() : async { apiKey : Text; webhookSecret : Text; offerWallName : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return { apiKey = ""; webhookSecret = ""; offerWallName = "" };
     };
     {
       apiKey        = adminSettings.cpagripApiKey;
@@ -2601,6 +2617,7 @@ persistent actor {
   // ── AdMob Configuration ───────────────────────────────────────────────────
 
   /// Return the current AdMob configuration — admin only.
+  /// Returns empty strings for non-admin callers (never traps).
   public shared query ({ caller }) func getAdmobConfig() : async {
     appId              : Text;
     bannerUnitId       : Text;
@@ -2610,7 +2627,7 @@ persistent actor {
     rewardedUnitId     : Text;
   } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return { appId = ""; bannerUnitId = ""; interstitialId = ""; ludoBannerId = ""; ludoInterstitialId = ""; rewardedUnitId = "" };
     };
     {
       appId              = admobAppId;
@@ -2650,7 +2667,7 @@ persistent actor {
     rewardedUnitId     : Text,
   ) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     admobAppId              := appId;
     admobBannerUnitId       := bannerUnitId;
@@ -2667,10 +2684,10 @@ persistent actor {
   /// Managers have restricted access (News, Jobs, Videos).
   public shared ({ caller }) func addManager(mobile : Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     if (mobile == "") {
-      Runtime.trap("Mobile number cannot be empty");
+      return false;
     };
     // Only add if not already in the list
     let exists = managers.find(func(m : Text) : Bool { m == mobile });
@@ -2684,9 +2701,10 @@ persistent actor {
   };
 
   /// Get all managers — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public shared query ({ caller }) func getManagers() : async [Text] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     managers.toArray();
   };
@@ -2694,7 +2712,7 @@ persistent actor {
   /// Remove a manager by mobile number — admin only.
   public shared ({ caller }) func removeManager(mobile : Text) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return false;
     };
     let before = managers.size();
     let filtered = managers.filter(func(m : Text) : Bool { m != mobile });
@@ -3216,9 +3234,10 @@ persistent actor {
   };
 
   /// Return all pending UPI unlock requests — admin only.
+  /// Returns empty array for non-admin callers (never traps).
   public query ({ caller }) func adminGetUpiUnlockRequests() : async [ChatTypes.LockedMessagePayment] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     ChatApi.adminGetUpiUnlockRequests(chatState);
   };
@@ -3366,7 +3385,7 @@ persistent actor {
 
   public query ({ caller }) func adminGetUpiPremiumRequests() : async [PremTypes.UpiPaymentRequest] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
+      return [];
     };
     PremApi.adminGetUpiPremiumRequests(premiumState);
   };
