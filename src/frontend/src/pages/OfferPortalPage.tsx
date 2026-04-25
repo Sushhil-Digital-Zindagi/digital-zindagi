@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ContentLockerOverlay from "../components/ContentLockerOverlay";
 import { useOfferAuth } from "../contexts/OfferAuthContext";
@@ -1393,25 +1393,25 @@ export function OfferControlCenter() {
   const { data: pendingWithdrawals = [] } = useAdminListPendingWithdrawals();
   const resolveWithdrawal = useAdminResolveWithdrawal();
 
-  const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
+  const [isEnabled, setIsEnabled] = useState<boolean>(true);
   const [webhookSecret, setWebhookSecret] = useState("");
   const [cpagripApiKey, setCpagripApiKey] = useState("");
   const [cpagripWebhookSecret, setCpagripWebhookSecret] = useState("");
   const [cpagripOfferWallName, setCpagripOfferWallName] = useState("");
-  const [adminPct, setAdminPct] = useState("");
-  const [userPct, setUserPct] = useState("");
+  const [adminPct, setAdminPct] = useState("60");
+  const [userPct, setUserPct] = useState("40");
 
-  // Hydrate fields from loaded config
-  const configRef = isEnabled === null && config !== undefined ? config : null;
-  if (configRef) {
-    setIsEnabled(configRef.isEnabled);
-    setWebhookSecret(configRef.cpaLeadWebhookSecret);
-    setCpagripApiKey(configRef.cpagripApiKey ?? "");
-    setCpagripWebhookSecret(configRef.cpagripWebhookSecret ?? "");
-    setCpagripOfferWallName(configRef.cpagripOfferWallName ?? "");
-    setAdminPct(configRef.adminProfitPct.toString());
-    setUserPct(configRef.userProfitPct.toString());
-  }
+  // Hydrate fields when config loads — use useEffect to avoid render-time setState
+  useEffect(() => {
+    if (!config) return;
+    setIsEnabled(config.isEnabled);
+    setWebhookSecret(config.cpaLeadWebhookSecret ?? "");
+    setCpagripApiKey(config.cpagripApiKey ?? "");
+    setCpagripWebhookSecret(config.cpagripWebhookSecret ?? "");
+    setCpagripOfferWallName(config.cpagripOfferWallName ?? "");
+    setAdminPct(config.adminProfitPct?.toString() ?? "60");
+    setUserPct(config.userProfitPct?.toString() ?? "40");
+  }, [config]);
 
   const handleSave = () => {
     const a = Number(adminPct);
@@ -1421,7 +1421,7 @@ export function OfferControlCenter() {
       return;
     }
     updateConfig.mutate({
-      isEnabled: isEnabled ?? true,
+      isEnabled,
       cpaLeadWebhookSecret: webhookSecret.trim(),
       cpagripApiKey: cpagripApiKey.trim(),
       adminProfitPct: BigInt(a),
@@ -1464,15 +1464,15 @@ export function OfferControlCenter() {
           <button
             type="button"
             data-ocid="offer_control.toggle"
-            onClick={() => setIsEnabled((v) => !(v ?? true))}
+            onClick={() => setIsEnabled((v) => !v)}
             className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-              (isEnabled ?? true) ? "bg-emerald-500" : "bg-muted-foreground/30"
+              isEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"
             }`}
             aria-label="Toggle portal"
           >
             <span
               className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${
-                (isEnabled ?? true) ? "left-7" : "left-1"
+                isEnabled ? "left-7" : "left-1"
               }`}
             />
           </button>

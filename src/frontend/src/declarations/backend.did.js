@@ -620,13 +620,6 @@ export const LocalNewsItem = IDL.Record({
   'createdAt' : IDL.Int,
   'imageUrl' : IDL.Opt(IDL.Text),
 });
-export const OfferPortalConfig = IDL.Record({
-  'cpaLeadWebhookSecret' : IDL.Text,
-  'cpagripApiKey' : IDL.Text,
-  'adminProfitPct' : IDL.Nat,
-  'isEnabled' : IDL.Bool,
-  'userProfitPct' : IDL.Nat,
-});
 export const PaymentConfig = IDL.Record({
   'razorpayKeyId' : IDL.Text,
   'razorpayKeySecret' : IDL.Text,
@@ -794,6 +787,11 @@ export const idlService = IDL.Service({
   'addVideo' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
+      [],
+    ),
+  'adjustWalletBalance' : IDL.Func(
+      [IDL.Nat, IDL.Float64, IDL.Bool, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'adminAddChatShortcut' : IDL.Func(
@@ -1122,7 +1120,30 @@ export const idlService = IDL.Service({
     ),
   'getOfferPortalConfig' : IDL.Func(
       [],
-      [IDL.Variant({ 'ok' : OfferPortalConfig, 'err' : IDL.Text })],
+      [
+        IDL.Record({
+          'cpaLeadWebhookSecret' : IDL.Text,
+          'cpagripOfferWallName' : IDL.Text,
+          'cpagripApiKey' : IDL.Text,
+          'postbackUrl' : IDL.Text,
+          'adminProfitPct' : IDL.Nat,
+          'isEnabled' : IDL.Bool,
+          'isAdmin' : IDL.Bool,
+          'cpagripWebhookSecret' : IDL.Text,
+          'userProfitPct' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
+  'getOfferPortalConfigForUser' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'adminProfitPct' : IDL.Nat,
+          'isEnabled' : IDL.Bool,
+          'userProfitPct' : IDL.Nat,
+        }),
+      ],
       ['query'],
     ),
   'getOfferPortalConfigFull' : IDL.Func(
@@ -1248,6 +1269,11 @@ export const idlService = IDL.Service({
   'loginOfferUser' : IDL.Func(
       [IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
+      [],
+    ),
+  'loginUser' : IDL.Func(
+      [MobileNumber, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : User, 'err' : IDL.Text })],
       [],
     ),
   'markMessagesRead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -1403,6 +1429,11 @@ export const idlService = IDL.Service({
   'updateChatNote' : IDL.Func(
       [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
       [IDL.Bool],
+      [],
+    ),
+  'updateCloudinaryConfig' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'updateCommissionConfig' : IDL.Func(
@@ -2172,13 +2203,6 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'imageUrl' : IDL.Opt(IDL.Text),
   });
-  const OfferPortalConfig = IDL.Record({
-    'cpaLeadWebhookSecret' : IDL.Text,
-    'cpagripApiKey' : IDL.Text,
-    'adminProfitPct' : IDL.Nat,
-    'isEnabled' : IDL.Bool,
-    'userProfitPct' : IDL.Nat,
-  });
   const PaymentConfig = IDL.Record({
     'razorpayKeyId' : IDL.Text,
     'razorpayKeySecret' : IDL.Text,
@@ -2343,6 +2367,11 @@ export const idlFactory = ({ IDL }) => {
     'addVideo' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
+        [],
+      ),
+    'adjustWalletBalance' : IDL.Func(
+        [IDL.Nat, IDL.Float64, IDL.Bool, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'adminAddChatShortcut' : IDL.Func(
@@ -2687,7 +2716,30 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getOfferPortalConfig' : IDL.Func(
         [],
-        [IDL.Variant({ 'ok' : OfferPortalConfig, 'err' : IDL.Text })],
+        [
+          IDL.Record({
+            'cpaLeadWebhookSecret' : IDL.Text,
+            'cpagripOfferWallName' : IDL.Text,
+            'cpagripApiKey' : IDL.Text,
+            'postbackUrl' : IDL.Text,
+            'adminProfitPct' : IDL.Nat,
+            'isEnabled' : IDL.Bool,
+            'isAdmin' : IDL.Bool,
+            'cpagripWebhookSecret' : IDL.Text,
+            'userProfitPct' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
+    'getOfferPortalConfigForUser' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'adminProfitPct' : IDL.Nat,
+            'isEnabled' : IDL.Bool,
+            'userProfitPct' : IDL.Nat,
+          }),
+        ],
         ['query'],
       ),
     'getOfferPortalConfigFull' : IDL.Func(
@@ -2813,6 +2865,11 @@ export const idlFactory = ({ IDL }) => {
     'loginOfferUser' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : OfferUser, 'err' : IDL.Text })],
+        [],
+      ),
+    'loginUser' : IDL.Func(
+        [MobileNumber, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : User, 'err' : IDL.Text })],
         [],
       ),
     'markMessagesRead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -2982,6 +3039,11 @@ export const idlFactory = ({ IDL }) => {
     'updateChatNote' : IDL.Func(
         [IDL.Nat, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Bool],
+        [],
+      ),
+    'updateCloudinaryConfig' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'updateCommissionConfig' : IDL.Func(

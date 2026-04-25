@@ -498,22 +498,38 @@ export function useUpdateOfferPortalConfig() {
       newWebhookSecret?: string;
       newOfferWallName?: string;
     }): Promise<boolean> => {
-      const result = await requireActor(actor).updateOfferPortalConfig(
-        isEnabled,
-        cpaLeadWebhookSecret,
-        cpagripApiKey,
-        adminProfitPct,
-        userProfitPct,
-        newWebhookSecret ?? "",
-        newOfferWallName ?? "",
-      );
-      if (result && typeof result === "object" && "__kind__" in result) {
-        if ((result as { __kind__: string }).__kind__ === "err") {
-          throw new Error(String((result as { err: string }).err));
+      if (!actor)
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein",
+        );
+      try {
+        const result = await (actor as AnyActor).updateOfferPortalConfig(
+          isEnabled,
+          cpaLeadWebhookSecret,
+          cpagripApiKey,
+          adminProfitPct,
+          userProfitPct,
+          newWebhookSecret ?? "",
+          newOfferWallName ?? "",
+        );
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if ((result as { __kind__: string }).__kind__ === "err") {
+            throw new Error(String((result as { err: string }).err));
+          }
+          return true;
         }
-        return true;
+        return Boolean(result);
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("method not found"))
+          throw new Error("Service is updating. Please refresh the page.");
+        if (lower.includes("unauthorized"))
+          throw new Error("Admin permission required.");
+        if (lower.includes("ic0.trap") || lower.includes("reject code"))
+          throw new Error("Something went wrong. Please try again.");
+        throw new Error(msg);
       }
-      return Boolean(result);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
@@ -580,18 +596,56 @@ export function useSaveCPAGripKeys() {
       webhookSecret: string;
       offerWallName: string;
     }): Promise<void> => {
-      const result = await requireActor(actor).saveCPAGripKeys(
-        apiKey,
-        webhookSecret,
-        offerWallName,
-      );
-      if (result && typeof result === "object" && "__kind__" in result) {
-        const r = result as { __kind__: string; err?: string };
-        if (r.__kind__ === "err") throw new Error(r.err ?? "Save failed");
+      if (!actor)
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein",
+        );
+      try {
+        const result = await (
+          actor as unknown as {
+            saveCPAGripKeys(
+              a: string,
+              w: string,
+              n: string,
+            ): Promise<
+              { __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }
+            >;
+          }
+        ).saveCPAGripKeys(
+          apiKey.trim(),
+          webhookSecret.trim(),
+          offerWallName.trim(),
+        );
+        if (result && typeof result === "object") {
+          if (
+            "__kind__" in result &&
+            (result as { __kind__: string }).__kind__ === "err"
+          ) {
+            throw new Error((result as { err: string }).err ?? "Save failed");
+          }
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("method not found"))
+          throw new Error("Service is updating. Please refresh the page.");
+        if (lower.includes("unauthorized"))
+          throw new Error("Admin permission required.");
+        if (
+          lower.includes("canister") ||
+          lower.includes("actor") ||
+          lower.includes("fetch")
+        ) {
+          throw new Error(
+            "Backend se connect nahi ho pa raha — thoda wait karein",
+          );
+        }
+        throw new Error(msg);
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+      qc.invalidateQueries({ queryKey: ["cpagripSettings"] });
       toast.success("Settings Updated Successfully ✅");
     },
     onError: (err) => {

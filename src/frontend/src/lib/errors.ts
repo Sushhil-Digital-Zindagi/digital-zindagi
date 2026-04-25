@@ -3,6 +3,11 @@
  * NEVER shows ic0.trap, canister IDs, or technical rejection codes to users.
  */
 
+/** Alias: parseBackendError — preferred name in new code */
+export function parseBackendError(error: unknown, defaultMsg?: string): string {
+  return sanitizeBackendError(error, defaultMsg);
+}
+
 export function sanitizeBackendError(
   error: unknown,
   defaultMsg?: string,

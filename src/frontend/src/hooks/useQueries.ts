@@ -3010,22 +3010,77 @@ export function useUpdateCpagripSettings() {
       offerWallName: string;
     }) => {
       if (!actor)
-        throw new Error("Actor not available — backend connect karein");
-      // Use saveCPAGripKeys which returns a proper variant {ok} | {err: Text}
-      const result = await actor.saveCPAGripKeys(
-        apiKey.trim(),
-        webhookSecret.trim(),
-        offerWallName.trim(),
-      );
-      if ("err" in result) {
-        throw new Error(result.err || "Save failed");
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein",
+        );
+      try {
+        // Use saveCPAGripKeys which returns a Result variant {__kind__: "ok"} | {__kind__: "err"}
+        const result = await (
+          actor as unknown as {
+            saveCPAGripKeys(
+              a: string,
+              w: string,
+              n: string,
+            ): Promise<
+              { __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }
+            >;
+          }
+        ).saveCPAGripKeys(
+          apiKey.trim(),
+          webhookSecret.trim(),
+          offerWallName.trim(),
+        );
+        // Handle both variant shapes: {__kind__} and legacy {ok}/{err}
+        if (result && typeof result === "object") {
+          if (
+            "__kind__" in result &&
+            (result as { __kind__: string }).__kind__ === "err"
+          ) {
+            throw new Error((result as { err: string }).err || "Save failed");
+          }
+          if (
+            "err" in result &&
+            !(
+              "ok" in result ||
+              ("__kind__" in result &&
+                (result as { __kind__: string }).__kind__ === "ok")
+            )
+          ) {
+            throw new Error((result as { err: string }).err || "Save failed");
+          }
+        }
+        // Canister is source of truth — do NOT cache to localStorage
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes("ic0.trap") ||
+          lower.includes("reject code: 5") ||
+          lower.includes("unauthorized")
+        ) {
+          throw new Error("Admin permission required. Please login as admin.");
+        }
+        if (lower.includes("method not found")) {
+          throw new Error("Service is updating. Please refresh the page.");
+        }
+        if (
+          lower.includes("canister") ||
+          lower.includes("actor") ||
+          lower.includes("failed to fetch")
+        ) {
+          throw new Error(
+            "Backend se connect nahi ho pa raha — thoda wait karein",
+          );
+        }
+        throw new Error(msg);
       }
-      // Canister is source of truth — do NOT cache to localStorage
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cpagripSettings"] });
       qc.invalidateQueries({ queryKey: ["adminSettings"] });
       qc.invalidateQueries({ queryKey: ["appSettings"] });
+      qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+      toast.success("Settings Updated Successfully ✅");
     },
     onError: (err: unknown) => {
       const msg =

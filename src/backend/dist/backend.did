@@ -395,14 +395,6 @@ type OfferTransaction =
              referralBonus;
            };
  };
-type OfferPortalConfig = 
- record {
-   adminProfitPct: nat;
-   cpaLeadWebhookSecret: text;
-   cpagripApiKey: text;
-   isEnabled: bool;
-   userProfitPct: nat;
- };
 type Note = 
  record {
    content: text;
@@ -817,6 +809,13 @@ service : {
     });
   addVideo: (title: text, videoUrl: text, thumbnailUrl: text, platform: 
    text, category: text) -> (nat);
+  /// Adjust wallet balance for a user by userId (Nat) — admin only.
+  /// Alias so both adminAdjustWallet and adjustWalletBalance work.
+  adjustWalletBalance: (userId: nat, amount: float64, isAdd: bool, note:
+   text) -> (variant {
+               err: text;
+               ok;
+             });
   adminAddChatShortcut: (trigger: text, content: text, category: text) ->
    (variant {
       err: text;
@@ -1088,16 +1087,34 @@ service : {
       tier5Earnings: nat;
       totalEarnings: nat;
     }) query;
-  /// Get Offer Portal global config — admin only.
-  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  /// Get Offer Portal global config.
+  /// Admin callers: receive full config including API keys and webhook secrets.
+  /// Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
+  /// with isEnabled and postbackUrl only. API keys and secrets are stripped.
   getOfferPortalConfig: () ->
-   (variant {
-      err: text;
-      ok: OfferPortalConfig;
+   (record {
+      adminProfitPct: nat;
+      cpaLeadWebhookSecret: text;
+      cpagripApiKey: text;
+      cpagripOfferWallName: text;
+      cpagripWebhookSecret: text;
+      isAdmin: bool;
+      isEnabled: bool;
+      postbackUrl: text;
+      userProfitPct: nat;
+    }) query;
+  /// Get safe Offer Portal config for any user (no auth required) — alias for getOfferPortalConfigPublic.
+  /// Returns ONLY non-sensitive fields: isEnabled, adminProfitPct, userProfitPct.
+  /// No API keys, no webhook secrets. Never traps for any caller.
+  getOfferPortalConfigForUser: () ->
+   (record {
+      adminProfitPct: nat;
+      isEnabled: bool;
+      userProfitPct: nat;
     }) query;
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
-  /// Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
+  /// Returns full config for admin, safe empty-secret config for non-admin — never traps.
   getOfferPortalConfigFull: () ->
    (variant {
       err: text;
@@ -1149,7 +1166,7 @@ service : {
   getRechargeServiceEnabled: () -> (bool) query;
   getScrapRates: () -> (vec ScrapRate) query;
   /// Get SMS (Fast2SMS) config — admin only.
-  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  /// Returns #ok(config) for admin, #ok(empty defaults) for non-admin — never traps.
   getSmsConfig: () -> (variant {
                          err: text;
                          ok: SmsConfig;
@@ -1203,6 +1220,13 @@ service : {
    (variant {
       err: text;
       ok: OfferUser;
+    });
+  /// loginUser — alias for login, accepts mobile + passwordHash + role (role is ignored, kept for API compat).
+  /// Returns #ok(User) or clean error message — never traps.
+  loginUser: (mobile: MobileNumber, passwordHash: text, _role: text) ->
+   (variant {
+      err: text;
+      ok: User;
     });
   markMessagesRead: (conversationId: nat) -> (bool);
   /// Mark a transaction as paid. Caller must own the transaction.
@@ -1263,6 +1287,7 @@ service : {
   requestWalletTopup: (amount: float64, note: text) -> (nat);
   /// Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
   /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+  /// Empty strings are ignored — existing values are preserved, preventing accidental wipe.
   saveCPAGripKeys: (apiKey: text, webhookSecret: text, offerWallName:
    text) -> (variant {
                err: text;
@@ -1337,6 +1362,7 @@ service : {
   updateAdminConfig: (newConfig: AdminConfig) -> ();
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
+  /// Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
   updateAdminSettings: (settings: AdminSettingsExtended) -> (bool);
   /// Update AdMob configuration — admin only.
   updateAdmobConfig: (appId: text, bannerUnitId: text, interstitialId: 
@@ -1353,6 +1379,13 @@ service : {
    opt text) -> (bool);
   updateChatNote: (id: nat, title: opt text, content: opt text, subject:
    opt text) -> (bool);
+  /// Update Cloudinary credentials — admin only.
+  /// Empty strings preserve existing defaults.
+  updateCloudinaryConfig: (cloudName: text, apiKey: text, apiSecret: 
+   text) -> (variant {
+               err: text;
+               ok;
+             });
   /// Update commission config — admin only.
   /// Validates: retailerPct + adminPct must equal globalPct.
   updateCommissionConfig: (globalPct: float64, retailerPct: float64,
@@ -1362,6 +1395,7 @@ service : {
   updateCpagripApiKey: (apiKey: text) -> (bool);
   /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
   /// Both fields are persisted in separate stable vars so they survive reloads.
+  /// Empty strings are ignored — existing values are preserved.
   updateCpagripSettings: (apiKey: text, webhookSecret: text, offerWallName:
    text) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:

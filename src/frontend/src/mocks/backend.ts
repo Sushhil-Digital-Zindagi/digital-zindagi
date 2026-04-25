@@ -339,13 +339,17 @@ export const mockBackend: backendInterface = {
     totalEarnings: BigInt(200),
     tier1Earnings: BigInt(130),
   }),
-  getOfferPortalConfig: async () => ({ __kind__: "ok" as const, ok: {
+  getOfferPortalConfig: async () => ({
     cpaLeadWebhookSecret: "",
     cpagripApiKey: "",
+    cpagripOfferWallName: "Digital Zindagi Offers",
+    cpagripWebhookSecret: "",
+    postbackUrl: "",
     adminProfitPct: BigInt(60),
     isEnabled: true,
+    isAdmin: false,
     userProfitPct: BigInt(40),
-  }}),
+  }),
   getOfferPortalConfigFull: async () => ({ __kind__: "ok" as const, ok: {
     cpaLeadWebhookSecret: "",
     cpagripOfferWallName: "",
@@ -356,6 +360,11 @@ export const mockBackend: backendInterface = {
     userProfitPct: BigInt(40),
   }}),
   getOfferPortalConfigPublic: async () => ({
+    adminProfitPct: BigInt(60),
+    isEnabled: true,
+    userProfitPct: BigInt(40),
+  }),
+  getOfferPortalConfigForUser: async () => ({
     adminProfitPct: BigInt(60),
     isEnabled: true,
     userProfitPct: BigInt(40),
@@ -538,6 +547,10 @@ export const mockBackend: backendInterface = {
   unlockMessage: async () => ({ __kind__: "ok" as const, ok: null }),
   updateListing: async () => ({ __kind__: "ok" as const, ok: null }),
   verifyStripeUnlock: async () => ({ __kind__: "ok" as const, ok: null }),
+  // Alias methods — added to satisfy backendInterface
+  adjustWalletBalance: async () => ({ __kind__: "ok" as const, ok: null }),
+  loginUser: async () => ({ __kind__: "err" as const, err: "Mock: use login() instead" }),
+  updateCloudinaryConfig: async () => ({ __kind__: "ok" as const, ok: null }),
   _immutableObjectStorageBlobsAreLive: async () => [],
   _immutableObjectStorageBlobsToDelete: async () => [],
   _immutableObjectStorageConfirmBlobDeletion: async () => undefined,

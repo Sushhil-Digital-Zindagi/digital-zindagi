@@ -115,8 +115,8 @@ persistent actor {
   var nextReceiptId     = 1;
   var offerPortalConfig : OPTypes.OfferPortalConfig = {
     isEnabled            = false;
-    cpaLeadWebhookSecret = "";
-    cpagripApiKey        = "";
+    cpaLeadWebhookSecret = "DZ_OfferWall_2026@Secret#123";
+    cpagripApiKey        = "914ebf2f2ed06fd6da511be81d502acd";
     adminProfitPct       = 60;
     userProfitPct        = 40;
   };
@@ -160,7 +160,7 @@ persistent actor {
     pointsPerAd         = 10;
     redemptionRate      = 100;
     minWithdrawal       = 50;
-    cpagripApiKey       = "";
+    cpagripApiKey       = "914ebf2f2ed06fd6da511be81d502acd";
     cloudinaryCloudName = "dquyiiu7o";
     cloudinaryApiKey    = "199372638334688";
     cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
@@ -170,7 +170,7 @@ persistent actor {
     udhaarBookEnabled   = true;
   };
   // Separate stable vars for new CPAGrip fields (upgrade-safe)
-  var cpagripWebhookSecret : Text = "";
+  var cpagripWebhookSecret : Text = "DZ_OfferWall_2026@Secret#123";
   var cpagripOfferWallName : Text = "Digital Zindagi Offers";
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
@@ -673,7 +673,7 @@ persistent actor {
 
   public shared ({ caller }) func login(mobile : MobileNumber, passwordHash : Text) : async { #ok : User; #err : Text } {
     switch (users.get(mobile)) {
-      case (null) { #err("User not found") };
+      case (null) { #err("User not found. Please register first.") };
       case (?user) {
         if (user.passwordHash == passwordHash) {
           // Update principal mapping on login
@@ -694,7 +694,32 @@ persistent actor {
 
           #ok(user);
         } else {
-          #err("Incorrect password");
+          #err("Incorrect password. Please try again.");
+        };
+      };
+    };
+  };
+
+  /// loginUser — alias for login, accepts mobile + passwordHash + role (role is ignored, kept for API compat).
+  /// Returns #ok(User) or clean error message — never traps.
+  public shared ({ caller }) func loginUser(mobile : MobileNumber, passwordHash : Text, _role : Text) : async { #ok : User; #err : Text } {
+    switch (users.get(mobile)) {
+      case (null) { #err("User not found. Please register first.") };
+      case (?user) {
+        if (user.passwordHash == passwordHash) {
+          userIdToPrincipal.add(user.id, caller);
+          principalToUserId.add(caller, user.id);
+          let userProfile : UserProfile = {
+            userId = user.id;
+            name = user.name;
+            mobile = user.mobile;
+            role = user.role;
+          };
+          userProfiles.add(caller, userProfile);
+          AccessControl.assignRole(accessControlState, caller, caller, #user);
+          #ok(user);
+        } else {
+          #err("Incorrect password. Please try again.");
         };
       };
     };
@@ -2191,13 +2216,49 @@ persistent actor {
     OPApi.adminResolveWithdrawal(offerUsers, offerWithdrawals, id, newStatus, adminNote);
   };
 
-  /// Get Offer Portal global config — admin only.
-  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
-  public shared query ({ caller }) func getOfferPortalConfig() : async { #ok : OPTypes.OfferPortalConfig; #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return #err("Unauthorized: Admin only");
+  /// Get Offer Portal global config.
+  /// Admin callers: receive full config including API keys and webhook secrets.
+  /// Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
+  /// with isEnabled and postbackUrl only. API keys and secrets are stripped.
+  public shared query ({ caller }) func getOfferPortalConfig() : async {
+    isEnabled            : Bool;
+    adminProfitPct       : Nat;
+    userProfitPct        : Nat;
+    cpaLeadWebhookSecret : Text;
+    cpagripApiKey        : Text;
+    postbackUrl          : Text;
+    cpagripWebhookSecret : Text;
+    cpagripOfferWallName : Text;
+    isAdmin              : Bool;
+  } {
+    let isAdminCaller = AccessControl.isAdmin(accessControlState, caller);
+    if (isAdminCaller) {
+      // Full config for admin
+      {
+        isEnabled            = offerPortalConfig.isEnabled;
+        adminProfitPct       = offerPortalConfig.adminProfitPct;
+        userProfitPct        = offerPortalConfig.userProfitPct;
+        cpaLeadWebhookSecret = offerPortalConfig.cpaLeadWebhookSecret;
+        cpagripApiKey        = offerPortalConfig.cpagripApiKey;
+        postbackUrl          = "/cpa-postback";
+        cpagripWebhookSecret = cpagripWebhookSecret;
+        cpagripOfferWallName = cpagripOfferWallName;
+        isAdmin              = true;
+      }
+    } else {
+      // Safe public config — no secrets exposed
+      {
+        isEnabled            = offerPortalConfig.isEnabled;
+        adminProfitPct       = offerPortalConfig.adminProfitPct;
+        userProfitPct        = offerPortalConfig.userProfitPct;
+        cpaLeadWebhookSecret = "";
+        cpagripApiKey        = "";
+        postbackUrl          = "/cpa-postback";
+        cpagripWebhookSecret = "";
+        cpagripOfferWallName = cpagripOfferWallName;
+        isAdmin              = false;
+      }
     };
-    #ok(offerPortalConfig);
   };
 
   /// Get Offer Portal global config — public (no auth required).
@@ -2205,6 +2266,17 @@ persistent actor {
   /// before showing the login/signup UI.  Webhook secrets are NOT included
   /// in this method — admin-only fields remain protected via getOfferPortalConfig.
   public shared query ({ caller }) func getOfferPortalConfigPublic() : async { isEnabled : Bool; adminProfitPct : Nat; userProfitPct : Nat } {
+    {
+      isEnabled      = offerPortalConfig.isEnabled;
+      adminProfitPct = offerPortalConfig.adminProfitPct;
+      userProfitPct  = offerPortalConfig.userProfitPct;
+    };
+  };
+
+  /// Get safe Offer Portal config for any user (no auth required) — alias for getOfferPortalConfigPublic.
+  /// Returns ONLY non-sensitive fields: isEnabled, adminProfitPct, userProfitPct.
+  /// No API keys, no webhook secrets. Never traps for any caller.
+  public query func getOfferPortalConfigForUser() : async { isEnabled : Bool; adminProfitPct : Nat; userProfitPct : Nat } {
     {
       isEnabled      = offerPortalConfig.isEnabled;
       adminProfitPct = offerPortalConfig.adminProfitPct;
@@ -2233,8 +2305,9 @@ persistent actor {
       case (#ok(_))    {
         offerPortalConfig := newConfig;
         // Persist the two extra CPAGrip fields to their separate stable vars
-        cpagripWebhookSecret := newWebhookSecret;
-        cpagripOfferWallName := newOfferWallName;
+        // Use the non-empty value: prefer newWebhookSecret if provided, else keep existing
+        if (newWebhookSecret != "") { cpagripWebhookSecret := newWebhookSecret };
+        if (newOfferWallName != "") { cpagripOfferWallName := newOfferWallName };
         // Mirror cpagripApiKey into adminSettings for consistency
         adminSettings := { adminSettings with cpagripApiKey };
         #ok(true);
@@ -2244,7 +2317,7 @@ persistent actor {
 
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
-  /// Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
+  /// Returns full config for admin, safe empty-secret config for non-admin — never traps.
   public shared query ({ caller }) func getOfferPortalConfigFull() : async {
     #ok : {
       isEnabled            : Bool;
@@ -2258,7 +2331,16 @@ persistent actor {
     #err : Text;
   } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return #err("Unauthorized: Admin only");
+      // Return safe non-sensitive config — never return #err (would trap frontend)
+      return #ok({
+        isEnabled            = offerPortalConfig.isEnabled;
+        cpaLeadWebhookSecret = "";
+        cpagripApiKey        = "";
+        adminProfitPct       = offerPortalConfig.adminProfitPct;
+        userProfitPct        = offerPortalConfig.userProfitPct;
+        cpagripWebhookSecret = "";
+        cpagripOfferWallName = cpagripOfferWallName;
+      });
     };
     #ok({
       isEnabled            = offerPortalConfig.isEnabled;
@@ -2274,10 +2356,10 @@ persistent actor {
   // ── SMS config ────────────────────────────────────────────────────────────
 
   /// Get SMS (Fast2SMS) config — admin only.
-  /// Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+  /// Returns #ok(config) for admin, #ok(empty defaults) for non-admin — never traps.
   public shared query ({ caller }) func getSmsConfig() : async { #ok : OPTypes.SmsConfig; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return #err("Unauthorized: Admin only");
+      return #ok({ fast2smsApiKey = ""; senderId = ""; isEnabled = false });
     };
     #ok(smsConfig);
   };
@@ -2462,10 +2544,18 @@ persistent actor {
 
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
+  /// Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
   public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettingsExtended) : async Bool {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       return false;
     };
+    // Preserve defaults for critical fields if empty strings are passed
+    let finalCloudName   = if (settings.cloudinaryCloudName != "") { settings.cloudinaryCloudName } else { adminSettings.cloudinaryCloudName };
+    let finalCloudApiKey = if (settings.cloudinaryApiKey != "") { settings.cloudinaryApiKey } else { adminSettings.cloudinaryApiKey };
+    let finalCloudSecret = if (settings.cloudinaryApiSecret != "") { settings.cloudinaryApiSecret } else { adminSettings.cloudinaryApiSecret };
+    let finalCpaApiKey   = if (settings.cpagripApiKey != "") { settings.cpagripApiKey } else { adminSettings.cpagripApiKey };
+    let finalWebhookSec  = if (settings.cpagripWebhookSecret != "") { settings.cpagripWebhookSecret } else { cpagripWebhookSecret };
+    let finalOfferName   = if (settings.cpagripOfferWallName != "") { settings.cpagripOfferWallName } else { cpagripOfferWallName };
     adminSettings := {
       referralLevel1Pct   = settings.referralLevel1Pct;
       referralLevel2Pct   = settings.referralLevel2Pct;
@@ -2479,18 +2569,18 @@ persistent actor {
       pointsPerAd         = settings.pointsPerAd;
       redemptionRate      = settings.redemptionRate;
       minWithdrawal       = settings.minWithdrawal;
-      cpagripApiKey       = settings.cpagripApiKey;
-      cloudinaryCloudName = settings.cloudinaryCloudName;
-      cloudinaryApiKey    = settings.cloudinaryApiKey;
-      cloudinaryApiSecret = settings.cloudinaryApiSecret;
+      cpagripApiKey       = finalCpaApiKey;
+      cloudinaryCloudName = finalCloudName;
+      cloudinaryApiKey    = finalCloudApiKey;
+      cloudinaryApiSecret = finalCloudSecret;
       ludoEnabled         = settings.ludoEnabled;
       rewardsEnabled      = settings.rewardsEnabled;
       gameEnabled         = settings.gameEnabled;
       udhaarBookEnabled   = settings.udhaarBookEnabled;
     };
     // Save new CPAGrip fields to their separate stable vars
-    cpagripWebhookSecret := settings.cpagripWebhookSecret;
-    cpagripOfferWallName := settings.cpagripOfferWallName;
+    cpagripWebhookSecret := finalWebhookSec;
+    cpagripOfferWallName := finalOfferName;
     // Mirror payment fields into paymentConfig for backward compat
     paymentConfig := {
       razorpayKeyId     = settings.razorpayKeyId;
@@ -2499,7 +2589,7 @@ persistent actor {
       qrCodeUrl         = settings.upiQrCodeUrl;
     };
     // Mirror cpagripApiKey into offerPortalConfig
-    offerPortalConfig := { offerPortalConfig with cpagripApiKey = settings.cpagripApiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = finalCpaApiKey; cpaLeadWebhookSecret = finalWebhookSec };
     true;
   };
 
@@ -2556,6 +2646,38 @@ persistent actor {
     };
   };
 
+  /// Update Cloudinary credentials — admin only.
+  /// Empty strings preserve existing defaults.
+  public shared ({ caller }) func updateCloudinaryConfig(
+    cloudName : Text,
+    apiKey    : Text,
+    apiSecret : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let finalCloudName = if (cloudName != "") { cloudName } else { adminSettings.cloudinaryCloudName };
+    let finalApiKey    = if (apiKey != "") { apiKey } else { adminSettings.cloudinaryApiKey };
+    let finalSecret    = if (apiSecret != "") { apiSecret } else { adminSettings.cloudinaryApiSecret };
+    adminSettings := {
+      adminSettings with
+      cloudinaryCloudName = finalCloudName;
+      cloudinaryApiKey    = finalApiKey;
+      cloudinaryApiSecret = finalSecret;
+    };
+    #ok(());
+  };
+
+  /// Adjust wallet balance for a user by userId (Nat) — admin only.
+  /// Alias so both adminAdjustWallet and adjustWalletBalance work.
+  public shared ({ caller }) func adjustWalletBalance(userId : Nat, amount : Float, isAdd : Bool, note : Text) : async { #ok : (); #err : Text } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let success = WRApi.adminAdjust(walletBalances, userId, amount, isAdd);
+    if (success) { #ok(()) } else { #err("User wallet not found") };
+  };
+
   /// Save the CPAGrip API key in canister state — admin only.
   /// Also mirrors the key into the live offerPortalConfig so it takes effect immediately.
   public shared ({ caller }) func updateCpagripApiKey(apiKey : Text) : async Bool {
@@ -2569,6 +2691,7 @@ persistent actor {
 
   /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
   /// Both fields are persisted in separate stable vars so they survive reloads.
+  /// Empty strings are ignored — existing values are preserved.
   public shared ({ caller }) func updateCpagripSettings(
     apiKey        : Text,
     webhookSecret : Text,
@@ -2577,15 +2700,19 @@ persistent actor {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       return false;
     };
-    adminSettings := { adminSettings with cpagripApiKey = apiKey };
-    offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
-    cpagripWebhookSecret := webhookSecret;
-    cpagripOfferWallName := offerWallName;
+    let finalApiKey        = if (apiKey != "") { apiKey } else { adminSettings.cpagripApiKey };
+    let finalWebhookSecret = if (webhookSecret != "") { webhookSecret } else { cpagripWebhookSecret };
+    let finalOfferWallName = if (offerWallName != "") { offerWallName } else { cpagripOfferWallName };
+    adminSettings := { adminSettings with cpagripApiKey = finalApiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = finalApiKey; cpaLeadWebhookSecret = finalWebhookSecret };
+    cpagripWebhookSecret := finalWebhookSecret;
+    cpagripOfferWallName := finalOfferWallName;
     true;
   };
 
   /// Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
   /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+  /// Empty strings are ignored — existing values are preserved, preventing accidental wipe.
   public shared ({ caller }) func saveCPAGripKeys(
     apiKey        : Text,
     webhookSecret : Text,
@@ -2594,10 +2721,14 @@ persistent actor {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       return #err("Unauthorized: Admin only");
     };
-    adminSettings := { adminSettings with cpagripApiKey = apiKey };
-    offerPortalConfig := { offerPortalConfig with cpagripApiKey = apiKey };
-    cpagripWebhookSecret := webhookSecret;
-    cpagripOfferWallName := offerWallName;
+    // Only update if non-empty — prevents accidental wipe of existing values
+    let finalApiKey        = if (apiKey != "") { apiKey } else { adminSettings.cpagripApiKey };
+    let finalWebhookSecret = if (webhookSecret != "") { webhookSecret } else { cpagripWebhookSecret };
+    let finalOfferWallName = if (offerWallName != "") { offerWallName } else { cpagripOfferWallName };
+    adminSettings := { adminSettings with cpagripApiKey = finalApiKey };
+    offerPortalConfig := { offerPortalConfig with cpagripApiKey = finalApiKey; cpaLeadWebhookSecret = finalWebhookSecret };
+    cpagripWebhookSecret := finalWebhookSecret;
+    cpagripOfferWallName := finalOfferWallName;
     #ok(());
   };
 

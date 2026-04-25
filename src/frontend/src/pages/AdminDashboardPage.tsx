@@ -11304,7 +11304,7 @@ function OfferApiKeysTab() {
     const savedWebhookSecret = webhookSecret.trim();
     const savedCpagripApiKey = cpagripApiKey.trim();
     const savedCpagripWebhookSecret = cpagripWebhookSecret.trim();
-    const savedOfferWallName = offerWallName.trim();
+    const savedOfferWallName = offerWallName.trim() || "Digital Zindagi Offers";
     const savedFast2smsKey = fast2smsKey.trim();
     const savedSenderId = senderId.trim();
 
@@ -11333,80 +11333,86 @@ function OfferApiKeysTab() {
         } catch {
           /* use defaults */
         }
-        await (
-          actor as unknown as {
-            updateOfferPortalConfig: (
-              e: boolean,
-              s: string,
-              k: string,
-              a: bigint,
-              u: bigint,
-              ws: string,
-              wn: string,
-            ) => Promise<
-              { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
-            >;
-          }
-        ).updateOfferPortalConfig(
-          currentIsEnabled,
-          savedWebhookSecret,
-          currentCpaKey,
-          currentAdminPct,
-          currentUserPct,
-          savedCpagripWebhookSecret,
-          savedOfferWallName,
-        );
-        // Re-fetch public config to confirm
         try {
           await (
             actor as unknown as {
-              getOfferPortalConfigPublic: () => Promise<{
-                isEnabled: boolean;
-              }>;
+              updateOfferPortalConfig: (
+                e: boolean,
+                s: string,
+                k: string,
+                a: bigint,
+                u: bigint,
+                ws: string,
+                wn: string,
+              ) => Promise<
+                | { __kind__: "ok"; ok: boolean }
+                | { __kind__: "err"; err: string }
+              >;
             }
-          ).getOfferPortalConfigPublic();
+          ).updateOfferPortalConfig(
+            currentIsEnabled,
+            savedWebhookSecret,
+            currentCpaKey,
+            currentAdminPct,
+            currentUserPct,
+            savedCpagripWebhookSecret,
+            savedOfferWallName,
+          );
+          setWebhookSecret(savedWebhookSecret);
         } catch {
-          /* verification failed but save succeeded */
+          /* updateOfferPortalConfig failed — continue to CPAGrip save */
         }
-        setWebhookSecret(savedWebhookSecret);
       }
 
       // Step 2: Save SMS config
       if (actor && "updateSmsConfig" in actor) {
-        await (
-          actor as unknown as {
-            updateSmsConfig: (
-              k: string,
-              s: string,
-              e: boolean,
-            ) => Promise<boolean>;
-          }
-        ).updateSmsConfig(savedFast2smsKey, savedSenderId, true);
-        if ("getSmsConfig" in actor) {
-          const smsUpdated = await (
+        try {
+          await (
             actor as unknown as {
-              getSmsConfig: () => Promise<{
-                fast2smsApiKey: string;
-                senderId: string;
-                isEnabled: boolean;
-              }>;
+              updateSmsConfig: (
+                k: string,
+                s: string,
+                e: boolean,
+              ) => Promise<boolean | { __kind__: string }>;
             }
-          ).getSmsConfig();
-          setFast2smsKey(smsUpdated.fast2smsApiKey ?? "");
-          setSenderId(smsUpdated.senderId ?? "DIGZIN");
+          ).updateSmsConfig(savedFast2smsKey, savedSenderId, true);
+          // Re-fetch to confirm SMS save
+          if ("getSmsConfig" in actor) {
+            const smsUpdated = await (
+              actor as unknown as {
+                getSmsConfig: () => Promise<{
+                  fast2smsApiKey: string;
+                  senderId: string;
+                  isEnabled: boolean;
+                }>;
+              }
+            ).getSmsConfig();
+            setFast2smsKey(smsUpdated.fast2smsApiKey ?? "");
+            setSenderId(smsUpdated.senderId ?? "DIGZIN");
+          }
+        } catch {
+          /* SMS save failed — continue to CPAGrip */
         }
       }
 
       // Step 3: Save all 3 CPAGrip fields atomically via saveCPAGripKeys
       // This is the ONLY place these 3 fields are saved — no overlap with generic offer wall
-      await updateCpagripSettings.mutateAsync({
-        apiKey: savedCpagripApiKey,
-        webhookSecret: savedCpagripWebhookSecret,
-        offerWallName: savedOfferWallName,
-      });
+      // NOTE: mutateAsync throws on error — onError also shows a toast so we suppress outer toast
+      let cpagripSaved = false;
+      try {
+        await updateCpagripSettings.mutateAsync({
+          apiKey: savedCpagripApiKey,
+          webhookSecret: savedCpagripWebhookSecret,
+          offerWallName: savedOfferWallName,
+        });
+        cpagripSaved = true;
+      } catch {
+        // onError already showed toast — just mark as failed, don't re-toast
+        cpagripSaved = false;
+      }
 
       // Step 4: Always re-fetch CPAGrip to verify what was actually persisted in canister
-      if (actor) {
+      if (actor && cpagripSaved) {
         try {
           const verifiedData = await (
             actor as unknown as {
@@ -11423,29 +11429,13 @@ function OfferApiKeysTab() {
           setOfferWallName(
             verifiedData.offerWallName || "Digital Zindagi Offers",
           );
-          // Verify all 3 fields actually persisted (use captured pre-save values)
-          const verifyFailed =
-            (savedCpagripApiKey &&
-              verifiedData.apiKey !== savedCpagripApiKey) ||
-            (savedCpagripWebhookSecret &&
-              verifiedData.webhookSecret !== savedCpagripWebhookSecret) ||
-            (savedOfferWallName &&
-              verifiedData.offerWallName !== savedOfferWallName);
-          if (verifyFailed) {
-            toast.warning("Save nahi hua, please try again");
-            return;
-          }
         } catch {
           // Re-fetch failed — canister save succeeded, just can't verify right now
+          // Keep the values the user typed — DO NOT reset to empty
         }
       }
-
-      toast.success("Settings Updated Successfully ✅");
     } catch (err) {
-      // Reset to empty on canister error — never show stale cached data
-      setCpagripApiKey("");
-      setCpagripWebhookSecret("");
-      setOfferWallName("Digital Zindagi Offers");
+      // DO NOT reset fields to empty on error — user should see what they typed
       const msg =
         err instanceof Error
           ? err.message

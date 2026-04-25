@@ -52,13 +52,6 @@ export interface ReferralStats {
     pointsEarned: bigint;
     badge: string;
 }
-export interface OfferPortalConfig {
-    cpaLeadWebhookSecret: string;
-    cpagripApiKey: string;
-    adminProfitPct: bigint;
-    isEnabled: boolean;
-    userProfitPct: bigint;
-}
 export interface CreatorEarningsSummary {
     payments: Array<LockedMessagePayment>;
     pendingPayouts: bigint;
@@ -754,6 +747,17 @@ export interface backendInterface {
         err: string;
     }>;
     addVideo(title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string): Promise<bigint>;
+    /**
+     * / Adjust wallet balance for a user by userId (Nat) — admin only.
+     * / Alias so both adminAdjustWallet and adjustWalletBalance work.
+     */
+    adjustWalletBalance(userId: bigint, amount: number, isAdd: boolean, note: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     adminAddChatShortcut(trigger: string, content: string, category: string): Promise<{
         __kind__: "ok";
         ok: bigint;
@@ -1120,20 +1124,36 @@ export interface backendInterface {
         tier1Earnings: bigint;
     }>;
     /**
-     * / Get Offer Portal global config — admin only.
-     * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+     * / Get Offer Portal global config.
+     * / Admin callers: receive full config including API keys and webhook secrets.
+     * / Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
+     * / with isEnabled and postbackUrl only. API keys and secrets are stripped.
      */
     getOfferPortalConfig(): Promise<{
-        __kind__: "ok";
-        ok: OfferPortalConfig;
-    } | {
-        __kind__: "err";
-        err: string;
+        cpaLeadWebhookSecret: string;
+        cpagripOfferWallName: string;
+        cpagripApiKey: string;
+        postbackUrl: string;
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        isAdmin: boolean;
+        cpagripWebhookSecret: string;
+        userProfitPct: bigint;
+    }>;
+    /**
+     * / Get safe Offer Portal config for any user (no auth required) — alias for getOfferPortalConfigPublic.
+     * / Returns ONLY non-sensitive fields: isEnabled, adminProfitPct, userProfitPct.
+     * / No API keys, no webhook secrets. Never traps for any caller.
+     */
+    getOfferPortalConfigForUser(): Promise<{
+        adminProfitPct: bigint;
+        isEnabled: boolean;
+        userProfitPct: bigint;
     }>;
     /**
      * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
      * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
-     * / Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
+     * / Returns full config for admin, safe empty-secret config for non-admin — never traps.
      */
     getOfferPortalConfigFull(): Promise<{
         __kind__: "ok";
@@ -1201,7 +1221,7 @@ export interface backendInterface {
     getScrapRates(): Promise<Array<ScrapRate>>;
     /**
      * / Get SMS (Fast2SMS) config — admin only.
-     * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+     * / Returns #ok(config) for admin, #ok(empty defaults) for non-admin — never traps.
      */
     getSmsConfig(): Promise<{
         __kind__: "ok";
@@ -1279,6 +1299,17 @@ export interface backendInterface {
     loginOfferUser(email: string, passwordHash: string): Promise<{
         __kind__: "ok";
         ok: OfferUser;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / loginUser — alias for login, accepts mobile + passwordHash + role (role is ignored, kept for API compat).
+     * / Returns #ok(User) or clean error message — never traps.
+     */
+    loginUser(mobile: MobileNumber, passwordHash: string, _role: string): Promise<{
+        __kind__: "ok";
+        ok: User;
     } | {
         __kind__: "err";
         err: string;
@@ -1368,6 +1399,7 @@ export interface backendInterface {
     /**
      * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
      * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+     * / Empty strings are ignored — existing values are preserved, preventing accidental wipe.
      */
     saveCPAGripKeys(apiKey: string, webhookSecret: string, offerWallName: string): Promise<{
         __kind__: "ok";
@@ -1470,6 +1502,7 @@ export interface backendInterface {
     /**
      * / Replace ALL admin settings in one atomic call — admin only.
      * / All existing field values are overwritten with the supplied record.
+     * / Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
      */
     updateAdminSettings(settings: AdminSettingsExtended): Promise<boolean>;
     /**
@@ -1488,6 +1521,17 @@ export interface backendInterface {
     updateChatGroupInfo(conversationId: bigint, name: string | null, photoUrl: string | null): Promise<boolean>;
     updateChatNote(id: bigint, title: string | null, content: string | null, subject: string | null): Promise<boolean>;
     /**
+     * / Update Cloudinary credentials — admin only.
+     * / Empty strings preserve existing defaults.
+     */
+    updateCloudinaryConfig(cloudName: string, apiKey: string, apiSecret: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
      * / Update commission config — admin only.
      * / Validates: retailerPct + adminPct must equal globalPct.
      */
@@ -1500,6 +1544,7 @@ export interface backendInterface {
     /**
      * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
      * / Both fields are persisted in separate stable vars so they survive reloads.
+     * / Empty strings are ignored — existing values are preserved.
      */
     updateCpagripSettings(apiKey: string, webhookSecret: string, offerWallName: string): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;

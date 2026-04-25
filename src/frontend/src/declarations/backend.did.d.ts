@@ -308,13 +308,6 @@ export interface Note {
   'createdAt' : bigint,
   'updatedAt' : bigint,
 }
-export interface OfferPortalConfig {
-  'cpaLeadWebhookSecret' : string,
-  'cpagripApiKey' : string,
-  'adminProfitPct' : bigint,
-  'isEnabled' : boolean,
-  'userProfitPct' : bigint,
-}
 export interface OfferTransaction {
   'id' : bigint,
   'status' : { 'pending' : null } |
@@ -723,6 +716,15 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
+  /**
+   * / Adjust wallet balance for a user by userId (Nat) — admin only.
+   * / Alias so both adminAdjustWallet and adjustWalletBalance work.
+   */
+  'adjustWalletBalance' : ActorMethod<
+    [bigint, number, boolean, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'adminAddChatShortcut' : ActorMethod<
     [string, string, string],
     { 'ok' : bigint } |
@@ -1073,18 +1075,42 @@ export interface _SERVICE {
     }
   >,
   /**
-   * / Get Offer Portal global config — admin only.
-   * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+   * / Get Offer Portal global config.
+   * / Admin callers: receive full config including API keys and webhook secrets.
+   * / Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
+   * / with isEnabled and postbackUrl only. API keys and secrets are stripped.
    */
   'getOfferPortalConfig' : ActorMethod<
     [],
-    { 'ok' : OfferPortalConfig } |
-      { 'err' : string }
+    {
+      'cpaLeadWebhookSecret' : string,
+      'cpagripOfferWallName' : string,
+      'cpagripApiKey' : string,
+      'postbackUrl' : string,
+      'adminProfitPct' : bigint,
+      'isEnabled' : boolean,
+      'isAdmin' : boolean,
+      'cpagripWebhookSecret' : string,
+      'userProfitPct' : bigint,
+    }
+  >,
+  /**
+   * / Get safe Offer Portal config for any user (no auth required) — alias for getOfferPortalConfigPublic.
+   * / Returns ONLY non-sensitive fields: isEnabled, adminProfitPct, userProfitPct.
+   * / No API keys, no webhook secrets. Never traps for any caller.
+   */
+  'getOfferPortalConfigForUser' : ActorMethod<
+    [],
+    {
+      'adminProfitPct' : bigint,
+      'isEnabled' : boolean,
+      'userProfitPct' : bigint,
+    }
   >,
   /**
    * / Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
    * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
-   * / Returns #ok(fullConfig) or #err("Unauthorized: Admin only") — never traps.
+   * / Returns full config for admin, safe empty-secret config for non-admin — never traps.
    */
   'getOfferPortalConfigFull' : ActorMethod<
     [],
@@ -1153,7 +1179,7 @@ export interface _SERVICE {
   'getScrapRates' : ActorMethod<[], Array<ScrapRate>>,
   /**
    * / Get SMS (Fast2SMS) config — admin only.
-   * / Returns #ok(config) or #err("Unauthorized: Admin only") — never traps.
+   * / Returns #ok(config) for admin, #ok(empty defaults) for non-admin — never traps.
    */
   'getSmsConfig' : ActorMethod<[], { 'ok' : SmsConfig } | { 'err' : string }>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
@@ -1219,6 +1245,15 @@ export interface _SERVICE {
   'loginOfferUser' : ActorMethod<
     [string, string],
     { 'ok' : OfferUser } |
+      { 'err' : string }
+  >,
+  /**
+   * / loginUser — alias for login, accepts mobile + passwordHash + role (role is ignored, kept for API compat).
+   * / Returns #ok(User) or clean error message — never traps.
+   */
+  'loginUser' : ActorMethod<
+    [MobileNumber, string, string],
+    { 'ok' : User } |
       { 'err' : string }
   >,
   'markMessagesRead' : ActorMethod<[bigint], boolean>,
@@ -1297,6 +1332,7 @@ export interface _SERVICE {
   /**
    * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
    * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
+   * / Empty strings are ignored — existing values are preserved, preventing accidental wipe.
    */
   'saveCPAGripKeys' : ActorMethod<
     [string, string, string],
@@ -1379,6 +1415,7 @@ export interface _SERVICE {
   /**
    * / Replace ALL admin settings in one atomic call — admin only.
    * / All existing field values are overwritten with the supplied record.
+   * / Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
    */
   'updateAdminSettings' : ActorMethod<[AdminSettingsExtended], boolean>,
   /**
@@ -1407,6 +1444,15 @@ export interface _SERVICE {
     boolean
   >,
   /**
+   * / Update Cloudinary credentials — admin only.
+   * / Empty strings preserve existing defaults.
+   */
+  'updateCloudinaryConfig' : ActorMethod<
+    [string, string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
    * / Update commission config — admin only.
    * / Validates: retailerPct + adminPct must equal globalPct.
    */
@@ -1419,6 +1465,7 @@ export interface _SERVICE {
   /**
    * / Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
    * / Both fields are persisted in separate stable vars so they survive reloads.
+   * / Empty strings are ignored — existing values are preserved.
    */
   'updateCpagripSettings' : ActorMethod<[string, string, string], boolean>,
   'updateCustomCode' : ActorMethod<
