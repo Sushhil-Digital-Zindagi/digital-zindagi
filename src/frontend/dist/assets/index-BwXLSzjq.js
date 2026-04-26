@@ -39461,7 +39461,7 @@ Service({
     []
   ),
   "adminAdjustWalletBalance": Func(
-    [Text, Int, Text, Text],
+    [Opt(Text), Text, Int, Text, Text],
     [Variant({ "ok": Int, "err": Text })],
     []
   ),
@@ -39476,7 +39476,7 @@ Service({
     []
   ),
   "adminAssignSubscription": Func(
-    [Text, Nat, Text],
+    [Opt(Text), Text, Nat, Text],
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
@@ -39533,12 +39533,17 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
-  "approveProvider": Func([Nat, SubscriptionPlan], [], []),
+  "approveProvider": Func(
+    [Opt(Text), Nat, SubscriptionPlan],
+    [],
+    []
+  ),
   "approveTopupRequest": Func([Nat, Bool], [Bool], []),
   "assignCallerUserRole": Func([Principal2, UserRole__1], [], []),
   "awardChatPoints": Func([Text, Nat], [Bool], []),
   "cancelChatScheduledMessage": Func([Nat], [Bool], []),
   "changeAdminPin": Func([Text, Text], [], []),
+  "checkAdminToken": Func([Text], [Bool], ["query"]),
   "cleanupExpiredChatStories": Func([], [Nat], []),
   "cleanupExpiredChatVaultItems": Func([], [Nat], []),
   "confirmUpiUnlock": Func(
@@ -39616,7 +39621,11 @@ Service({
   "getActiveBanners": Func([], [Vec(Banner)], ["query"]),
   "getActiveChatStories": Func([], [Vec(Story)], ["query"]),
   "getActiveProviders": Func([], [Vec(ProviderProfile)], ["query"]),
-  "getAdminAuditLog": Func([Nat], [Vec(AuditLogEntry)], ["query"]),
+  "getAdminAuditLog": Func(
+    [Opt(Text), Nat],
+    [Vec(AuditLogEntry)],
+    []
+  ),
   "getAdminConfig": Func([], [Opt(AdminConfig)], ["query"]),
   "getAdminSettings": Func([], [AdminSettingsExtended], ["query"]),
   "getAdmobConfig": Func(
@@ -39704,7 +39713,7 @@ Service({
     ["query"]
   ),
   "getCpagripSettings": Func(
-    [],
+    [Opt(Text)],
     [
       Record({
         "webhookSecret": Text,
@@ -39712,7 +39721,7 @@ Service({
         "apiKey": Text
       })
     ],
-    ["query"]
+    []
   ),
   "getCreatorEarnings": Func([], [CreatorEarningsSummary], ["query"]),
   "getCustomCodes": Func([], [Vec(CustomCode)], ["query"]),
@@ -39770,7 +39779,7 @@ Service({
     ["query"]
   ),
   "getOfferPortalConfig": Func(
-    [],
+    [Opt(Text)],
     [
       Record({
         "cpaLeadWebhookSecret": Text,
@@ -39784,7 +39793,7 @@ Service({
         "userProfitPct": Nat
       })
     ],
-    ["query"]
+    []
   ),
   "getOfferPortalConfigForUser": Func(
     [],
@@ -39798,7 +39807,7 @@ Service({
     ["query"]
   ),
   "getOfferPortalConfigFull": Func(
-    [],
+    [Opt(Text)],
     [
       Variant({
         "ok": Record({
@@ -39813,7 +39822,7 @@ Service({
         "err": Text
       })
     ],
-    ["query"]
+    []
   ),
   "getOfferPortalConfigPublic": Func(
     [],
@@ -39838,7 +39847,11 @@ Service({
     ["query"]
   ),
   "getPaymentConfig": Func([], [PaymentConfig], ["query"]),
-  "getPendingApprovals": Func([], [Vec(ProviderProfile)], ["query"]),
+  "getPendingApprovals": Func(
+    [Opt(Text)],
+    [Vec(ProviderProfile)],
+    []
+  ),
   "getPremiumPlans": Func([], [PremiumPrices], ["query"]),
   "getProviderOrders": Func([Nat], [Vec(Order)], ["query"]),
   "getProviderProfile": Func(
@@ -39961,7 +39974,7 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
-  "rejectProvider": Func([Nat], [], []),
+  "rejectProvider": Func([Opt(Text), Nat], [], []),
   "removeChatGroupMember": Func([Nat, Principal2], [Bool], []),
   "removeLockedFeature": Func(
     [Text],
@@ -39983,7 +39996,7 @@ Service({
   ),
   "requestWalletTopup": Func([Float64, Text], [Nat], []),
   "saveCPAGripKeys": Func(
-    [Text, Text, Text],
+    [Opt(Text), Text, Text, Text],
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
@@ -40055,14 +40068,18 @@ Service({
     []
   ),
   "updateAdminConfig": Func([AdminConfig], [], []),
-  "updateAdminSettings": Func([AdminSettingsExtended], [Bool], []),
+  "updateAdminSettings": Func(
+    [Opt(Text), AdminSettingsExtended],
+    [Bool],
+    []
+  ),
   "updateAdmobConfig": Func(
     [Text, Text, Text, Text, Text, Text],
     [Bool],
     []
   ),
   "updateAppSettings": Func(
-    [Text],
+    [Opt(Text), Text],
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
@@ -40094,7 +40111,7 @@ Service({
   ),
   "updateCpagripApiKey": Func([Text], [Bool], []),
   "updateCpagripSettings": Func(
-    [Text, Text, Text],
+    [Opt(Text), Text, Text, Text],
     [Bool],
     []
   ),
@@ -40169,7 +40186,16 @@ Service({
     []
   ),
   "updateOfferPortalConfig": Func(
-    [Bool, Text, Text, Nat, Nat, Text, Text],
+    [
+      Opt(Text),
+      Bool,
+      Text,
+      Text,
+      Nat,
+      Nat,
+      Text,
+      Text
+    ],
     [Variant({ "ok": Bool, "err": Text })],
     []
   ),
@@ -40214,7 +40240,7 @@ Service({
     []
   ),
   "updateSubscriptionPricing": Func([SubscriptionPricing], [], []),
-  "updateToggle": Func([Text, Bool], [], []),
+  "updateToggle": Func([Opt(Text), Text, Bool], [], []),
   "updateUdhaarCustomer": Func(
     [Text, Text, Text, Text],
     [Variant({ "ok": UdhaarCustomer, "err": Text })],
@@ -40231,6 +40257,11 @@ Service({
     []
   ),
   "uploadPaymentScreenshot": Func([Nat, Text], [], []),
+  "verifyAdminCredentials": Func(
+    [Text, Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "verifyAdminPin": Func([Text], [Bool], ["query"]),
   "verifyStripeUnlock": Func(
     [Nat, Text],
@@ -41037,7 +41068,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "adminAdjustWalletBalance": IDL2.Func(
-      [IDL2.Text, IDL2.Int, IDL2.Text, IDL2.Text],
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Int, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Int, "err": IDL2.Text })],
       []
     ),
@@ -41052,7 +41083,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "adminAssignSubscription": IDL2.Func(
-      [IDL2.Text, IDL2.Nat, IDL2.Text],
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Nat, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
@@ -41109,12 +41140,17 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
-    "approveProvider": IDL2.Func([IDL2.Nat, SubscriptionPlan2], [], []),
+    "approveProvider": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Nat, SubscriptionPlan2],
+      [],
+      []
+    ),
     "approveTopupRequest": IDL2.Func([IDL2.Nat, IDL2.Bool], [IDL2.Bool], []),
     "assignCallerUserRole": IDL2.Func([IDL2.Principal, UserRole__12], [], []),
     "awardChatPoints": IDL2.Func([IDL2.Text, IDL2.Nat], [IDL2.Bool], []),
     "cancelChatScheduledMessage": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "changeAdminPin": IDL2.Func([IDL2.Text, IDL2.Text], [], []),
+    "checkAdminToken": IDL2.Func([IDL2.Text], [IDL2.Bool], ["query"]),
     "cleanupExpiredChatStories": IDL2.Func([], [IDL2.Nat], []),
     "cleanupExpiredChatVaultItems": IDL2.Func([], [IDL2.Nat], []),
     "confirmUpiUnlock": IDL2.Func(
@@ -41193,9 +41229,9 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getActiveChatStories": IDL2.Func([], [IDL2.Vec(Story2)], ["query"]),
     "getActiveProviders": IDL2.Func([], [IDL2.Vec(ProviderProfile2)], ["query"]),
     "getAdminAuditLog": IDL2.Func(
-      [IDL2.Nat],
+      [IDL2.Opt(IDL2.Text), IDL2.Nat],
       [IDL2.Vec(AuditLogEntry2)],
-      ["query"]
+      []
     ),
     "getAdminConfig": IDL2.Func([], [IDL2.Opt(AdminConfig2)], ["query"]),
     "getAdminSettings": IDL2.Func([], [AdminSettingsExtended2], ["query"]),
@@ -41284,7 +41320,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "getCpagripSettings": IDL2.Func(
-      [],
+      [IDL2.Opt(IDL2.Text)],
       [
         IDL2.Record({
           "webhookSecret": IDL2.Text,
@@ -41292,7 +41328,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
           "apiKey": IDL2.Text
         })
       ],
-      ["query"]
+      []
     ),
     "getCreatorEarnings": IDL2.Func([], [CreatorEarningsSummary2], ["query"]),
     "getCustomCodes": IDL2.Func([], [IDL2.Vec(CustomCode2)], ["query"]),
@@ -41362,7 +41398,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "getOfferPortalConfig": IDL2.Func(
-      [],
+      [IDL2.Opt(IDL2.Text)],
       [
         IDL2.Record({
           "cpaLeadWebhookSecret": IDL2.Text,
@@ -41376,7 +41412,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
           "userProfitPct": IDL2.Nat
         })
       ],
-      ["query"]
+      []
     ),
     "getOfferPortalConfigForUser": IDL2.Func(
       [],
@@ -41390,7 +41426,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "getOfferPortalConfigFull": IDL2.Func(
-      [],
+      [IDL2.Opt(IDL2.Text)],
       [
         IDL2.Variant({
           "ok": IDL2.Record({
@@ -41405,7 +41441,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
           "err": IDL2.Text
         })
       ],
-      ["query"]
+      []
     ),
     "getOfferPortalConfigPublic": IDL2.Func(
       [],
@@ -41430,7 +41466,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "getPaymentConfig": IDL2.Func([], [PaymentConfig2], ["query"]),
-    "getPendingApprovals": IDL2.Func([], [IDL2.Vec(ProviderProfile2)], ["query"]),
+    "getPendingApprovals": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Vec(ProviderProfile2)],
+      []
+    ),
     "getPremiumPlans": IDL2.Func([], [PremiumPrices2], ["query"]),
     "getProviderOrders": IDL2.Func([IDL2.Nat], [IDL2.Vec(Order2)], ["query"]),
     "getProviderProfile": IDL2.Func(
@@ -41553,7 +41593,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
-    "rejectProvider": IDL2.Func([IDL2.Nat], [], []),
+    "rejectProvider": IDL2.Func([IDL2.Opt(IDL2.Text), IDL2.Nat], [], []),
     "removeChatGroupMember": IDL2.Func(
       [IDL2.Nat, IDL2.Principal],
       [IDL2.Bool],
@@ -41579,7 +41619,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "requestWalletTopup": IDL2.Func([IDL2.Float64, IDL2.Text], [IDL2.Nat], []),
     "saveCPAGripKeys": IDL2.Func(
-      [IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
@@ -41661,14 +41701,18 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "updateAdminConfig": IDL2.Func([AdminConfig2], [], []),
-    "updateAdminSettings": IDL2.Func([AdminSettingsExtended2], [IDL2.Bool], []),
+    "updateAdminSettings": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), AdminSettingsExtended2],
+      [IDL2.Bool],
+      []
+    ),
     "updateAdmobConfig": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Bool],
       []
     ),
     "updateAppSettings": IDL2.Func(
-      [IDL2.Text],
+      [IDL2.Opt(IDL2.Text), IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
@@ -41700,7 +41744,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "updateCpagripApiKey": IDL2.Func([IDL2.Text], [IDL2.Bool], []),
     "updateCpagripSettings": IDL2.Func(
-      [IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Bool],
       []
     ),
@@ -41775,7 +41819,16 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "updateOfferPortalConfig": IDL2.Func(
-      [IDL2.Bool, IDL2.Text, IDL2.Text, IDL2.Nat, IDL2.Nat, IDL2.Text, IDL2.Text],
+      [
+        IDL2.Opt(IDL2.Text),
+        IDL2.Bool,
+        IDL2.Text,
+        IDL2.Text,
+        IDL2.Nat,
+        IDL2.Nat,
+        IDL2.Text,
+        IDL2.Text
+      ],
       [IDL2.Variant({ "ok": IDL2.Bool, "err": IDL2.Text })],
       []
     ),
@@ -41820,7 +41873,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "updateSubscriptionPricing": IDL2.Func([SubscriptionPricing2], [], []),
-    "updateToggle": IDL2.Func([IDL2.Text, IDL2.Bool], [], []),
+    "updateToggle": IDL2.Func([IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Bool], [], []),
     "updateUdhaarCustomer": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": UdhaarCustomer2, "err": IDL2.Text })],
@@ -41837,6 +41890,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "uploadPaymentScreenshot": IDL2.Func([IDL2.Nat, IDL2.Text], [], []),
+    "verifyAdminCredentials": IDL2.Func(
+      [IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "verifyAdminPin": IDL2.Func([IDL2.Text], [IDL2.Bool], ["query"]),
     "verifyStripeUnlock": IDL2.Func(
       [IDL2.Nat, IDL2.Text],
@@ -42302,17 +42360,17 @@ class Backend {
       return result;
     }
   }
-  async adminAdjustWalletBalance(arg0, arg1, arg2, arg3) {
+  async adminAdjustWalletBalance(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminAdjustWalletBalance(arg0, arg1, arg2, arg3);
+        const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
         return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminAdjustWalletBalance(arg0, arg1, arg2, arg3);
+      const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
       return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42344,17 +42402,17 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
-  async adminAssignSubscription(arg0, arg1, arg2) {
+  async adminAssignSubscription(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminAssignSubscription(arg0, arg1, arg2);
+        const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminAssignSubscription(arg0, arg1, arg2);
+      const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42540,17 +42598,17 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
-  async approveProvider(arg0, arg1) {
+  async approveProvider(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.approveProvider(arg0, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.approveProvider(arg0, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
@@ -42621,6 +42679,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.changeAdminPin(arg0, arg1);
+      return result;
+    }
+  }
+  async checkAdminToken(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.checkAdminToken(arg0);
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.checkAdminToken(arg0);
       return result;
     }
   }
@@ -43030,17 +43102,17 @@ class Backend {
       return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
     }
   }
-  async getAdminAuditLog(arg0) {
+  async getAdminAuditLog(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.getAdminAuditLog(arg0);
+        const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
         return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getAdminAuditLog(arg0);
+      const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
       return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -43394,17 +43466,17 @@ class Backend {
       return from_candid_vec_n102(this._uploadFile, this._downloadFile, result);
     }
   }
-  async getCpagripSettings() {
+  async getCpagripSettings(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getCpagripSettings();
+        const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getCpagripSettings();
+      const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -43744,17 +43816,17 @@ class Backend {
       return result;
     }
   }
-  async getOfferPortalConfig() {
+  async getOfferPortalConfig(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getOfferPortalConfig();
+        const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getOfferPortalConfig();
+      const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -43772,17 +43844,17 @@ class Backend {
       return result;
     }
   }
-  async getOfferPortalConfigFull() {
+  async getOfferPortalConfigFull(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getOfferPortalConfigFull();
+        const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
         return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getOfferPortalConfigFull();
+      const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
       return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -43856,17 +43928,17 @@ class Backend {
       return result;
     }
   }
-  async getPendingApprovals() {
+  async getPendingApprovals(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getPendingApprovals();
+        const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
         return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getPendingApprovals();
+      const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
       return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44458,17 +44530,17 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
-  async rejectProvider(arg0) {
+  async rejectProvider(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.rejectProvider(arg0);
+        const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.rejectProvider(arg0);
+      const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
       return result;
     }
   }
@@ -44584,17 +44656,17 @@ class Backend {
       return result;
     }
   }
-  async saveCPAGripKeys(arg0, arg1, arg2) {
+  async saveCPAGripKeys(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+        const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+      const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44892,17 +44964,17 @@ class Backend {
       return result;
     }
   }
-  async updateAdminSettings(arg0) {
+  async updateAdminSettings(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAdminSettings(arg0);
+        const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAdminSettings(arg0);
+      const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
       return result;
     }
   }
@@ -44920,17 +44992,17 @@ class Backend {
       return result;
     }
   }
-  async updateAppSettings(arg0) {
+  async updateAppSettings(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAppSettings(arg0);
+        const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAppSettings(arg0);
+      const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -45032,17 +45104,17 @@ class Backend {
       return result;
     }
   }
-  async updateCpagripSettings(arg0, arg1, arg2) {
+  async updateCpagripSettings(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateCpagripSettings(arg0, arg1, arg2);
+        const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateCpagripSettings(arg0, arg1, arg2);
+      const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return result;
     }
   }
@@ -45144,17 +45216,17 @@ class Backend {
       return result;
     }
   }
-  async updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+  async updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+        const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+      const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
       return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -45284,17 +45356,17 @@ class Backend {
       return result;
     }
   }
-  async updateToggle(arg0, arg1) {
+  async updateToggle(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateToggle(arg0, arg1);
+        const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateToggle(arg0, arg1);
+      const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
       return result;
     }
   }
@@ -45352,6 +45424,20 @@ class Backend {
     } else {
       const result = await this.actor.uploadPaymentScreenshot(arg0, arg1);
       return result;
+    }
+  }
+  async verifyAdminCredentials(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.verifyAdminCredentials(arg0, arg1);
+        return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.verifyAdminCredentials(arg0, arg1);
+      return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
     }
   }
   async verifyAdminPin(arg0) {
@@ -46406,6 +46492,27 @@ function useActor() {
   const result = useActor$1(createBackendActor);
   return result;
 }
+const ADMIN_TOKEN_KEY = "dz_admin_token";
+const ADMIN_VERIFIED_KEY = "adminVerified";
+function getAdminToken() {
+  try {
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+function setAdminToken(token) {
+  try {
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    sessionStorage.setItem(ADMIN_VERIFIED_KEY, "true");
+    sessionStorage.setItem("dz_admin_verified", "true");
+    sessionStorage.setItem("dz_admin_token_ts", String(Date.now()));
+  } catch {
+  }
+}
+function generateAdminToken(email) {
+  return btoa(`${email}:${Date.now()}`);
+}
 function lsRead$3(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -47151,7 +47258,9 @@ function useUpdateAppSettings() {
   return useMutation({
     mutationFn: async (settings) => {
       if (!actor)
-        throw new Error("Actor not available — canister not connected");
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein"
+        );
       let current = {};
       try {
         const raw = await actor.getAppSettings();
@@ -47160,16 +47269,22 @@ function useUpdateAppSettings() {
       }
       const merged = { ...current, ...settings };
       const json = JSON.stringify(merged);
+      const adminToken = getAdminToken();
       try {
-        const result = await actor.updateAppSettings(json);
+        const result = await actor.updateAppSettings(adminToken, json);
         if (result && typeof result === "object" && "__kind__" in result && result.__kind__ === "err") {
           const errMsg = result.err ?? "Settings save failed";
+          const lower = errMsg.toLowerCase();
+          if (lower.includes("unauthorized") || lower.includes("admin only")) {
+            throw new Error("Admin access required — pehle login karein");
+          }
           throw new Error(errMsg);
         }
       } catch (err) {
         const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
         throw new Error(
-          msg.toLowerCase().includes("method not found") ? "Settings save nahi ho payi — admin panel reload karein" : msg.toLowerCase().includes("actor not available") || msg.toLowerCase().includes("canister") ? "Backend se connect nahi ho pa raha — thoda wait karein" : msg
+          lower.includes("method not found") ? "Settings save nahi ho payi — admin panel reload karein" : lower.includes("unauthorized") || lower.includes("admin only") ? "Admin access required — pehle login karein" : lower.includes("ic0.trap") || lower.includes("reject code") ? "Backend se connect nahi ho pa raha — thoda wait karein" : lower.includes("actor not available") || lower.includes("canister not") ? "Backend se connect nahi ho pa raha — thoda wait karein" : msg
         );
       }
       localStorage.setItem(APP_SETTINGS_LS_KEY, JSON.stringify(merged));
@@ -48294,7 +48409,7 @@ function useUpdateLudoSettings() {
             ...settings
           }
         };
-        await actor.updateAppSettings(JSON.stringify(merged));
+        await actor.updateAppSettings(getAdminToken(), JSON.stringify(merged));
       } catch {
       }
     },
@@ -48376,7 +48491,11 @@ function useUpdateAdminSettings() {
       const merged = { ...cached, ...settings };
       localStorage.setItem(ADMIN_SETTINGS_LS_KEY, JSON.stringify(merged));
       if (!actor) return;
-      const current = await actor.getAdminSettings().catch(() => ({}));
+      let current = {};
+      try {
+        current = await actor.getAdminSettings();
+      } catch {
+      }
       const full = {
         pointsPerAd: current.pointsPerAd ?? 10n,
         cloudinaryApiKey: current.cloudinaryApiKey ?? "",
@@ -48403,7 +48522,21 @@ function useUpdateAdminSettings() {
         cpagripOfferWallName: current.cpagripOfferWallName ?? "Digital Zindagi Offers",
         ...settings
       };
-      await actor.updateAdminSettings(full);
+      try {
+        await actor.updateAdminSettings(getAdminToken(), full);
+      } catch (err) {
+        const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("unauthorized") || lower.includes("admin only")) {
+          throw new Error("Admin access required — pehle login karein");
+        }
+        if (lower.includes("ic0.trap") || lower.includes("reject code")) {
+          throw new Error(
+            "Backend se connect nahi ho pa raha — thoda wait karein"
+          );
+        }
+        throw new Error(msg);
+      }
       if (full.cloudinaryCloudName)
         localStorage.setItem(
           "dz_cloudinary_cloud_name",
@@ -48433,6 +48566,7 @@ function useUpdateCpagripSettings() {
         );
       try {
         const result = await actor.saveCPAGripKeys(
+          getAdminToken(),
           apiKey.trim(),
           webhookSecret.trim(),
           offerWallName.trim()
@@ -48483,8 +48617,13 @@ function useUpdatePaymentConfig() {
       localStorage.setItem(PAYMENT_CONFIG_LS_KEY, JSON.stringify(config));
       if (!actor) return;
       try {
-        await actor.setPaymentConfig(JSON.stringify(config));
-      } catch {
+        await actor.setPaymentConfig(config);
+      } catch (err) {
+        const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("unauthorized") || lower.includes("admin only")) {
+          throw new Error("Admin access required — pehle login karein");
+        }
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentConfig"] })
@@ -52908,6 +53047,92 @@ function PremiumAdminSection() {
     ] })
   ] });
 }
+const ERROR_MAP = [
+  {
+    patterns: ["ic0.trap", "canister trapped", "trapped explicitly"],
+    message: "Server se connect nahi hua, please try again"
+  },
+  {
+    patterns: ["unauthorized", "admin only", "only admins"],
+    message: "Admin access required — pehle login karein"
+  },
+  {
+    patterns: [
+      "method not found",
+      "no query method",
+      "no update method",
+      "has no"
+    ],
+    message: "Feature abhi load ho raha hai, refresh karein"
+  },
+  {
+    patterns: [
+      "already_registered",
+      "already registered",
+      "already exists",
+      "email already"
+    ],
+    message: "Yeh email pehle se registered hai"
+  },
+  {
+    patterns: [
+      "wrong password",
+      "incorrect password",
+      "password mismatch",
+      "invalid password"
+    ],
+    message: "Password galat hai — dobara try karein"
+  },
+  {
+    patterns: ["user not found", "no user", "does not exist"],
+    message: "Account nahi mila — pehle register karein"
+  },
+  {
+    patterns: ["reject code: 5", "reject code 5", "ic0503"],
+    message: "Backend se response nahi aaya, retry karein"
+  },
+  {
+    patterns: [
+      "failed to fetch",
+      "networkerror",
+      "network error",
+      "fetch failed"
+    ],
+    message: "Internet connection check karein aur retry karein"
+  },
+  {
+    patterns: ["timeout", "timed out"],
+    message: "Server slow hai — thoda wait karke retry karein"
+  },
+  {
+    patterns: ["actor not available", "actor not ready"],
+    message: "App load ho rahi hai, ek second wait karein"
+  },
+  {
+    patterns: ["canister id", "principal", "-cai"],
+    message: "Backend connection mein problem hai, refresh karein"
+  },
+  {
+    patterns: ["current password", "current pin", "galat password"],
+    message: "Password galat hai — dobara try karein"
+  }
+];
+function sanitizeError(err) {
+  const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+  for (const { patterns, message } of ERROR_MAP) {
+    if (patterns.some((p2) => lower.includes(p2))) {
+      return message;
+    }
+  }
+  if (/0x[0-9a-f]{4,}/i.test(raw) || /\b[0-9a-f]{8,}\b/.test(raw) || raw.length > 200 || /request id:/i.test(raw)) {
+    return "Kuch problem hua — please try again";
+  }
+  if (raw.length > 0 && raw.length < 120 && !raw.includes("0:") && !raw.includes('"')) {
+    return raw;
+  }
+  return "Kuch problem hua — please try again";
+}
 const DEFAULT_EMERALD = "#059669";
 function SaveConfirmation({ show }) {
   if (!show) return null;
@@ -53654,7 +53879,7 @@ function BannerManager() {
       setLinkUrl("");
       qc.invalidateQueries({ queryKey: ["activeBanners"] });
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "Add nahi ho saka");
+      ue.error(sanitizeError(err));
     } finally {
       setAdding(false);
     }
@@ -53666,7 +53891,7 @@ function BannerManager() {
       ue.success("Banner delete ho gaya");
       qc.invalidateQueries({ queryKey: ["activeBanners"] });
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "Delete nahi ho saca");
+      ue.error(sanitizeError(err));
     }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
@@ -53889,8 +54114,7 @@ function FounderSettingsSection() {
       ue.success("Founder settings save ho gayi!");
       setTimeout(() => setShowSaved(false), 3e3);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -54882,7 +55106,7 @@ function AdminSettings() {
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3e3);
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "Save nahi ho saka");
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -54930,7 +55154,7 @@ function AdminSettings() {
       setNewPin("");
       setConfirmPin("");
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "PIN change nahi ho saka");
+      ue.error(sanitizeError(err));
     } finally {
       setPinSaving(false);
     }
@@ -55222,7 +55446,7 @@ function AdminSettings() {
                 ue.error("Sab password fields bharen");
                 return;
               }
-              const storedPwd = localStorage.getItem("dz_admin_password") ?? "Admin@2024";
+              const storedPwd = localStorage.getItem("dz_admin_password") ?? "admin123@";
               if (currentAdminPassword !== storedPwd) {
                 ue.error("Current password galat hai");
                 return;
@@ -55839,7 +56063,7 @@ function SubscriptionPricingSection() {
       });
       ue.success("Pricing update ho gayi!");
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "Update nahi ho saca");
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -55975,7 +56199,7 @@ function StaffManagement() {
       setMgMobile("");
       setPassword("");
     } catch (err) {
-      ue.error(err instanceof Error ? err.message : "Add nahi ho saka");
+      ue.error(sanitizeError(err));
     } finally {
       setAdding(false);
     }
@@ -56581,8 +56805,7 @@ function SocialMediaSection() {
       ue.success("Social Media settings save ho gayi!");
       setTimeout(() => setSaved(false), 2e3);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -56738,8 +56961,7 @@ function AffiliateMarketingSection() {
       ue.success("Affiliate Marketing settings save ho gayi!");
       setTimeout(() => setSaved(false), 2e3);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -57652,8 +57874,7 @@ function AppSettingsSection() {
       ue.success(`${label} save ho gaya!`);
       setTimeout(() => setSavedField(null), 2e3);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSavingField(null);
     }
@@ -57665,8 +57886,7 @@ function AppSettingsSection() {
       broadcastSettingsChange();
       ue.success(`${label} ${value ? "ON" : "OFF"} ho gaya!`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSavingField(null);
     }
@@ -58604,8 +58824,7 @@ function NotificationBarSection() {
       broadcastSettingsChange();
       ue.success("Notification bar update ho gaya!");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -62672,21 +62891,30 @@ function OfferApiKeysTab() {
   const [showSmsKey, setShowSmsKey] = reactExports.useState(false);
   const [saving, setSaving] = reactExports.useState(false);
   const [loaded, setLoaded] = reactExports.useState(false);
+  const DEFAULT_CPAGRIP_API_KEY = "914ebf2f2ed06fd6da511be81d502acd";
+  const DEFAULT_CPAGRIP_WEBHOOK_SECRET = "DZ_OfferWall_2026@Secret#123";
+  const DEFAULT_OFFER_WALL_NAME = "Digital Zindagi Offers";
   reactExports.useEffect(() => {
     const load = async () => {
+      var _a3, _b3, _c2;
       try {
         if (actor) {
           try {
-            const cpagripData = await actor.getCpagripSettings();
-            setCpagripApiKey(cpagripData.apiKey ?? "");
-            setCpagripWebhookSecret(cpagripData.webhookSecret ?? "");
+            const adminToken = sessionStorage.getItem("dz_admin_token");
+            const cpagripData = await actor.getCpagripSettings(adminToken);
+            setCpagripApiKey(
+              ((_a3 = cpagripData.apiKey) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_API_KEY
+            );
+            setCpagripWebhookSecret(
+              ((_b3 = cpagripData.webhookSecret) == null ? void 0 : _b3.trim()) || DEFAULT_CPAGRIP_WEBHOOK_SECRET
+            );
             setOfferWallName(
-              cpagripData.offerWallName ?? "Digital Zindagi Offers"
+              ((_c2 = cpagripData.offerWallName) == null ? void 0 : _c2.trim()) || DEFAULT_OFFER_WALL_NAME
             );
           } catch {
-            setCpagripApiKey("");
-            setCpagripWebhookSecret("");
-            setOfferWallName("Digital Zindagi Offers");
+            setCpagripApiKey(DEFAULT_CPAGRIP_API_KEY);
+            setCpagripWebhookSecret(DEFAULT_CPAGRIP_WEBHOOK_SECRET);
+            setOfferWallName(DEFAULT_OFFER_WALL_NAME);
           }
         }
         if (actor) {
@@ -62713,6 +62941,7 @@ function OfferApiKeysTab() {
   const canisterId = typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "your-canister-id";
   const postbackUrl = `https://${canisterId}.icp0.io/cpalead-postback`;
   const handleSave = async () => {
+    var _a3, _b3, _c2;
     const savedWebhookSecret = webhookSecret.trim();
     const savedCpagripApiKey = cpagripApiKey.trim();
     const savedCpagripWebhookSecret = cpagripWebhookSecret.trim();
@@ -62771,18 +63000,20 @@ function OfferApiKeysTab() {
       }
       if (actor && cpagripSaved) {
         try {
-          const verifiedData = await actor.getCpagripSettings();
-          setCpagripApiKey(verifiedData.apiKey ?? "");
-          setCpagripWebhookSecret(verifiedData.webhookSecret ?? "");
+          const adminToken = sessionStorage.getItem("dz_admin_token");
+          const verifiedData = await actor.getCpagripSettings(adminToken);
+          setCpagripApiKey(((_a3 = verifiedData.apiKey) == null ? void 0 : _a3.trim()) || savedCpagripApiKey);
+          setCpagripWebhookSecret(
+            ((_b3 = verifiedData.webhookSecret) == null ? void 0 : _b3.trim()) || savedCpagripWebhookSecret
+          );
           setOfferWallName(
-            verifiedData.offerWallName || "Digital Zindagi Offers"
+            ((_c2 = verifiedData.offerWallName) == null ? void 0 : _c2.trim()) || savedOfferWallName || "Digital Zindagi Offers"
           );
         } catch {
         }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to save. Please try again.";
-      ue.error(msg);
+      ue.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -65130,17 +65361,16 @@ function AdminDashboardPage() {
   ] });
 }
 const DEFAULT_PIN = "12345";
-const PIN_STORAGE_KEY = "dz_admin_pin";
-async function initDefaultPin() {
-  if (!localStorage.getItem(PIN_STORAGE_KEY)) {
-    const hash = await hashPassword(DEFAULT_PIN);
-    localStorage.setItem(PIN_STORAGE_KEY, hash);
-  }
-}
 function AdminPinPage() {
+  const [step, setStep] = reactExports.useState("emailPassword");
+  const [email, setEmail] = reactExports.useState("");
+  const [password, setPassword] = reactExports.useState("");
+  const [showPwd, setShowPwd] = reactExports.useState(false);
+  const [emailLoading, setEmailLoading] = reactExports.useState(false);
+  const [emailError, setEmailError] = reactExports.useState("");
   const [digits, setDigits] = reactExports.useState(["", "", "", "", ""]);
-  const [loading, setLoading] = reactExports.useState(false);
-  const [error, setError] = reactExports.useState(false);
+  const [pinLoading, setPinLoading] = reactExports.useState(false);
+  const [pinError, setPinError] = reactExports.useState(false);
   const refs = [
     reactExports.useRef(null),
     reactExports.useRef(null),
@@ -65150,54 +65380,116 @@ function AdminPinPage() {
   ];
   const { actor } = useActor();
   const navigate = useNavigate();
-  const { isSuperAdmin } = useAuth();
-  reactExports.useEffect(() => {
-    initDefaultPin();
-  }, []);
+  const { isSuperAdmin, user } = useAuth();
   reactExports.useEffect(() => {
     if (isSuperAdmin) {
-      sessionStorage.setItem("adminVerified", "true");
+      const token = generateAdminToken((user == null ? void 0 : user.email) ?? SUPER_ADMIN_EMAIL);
+      setAdminToken(token);
       navigate("/admin");
     }
-  }, [isSuperAdmin, navigate]);
+  }, [isSuperAdmin, navigate, user == null ? void 0 : user.email]);
   reactExports.useEffect(() => {
     const pin = digits.join("");
     if (pin.length === 5) {
-      handleVerify(pin);
+      handleVerifyPin(pin);
     }
   }, [digits]);
-  const handleVerify = async (pin) => {
-    var _a3;
-    setLoading(true);
-    setError(false);
+  const handleEmailPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setEmailError("");
+    const trimmedEmail = email.trim().toLowerCase();
+    if (trimmedEmail !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+      setEmailError("Sirf Super Admin yahan login kar sakte hain");
+      return;
+    }
+    setEmailLoading(true);
     try {
-      const hash = await hashPassword(pin);
-      const storedHash = localStorage.getItem(PIN_STORAGE_KEY);
-      let valid = storedHash ? hash === storedHash : false;
+      let verified = false;
+      let sessionToken = null;
+      if (actor) {
+        try {
+          const result = await actor.verifyAdminCredentials(trimmedEmail, password);
+          if (result && typeof result === "object" && "__kind__" in result) {
+            if (result.__kind__ === "ok") {
+              verified = true;
+              const ok = result.ok;
+              sessionToken = (ok == null ? void 0 : ok.token) ?? generateAdminToken(trimmedEmail);
+            } else {
+              const errMsg = result.err ?? "Invalid credentials";
+              const lower = errMsg.toLowerCase();
+              if (lower.includes("unauthorized") || lower.includes("wrong") || lower.includes("invalid") || lower.includes("incorrect") || lower.includes("password")) {
+                setEmailError(
+                  "Current password galat hai — sahi password dalein"
+                );
+              } else {
+                setEmailError(sanitizeError(new Error(errMsg)));
+              }
+              return;
+            }
+          } else {
+            verified = !!result;
+            if (verified) sessionToken = generateAdminToken(trimmedEmail);
+          }
+        } catch (backendErr) {
+          const msg = (backendErr == null ? void 0 : backendErr.message) ?? (typeof backendErr === "string" ? backendErr : "");
+          const lower = msg.toLowerCase();
+          if (lower.includes("unauthorized") || lower.includes("wrong") || lower.includes("incorrect") || lower.includes("ic0.trap") || lower.includes("reject code: 5") || lower.includes("reject code 5")) {
+            setEmailError("Current password galat hai — sahi password dalein");
+            return;
+          }
+        }
+      }
+      if (!verified) {
+        const ADMIN_PWD = "admin123@";
+        verified = password === ADMIN_PWD;
+        if (verified) sessionToken = generateAdminToken(trimmedEmail);
+      }
+      if (!verified) {
+        setEmailError("Current password galat hai — sahi password dalein");
+        return;
+      }
+      setAdminToken(sessionToken ?? generateAdminToken(trimmedEmail));
+      sessionStorage.setItem("dz_admin_email", trimmedEmail);
+      ue.success("Admin verified ✓ Welcome!");
+      navigate("/admin");
+    } catch (err) {
+      setEmailError(sanitizeError(err));
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+  const handleVerifyPin = async (pin) => {
+    var _a3;
+    setPinLoading(true);
+    setPinError(false);
+    try {
+      let valid = pin === DEFAULT_PIN;
       if (!valid && actor) {
         try {
-          valid = await actor.verifyAdminPin(hash);
+          valid = await actor.verifyAdminPin(pin);
         } catch {
         }
       }
       if (valid) {
-        sessionStorage.setItem("adminVerified", "true");
+        const pinToken = generateAdminToken(SUPER_ADMIN_EMAIL);
+        setAdminToken(pinToken);
+        sessionStorage.setItem("dz_admin_email", SUPER_ADMIN_EMAIL);
         ue.success("PIN sahi hai! Welcome Admin.");
         navigate("/admin");
       } else {
-        setError(true);
+        setPinError(true);
         setDigits(["", "", "", "", ""]);
         (_a3 = refs[0].current) == null ? void 0 : _a3.focus();
-        ue.error("Galat PIN");
+        ue.error("Galat PIN — dobara try karein");
       }
     } catch (err) {
-      ue.error((err == null ? void 0 : err.message) ?? "PIN verify nahi ho saka");
+      ue.error(sanitizeError(err));
       setDigits(["", "", "", "", ""]);
     } finally {
-      setLoading(false);
+      setPinLoading(false);
     }
   };
-  const handleChange = (i, val) => {
+  const handleDigitChange = (i, val) => {
     var _a3;
     const digit = val.replace(/\D/g, "").slice(-1);
     const next = [...digits];
@@ -65225,40 +65517,169 @@ function AdminPinPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-emerald-header px-8 py-8 text-center", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { size: 40, className: "text-white" }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-heading font-bold text-white text-2xl", children: "Digital Zindagi Admin" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white/70 text-sm mt-1", children: "5-digit PIN daalein" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white/70 text-sm mt-1", children: step === "emailPassword" ? "Admin credentials daalein" : "5-digit PIN daalein" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-8 py-8", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center gap-2 mb-6", children: digits.map((d2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "input",
+          step === "emailPassword" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            motion.form,
             {
-              ref: refs[i],
-              "data-ocid": "adminpin.input",
-              type: "password",
-              inputMode: "numeric",
-              maxLength: 1,
-              value: d2,
-              onChange: (e) => handleChange(i, e.target.value),
-              onKeyDown: (e) => handleKeyDown(i, e),
-              className: `w-12 h-12 text-center text-2xl font-bold border-2 rounded-xl outline-none transition-all ${error ? "border-destructive bg-red-50 text-destructive" : d2 ? "border-primary bg-accent text-foreground" : "border-border text-foreground focus:border-primary"}`,
-              "aria-label": `PIN digit ${i + 1}`
+              initial: { opacity: 0, x: -20 },
+              animate: { opacity: 1, x: 0 },
+              onSubmit: handleEmailPasswordSubmit,
+              className: "space-y-4",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "label",
+                    {
+                      htmlFor: "admin-email",
+                      className: "block text-sm font-medium text-foreground mb-1",
+                      children: "Admin Email"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Mail,
+                      {
+                        size: 16,
+                        className: "absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        id: "admin-email",
+                        type: "email",
+                        "data-ocid": "adminpin.email_input",
+                        value: email,
+                        onChange: (e) => {
+                          setEmail(e.target.value);
+                          setEmailError("");
+                        },
+                        placeholder: "sushhilkumar651@gmail.com",
+                        required: true,
+                        className: "w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-colors"
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "label",
+                    {
+                      htmlFor: "admin-password",
+                      className: "block text-sm font-medium text-foreground mb-1",
+                      children: "Password"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        id: "admin-password",
+                        type: showPwd ? "text" : "password",
+                        "data-ocid": "adminpin.password_input",
+                        value: password,
+                        onChange: (e) => {
+                          setPassword(e.target.value);
+                          setEmailError("");
+                        },
+                        placeholder: "••••••••",
+                        required: true,
+                        className: "w-full px-4 pr-10 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-colors"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => setShowPwd((v2) => !v2),
+                        className: "absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground",
+                        "aria-label": showPwd ? "Hide password" : "Show password",
+                        children: showPwd ? /* @__PURE__ */ jsxRuntimeExports.jsx(EyeOff, { size: 16 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, { size: 16 })
+                      }
+                    )
+                  ] })
+                ] }),
+                emailError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "p",
+                  {
+                    "data-ocid": "adminpin.error_state",
+                    className: "text-destructive text-sm font-medium text-center",
+                    children: emailError
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "submit",
+                    "data-ocid": "adminpin.submit_button",
+                    disabled: emailLoading,
+                    className: "w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60",
+                    children: [
+                      emailLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 16, className: "animate-spin" }) : null,
+                      emailLoading ? "Verify ho raha hai..." : "Admin Login"
+                    ]
+                  }
+                )
+              ]
             },
-            i
-          )) }),
-          error && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
-            {
-              "data-ocid": "adminpin.error_state",
-              className: "text-center text-destructive text-sm font-medium mb-4",
-              children: "Galat PIN! Dobara try karein."
-            }
+            "email-form"
           ),
-          loading && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
+          step === "pin" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            motion.div,
             {
-              "data-ocid": "adminpin.loading_state",
-              className: "flex justify-center",
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 24, className: "animate-spin text-primary" })
-            }
+              initial: { opacity: 0, x: 20 },
+              animate: { opacity: 1, x: 0 },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center gap-2 mb-6", children: digits.map((d2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    ref: refs[i],
+                    "data-ocid": "adminpin.input",
+                    type: "password",
+                    inputMode: "numeric",
+                    maxLength: 1,
+                    value: d2,
+                    onChange: (e) => handleDigitChange(i, e.target.value),
+                    onKeyDown: (e) => handleKeyDown(i, e),
+                    className: `w-12 h-12 text-center text-2xl font-bold border-2 rounded-xl outline-none transition-all ${pinError ? "border-destructive bg-red-50 text-destructive" : d2 ? "border-primary bg-accent text-foreground" : "border-border text-foreground focus:border-primary"}`,
+                    "aria-label": `PIN digit ${i + 1}`
+                  },
+                  i
+                )) }),
+                pinError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "p",
+                  {
+                    "data-ocid": "adminpin.pin_error_state",
+                    className: "text-center text-destructive text-sm font-medium mb-4",
+                    children: "Galat PIN! Dobara try karein."
+                  }
+                ),
+                pinLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "div",
+                  {
+                    "data-ocid": "adminpin.loading_state",
+                    className: "flex justify-center",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 24, className: "animate-spin text-primary" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      setStep("emailPassword");
+                      setDigits(["", "", "", "", ""]);
+                      setPinError(false);
+                    },
+                    className: "mt-4 w-full text-sm text-muted-foreground underline text-center",
+                    children: "← Wapas jaayein"
+                  }
+                )
+              ]
+            },
+            "pin-form"
           )
         ] })
       ]
@@ -78563,7 +78984,7 @@ function JobsPage() {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Footer, {})
   ] });
 }
-const ADMIN_PASSWORD = "123456";
+const ADMIN_PASSWORD = "admin123@";
 const ADMIN_PIN = "12345";
 const SUPER_ADMIN_ALT_EMAIL = "sushilkumar12022@gmail.com";
 function getLoginErrorMessage(err) {
@@ -81504,10 +81925,25 @@ function useRegisterOfferUser() {
       const a2 = requireActor(actor);
       const hash = await sha256hex(password);
       try {
-        await a2.registerOfferUser(email, hash, referralCode ?? null);
+        const regResult = await a2.registerOfferUser(
+          email,
+          hash,
+          referralCode ?? null
+        );
+        if (regResult && typeof regResult === "object" && "__kind__" in regResult && regResult.__kind__ === "err") {
+          const errMsg = regResult.err ?? "";
+          const lower = errMsg.toLowerCase();
+          if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
+            throw new Error("already_registered");
+          }
+          throw new Error(
+            "Registration mein kuch problem hua, dobara try karein"
+          );
+        }
       } catch (err) {
         const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
         const lower = raw.toLowerCase();
+        if (raw === "already_registered") throw err;
         if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
           throw new Error("already_registered");
         }
@@ -81516,8 +81952,20 @@ function useRegisterOfferUser() {
         );
       }
       try {
-        const raw = await a2.loginOfferUser(email, hash);
-        return mapBackendOfferUser(raw);
+        const loginResult = await a2.loginOfferUser(email, hash);
+        if (loginResult && typeof loginResult === "object" && "__kind__" in loginResult) {
+          if (loginResult.__kind__ === "ok") {
+            return mapBackendOfferUser(
+              loginResult.ok
+            );
+          }
+          throw new Error(
+            loginResult.err ?? "Login failed"
+          );
+        }
+        return mapBackendOfferUser(
+          loginResult
+        );
       } catch (err) {
         throw new Error(mapOfferLoginError(err));
       }
@@ -81572,8 +82020,18 @@ function useLoginOfferUser() {
       const a2 = requireActor(actor);
       const hash = await sha256hex(password);
       try {
-        const raw = await a2.loginOfferUser(email, hash);
-        return mapBackendOfferUser(raw);
+        const result = await a2.loginOfferUser(email, hash);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if (result.__kind__ === "ok") {
+            return mapBackendOfferUser(
+              result.ok
+            );
+          }
+          throw new Error(result.err ?? "Login failed");
+        }
+        return mapBackendOfferUser(
+          result
+        );
       } catch (err) {
         throw new Error(mapOfferLoginError(err));
       }
@@ -87108,7 +87566,7 @@ function SignupPage() {
     setShowSubscriptionModal(false);
     try {
       const passwordHash = await hashPassword(password);
-      await withTimeout(
+      const regResult = await withTimeout(
         actor.registerUser(
           name.trim(),
           mobile.trim(),
@@ -87118,6 +87576,15 @@ function SignupPage() {
           secA.trim()
         )
       );
+      if (regResult && typeof regResult === "object" && "__kind__" in regResult && regResult.__kind__ === "err") {
+        const errMsg = regResult.err ?? "";
+        const lower = errMsg.toLowerCase();
+        if (lower.includes("already") || lower.includes("registered") || lower.includes("duplicate")) {
+          setRegistrationSuccess(true);
+          return;
+        }
+        throw new Error(errMsg);
+      }
       setRegistrationSuccess(true);
     } catch (err) {
       const msg = getSignupErrorMessage(err);
@@ -87162,7 +87629,7 @@ function SignupPage() {
     setSubmitting(true);
     try {
       const passwordHash = await hashPassword(password);
-      await withTimeout(
+      const custResult = await withTimeout(
         actor.registerUser(
           name.trim(),
           mobile.trim(),
@@ -87172,6 +87639,15 @@ function SignupPage() {
           secA.trim()
         )
       );
+      if (custResult && typeof custResult === "object" && "__kind__" in custResult && custResult.__kind__ === "err") {
+        const errMsg = custResult.err ?? "";
+        const lower = errMsg.toLowerCase();
+        if (lower.includes("already") || lower.includes("registered") || lower.includes("duplicate")) {
+          ue.error("यह email/number पहले से registered है। Login करें।");
+          return;
+        }
+        throw new Error(errMsg);
+      }
       setRegistrationSuccess(true);
     } catch (err) {
       const rawMsg = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "");
@@ -89554,7 +90030,7 @@ function ProviderRoute({ children }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 }
 function AdminRoute({ children }) {
-  const adminVerified = sessionStorage.getItem("adminVerified") === "true";
+  const adminVerified = sessionStorage.getItem("adminVerified") === "true" || sessionStorage.getItem("dz_admin_verified") === "true" || !!sessionStorage.getItem("dz_admin_token");
   if (!adminVerified) return /* @__PURE__ */ jsxRuntimeExports.jsx(Navigate, { to: "/admin/pin", replace: true });
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 }

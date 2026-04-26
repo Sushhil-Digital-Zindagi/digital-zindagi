@@ -176,6 +176,17 @@ persistent actor {
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
 
+  // ── Admin Email+Password Session Token state ──────────────────────────────
+  // Tokens are keyed by a random-ish text and expire after 24h (nanoseconds).
+  // This allows the frontend to authenticate as admin using email+password
+  // when Internet Identity is not used (anonymous principal flow).
+  var adminSessionTokens = Map.empty<Text, Int>(); // token -> expiresAt (nanoseconds)
+  // Pre-hashed credentials — SHA256 not available in Motoko core so we store
+  // the plain values; the frontend must send the exact same strings.
+  // IMPORTANT: These are the single-source-of-truth admin credentials.
+  let ADMIN_EMAIL    : Text = "sushhilkumar651@gmail.com";
+  let ADMIN_PASSWORD : Text = "admin123@";
+
   // ── AdMob Configuration state ─────────────────────────────────────────────
   var admobAppId           : Text = "";
   var admobBannerUnitId    : Text = "";
@@ -500,6 +511,25 @@ persistent actor {
     note : Text;
     status : Text;            // "Pending" | "Paid"
     createdAt : Int;
+  };
+
+  // ── Admin session token helpers ───────────────────────────────────────────
+
+  /// Check if a session token is valid (exists and not expired).
+  func validateAdminSession(token : Text) : Bool {
+    switch (adminSessionTokens.get(token)) {
+      case null { false };
+      case (?expiresAt) { Time.now() < expiresAt };
+    };
+  };
+
+  /// Check if caller is admin by principal OR by a valid email+password session token.
+  func isAdminCallerOrToken(caller : Principal, adminToken : ?Text) : Bool {
+    if (AccessControl.isAdmin(accessControlState, caller)) { return true };
+    switch (adminToken) {
+      case null { false };
+      case (?token) { validateAdminSession(token) };
+    };
   };
 
   // ── Seed helper ──────────────────────────────────────────────────────────
@@ -1036,8 +1066,9 @@ persistent actor {
   };
 
   /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
-  public query ({ caller }) func getPendingApprovals() : async [ProviderProfile] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  /// Also accepts an adminToken for email+password auth flow.
+  public shared ({ caller }) func getPendingApprovals(adminToken : ?Text) : async [ProviderProfile] {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return [];
     };
     // Return ALL providers with approvalStatus == #pending regardless of screenshot
@@ -1073,8 +1104,8 @@ persistent actor {
     subscriptionPricing := ?newPricing;
   };
 
-  public shared ({ caller }) func approveProvider(userId : Nat, plan : SubscriptionPlan) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func approveProvider(adminToken : ?Text, userId : Nat, plan : SubscriptionPlan) : async () {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       Runtime.trap("Unauthorized: Only admins can approve providers");
     };
     switch (providerProfiles.get(userId)) {
@@ -1107,8 +1138,8 @@ persistent actor {
     };
   };
 
-  public shared ({ caller }) func rejectProvider(userId : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func rejectProvider(adminToken : ?Text, userId : Nat) : async () {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       Runtime.trap("Unauthorized: Only admins can reject providers");
     };
     switch (providerProfiles.get(userId)) {
@@ -1142,8 +1173,8 @@ persistent actor {
     toggles.entries().toArray();
   };
 
-  public shared ({ caller }) func updateToggle(toggleName : Text, value : Bool) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func updateToggle(adminToken : ?Text, toggleName : Text, value : Bool) : async () {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       Runtime.trap("Unauthorized: Only admins can update toggles");
     };
     toggles.add(toggleName, value);
@@ -1217,8 +1248,29 @@ persistent actor {
     adminPinHash == pinHash;
   };
 
+  /// Verify admin email+password credentials and issue a 24-hour session token.
+  /// The frontend stores this token and passes it as ?adminToken to admin methods.
+  /// Returns #ok(token) on success, #err(reason) on failure — never traps.
+  public shared func verifyAdminCredentials(email : Text, password : Text) : async { #ok : Text; #err : Text } {
+    if (email != ADMIN_EMAIL or password != ADMIN_PASSWORD) {
+      return #err("Invalid admin credentials");
+    };
+    // Generate a token: timestamp + caller-agnostic pseudo-random suffix
+    let now = Time.now();
+    let token = "dzadmin_" # Int.abs(now).toText() # "_" # email.size().toText();
+    let expiresAt : Int = now + (24 * 60 * 60 * 1_000_000_000); // 24 hours in nanoseconds
+    adminSessionTokens.add(token, expiresAt);
+    #ok(token);
+  };
+
+  /// Validate an admin session token — public query.
+  /// Returns true if the token is valid and not expired.
+  public query func checkAdminToken(token : Text) : async Bool {
+    validateAdminSession(token);
+  };
+
   public shared ({ caller }) func changeAdminPin(currentPinHash : Text, newPinHash : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, null)) {
       Runtime.trap("Unauthorized: Only admins can change the admin PIN");
     };
     if (currentPinHash != adminPinHash) {
@@ -1675,8 +1727,8 @@ persistent actor {
     appSettingsJson;
   };
 
-  public shared ({ caller }) func updateAppSettings(json : Text) : async { #ok : (); #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func updateAppSettings(adminToken : ?Text, json : Text) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Only admins can update app settings");
     };
     appSettingsJson := json;
@@ -2220,7 +2272,7 @@ persistent actor {
   /// Admin callers: receive full config including API keys and webhook secrets.
   /// Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
   /// with isEnabled and postbackUrl only. API keys and secrets are stripped.
-  public shared query ({ caller }) func getOfferPortalConfig() : async {
+  public shared ({ caller }) func getOfferPortalConfig(adminToken : ?Text) : async {
     isEnabled            : Bool;
     adminProfitPct       : Nat;
     userProfitPct        : Nat;
@@ -2231,7 +2283,7 @@ persistent actor {
     cpagripOfferWallName : Text;
     isAdmin              : Bool;
   } {
-    let isAdminCaller = AccessControl.isAdmin(accessControlState, caller);
+    let isAdminCaller = isAdminCallerOrToken(caller, adminToken);
     if (isAdminCaller) {
       // Full config for admin
       {
@@ -2288,6 +2340,7 @@ persistent actor {
   /// Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
   /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
   public shared ({ caller }) func updateOfferPortalConfig(
+    adminToken           : ?Text,
     isEnabled            : Bool,
     cpaLeadWebhookSecret : Text,
     cpagripApiKey        : Text,
@@ -2296,7 +2349,7 @@ persistent actor {
     newWebhookSecret     : Text,
     newOfferWallName     : Text,
   ) : async { #ok : Bool; #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
     let newConfig : OPTypes.OfferPortalConfig = { isEnabled; cpaLeadWebhookSecret; cpagripApiKey; adminProfitPct; userProfitPct };
@@ -2318,7 +2371,7 @@ persistent actor {
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
   /// Returns full config for admin, safe empty-secret config for non-admin — never traps.
-  public shared query ({ caller }) func getOfferPortalConfigFull() : async {
+  public shared ({ caller }) func getOfferPortalConfigFull(adminToken : ?Text) : async {
     #ok : {
       isEnabled            : Bool;
       cpaLeadWebhookSecret : Text;
@@ -2330,7 +2383,7 @@ persistent actor {
     };
     #err : Text;
   } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       // Return safe non-sensitive config — never return #err (would trap frontend)
       return #ok({
         isEnabled            = offerPortalConfig.isEnabled;
@@ -2434,10 +2487,11 @@ persistent actor {
 
   /// Return the most recent `limit` audit log entries — admin only.
   /// Returns empty array if caller is not admin (never traps).
-  public shared query ({ caller }) func getAdminAuditLog(
+  public shared ({ caller }) func getAdminAuditLog(
+    adminToken : ?Text,
     limit : Nat,
   ) : async [AuditTypes.AuditLogEntry] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return [];
     };
     AuditApi.getAdminAuditLog(auditLog, limit);
@@ -2446,12 +2500,13 @@ persistent actor {
   /// Adjust (add or deduct) a user's wallet balance and log the action — admin only.
   /// Returns the new balance as Int on success.
   public shared ({ caller }) func adminAdjustWalletBalance(
+    adminToken : ?Text,
     userId : Text,
     amount : Int,
     action : Text,
     note   : Text,
   ) : async { #ok : Int; #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
     let adminEmail = "admin";
@@ -2467,11 +2522,12 @@ persistent actor {
 
   /// Manually assign or revoke a subscription for a user — admin only.
   public shared ({ caller }) func adminAssignSubscription(
+    adminToken   : ?Text,
     userId       : Text,
     durationDays : Nat,
     action       : Text,
   ) : async { #ok; #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
     let adminEmail = "admin";
@@ -2545,8 +2601,8 @@ persistent actor {
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
   /// Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
-  public shared ({ caller }) func updateAdminSettings(settings : ASTypes.AdminSettingsExtended) : async Bool {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func updateAdminSettings(adminToken : ?Text, settings : ASTypes.AdminSettingsExtended) : async Bool {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return false;
     };
     // Preserve defaults for critical fields if empty strings are passed
@@ -2693,11 +2749,12 @@ persistent actor {
   /// Both fields are persisted in separate stable vars so they survive reloads.
   /// Empty strings are ignored — existing values are preserved.
   public shared ({ caller }) func updateCpagripSettings(
+    adminToken    : ?Text,
     apiKey        : Text,
     webhookSecret : Text,
     offerWallName : Text,
   ) : async Bool {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return false;
     };
     let finalApiKey        = if (apiKey != "") { apiKey } else { adminSettings.cpagripApiKey };
@@ -2714,11 +2771,12 @@ persistent actor {
   /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
   /// Empty strings are ignored — existing values are preserved, preventing accidental wipe.
   public shared ({ caller }) func saveCPAGripKeys(
+    adminToken    : ?Text,
     apiKey        : Text,
     webhookSecret : Text,
     offerWallName : Text,
   ) : async { #ok : (); #err : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
     // Only update if non-empty — prevents accidental wipe of existing values
@@ -2734,8 +2792,8 @@ persistent actor {
 
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
   /// Returns empty strings for non-admin callers (never traps).
-  public shared query ({ caller }) func getCpagripSettings() : async { apiKey : Text; webhookSecret : Text; offerWallName : Text } {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+  public shared ({ caller }) func getCpagripSettings(adminToken : ?Text) : async { apiKey : Text; webhookSecret : Text; offerWallName : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return { apiKey = ""; webhookSecret = ""; offerWallName = "" };
     };
     {

@@ -831,11 +831,11 @@ service : {
    text) -> (bool);
   /// Adjust (add or deduct) a user's wallet balance and log the action — admin only.
   /// Returns the new balance as Int on success.
-  adminAdjustWalletBalance: (userId: text, amount: int, action: text, note:
-   text) -> (variant {
-               err: text;
-               ok: int;
-             });
+  adminAdjustWalletBalance: (adminToken: opt text, userId: text, amount: 
+   int, action: text, note: text) -> (variant {
+                                        err: text;
+                                        ok: int;
+                                      });
   adminApproveUpiPremium: (requestId: nat) -> (variant {
                                                  err: text;
                                                  ok;
@@ -846,11 +846,11 @@ service : {
                                                 ok;
                                               });
   /// Manually assign or revoke a subscription for a user — admin only.
-  adminAssignSubscription: (userId: text, durationDays: nat, action: 
-   text) -> (variant {
-               err: text;
-               ok;
-             });
+  adminAssignSubscription: (adminToken: opt text, userId: text, durationDays:
+   nat, action: text) -> (variant {
+                            err: text;
+                            ok;
+                          });
   adminBroadcastChatMessage: (content: text) -> (bool);
   adminDeleteChatShortcut: (id: nat) -> (bool);
   adminDeleteNewsItem: (id: nat) -> (variant {
@@ -890,13 +890,17 @@ service : {
       err: text;
       ok;
     });
-  approveProvider: (userId: nat, plan: SubscriptionPlan) -> ();
+  approveProvider: (adminToken: opt text, userId: nat, plan:
+   SubscriptionPlan) -> ();
   /// Approve or reject a topup request.  On approval, funds are credited — admin only.
   approveTopupRequest: (requestId: nat, approve: bool) -> (bool);
   assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
   awardChatPoints: (action: text, points: nat) -> (bool);
   cancelChatScheduledMessage: (id: nat) -> (bool);
   changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
+  /// Validate an admin session token — public query.
+  /// Returns true if the token is valid and not expired.
+  checkAdminToken: (token: text) -> (bool) query;
   cleanupExpiredChatStories: () -> (nat);
   cleanupExpiredChatVaultItems: () -> (nat);
   /// Submit a UPI transaction reference for admin approval to unlock a message.
@@ -967,7 +971,7 @@ service : {
   getActiveProviders: () -> (vec ProviderProfile) query;
   /// Return the most recent `limit` audit log entries — admin only.
   /// Returns empty array if caller is not admin (never traps).
-  getAdminAuditLog: (limit: nat) -> (vec AuditLogEntry) query;
+  getAdminAuditLog: (adminToken: opt text, limit: nat) -> (vec AuditLogEntry);
   getAdminConfig: () -> (opt AdminConfig) query;
   /// Return all admin settings — readable by any caller so the frontend can
   /// apply toggles and rates without an admin auth round-trip.
@@ -1036,12 +1040,12 @@ service : {
    opt nat) -> (vec ChatMessage) query;
   /// Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
   /// Returns empty strings for non-admin callers (never traps).
-  getCpagripSettings: () ->
+  getCpagripSettings: (adminToken: opt text) ->
    (record {
       apiKey: text;
       offerWallName: text;
       webhookSecret: text;
-    }) query;
+    });
   /// Return the caller's pay-to-unlock creator earnings.
   getCreatorEarnings: () -> (CreatorEarningsSummary) query;
   getCustomCodes: () -> (vec CustomCode) query;
@@ -1091,7 +1095,7 @@ service : {
   /// Admin callers: receive full config including API keys and webhook secrets.
   /// Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
   /// with isEnabled and postbackUrl only. API keys and secrets are stripped.
-  getOfferPortalConfig: () ->
+  getOfferPortalConfig: (adminToken: opt text) ->
    (record {
       adminProfitPct: nat;
       cpaLeadWebhookSecret: text;
@@ -1102,7 +1106,7 @@ service : {
       isEnabled: bool;
       postbackUrl: text;
       userProfitPct: nat;
-    }) query;
+    });
   /// Get safe Offer Portal config for any user (no auth required) — alias for getOfferPortalConfigPublic.
   /// Returns ONLY non-sensitive fields: isEnabled, adminProfitPct, userProfitPct.
   /// No API keys, no webhook secrets. Never traps for any caller.
@@ -1115,7 +1119,7 @@ service : {
   /// Get the full Offer Portal config including cpagripWebhookSecret and cpagripOfferWallName — admin only.
   /// Use this after saving to verify all 3 CPAGrip fields persisted correctly.
   /// Returns full config for admin, safe empty-secret config for non-admin — never traps.
-  getOfferPortalConfigFull: () ->
+  getOfferPortalConfigFull: (adminToken: opt text) ->
    (variant {
       err: text;
       ok:
@@ -1128,7 +1132,7 @@ service : {
          isEnabled: bool;
          userProfitPct: nat;
        };
-    }) query;
+    });
   /// Get Offer Portal global config — public (no auth required).
   /// Returns the config so any visitor can check whether the portal is enabled
   /// before showing the login/signup UI.  Webhook secrets are NOT included
@@ -1150,7 +1154,8 @@ service : {
   /// Readable by all callers — providers and riders need to display UPI/QR.
   getPaymentConfig: () -> (PaymentConfig) query;
   /// Alias for getProvidersPendingApproval — kept for frontend compatibility.
-  getPendingApprovals: () -> (vec ProviderProfile) query;
+  /// Also accepts an adminToken for email+password auth flow.
+  getPendingApprovals: (adminToken: opt text) -> (vec ProviderProfile);
   getPremiumPlans: () -> (PremiumPrices) query;
   getProviderOrders: (userId: nat) -> (vec Order) query;
   getProviderProfile: (userId: nat) -> (opt ProviderProfile) query;
@@ -1264,7 +1269,7 @@ service : {
       err: text;
       ok;
     });
-  rejectProvider: (userId: nat) -> ();
+  rejectProvider: (adminToken: opt text, userId: nat) -> ();
   removeChatGroupMember: (conversationId: nat, memberId: principal) -> (bool);
   /// Remove a locked feature by id — admin only.
   removeLockedFeature: (featureId: text) -> (variant {
@@ -1288,11 +1293,11 @@ service : {
   /// Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
   /// Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
   /// Empty strings are ignored — existing values are preserved, preventing accidental wipe.
-  saveCPAGripKeys: (apiKey: text, webhookSecret: text, offerWallName:
-   text) -> (variant {
-               err: text;
-               ok;
-             });
+  saveCPAGripKeys: (adminToken: opt text, apiKey: text, webhookSecret: 
+   text, offerWallName: text) -> (variant {
+                                    err: text;
+                                    ok;
+                                  });
   saveCallerUserProfile: (profile: UserProfile) -> ();
   saveChatNote: (title: text, content: text, subject: text) ->
    (variant {
@@ -1363,15 +1368,17 @@ service : {
   /// Replace ALL admin settings in one atomic call — admin only.
   /// All existing field values are overwritten with the supplied record.
   /// Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
-  updateAdminSettings: (settings: AdminSettingsExtended) -> (bool);
+  updateAdminSettings: (adminToken: opt text, settings:
+   AdminSettingsExtended) -> (bool);
   /// Update AdMob configuration — admin only.
   updateAdmobConfig: (appId: text, bannerUnitId: text, interstitialId: 
    text, ludoBannerId: text, ludoInterstitialId: text, rewardedUnitId:
    text) -> (bool);
-  updateAppSettings: (json: text) -> (variant {
-                                        err: text;
-                                        ok;
-                                      });
+  updateAppSettings: (adminToken: opt text, json: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   updateCategory: (id: nat, name: text, emoji: text, color: text, enabled:
    bool) -> (bool);
   updateChatAdminSettings: (settings: ChatAdminSettings) -> (bool);
@@ -1396,8 +1403,8 @@ service : {
   /// Save CPAGrip Webhook Secret Key and Offer Wall Name — admin only.
   /// Both fields are persisted in separate stable vars so they survive reloads.
   /// Empty strings are ignored — existing values are preserved.
-  updateCpagripSettings: (apiKey: text, webhookSecret: text, offerWallName:
-   text) -> (bool);
+  updateCpagripSettings: (adminToken: opt text, apiKey: text, webhookSecret:
+   text, offerWallName: text) -> (bool);
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool, title: text, subtitle1: text,
    subtitle2: text, alignment: text, layoutStyle: text) -> (bool);
@@ -1422,9 +1429,9 @@ service : {
   /// Update Offer Portal config (toggle, offer wall secret, profit split) — admin only.
   /// Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
   /// Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
-  updateOfferPortalConfig: (isEnabled: bool, cpaLeadWebhookSecret: text,
-   cpagripApiKey: text, adminProfitPct: nat, userProfitPct: nat,
-   newWebhookSecret: text, newOfferWallName: text) ->
+  updateOfferPortalConfig: (adminToken: opt text, isEnabled: bool,
+   cpaLeadWebhookSecret: text, cpagripApiKey: text, adminProfitPct: nat,
+   userProfitPct: nat, newWebhookSecret: text, newOfferWallName: text) ->
    (variant {
       err: text;
       ok: bool;
@@ -1457,7 +1464,7 @@ service : {
                ok: bool;
              });
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
-  updateToggle: (toggleName: text, value: bool) -> ();
+  updateToggle: (adminToken: opt text, toggleName: text, value: bool) -> ();
   /// Update a customer. Caller must own the customer (shopId check).
   updateUdhaarCustomer: (customerId: text, name: text, mobile: text, address:
    text) -> (variant {
@@ -1474,6 +1481,14 @@ service : {
   updateVideo: (id: nat, title: text, videoUrl: text, thumbnailUrl: text,
    platform: text, category: text, enabled: bool) -> (bool);
   uploadPaymentScreenshot: (userId: nat, blobId: text) -> ();
+  /// Verify admin email+password credentials and issue a 24-hour session token.
+  /// The frontend stores this token and passes it as ?adminToken to admin methods.
+  /// Returns #ok(token) on success, #err(reason) on failure — never traps.
+  verifyAdminCredentials: (email: text, password: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   verifyAdminPin: (pinHash: text) -> (bool) query;
   /// Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
   verifyStripeUnlock: (messageId: nat, paymentIntentId: text) ->

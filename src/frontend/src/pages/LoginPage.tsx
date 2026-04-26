@@ -1,5 +1,5 @@
-// V147: Admin credentials reset — Temporary Password: 123456, PIN: 12345
-const ADMIN_PASSWORD = "123456";
+// V147: Admin credentials reset
+const ADMIN_PASSWORD = "admin123@";
 const ADMIN_PIN = "12345";
 
 import { Eye, EyeOff, Loader2, Lock, Mail, Phone, Star } from "lucide-react";

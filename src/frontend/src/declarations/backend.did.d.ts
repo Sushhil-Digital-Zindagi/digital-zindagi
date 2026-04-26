@@ -744,7 +744,7 @@ export interface _SERVICE {
    * / Returns the new balance as Int on success.
    */
   'adminAdjustWalletBalance' : ActorMethod<
-    [string, bigint, string, string],
+    [[] | [string], string, bigint, string, string],
     { 'ok' : bigint } |
       { 'err' : string }
   >,
@@ -765,7 +765,7 @@ export interface _SERVICE {
    * / Manually assign or revoke a subscription for a user — admin only.
    */
   'adminAssignSubscription' : ActorMethod<
-    [string, bigint, string],
+    [[] | [string], string, bigint, string],
     { 'ok' : null } |
       { 'err' : string }
   >,
@@ -825,7 +825,10 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
-  'approveProvider' : ActorMethod<[bigint, SubscriptionPlan], undefined>,
+  'approveProvider' : ActorMethod<
+    [[] | [string], bigint, SubscriptionPlan],
+    undefined
+  >,
   /**
    * / Approve or reject a topup request.  On approval, funds are credited — admin only.
    */
@@ -834,6 +837,11 @@ export interface _SERVICE {
   'awardChatPoints' : ActorMethod<[string, bigint], boolean>,
   'cancelChatScheduledMessage' : ActorMethod<[bigint], boolean>,
   'changeAdminPin' : ActorMethod<[string, string], undefined>,
+  /**
+   * / Validate an admin session token — public query.
+   * / Returns true if the token is valid and not expired.
+   */
+  'checkAdminToken' : ActorMethod<[string], boolean>,
   'cleanupExpiredChatStories' : ActorMethod<[], bigint>,
   'cleanupExpiredChatVaultItems' : ActorMethod<[], bigint>,
   /**
@@ -914,7 +922,10 @@ export interface _SERVICE {
    * / Return the most recent `limit` audit log entries — admin only.
    * / Returns empty array if caller is not admin (never traps).
    */
-  'getAdminAuditLog' : ActorMethod<[bigint], Array<AuditLogEntry>>,
+  'getAdminAuditLog' : ActorMethod<
+    [[] | [string], bigint],
+    Array<AuditLogEntry>
+  >,
   'getAdminConfig' : ActorMethod<[], [] | [AdminConfig]>,
   /**
    * / Return all admin settings — readable by any caller so the frontend can
@@ -1004,7 +1015,7 @@ export interface _SERVICE {
    * / Returns empty strings for non-admin callers (never traps).
    */
   'getCpagripSettings' : ActorMethod<
-    [],
+    [[] | [string]],
     { 'webhookSecret' : string, 'offerWallName' : string, 'apiKey' : string }
   >,
   /**
@@ -1081,7 +1092,7 @@ export interface _SERVICE {
    * / with isEnabled and postbackUrl only. API keys and secrets are stripped.
    */
   'getOfferPortalConfig' : ActorMethod<
-    [],
+    [[] | [string]],
     {
       'cpaLeadWebhookSecret' : string,
       'cpagripOfferWallName' : string,
@@ -1113,7 +1124,7 @@ export interface _SERVICE {
    * / Returns full config for admin, safe empty-secret config for non-admin — never traps.
    */
   'getOfferPortalConfigFull' : ActorMethod<
-    [],
+    [[] | [string]],
     {
         'ok' : {
           'cpaLeadWebhookSecret' : string,
@@ -1155,8 +1166,9 @@ export interface _SERVICE {
   'getPaymentConfig' : ActorMethod<[], PaymentConfig>,
   /**
    * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
+   * / Also accepts an adminToken for email+password auth flow.
    */
-  'getPendingApprovals' : ActorMethod<[], Array<ProviderProfile>>,
+  'getPendingApprovals' : ActorMethod<[[] | [string]], Array<ProviderProfile>>,
   'getPremiumPlans' : ActorMethod<[], PremiumPrices>,
   'getProviderOrders' : ActorMethod<[bigint], Array<Order>>,
   'getProviderProfile' : ActorMethod<[bigint], [] | [ProviderProfile]>,
@@ -1300,7 +1312,7 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
-  'rejectProvider' : ActorMethod<[bigint], undefined>,
+  'rejectProvider' : ActorMethod<[[] | [string], bigint], undefined>,
   'removeChatGroupMember' : ActorMethod<[bigint, Principal], boolean>,
   /**
    * / Remove a locked feature by id — admin only.
@@ -1335,7 +1347,7 @@ export interface _SERVICE {
    * / Empty strings are ignored — existing values are preserved, preventing accidental wipe.
    */
   'saveCPAGripKeys' : ActorMethod<
-    [string, string, string],
+    [[] | [string], string, string, string],
     { 'ok' : null } |
       { 'err' : string }
   >,
@@ -1417,7 +1429,10 @@ export interface _SERVICE {
    * / All existing field values are overwritten with the supplied record.
    * / Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
    */
-  'updateAdminSettings' : ActorMethod<[AdminSettingsExtended], boolean>,
+  'updateAdminSettings' : ActorMethod<
+    [[] | [string], AdminSettingsExtended],
+    boolean
+  >,
   /**
    * / Update AdMob configuration — admin only.
    */
@@ -1426,7 +1441,7 @@ export interface _SERVICE {
     boolean
   >,
   'updateAppSettings' : ActorMethod<
-    [string],
+    [[] | [string], string],
     { 'ok' : null } |
       { 'err' : string }
   >,
@@ -1467,7 +1482,10 @@ export interface _SERVICE {
    * / Both fields are persisted in separate stable vars so they survive reloads.
    * / Empty strings are ignored — existing values are preserved.
    */
-  'updateCpagripSettings' : ActorMethod<[string, string, string], boolean>,
+  'updateCpagripSettings' : ActorMethod<
+    [[] | [string], string, string, string],
+    boolean
+  >,
   'updateCustomCode' : ActorMethod<
     [
       bigint,
@@ -1527,7 +1545,7 @@ export interface _SERVICE {
    * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
    */
   'updateOfferPortalConfig' : ActorMethod<
-    [boolean, string, string, bigint, bigint, string, string],
+    [[] | [string], boolean, string, string, bigint, bigint, string, string],
     { 'ok' : boolean } |
       { 'err' : string }
   >,
@@ -1578,7 +1596,7 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
-  'updateToggle' : ActorMethod<[string, boolean], undefined>,
+  'updateToggle' : ActorMethod<[[] | [string], string, boolean], undefined>,
   /**
    * / Update a customer. Caller must own the customer (shopId check).
    */
@@ -1600,6 +1618,16 @@ export interface _SERVICE {
     boolean
   >,
   'uploadPaymentScreenshot' : ActorMethod<[bigint, string], undefined>,
+  /**
+   * / Verify admin email+password credentials and issue a 24-hour session token.
+   * / The frontend stores this token and passes it as ?adminToken to admin methods.
+   * / Returns #ok(token) on success, #err(reason) on failure — never traps.
+   */
+  'verifyAdminCredentials' : ActorMethod<
+    [string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'verifyAdminPin' : ActorMethod<[string], boolean>,
   /**
    * / Verify a Stripe PaymentIntent and unlock the message if payment succeeded.

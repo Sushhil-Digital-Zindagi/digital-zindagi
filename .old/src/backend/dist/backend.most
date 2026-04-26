@@ -565,6 +565,8 @@ type WalletTopupRequest__51988012 =
     userId : Nat
   };
 actor {
+  stable ADMIN_EMAIL : Text;
+  stable ADMIN_PASSWORD : Text;
   stable accessControlState :
     {
       var adminAssigned : Bool;
@@ -572,6 +574,8 @@ actor {
     };
   stable var adminConfig : ?AdminConfig__889654536;
   stable var adminPinHash : Text;
+  stable var adminSessionTokens :
+    {var root : Node__46230540<Text, Int>; var size : Nat__490723111};
   stable var adminSettings :
     {
       cloudinaryApiKey : Text;

@@ -66,7 +66,11 @@ function ProviderRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const adminVerified = sessionStorage.getItem("adminVerified") === "true";
+  // Check both keys: adminVerified (set by AuthContext + AdminPinPage) and dz_admin_token (set by setAdminToken)
+  const adminVerified =
+    sessionStorage.getItem("adminVerified") === "true" ||
+    sessionStorage.getItem("dz_admin_verified") === "true" ||
+    !!sessionStorage.getItem("dz_admin_token");
   if (!adminVerified) return <Navigate to="/admin/pin" replace />;
   return <>{children}</>;
 }

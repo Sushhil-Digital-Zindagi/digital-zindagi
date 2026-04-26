@@ -1,8 +1,3 @@
-// ============================================================
-// Offer Portal React-Query hooks
-// All calls go through the backend actor — no mock/localStorage primary.
-// Actor readiness pattern: never throws "Actor not available" to the user.
-// ============================================================
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOfferAuth } from "../contexts/OfferAuthContext";
@@ -17,6 +12,7 @@ import type {
   OfferWithdrawalStatus,
 } from "../types/offerTypes";
 import { useActor } from "./useActor";
+import { getAdminToken } from "./useAdminSession";
 
 // ---------- actor safety ----------
 // We cast the actor to `any` internally so we're not constrained by the
@@ -287,12 +283,39 @@ export function useRegisterOfferUser() {
       const hash = await sha256hex(password);
 
       try {
-        // Step 1: Register — returns new user's bigint ID
-        await a.registerOfferUser(email, hash, referralCode ?? null);
+        // Step 1: Register — returns Result<OfferUser, String>
+        const regResult = await a.registerOfferUser(
+          email,
+          hash,
+          referralCode ?? null,
+        );
+        // Handle Result variant from backend
+        if (
+          regResult &&
+          typeof regResult === "object" &&
+          "__kind__" in regResult &&
+          (regResult as { __kind__: string }).__kind__ === "err"
+        ) {
+          const errMsg = (regResult as { err: string }).err ?? "";
+          const lower = errMsg.toLowerCase();
+          if (
+            lower.includes("already") ||
+            lower.includes("exists") ||
+            lower.includes("registered") ||
+            lower.includes("already_registered")
+          ) {
+            throw new Error("already_registered");
+          }
+          throw new Error(
+            "Registration mein kuch problem hua, dobara try karein",
+          );
+        }
       } catch (err) {
         const raw =
           (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
         const lower = raw.toLowerCase();
+        // Re-throw already_registered as-is
+        if (raw === "already_registered") throw err;
         // "already registered" = user exists, treat gracefully
         if (
           lower.includes("already") ||
@@ -312,10 +335,30 @@ export function useRegisterOfferUser() {
         );
       }
 
-      // Step 2: Immediately login with same credentials (backend returns full user)
+      // Step 2: Immediately login with same credentials (backend returns Result<OfferUser>)
       try {
-        const raw = await a.loginOfferUser(email, hash);
-        return mapBackendOfferUser(raw);
+        const loginResult = await a.loginOfferUser(email, hash);
+        // Handle Result variant
+        if (
+          loginResult &&
+          typeof loginResult === "object" &&
+          "__kind__" in loginResult
+        ) {
+          if ((loginResult as { __kind__: string }).__kind__ === "ok") {
+            return mapBackendOfferUser(
+              (loginResult as { ok: typeof loginResult }).ok as Parameters<
+                typeof mapBackendOfferUser
+              >[0],
+            );
+          }
+          throw new Error(
+            (loginResult as { err: string }).err ?? "Login failed",
+          );
+        }
+        // Fallback: backend returned the user directly (old format)
+        return mapBackendOfferUser(
+          loginResult as Parameters<typeof mapBackendOfferUser>[0],
+        );
       } catch (err) {
         throw new Error(mapOfferLoginError(err));
       }
@@ -421,8 +464,21 @@ export function useLoginOfferUser() {
       const a = requireActor(actor);
       const hash = await sha256hex(password);
       try {
-        const raw = await a.loginOfferUser(email, hash);
-        return mapBackendOfferUser(raw);
+        const result = await a.loginOfferUser(email, hash);
+        // Handle Result<OfferUser, String> variant from backend
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if ((result as { __kind__: string }).__kind__ === "ok") {
+            return mapBackendOfferUser(
+              (result as { ok: Parameters<typeof mapBackendOfferUser>[0] }).ok,
+            );
+          }
+          // err variant — map to clean message
+          throw new Error((result as { err: string }).err ?? "Login failed");
+        }
+        // Fallback: backend returned the user directly (legacy format)
+        return mapBackendOfferUser(
+          result as Parameters<typeof mapBackendOfferUser>[0],
+        );
       } catch (err) {
         // Map all raw errors to user-friendly messages before re-throwing
         throw new Error(mapOfferLoginError(err));
@@ -504,6 +560,7 @@ export function useUpdateOfferPortalConfig() {
         );
       try {
         const result = await (actor as AnyActor).updateOfferPortalConfig(
+          getAdminToken(),
           isEnabled,
           cpaLeadWebhookSecret,
           cpagripApiKey,
@@ -562,7 +619,9 @@ export function useGetCpagripSettings() {
       };
       if (!actor) return empty;
       try {
-        const data = await (actor as AnyActor).getCpagripSettings();
+        const data = await (actor as AnyActor).getCpagripSettings(
+          getAdminToken(),
+        );
         return {
           apiKey: data.apiKey ?? "",
           webhookSecret: data.webhookSecret ?? "",
@@ -604,6 +663,7 @@ export function useSaveCPAGripKeys() {
         const result = await (
           actor as unknown as {
             saveCPAGripKeys(
+              adminToken: string | null,
               a: string,
               w: string,
               n: string,
@@ -612,6 +672,7 @@ export function useSaveCPAGripKeys() {
             >;
           }
         ).saveCPAGripKeys(
+          getAdminToken(),
           apiKey.trim(),
           webhookSecret.trim(),
           offerWallName.trim(),

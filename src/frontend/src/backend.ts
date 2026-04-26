@@ -873,7 +873,7 @@ export interface backendInterface {
      * / Adjust (add or deduct) a user's wallet balance and log the action — admin only.
      * / Returns the new balance as Int on success.
      */
-    adminAdjustWalletBalance(userId: string, amount: bigint, action: string, note: string): Promise<{
+    adminAdjustWalletBalance(adminToken: string | null, userId: string, amount: bigint, action: string, note: string): Promise<{
         __kind__: "ok";
         ok: bigint;
     } | {
@@ -900,7 +900,7 @@ export interface backendInterface {
     /**
      * / Manually assign or revoke a subscription for a user — admin only.
      */
-    adminAssignSubscription(userId: string, durationDays: bigint, action: string): Promise<{
+    adminAssignSubscription(adminToken: string | null, userId: string, durationDays: bigint, action: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -962,7 +962,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    approveProvider(userId: bigint, plan: SubscriptionPlan): Promise<void>;
+    approveProvider(adminToken: string | null, userId: bigint, plan: SubscriptionPlan): Promise<void>;
     /**
      * / Approve or reject a topup request.  On approval, funds are credited — admin only.
      */
@@ -971,6 +971,11 @@ export interface backendInterface {
     awardChatPoints(action: string, points: bigint): Promise<boolean>;
     cancelChatScheduledMessage(id: bigint): Promise<boolean>;
     changeAdminPin(currentPinHash: string, newPinHash: string): Promise<void>;
+    /**
+     * / Validate an admin session token — public query.
+     * / Returns true if the token is valid and not expired.
+     */
+    checkAdminToken(token: string): Promise<boolean>;
     cleanupExpiredChatStories(): Promise<bigint>;
     cleanupExpiredChatVaultItems(): Promise<bigint>;
     /**
@@ -1070,7 +1075,7 @@ export interface backendInterface {
      * / Return the most recent `limit` audit log entries — admin only.
      * / Returns empty array if caller is not admin (never traps).
      */
-    getAdminAuditLog(limit: bigint): Promise<Array<AuditLogEntry>>;
+    getAdminAuditLog(adminToken: string | null, limit: bigint): Promise<Array<AuditLogEntry>>;
     getAdminConfig(): Promise<AdminConfig | null>;
     /**
      * / Return all admin settings — readable by any caller so the frontend can
@@ -1150,7 +1155,7 @@ export interface backendInterface {
      * / Return the full CPAGrip settings (apiKey + webhookSecret + offerWallName) — admin only.
      * / Returns empty strings for non-admin callers (never traps).
      */
-    getCpagripSettings(): Promise<{
+    getCpagripSettings(adminToken: string | null): Promise<{
         webhookSecret: string;
         offerWallName: string;
         apiKey: string;
@@ -1222,7 +1227,7 @@ export interface backendInterface {
      * / Non-admin callers (including anonymous): NEVER TRAP — receive safe public config
      * / with isEnabled and postbackUrl only. API keys and secrets are stripped.
      */
-    getOfferPortalConfig(): Promise<{
+    getOfferPortalConfig(adminToken: string | null): Promise<{
         cpaLeadWebhookSecret: string;
         cpagripOfferWallName: string;
         cpagripApiKey: string;
@@ -1248,7 +1253,7 @@ export interface backendInterface {
      * / Use this after saving to verify all 3 CPAGrip fields persisted correctly.
      * / Returns full config for admin, safe empty-secret config for non-admin — never traps.
      */
-    getOfferPortalConfigFull(): Promise<{
+    getOfferPortalConfigFull(adminToken: string | null): Promise<{
         __kind__: "ok";
         ok: {
             cpaLeadWebhookSecret: string;
@@ -1290,8 +1295,9 @@ export interface backendInterface {
     getPaymentConfig(): Promise<PaymentConfig>;
     /**
      * / Alias for getProvidersPendingApproval — kept for frontend compatibility.
+     * / Also accepts an adminToken for email+password auth flow.
      */
-    getPendingApprovals(): Promise<Array<ProviderProfile>>;
+    getPendingApprovals(adminToken: string | null): Promise<Array<ProviderProfile>>;
     getPremiumPlans(): Promise<PremiumPrices>;
     getProviderOrders(userId: bigint): Promise<Array<Order>>;
     getProviderProfile(userId: bigint): Promise<ProviderProfile | null>;
@@ -1456,7 +1462,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    rejectProvider(userId: bigint): Promise<void>;
+    rejectProvider(adminToken: string | null, userId: bigint): Promise<void>;
     removeChatGroupMember(conversationId: bigint, memberId: Principal): Promise<boolean>;
     /**
      * / Remove a locked feature by id — admin only.
@@ -1494,7 +1500,7 @@ export interface backendInterface {
      * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.
      * / Empty strings are ignored — existing values are preserved, preventing accidental wipe.
      */
-    saveCPAGripKeys(apiKey: string, webhookSecret: string, offerWallName: string): Promise<{
+    saveCPAGripKeys(adminToken: string | null, apiKey: string, webhookSecret: string, offerWallName: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -1597,12 +1603,12 @@ export interface backendInterface {
      * / All existing field values are overwritten with the supplied record.
      * / Empty strings for Cloudinary/CPAGrip fields preserve the existing defaults.
      */
-    updateAdminSettings(settings: AdminSettingsExtended): Promise<boolean>;
+    updateAdminSettings(adminToken: string | null, settings: AdminSettingsExtended): Promise<boolean>;
     /**
      * / Update AdMob configuration — admin only.
      */
     updateAdmobConfig(appId: string, bannerUnitId: string, interstitialId: string, ludoBannerId: string, ludoInterstitialId: string, rewardedUnitId: string): Promise<boolean>;
-    updateAppSettings(json: string): Promise<{
+    updateAppSettings(adminToken: string | null, json: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -1639,7 +1645,7 @@ export interface backendInterface {
      * / Both fields are persisted in separate stable vars so they survive reloads.
      * / Empty strings are ignored — existing values are preserved.
      */
-    updateCpagripSettings(apiKey: string, webhookSecret: string, offerWallName: string): Promise<boolean>;
+    updateCpagripSettings(adminToken: string | null, apiKey: string, webhookSecret: string, offerWallName: string): Promise<boolean>;
     updateCustomCode(id: bigint, name: string, code: string, btnLabel: string, icon: string, placement: string, enabled: boolean, title: string, subtitle1: string, subtitle2: string, alignment: string, layoutStyle: string): Promise<boolean>;
     updateCustomSection(id: bigint, name: string, heading: string, placement: string, buttons: string, enabled: boolean): Promise<boolean>;
     updateJob(id: bigint, title: string, department: string, location: string, lastDate: string, applyLink: string, category: string, enabled: boolean): Promise<boolean>;
@@ -1661,7 +1667,7 @@ export interface backendInterface {
      * / Also persists cpagripWebhookSecret and cpagripOfferWallName to their stable vars.
      * / Returns #ok(true) on success, #err(reason) if validation fails (e.g. API key too short).
      */
-    updateOfferPortalConfig(isEnabled: boolean, cpaLeadWebhookSecret: string, cpagripApiKey: string, adminProfitPct: bigint, userProfitPct: bigint, newWebhookSecret: string, newOfferWallName: string): Promise<{
+    updateOfferPortalConfig(adminToken: string | null, isEnabled: boolean, cpaLeadWebhookSecret: string, cpagripApiKey: string, adminProfitPct: bigint, userProfitPct: bigint, newWebhookSecret: string, newOfferWallName: string): Promise<{
         __kind__: "ok";
         ok: boolean;
     } | {
@@ -1702,7 +1708,7 @@ export interface backendInterface {
         err: string;
     }>;
     updateSubscriptionPricing(newPricing: SubscriptionPricing): Promise<void>;
-    updateToggle(toggleName: string, value: boolean): Promise<void>;
+    updateToggle(adminToken: string | null, toggleName: string, value: boolean): Promise<void>;
     /**
      * / Update a customer. Caller must own the customer (shopId check).
      */
@@ -1725,6 +1731,18 @@ export interface backendInterface {
     }>;
     updateVideo(id: bigint, title: string, videoUrl: string, thumbnailUrl: string, platform: string, category: string, enabled: boolean): Promise<boolean>;
     uploadPaymentScreenshot(userId: bigint, blobId: string): Promise<void>;
+    /**
+     * / Verify admin email+password credentials and issue a 24-hour session token.
+     * / The frontend stores this token and passes it as ?adminToken to admin methods.
+     * / Returns #ok(token) on success, #err(reason) on failure — never traps.
+     */
+    verifyAdminCredentials(email: string, password: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     verifyAdminPin(pinHash: string): Promise<boolean>;
     /**
      * / Verify a Stripe PaymentIntent and unlock the message if payment succeeded.
@@ -2186,7 +2204,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async adminAdjustWalletBalance(arg0: string, arg1: bigint, arg2: string, arg3: string): Promise<{
+    async adminAdjustWalletBalance(arg0: string | null, arg1: string, arg2: bigint, arg3: string, arg4: string): Promise<{
         __kind__: "ok";
         ok: bigint;
     } | {
@@ -2195,14 +2213,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.adminAdjustWalletBalance(arg0, arg1, arg2, arg3);
+                const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
                 return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.adminAdjustWalletBalance(arg0, arg1, arg2, arg3);
+            const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
             return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -2246,7 +2264,7 @@ export class Backend implements backendInterface {
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
-    async adminAssignSubscription(arg0: string, arg1: bigint, arg2: string): Promise<{
+    async adminAssignSubscription(arg0: string | null, arg1: string, arg2: bigint, arg3: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -2255,14 +2273,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.adminAssignSubscription(arg0, arg1, arg2);
+                const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
                 return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.adminAssignSubscription(arg0, arg1, arg2);
+            const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -2472,17 +2490,17 @@ export class Backend implements backendInterface {
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
-    async approveProvider(arg0: bigint, arg1: SubscriptionPlan): Promise<void> {
+    async approveProvider(arg0: string | null, arg1: bigint, arg2: SubscriptionPlan): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.approveProvider(arg0, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.approveProvider(arg0, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
             return result;
         }
     }
@@ -2553,6 +2571,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.changeAdminPin(arg0, arg1);
+            return result;
+        }
+    }
+    async checkAdminToken(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.checkAdminToken(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.checkAdminToken(arg0);
             return result;
         }
     }
@@ -3016,17 +3048,17 @@ export class Backend implements backendInterface {
             return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getAdminAuditLog(arg0: bigint): Promise<Array<AuditLogEntry>> {
+    async getAdminAuditLog(arg0: string | null, arg1: bigint): Promise<Array<AuditLogEntry>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAdminAuditLog(arg0);
+                const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
                 return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAdminAuditLog(arg0);
+            const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
             return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -3396,21 +3428,21 @@ export class Backend implements backendInterface {
             return from_candid_vec_n102(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getCpagripSettings(): Promise<{
+    async getCpagripSettings(arg0: string | null): Promise<{
         webhookSecret: string;
         offerWallName: string;
         apiKey: string;
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.getCpagripSettings();
+                const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getCpagripSettings();
+            const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -3759,7 +3791,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getOfferPortalConfig(): Promise<{
+    async getOfferPortalConfig(arg0: string | null): Promise<{
         cpaLeadWebhookSecret: string;
         cpagripOfferWallName: string;
         cpagripApiKey: string;
@@ -3772,14 +3804,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.getOfferPortalConfig();
+                const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getOfferPortalConfig();
+            const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -3801,7 +3833,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getOfferPortalConfigFull(): Promise<{
+    async getOfferPortalConfigFull(arg0: string | null): Promise<{
         __kind__: "ok";
         ok: {
             cpaLeadWebhookSecret: string;
@@ -3818,14 +3850,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.getOfferPortalConfigFull();
+                const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
                 return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getOfferPortalConfigFull();
+            const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
             return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -3909,17 +3941,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getPendingApprovals(): Promise<Array<ProviderProfile>> {
+    async getPendingApprovals(arg0: string | null): Promise<Array<ProviderProfile>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPendingApprovals();
+                const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
                 return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPendingApprovals();
+            const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
             return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -4571,17 +4603,17 @@ export class Backend implements backendInterface {
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
-    async rejectProvider(arg0: bigint): Promise<void> {
+    async rejectProvider(arg0: string | null, arg1: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.rejectProvider(arg0);
+                const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.rejectProvider(arg0);
+            const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
             return result;
         }
     }
@@ -4709,7 +4741,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async saveCPAGripKeys(arg0: string, arg1: string, arg2: string): Promise<{
+    async saveCPAGripKeys(arg0: string | null, arg1: string, arg2: string, arg3: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -4718,14 +4750,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+                const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
                 return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCPAGripKeys(arg0, arg1, arg2);
+            const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -5077,17 +5109,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateAdminSettings(arg0: AdminSettingsExtended): Promise<boolean> {
+    async updateAdminSettings(arg0: string | null, arg1: AdminSettingsExtended): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateAdminSettings(arg0);
+                const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateAdminSettings(arg0);
+            const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
             return result;
         }
     }
@@ -5105,7 +5137,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateAppSettings(arg0: string): Promise<{
+    async updateAppSettings(arg0: string | null, arg1: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -5114,14 +5146,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateAppSettings(arg0);
+                const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
                 return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateAppSettings(arg0);
+            const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
             return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -5229,17 +5261,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateCpagripSettings(arg0: string, arg1: string, arg2: string): Promise<boolean> {
+    async updateCpagripSettings(arg0: string | null, arg1: string, arg2: string, arg3: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateCpagripSettings(arg0, arg1, arg2);
+                const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateCpagripSettings(arg0, arg1, arg2);
+            const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
             return result;
         }
     }
@@ -5347,7 +5379,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateOfferPortalConfig(arg0: boolean, arg1: string, arg2: string, arg3: bigint, arg4: bigint, arg5: string, arg6: string): Promise<{
+    async updateOfferPortalConfig(arg0: string | null, arg1: boolean, arg2: string, arg3: string, arg4: bigint, arg5: bigint, arg6: string, arg7: string): Promise<{
         __kind__: "ok";
         ok: boolean;
     } | {
@@ -5356,14 +5388,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                 return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
             return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -5499,17 +5531,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateToggle(arg0: string, arg1: boolean): Promise<void> {
+    async updateToggle(arg0: string | null, arg1: string, arg2: boolean): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateToggle(arg0, arg1);
+                const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateToggle(arg0, arg1);
+            const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
             return result;
         }
     }
@@ -5579,6 +5611,26 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.uploadPaymentScreenshot(arg0, arg1);
             return result;
+        }
+    }
+    async verifyAdminCredentials(arg0: string, arg1: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifyAdminCredentials(arg0, arg1);
+                return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifyAdminCredentials(arg0, arg1);
+            return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
         }
     }
     async verifyAdminPin(arg0: string): Promise<boolean> {

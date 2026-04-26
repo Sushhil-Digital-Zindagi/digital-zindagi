@@ -511,6 +511,8 @@ export const mockBackend: backendInterface = {
   }),
   updateVideo: async () => true,
   uploadPaymentScreenshot: async () => undefined,
+  checkAdminToken: async () => false,
+  verifyAdminCredentials: async () => ({ __kind__: "err" as const, err: "demo_mode" }),
   verifyAdminPin: async () => true,
   verifyUnlockKey: async () => ({ __kind__: "ok", ok: true }),
   viewChatStory: async () => true,

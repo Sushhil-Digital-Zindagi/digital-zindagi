@@ -810,7 +810,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'adminAdjustWalletBalance' : IDL.Func(
-      [IDL.Text, IDL.Int, IDL.Text, IDL.Text],
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Int, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
       [],
     ),
@@ -825,7 +825,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'adminAssignSubscription' : IDL.Func(
-      [IDL.Text, IDL.Nat, IDL.Text],
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Nat, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -882,12 +882,17 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
-  'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
+  'approveProvider' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Nat, SubscriptionPlan],
+      [],
+      [],
+    ),
   'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
   'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
   'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
   'confirmUpiUnlock' : IDL.Func(
@@ -965,7 +970,11 @@ export const idlService = IDL.Service({
   'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
   'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
-  'getAdminAuditLog' : IDL.Func([IDL.Nat], [IDL.Vec(AuditLogEntry)], ['query']),
+  'getAdminAuditLog' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Nat],
+      [IDL.Vec(AuditLogEntry)],
+      [],
+    ),
   'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
   'getAdminSettings' : IDL.Func([], [AdminSettingsExtended], ['query']),
   'getAdmobConfig' : IDL.Func(
@@ -1053,7 +1062,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getCpagripSettings' : IDL.Func(
-      [],
+      [IDL.Opt(IDL.Text)],
       [
         IDL.Record({
           'webhookSecret' : IDL.Text,
@@ -1061,7 +1070,7 @@ export const idlService = IDL.Service({
           'apiKey' : IDL.Text,
         }),
       ],
-      ['query'],
+      [],
     ),
   'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
@@ -1119,7 +1128,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getOfferPortalConfig' : IDL.Func(
-      [],
+      [IDL.Opt(IDL.Text)],
       [
         IDL.Record({
           'cpaLeadWebhookSecret' : IDL.Text,
@@ -1133,7 +1142,7 @@ export const idlService = IDL.Service({
           'userProfitPct' : IDL.Nat,
         }),
       ],
-      ['query'],
+      [],
     ),
   'getOfferPortalConfigForUser' : IDL.Func(
       [],
@@ -1147,7 +1156,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getOfferPortalConfigFull' : IDL.Func(
-      [],
+      [IDL.Opt(IDL.Text)],
       [
         IDL.Variant({
           'ok' : IDL.Record({
@@ -1162,7 +1171,7 @@ export const idlService = IDL.Service({
           'err' : IDL.Text,
         }),
       ],
-      ['query'],
+      [],
     ),
   'getOfferPortalConfigPublic' : IDL.Func(
       [],
@@ -1187,7 +1196,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
-  'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+  'getPendingApprovals' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Vec(ProviderProfile)],
+      [],
+    ),
   'getPremiumPlans' : IDL.Func([], [PremiumPrices], ['query']),
   'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getProviderProfile' : IDL.Func(
@@ -1310,7 +1323,7 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
-  'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+  'rejectProvider' : IDL.Func([IDL.Opt(IDL.Text), IDL.Nat], [], []),
   'removeChatGroupMember' : IDL.Func([IDL.Nat, IDL.Principal], [IDL.Bool], []),
   'removeLockedFeature' : IDL.Func(
       [IDL.Text],
@@ -1332,7 +1345,7 @@ export const idlService = IDL.Service({
     ),
   'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
   'saveCPAGripKeys' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -1404,14 +1417,18 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
-  'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
+  'updateAdminSettings' : IDL.Func(
+      [IDL.Opt(IDL.Text), AdminSettingsExtended],
+      [IDL.Bool],
+      [],
+    ),
   'updateAdmobConfig' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Bool],
       [],
     ),
   'updateAppSettings' : IDL.Func(
-      [IDL.Text],
+      [IDL.Opt(IDL.Text), IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -1443,7 +1460,7 @@ export const idlService = IDL.Service({
     ),
   'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'updateCpagripSettings' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
       [IDL.Bool],
       [],
     ),
@@ -1518,7 +1535,16 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateOfferPortalConfig' : IDL.Func(
-      [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Text, IDL.Text],
+      [
+        IDL.Opt(IDL.Text),
+        IDL.Bool,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+      ],
       [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
@@ -1563,7 +1589,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
-  'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+  'updateToggle' : IDL.Func([IDL.Opt(IDL.Text), IDL.Text, IDL.Bool], [], []),
   'updateUdhaarCustomer' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
@@ -1580,6 +1606,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'verifyAdminCredentials' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'verifyStripeUnlock' : IDL.Func(
       [IDL.Nat, IDL.Text],
@@ -2390,7 +2421,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'adminAdjustWalletBalance' : IDL.Func(
-        [IDL.Text, IDL.Int, IDL.Text, IDL.Text],
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Int, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
         [],
       ),
@@ -2405,7 +2436,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'adminAssignSubscription' : IDL.Func(
-        [IDL.Text, IDL.Nat, IDL.Text],
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Nat, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
@@ -2462,12 +2493,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
-    'approveProvider' : IDL.Func([IDL.Nat, SubscriptionPlan], [], []),
+    'approveProvider' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Nat, SubscriptionPlan],
+        [],
+        [],
+      ),
     'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
     'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
     'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
     'confirmUpiUnlock' : IDL.Func(
@@ -2546,9 +2582,9 @@ export const idlFactory = ({ IDL }) => {
     'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
     'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAdminAuditLog' : IDL.Func(
-        [IDL.Nat],
+        [IDL.Opt(IDL.Text), IDL.Nat],
         [IDL.Vec(AuditLogEntry)],
-        ['query'],
+        [],
       ),
     'getAdminConfig' : IDL.Func([], [IDL.Opt(AdminConfig)], ['query']),
     'getAdminSettings' : IDL.Func([], [AdminSettingsExtended], ['query']),
@@ -2637,7 +2673,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCpagripSettings' : IDL.Func(
-        [],
+        [IDL.Opt(IDL.Text)],
         [
           IDL.Record({
             'webhookSecret' : IDL.Text,
@@ -2645,7 +2681,7 @@ export const idlFactory = ({ IDL }) => {
             'apiKey' : IDL.Text,
           }),
         ],
-        ['query'],
+        [],
       ),
     'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
@@ -2715,7 +2751,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getOfferPortalConfig' : IDL.Func(
-        [],
+        [IDL.Opt(IDL.Text)],
         [
           IDL.Record({
             'cpaLeadWebhookSecret' : IDL.Text,
@@ -2729,7 +2765,7 @@ export const idlFactory = ({ IDL }) => {
             'userProfitPct' : IDL.Nat,
           }),
         ],
-        ['query'],
+        [],
       ),
     'getOfferPortalConfigForUser' : IDL.Func(
         [],
@@ -2743,7 +2779,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getOfferPortalConfigFull' : IDL.Func(
-        [],
+        [IDL.Opt(IDL.Text)],
         [
           IDL.Variant({
             'ok' : IDL.Record({
@@ -2758,7 +2794,7 @@ export const idlFactory = ({ IDL }) => {
             'err' : IDL.Text,
           }),
         ],
-        ['query'],
+        [],
       ),
     'getOfferPortalConfigPublic' : IDL.Func(
         [],
@@ -2783,7 +2819,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPaymentConfig' : IDL.Func([], [PaymentConfig], ['query']),
-    'getPendingApprovals' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
+    'getPendingApprovals' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Vec(ProviderProfile)],
+        [],
+      ),
     'getPremiumPlans' : IDL.Func([], [PremiumPrices], ['query']),
     'getProviderOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getProviderProfile' : IDL.Func(
@@ -2906,7 +2946,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
-    'rejectProvider' : IDL.Func([IDL.Nat], [], []),
+    'rejectProvider' : IDL.Func([IDL.Opt(IDL.Text), IDL.Nat], [], []),
     'removeChatGroupMember' : IDL.Func(
         [IDL.Nat, IDL.Principal],
         [IDL.Bool],
@@ -2932,7 +2972,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
     'saveCPAGripKeys' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
@@ -3014,14 +3054,18 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateAdminConfig' : IDL.Func([AdminConfig], [], []),
-    'updateAdminSettings' : IDL.Func([AdminSettingsExtended], [IDL.Bool], []),
+    'updateAdminSettings' : IDL.Func(
+        [IDL.Opt(IDL.Text), AdminSettingsExtended],
+        [IDL.Bool],
+        [],
+      ),
     'updateAdmobConfig' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Bool],
         [],
       ),
     'updateAppSettings' : IDL.Func(
-        [IDL.Text],
+        [IDL.Opt(IDL.Text), IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
@@ -3053,7 +3097,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateCpagripApiKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'updateCpagripSettings' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
         [IDL.Bool],
         [],
       ),
@@ -3128,7 +3172,16 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateOfferPortalConfig' : IDL.Func(
-        [IDL.Bool, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Text, IDL.Text],
+        [
+          IDL.Opt(IDL.Text),
+          IDL.Bool,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+        ],
         [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
@@ -3173,7 +3226,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
-    'updateToggle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
+    'updateToggle' : IDL.Func([IDL.Opt(IDL.Text), IDL.Text, IDL.Bool], [], []),
     'updateUdhaarCustomer' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : UdhaarCustomer, 'err' : IDL.Text })],
@@ -3190,6 +3243,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'uploadPaymentScreenshot' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'verifyAdminCredentials' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'verifyAdminPin' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'verifyStripeUnlock' : IDL.Func(
         [IDL.Nat, IDL.Text],

@@ -72,7 +72,12 @@ interface ActorWithRegister {
     role: UserRole,
     securityQuestion: string,
     securityAnswer: string,
-  ): Promise<void>;
+  ): Promise<
+    | { __kind__: "ok"; ok: null }
+    | { __kind__: "err"; err: string }
+    | null
+    | undefined
+  >;
 }
 
 const SECURITY_QUESTIONS = [
@@ -279,7 +284,7 @@ export default function SignupPage() {
       const passwordHash = await hashPassword(password);
 
       // BLOCKING canister call — await confirmation before proceeding
-      await withTimeout(
+      const regResult = await withTimeout(
         (actor as unknown as ActorWithRegister).registerUser(
           name.trim(),
           mobile.trim(),
@@ -289,6 +294,27 @@ export default function SignupPage() {
           secA.trim(),
         ),
       );
+
+      // Handle Result<ok, err> variant from backend
+      if (
+        regResult &&
+        typeof regResult === "object" &&
+        "__kind__" in regResult &&
+        (regResult as { __kind__: string }).__kind__ === "err"
+      ) {
+        const errMsg = (regResult as { err: string }).err ?? "";
+        const lower = errMsg.toLowerCase();
+        if (
+          lower.includes("already") ||
+          lower.includes("registered") ||
+          lower.includes("duplicate")
+        ) {
+          // Already registered — still show pending approval (provider can proceed)
+          setRegistrationSuccess(true);
+          return;
+        }
+        throw new Error(errMsg);
+      }
 
       // Backend confirmed — now show success
       setRegistrationSuccess(true);
@@ -354,7 +380,7 @@ export default function SignupPage() {
       const passwordHash = await hashPassword(password);
 
       // BLOCKING canister call — await confirmation
-      await withTimeout(
+      const custResult = await withTimeout(
         (actor as unknown as ActorWithRegister).registerUser(
           name.trim(),
           mobile.trim(),
@@ -364,6 +390,26 @@ export default function SignupPage() {
           secA.trim(),
         ),
       );
+
+      // Handle Result<ok, err> variant from backend
+      if (
+        custResult &&
+        typeof custResult === "object" &&
+        "__kind__" in custResult &&
+        (custResult as { __kind__: string }).__kind__ === "err"
+      ) {
+        const errMsg = (custResult as { err: string }).err ?? "";
+        const lower = errMsg.toLowerCase();
+        if (
+          lower.includes("already") ||
+          lower.includes("registered") ||
+          lower.includes("duplicate")
+        ) {
+          toast.error("यह email/number पहले से registered है। Login करें।");
+          return;
+        }
+        throw new Error(errMsg);
+      }
 
       // Backend confirmed — now show success
       setRegistrationSuccess(true);

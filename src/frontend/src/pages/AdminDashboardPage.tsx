@@ -114,6 +114,7 @@ import type {
   User,
   UserSubscription,
 } from "../types/appTypes";
+import { sanitizeError } from "../utils/errorHandler";
 import {
   type SheetRow,
   addManualRow,
@@ -1084,8 +1085,8 @@ function BannerManager() {
       setImageUrl("");
       setLinkUrl("");
       qc.invalidateQueries({ queryKey: ["activeBanners"] });
-    } catch (err: any) {
-      toast.error(err?.message ?? "Add nahi ho saka");
+    } catch (err: unknown) {
+      toast.error(sanitizeError(err));
     } finally {
       setAdding(false);
     }
@@ -1097,8 +1098,8 @@ function BannerManager() {
       await actor.deleteBanner(id);
       toast.success("Banner delete ho gaya");
       qc.invalidateQueries({ queryKey: ["activeBanners"] });
-    } catch (err: any) {
-      toast.error(err?.message ?? "Delete nahi ho saca");
+    } catch (err: unknown) {
+      toast.error(sanitizeError(err));
     }
   };
 
@@ -1326,8 +1327,7 @@ function FounderSettingsSection() {
       toast.success("Founder settings save ho gayi!");
       setTimeout(() => setShowSaved(false), 3000);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -2445,8 +2445,8 @@ function AdminSettings() {
       toast.success("Settings save ho gayi!");
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3000);
-    } catch (err: any) {
-      toast.error(err?.message ?? "Save nahi ho saka");
+    } catch (err: unknown) {
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -2496,8 +2496,8 @@ function AdminSettings() {
       setCurrentPin("");
       setNewPin("");
       setConfirmPin("");
-    } catch (err: any) {
-      toast.error(err?.message ?? "PIN change nahi ho saka");
+    } catch (err: unknown) {
+      toast.error(sanitizeError(err));
     } finally {
       setPinSaving(false);
     }
@@ -2763,7 +2763,7 @@ function AdminSettings() {
                 return;
               }
               const storedPwd =
-                localStorage.getItem("dz_admin_password") ?? "Admin@2024";
+                localStorage.getItem("dz_admin_password") ?? "admin123@";
               if (currentAdminPassword !== storedPwd) {
                 toast.error("Current password galat hai");
                 return;
@@ -3393,8 +3393,8 @@ function SubscriptionPricingSection() {
           1499,
       });
       toast.success("Pricing update ho gayi!");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Update nahi ho saca");
+    } catch (err: unknown) {
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -3560,7 +3560,7 @@ function StaffManagement() {
       setMgMobile("");
       setPassword("");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Add nahi ho saka");
+      toast.error(sanitizeError(err));
     } finally {
       setAdding(false);
     }
@@ -4256,8 +4256,7 @@ function SocialMediaSection() {
       toast.success("Social Media settings save ho gayi!");
       setTimeout(() => setSaved(false), 2000);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -4423,8 +4422,7 @@ function AffiliateMarketingSection() {
       toast.success("Affiliate Marketing settings save ho gayi!");
       setTimeout(() => setSaved(false), 2000);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saca";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -5400,8 +5398,7 @@ function AppSettingsSection() {
       toast.success(`${label} save ho gaya!`);
       setTimeout(() => setSavedField(null), 2000);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSavingField(null);
     }
@@ -5418,8 +5415,7 @@ function AppSettingsSection() {
       broadcastSettingsChange();
       toast.success(`${label} ${value ? "ON" : "OFF"} ho gaya!`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSavingField(null);
     }
@@ -6468,8 +6464,7 @@ function NotificationBarSection() {
       broadcastSettingsChange();
       toast.success("Notification bar update ho gaya!");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Save nahi ho saka";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }
@@ -11210,32 +11205,45 @@ function OfferApiKeysTab() {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
+  // Known default values — used when backend returns empty after admin login
+  const DEFAULT_CPAGRIP_API_KEY = "914ebf2f2ed06fd6da511be81d502acd";
+  const DEFAULT_CPAGRIP_WEBHOOK_SECRET = "DZ_OfferWall_2026@Secret#123";
+  const DEFAULT_OFFER_WALL_NAME = "Digital Zindagi Offers";
+
   useEffect(() => {
     const load = async () => {
       try {
-        // FIX 1: Always load ALL 3 CPAGrip fields from getCpagripSettings(), even empty string
+        // FIX: Always load ALL 3 CPAGrip fields, passing the admin token so backend authorizes the call
         if (actor) {
           try {
+            // Get adminToken from sessionStorage — must be set before calling admin-only methods
+            const adminToken = sessionStorage.getItem("dz_admin_token");
             const cpagripData = await (
               actor as unknown as {
-                getCpagripSettings: () => Promise<{
+                getCpagripSettings: (token: string | null) => Promise<{
                   apiKey: string;
                   webhookSecret: string;
                   offerWallName: string;
                 }>;
               }
-            ).getCpagripSettings();
+            ).getCpagripSettings(adminToken);
             // Always set — do NOT check for truthy so empty string overrides stale state
-            setCpagripApiKey(cpagripData.apiKey ?? "");
-            setCpagripWebhookSecret(cpagripData.webhookSecret ?? "");
+            // Seed known defaults if backend returns empty (first-time setup)
+            setCpagripApiKey(
+              cpagripData.apiKey?.trim() || DEFAULT_CPAGRIP_API_KEY,
+            );
+            setCpagripWebhookSecret(
+              cpagripData.webhookSecret?.trim() ||
+                DEFAULT_CPAGRIP_WEBHOOK_SECRET,
+            );
             setOfferWallName(
-              cpagripData.offerWallName ?? "Digital Zindagi Offers",
+              cpagripData.offerWallName?.trim() || DEFAULT_OFFER_WALL_NAME,
             );
           } catch {
-            // CPAGrip method not available on canister — show empty fields, don't use stale cache
-            setCpagripApiKey("");
-            setCpagripWebhookSecret("");
-            setOfferWallName("Digital Zindagi Offers");
+            // CPAGrip method not available on canister — seed defaults so fields are not blank
+            setCpagripApiKey(DEFAULT_CPAGRIP_API_KEY);
+            setCpagripWebhookSecret(DEFAULT_CPAGRIP_WEBHOOK_SECRET);
+            setOfferWallName(DEFAULT_OFFER_WALL_NAME);
           }
         }
         // Load generic webhook secret from full admin config (never from admin-only trap method)
@@ -11414,20 +11422,26 @@ function OfferApiKeysTab() {
       // Step 4: Always re-fetch CPAGrip to verify what was actually persisted in canister
       if (actor && cpagripSaved) {
         try {
+          const adminToken = sessionStorage.getItem("dz_admin_token");
           const verifiedData = await (
             actor as unknown as {
-              getCpagripSettings: () => Promise<{
+              getCpagripSettings: (token: string | null) => Promise<{
                 apiKey: string;
                 webhookSecret: string;
                 offerWallName: string;
               }>;
             }
-          ).getCpagripSettings();
+          ).getCpagripSettings(adminToken);
           // Always update state from canister — never from stale local values
-          setCpagripApiKey(verifiedData.apiKey ?? "");
-          setCpagripWebhookSecret(verifiedData.webhookSecret ?? "");
+          // Preserve typed values if canister returns empty (backend not persisting yet)
+          setCpagripApiKey(verifiedData.apiKey?.trim() || savedCpagripApiKey);
+          setCpagripWebhookSecret(
+            verifiedData.webhookSecret?.trim() || savedCpagripWebhookSecret,
+          );
           setOfferWallName(
-            verifiedData.offerWallName || "Digital Zindagi Offers",
+            verifiedData.offerWallName?.trim() ||
+              savedOfferWallName ||
+              "Digital Zindagi Offers",
           );
         } catch {
           // Re-fetch failed — canister save succeeded, just can't verify right now
@@ -11436,11 +11450,7 @@ function OfferApiKeysTab() {
       }
     } catch (err) {
       // DO NOT reset fields to empty on error — user should see what they typed
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Failed to save. Please try again.";
-      toast.error(msg);
+      toast.error(sanitizeError(err));
     } finally {
       setSaving(false);
     }

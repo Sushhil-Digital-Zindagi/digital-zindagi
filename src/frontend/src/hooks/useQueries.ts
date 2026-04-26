@@ -1202,7 +1202,9 @@ export function useUpdateAppSettings() {
   return useMutation({
     mutationFn: async (settings: AppSettings) => {
       if (!actor)
-        throw new Error("Actor not available — canister not connected");
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein",
+        );
       // Read current canister value, merge, write back
       let current: AppSettings = {};
       try {
@@ -1216,14 +1218,16 @@ export function useUpdateAppSettings() {
       const merged = { ...current, ...settings };
       const json = JSON.stringify(merged);
       // Backend returns {#ok; #err} — handle both variants
+      const adminToken = getAdminToken();
       try {
         const result = await (
           actor as unknown as {
             updateAppSettings(
+              adminToken: string | null,
               json: string,
             ): Promise<{ __kind__: string; err?: string } | undefined>;
           }
-        ).updateAppSettings(json);
+        ).updateAppSettings(adminToken, json);
         // Check for Result-style error from canister
         if (
           result &&
@@ -1233,18 +1237,27 @@ export function useUpdateAppSettings() {
         ) {
           const errMsg =
             (result as { err?: string }).err ?? "Settings save failed";
+          const lower = errMsg.toLowerCase();
+          if (lower.includes("unauthorized") || lower.includes("admin only")) {
+            throw new Error("Admin access required — pehle login karein");
+          }
           throw new Error(errMsg);
         }
       } catch (err) {
         const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
         // Rethrow — caller will handle
         throw new Error(
-          msg.toLowerCase().includes("method not found")
+          lower.includes("method not found")
             ? "Settings save nahi ho payi — admin panel reload karein"
-            : msg.toLowerCase().includes("actor not available") ||
-                msg.toLowerCase().includes("canister")
-              ? "Backend se connect nahi ho pa raha — thoda wait karein"
-              : msg,
+            : lower.includes("unauthorized") || lower.includes("admin only")
+              ? "Admin access required — pehle login karein"
+              : lower.includes("ic0.trap") || lower.includes("reject code")
+                ? "Backend se connect nahi ho pa raha — thoda wait karein"
+                : lower.includes("actor not available") ||
+                    lower.includes("canister not")
+                  ? "Backend se connect nahi ho pa raha — thoda wait karein"
+                  : msg,
         );
       }
       // Cache in localStorage after canister confirms
@@ -1346,6 +1359,7 @@ export function useUpdateAppSettings() {
 // =====================================================================
 
 import type { backendInterface } from "../backend.d.ts";
+import { getAdminToken } from "./useAdminSession";
 
 /** Typed accessor for actor that exposes all Udhaar backend methods */
 type UdhaarActor = Pick<
@@ -2751,8 +2765,13 @@ export function useUpdateLudoSettings() {
           },
         };
         await (
-          actor as unknown as { updateAppSettings(json: string): Promise<void> }
-        ).updateAppSettings(JSON.stringify(merged));
+          actor as unknown as {
+            updateAppSettings(
+              adminToken: string | null,
+              json: string,
+            ): Promise<void>;
+          }
+        ).updateAppSettings(getAdminToken(), JSON.stringify(merged));
       } catch {
         // localStorage already updated — canister will sync on next poll
       }
@@ -2781,8 +2800,13 @@ export function useUpdateCpagripApiKey() {
           raw && raw !== "{}" ? (JSON.parse(raw) as AppSettings) : {};
         const merged = { ...current, cpagripApiKey: apiKey.trim() };
         await (
-          actor as unknown as { updateAppSettings(json: string): Promise<void> }
-        ).updateAppSettings(JSON.stringify(merged));
+          actor as unknown as {
+            updateAppSettings(
+              adminToken: string | null,
+              json: string,
+            ): Promise<void>;
+          }
+        ).updateAppSettings(getAdminToken(), JSON.stringify(merged));
         localStorage.setItem(
           APP_SETTINGS_LS_KEY,
           JSON.stringify({ ...current, cpagripApiKey: apiKey.trim() }),
@@ -2898,13 +2922,16 @@ export function useUpdateAdminSettings() {
       const merged = { ...cached, ...settings };
       localStorage.setItem(ADMIN_SETTINGS_LS_KEY, JSON.stringify(merged));
       if (!actor) return;
-      const current = await (
-        actor as unknown as {
-          getAdminSettings(): Promise<BackendAdminSettings>;
-        }
-      )
-        .getAdminSettings()
-        .catch(() => ({}) as BackendAdminSettings);
+      let current: BackendAdminSettings = {} as BackendAdminSettings;
+      try {
+        current = await (
+          actor as unknown as {
+            getAdminSettings(): Promise<BackendAdminSettings>;
+          }
+        ).getAdminSettings();
+      } catch {
+        // ignore
+      }
       const full: BackendAdminSettings = {
         pointsPerAd: current.pointsPerAd ?? 10n,
         cloudinaryApiKey: current.cloudinaryApiKey ?? "",
@@ -2932,11 +2959,28 @@ export function useUpdateAdminSettings() {
           current.cpagripOfferWallName ?? "Digital Zindagi Offers",
         ...settings,
       };
-      await (
-        actor as unknown as {
-          updateAdminSettings(s: BackendAdminSettings): Promise<boolean>;
+      try {
+        await (
+          actor as unknown as {
+            updateAdminSettings(
+              adminToken: string | null,
+              s: BackendAdminSettings,
+            ): Promise<boolean>;
+          }
+        ).updateAdminSettings(getAdminToken(), full);
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("unauthorized") || lower.includes("admin only")) {
+          throw new Error("Admin access required — pehle login karein");
         }
-      ).updateAdminSettings(full);
+        if (lower.includes("ic0.trap") || lower.includes("reject code")) {
+          throw new Error(
+            "Backend se connect nahi ho pa raha — thoda wait karein",
+          );
+        }
+        throw new Error(msg);
+      }
       // Update cloudinary cache fields
       if (full.cloudinaryCloudName)
         localStorage.setItem(
@@ -2977,13 +3021,13 @@ export function useGetCpagripSettings() {
       try {
         const data = await (
           actor as unknown as {
-            getCpagripSettings: () => Promise<{
+            getCpagripSettings: (adminToken: string | null) => Promise<{
               apiKey: string;
               webhookSecret: string;
               offerWallName: string;
             }>;
           }
-        ).getCpagripSettings();
+        ).getCpagripSettings(getAdminToken());
         return data;
       } catch {
         // Canister error — reset to empty, never show stale values
@@ -3018,6 +3062,7 @@ export function useUpdateCpagripSettings() {
         const result = await (
           actor as unknown as {
             saveCPAGripKeys(
+              adminToken: string | null,
               a: string,
               w: string,
               n: string,
@@ -3026,6 +3071,7 @@ export function useUpdateCpagripSettings() {
             >;
           }
         ).saveCPAGripKeys(
+          getAdminToken(),
           apiKey.trim(),
           webhookSecret.trim(),
           offerWallName.trim(),
@@ -3102,12 +3148,18 @@ export function useUpdatePaymentConfig() {
       localStorage.setItem(PAYMENT_CONFIG_LS_KEY, JSON.stringify(config));
       if (!actor) return;
       try {
+        // setPaymentConfig accepts a PaymentConfig object
         await (
           actor as unknown as {
-            setPaymentConfig(json: string): Promise<void>;
+            setPaymentConfig(config: PaymentConfig): Promise<boolean>;
           }
-        ).setPaymentConfig(JSON.stringify(config));
-      } catch {
+        ).setPaymentConfig(config);
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("unauthorized") || lower.includes("admin only")) {
+          throw new Error("Admin access required — pehle login karein");
+        }
         // localStorage already saved — canister will sync on next poll
       }
     },
