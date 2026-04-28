@@ -500,6 +500,7 @@ export interface OfferUser {
     tier2Earnings: bigint;
     passwordHash: string;
     totalEarnings: bigint;
+    mobile?: string;
     tier1Earnings: bigint;
 }
 export interface RewardPoints {
@@ -853,6 +854,17 @@ export interface backendInterface {
     adminRejectUpiUnlock(paymentId: bigint): Promise<{
         __kind__: "ok";
         ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Admin-authenticated direct password reset for an Offer Portal user (no OTP).
+     * / callerEmail and callerPasswordHash must match the admin credentials.
+     */
+    adminResetOfferPassword(callerEmail: string, callerPasswordHash: string, targetEmail: string, newPasswordHash: string): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -1395,6 +1407,19 @@ export interface backendInterface {
     }>;
     requestApproval(): Promise<void>;
     /**
+     * / Request an OTP for Offer Portal password reset.
+     * / Stores the OTP in stable memory with a 10-minute TTL.
+     * / If the user has a mobile number and Fast2SMS is configured, the SMS is sent.
+     * / Otherwise returns ok with instructions to contact admin.
+     */
+    requestOfferPasswordReset(email: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
      * / Submit a UPI withdrawal request from the Offer Portal.
      */
     requestOfferWithdrawal(offerUserId: bigint, upiId: string, amount: bigint): Promise<bigint>;
@@ -1402,6 +1427,17 @@ export interface backendInterface {
      * / Request admin to top-up your wallet.  Returns the new request ID.
      */
     requestWalletTopup(amount: number, note: string): Promise<bigint>;
+    /**
+     * / Verify OTP and set a new password for an Offer Portal user.
+     * / The OTP must not be expired and must match within 3 attempts.
+     */
+    resetOfferPassword(email: string, otp: string, newPasswordHash: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
      * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.

@@ -99,6 +99,7 @@ export const OfferUser = IDL.Record({
   'tier2Earnings' : IDL.Nat,
   'passwordHash' : IDL.Text,
   'totalEarnings' : IDL.Nat,
+  'mobile' : IDL.Opt(IDL.Text),
   'tier1Earnings' : IDL.Nat,
 });
 export const OfferWithdrawal = IDL.Record({
@@ -863,6 +864,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'adminResetOfferPassword' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'adminResolveWithdrawal' : IDL.Func(
       [
         IDL.Nat,
@@ -1338,12 +1344,22 @@ export const idlService = IDL.Service({
       [],
     ),
   'requestApproval' : IDL.Func([], [], []),
+  'requestOfferPasswordReset' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'requestOfferWithdrawal' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Nat],
       [IDL.Nat],
       [],
     ),
   'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
+  'resetOfferPassword' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'saveCPAGripKeys' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -1716,6 +1732,7 @@ export const idlFactory = ({ IDL }) => {
     'tier2Earnings' : IDL.Nat,
     'passwordHash' : IDL.Text,
     'totalEarnings' : IDL.Nat,
+    'mobile' : IDL.Opt(IDL.Text),
     'tier1Earnings' : IDL.Nat,
   });
   const OfferWithdrawal = IDL.Record({
@@ -2474,6 +2491,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'adminResetOfferPassword' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'adminResolveWithdrawal' : IDL.Func(
         [
           IDL.Nat,
@@ -2965,12 +2987,22 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'requestApproval' : IDL.Func([], [], []),
+    'requestOfferPasswordReset' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'requestOfferWithdrawal' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Nat],
         [IDL.Nat],
         [],
       ),
     'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
+    'resetOfferPassword' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'saveCPAGripKeys' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],

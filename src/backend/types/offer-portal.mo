@@ -8,6 +8,7 @@ module {
     userId          : Text;    // e.g. "offer_user_42"
     email           : Text;
     passwordHash    : Text;    // stored as-is (future: apply hashing)
+    mobile          : ?Text;   // optional mobile number for OTP-based password reset
     referralCode    : Text;    // unique referral code for this user
     referredBy      : ?Text;   // referral code of the direct referrer, if any
     totalEarnings   : Nat;     // lifetime credited earnings (paise / smallest unit)
@@ -18,6 +19,13 @@ module {
     tier4Earnings   : Nat;     // sum of commissions earned as tier-4 (0.5%)
     tier5Earnings   : Nat;     // sum of commissions earned as tier-5 (0.25%)
     createdAt       : Int;
+  };
+
+  /// OTP entry for password-reset flow.
+  public type OtpEntry = {
+    otp       : Text;   // 6-digit code
+    expiresAt : Int;    // nanosecond timestamp (10 min TTL)
+    attempts  : Nat;    // failed verification attempts so far (max 3)
   };
 
   /// A credit or debit event in the Offer Portal ledger.

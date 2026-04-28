@@ -43,7 +43,9 @@ import {
   useOfferEarningsSummary,
   useOfferPortalConfig,
   useRegisterOfferUser,
+  useRequestOfferPasswordReset,
   useRequestOfferWithdrawal,
+  useResetOfferPassword,
   useUpdateOfferPortalConfig,
 } from "../hooks/useOfferQueries";
 import { useContentLockerConfig } from "../hooks/useQueries";
@@ -110,7 +112,13 @@ function getOfferErrorMessage(
   return defaultMsg;
 }
 
-type View = "landing" | "login" | "signup" | "dashboard" | "redeem";
+type View =
+  | "landing"
+  | "login"
+  | "signup"
+  | "dashboard"
+  | "redeem"
+  | "forgotPassword";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -279,6 +287,7 @@ export default function OfferPortalPage() {
               onSuccess={() => setView("dashboard")}
               onSignup={() => setView("signup")}
               onBack={() => setView("landing")}
+              onForgotPassword={() => setView("forgotPassword")}
             />
           )}
           {view === "signup" && (
@@ -287,6 +296,13 @@ export default function OfferPortalPage() {
               onSuccess={() => setView("dashboard")}
               onLogin={() => setView("login")}
               onBack={() => setView("landing")}
+            />
+          )}
+          {view === "forgotPassword" && (
+            <ForgotPasswordView
+              key="forgotPassword"
+              onBack={() => setView("login")}
+              onSuccess={() => setView("login")}
             />
           )}
           {view === "dashboard" && currentOfferUser && (
@@ -448,10 +464,12 @@ function LoginView({
   onSuccess,
   onSignup,
   onBack,
+  onForgotPassword,
 }: {
   onSuccess: () => void;
   onSignup: () => void;
   onBack: () => void;
+  onForgotPassword: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -555,6 +573,16 @@ function LoginView({
             autoComplete="current-password"
             required
           />
+          <div className="flex justify-end mt-1.5">
+            <button
+              type="button"
+              data-ocid="offer_portal.forgot_password_link"
+              onClick={onForgotPassword}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              Forgot Password?
+            </button>
+          </div>
         </div>
         {errorMsg && (
           <p
@@ -612,6 +640,7 @@ function SignupView({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mobile, setMobile] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [referralCode, setReferralCode] = useState(() => {
     try {
@@ -637,6 +666,10 @@ function SignupView({
       setErrorMsg("Password kam se kam 6 characters ka hona chahiye");
       return;
     }
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
+      setErrorMsg("Mobile number 10 digits ka hona chahiye (6/7/8/9 se shuru)");
+      return;
+    }
     if (actorLoading) {
       setErrorMsg("Portal abhi load ho raha hai, ek second wait karein...");
       return;
@@ -647,6 +680,7 @@ function SignupView({
         email: email.trim(),
         password,
         referralCode: referralCode.trim().toUpperCase() || undefined,
+        mobile: mobile.trim() || undefined,
       },
       {
         onSuccess: (user) => {
@@ -762,6 +796,33 @@ function SignupView({
             className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
           />
         </div>
+        <div>
+          <label
+            htmlFor="op-signup-mobile"
+            className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+          >
+            Mobile Number{" "}
+            <span className="text-muted-foreground font-normal normal-case">
+              (OTP recovery ke liye)
+            </span>
+          </label>
+          <input
+            id="op-signup-mobile"
+            data-ocid="offer_portal.input"
+            type="tel"
+            inputMode="numeric"
+            placeholder="10-digit mobile (optional)"
+            value={mobile}
+            onChange={(e) =>
+              setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
+            }
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+            maxLength={10}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Agar password bhool jaao to OTP is number par aayega
+          </p>
+        </div>
         {errorMsg && (
           <p
             data-ocid="offer_portal.error_msg"
@@ -801,6 +862,314 @@ function SignupView({
           Login Karein
         </button>
       </p>
+    </motion.div>
+  );
+}
+
+// ─── Forgot Password ──────────────────────────────────────────────────────────
+
+async function sha256hex(pwd: string): Promise<string> {
+  const data = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function ForgotPasswordView({
+  onBack,
+  onSuccess,
+}: {
+  onBack: () => void;
+  onSuccess: () => void;
+}) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [otpSentMsg, setOtpSentMsg] = useState("");
+
+  const requestOtpMutation = useRequestOfferPasswordReset();
+  const resetPasswordMutation = useResetOfferPassword();
+
+  const handleRequestOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!email.trim()) {
+      setErrorMsg("Email daalo");
+      return;
+    }
+    requestOtpMutation.mutate(
+      { email: email.trim() },
+      {
+        onSuccess: () => {
+          setOtpSentMsg(
+            "OTP आपके registered mobile पर भेज दिया गया है। अगर SMS नहीं आया, तो Admin से संपर्क करें।",
+          );
+          setStep(2);
+        },
+        onError: (err) => {
+          setErrorMsg(
+            err instanceof Error
+              ? err.message
+              : "OTP bhejne mein problem hua. Dobara try karein.",
+          );
+        },
+      },
+    );
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!otp.trim() || otp.length !== 6) {
+      setErrorMsg("6-digit OTP daalo");
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setErrorMsg("Naya password kam se kam 6 characters ka hona chahiye");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg("Dono passwords match nahi karte");
+      return;
+    }
+    const hash = await sha256hex(newPassword);
+    resetPasswordMutation.mutate(
+      { email: email.trim(), otp: otp.trim(), newPasswordHash: hash },
+      {
+        onSuccess: () => {
+          toast.success(
+            "Password reset ho gaya! Ab naye password se login karein. ✅",
+          );
+          onSuccess();
+        },
+        onError: (err) => {
+          setErrorMsg(
+            err instanceof Error
+              ? err.message
+              : "Password reset fail hua. Dobara try karein.",
+          );
+        },
+      },
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -40 }}
+      transition={{ duration: 0.25 }}
+      className="flex-1 px-4 py-8 max-w-md mx-auto w-full"
+    >
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors"
+      >
+        <ArrowLeft size={15} /> Login par wapas jao
+      </button>
+
+      <div className="text-center mb-8">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <span className="text-2xl" aria-hidden>
+            🔑
+          </span>
+        </div>
+        <h2 className="font-heading font-bold text-2xl text-foreground">
+          Password Bhool Gaye?
+        </h2>
+        <p className="text-muted-foreground text-sm mt-1">
+          {step === 1
+            ? "Apni email daalo — OTP registered mobile par aayega"
+            : "OTP aur naya password daalo"}
+        </p>
+      </div>
+
+      {/* Step indicator */}
+      <div className="flex items-center justify-center gap-2 mb-7">
+        {[1, 2].map((s) => (
+          <div key={s} className="flex items-center gap-2">
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step === s
+                  ? "bg-emerald-600 text-white shadow-md"
+                  : step > s
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {step > s ? "✓" : s}
+            </div>
+            {s < 2 && (
+              <div
+                className={`w-12 h-0.5 rounded-full ${step > s ? "bg-emerald-400" : "bg-border"}`}
+              />
+            )}
+          </div>
+        ))}
+        <p className="sr-only">
+          Step {step} of 2: {step === 1 ? "Request OTP" : "Reset Password"}
+        </p>
+      </div>
+
+      {step === 1 ? (
+        <form onSubmit={handleRequestOtp} className="space-y-4">
+          <div>
+            <label
+              htmlFor="fp-email"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+            >
+              Registered Email
+            </label>
+            <input
+              id="fp-email"
+              data-ocid="offer_portal.forgot_password_email_input"
+              type="email"
+              placeholder="aapka@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+              autoComplete="email"
+              required
+            />
+          </div>
+          {errorMsg && (
+            <p
+              data-ocid="offer_portal.forgot_password.error_state"
+              className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+            >
+              {errorMsg}
+            </p>
+          )}
+          <button
+            type="submit"
+            data-ocid="offer_portal.forgot_password_send_otp_button"
+            disabled={requestOtpMutation.isPending}
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all disabled:opacity-60 text-sm shadow-md flex items-center justify-center gap-2"
+          >
+            {requestOtpMutation.isPending ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> OTP bhej raha
+                hai...
+              </>
+            ) : (
+              "OTP Bhejo →"
+            )}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          {otpSentMsg && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-start gap-2">
+              <span className="text-lg mt-0.5 flex-shrink-0" aria-hidden>
+                📱
+              </span>
+              <p className="text-emerald-800 text-xs leading-relaxed">
+                {otpSentMsg}
+              </p>
+            </div>
+          )}
+          <div>
+            <label
+              htmlFor="fp-otp"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+            >
+              OTP (6 digits)
+            </label>
+            <input
+              id="fp-otp"
+              data-ocid="offer_portal.forgot_password_otp_input"
+              type="text"
+              inputMode="numeric"
+              placeholder="6-digit OTP"
+              value={otp}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background tracking-widest font-mono text-center text-lg"
+              maxLength={6}
+              autoComplete="one-time-code"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="fp-newpwd"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+            >
+              Naya Password (min 6 chars)
+            </label>
+            <input
+              id="fp-newpwd"
+              data-ocid="offer_portal.forgot_password_new_password_input"
+              type="password"
+              placeholder="Strong password banayein"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+              autoComplete="new-password"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="fp-confirmpwd"
+              className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5"
+            >
+              Password Confirm Karein
+            </label>
+            <input
+              id="fp-confirmpwd"
+              data-ocid="offer_portal.forgot_password_confirm_password_input"
+              type="password"
+              placeholder="Dobara same password daalo"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+              autoComplete="new-password"
+            />
+          </div>
+          {errorMsg && (
+            <p
+              data-ocid="offer_portal.forgot_password.error_state"
+              className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+            >
+              {errorMsg}
+            </p>
+          )}
+          <button
+            type="submit"
+            data-ocid="offer_portal.forgot_password_reset_button"
+            disabled={resetPasswordMutation.isPending}
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all disabled:opacity-60 text-sm shadow-md flex items-center justify-center gap-2"
+          >
+            {resetPasswordMutation.isPending ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> Resetting...
+              </>
+            ) : (
+              "Password Reset Karein →"
+            )}
+          </button>
+          <button
+            type="button"
+            data-ocid="offer_portal.forgot_password_resend_otp_button"
+            onClick={() => {
+              setStep(1);
+              setOtp("");
+              setNewPassword("");
+              setConfirmPassword("");
+              setErrorMsg("");
+              setOtpSentMsg("");
+            }}
+            className="w-full text-primary text-sm font-medium hover:underline py-2"
+          >
+            OTP nahi aaya? Dobara request karein
+          </button>
+        </form>
+      )}
     </motion.div>
   );
 }
@@ -1105,6 +1474,33 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
           <ExternalLink size={14} />
           Share Referral Link
         </button>
+      </div>
+
+      {/* CPAGrip Offer Wall */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <CircleDollarSign size={15} className="text-emerald-600" />
+          <h3 className="font-bold text-foreground text-sm">
+            Available Offers
+          </h3>
+        </div>
+        <div className="rounded-2xl overflow-hidden border border-border shadow-sm bg-card">
+          <iframe
+            src="https://www.cpagrip.com/view.php?id=1889594"
+            style={{
+              width: "100%",
+              height: "600px",
+              border: "none",
+              borderRadius: "8px",
+            }}
+            title="CPAGrip Offer Wall"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground text-center px-2">
+          💡 Complete offers above to earn points. Earnings update within a few
+          minutes.
+        </p>
       </div>
 
       {/* Earnings List */}

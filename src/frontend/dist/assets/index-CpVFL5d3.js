@@ -38751,6 +38751,7 @@ const OfferUser = Record({
   "tier2Earnings": Nat,
   "passwordHash": Text,
   "totalEarnings": Nat,
+  "mobile": Opt(Text),
   "tier1Earnings": Nat
 });
 const OfferWithdrawal = Record({
@@ -39514,6 +39515,11 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "adminResetOfferPassword": Func(
+    [Text, Text, Text, Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "adminResolveWithdrawal": Func(
     [
       Nat,
@@ -39989,12 +39995,22 @@ Service({
     []
   ),
   "requestApproval": Func([], [], []),
+  "requestOfferPasswordReset": Func(
+    [Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "requestOfferWithdrawal": Func(
     [Nat, Text, Nat],
     [Nat],
     []
   ),
   "requestWalletTopup": Func([Float64, Text], [Nat], []),
+  "resetOfferPassword": Func(
+    [Text, Text, Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "saveCPAGripKeys": Func(
     [Opt(Text), Text, Text, Text],
     [Variant({ "ok": Null, "err": Text })],
@@ -40364,6 +40380,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "tier2Earnings": IDL2.Nat,
     "passwordHash": IDL2.Text,
     "totalEarnings": IDL2.Nat,
+    "mobile": IDL2.Opt(IDL2.Text),
     "tier1Earnings": IDL2.Nat
   });
   const OfferWithdrawal2 = IDL2.Record({
@@ -41121,6 +41138,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "adminResetOfferPassword": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "adminResolveWithdrawal": IDL2.Func(
       [
         IDL2.Nat,
@@ -41612,12 +41634,22 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "requestApproval": IDL2.Func([], [], []),
+    "requestOfferPasswordReset": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "requestOfferWithdrawal": IDL2.Func(
       [IDL2.Nat, IDL2.Text, IDL2.Nat],
       [IDL2.Nat],
       []
     ),
     "requestWalletTopup": IDL2.Func([IDL2.Float64, IDL2.Text], [IDL2.Nat], []),
+    "resetOfferPassword": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "saveCPAGripKeys": IDL2.Func(
       [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
@@ -42556,17 +42588,31 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
+  async adminResetOfferPassword(arg0, arg1, arg2, arg3) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async adminResolveWithdrawal(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n37(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n38(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n37(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n38(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
@@ -42601,14 +42647,14 @@ class Backend {
   async approveProvider(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n39(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n38(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n39(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
@@ -42629,14 +42675,14 @@ class Backend {
   async assignCallerUserRole(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n40(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n41(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n40(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n41(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -42755,14 +42801,14 @@ class Backend {
   async createListing(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n42(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n43(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n42(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n43(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42770,14 +42816,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.createUnlockPaymentIntent(arg0);
-        return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.createUnlockPaymentIntent(arg0);
-      return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async deleteBanner(arg0) {
@@ -44628,6 +44674,20 @@ class Backend {
       return result;
     }
   }
+  async requestOfferPasswordReset(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.requestOfferPasswordReset(arg0);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.requestOfferPasswordReset(arg0);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async requestOfferWithdrawal(arg0, arg1, arg2) {
     if (this.processError) {
       try {
@@ -44654,6 +44714,20 @@ class Backend {
     } else {
       const result = await this.actor.requestWalletTopup(arg0, arg1);
       return result;
+    }
+  }
+  async resetOfferPassword(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async saveCPAGripKeys(arg0, arg1, arg2, arg3) {
@@ -44842,14 +44916,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-        return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-      return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async setPaymentConfig(arg0) {
@@ -44912,14 +44986,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n172(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n172(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async toggleCustomSection(arg0, arg1) {
@@ -45430,14 +45504,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-        return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-      return from_candid_variant_n44(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async verifyAdminPin(arg0) {
@@ -45876,6 +45950,7 @@ function from_candid_record_n32(_uploadFile, _downloadFile, value) {
     tier2Earnings: value.tier2Earnings,
     passwordHash: value.passwordHash,
     totalEarnings: value.totalEarnings,
+    mobile: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mobile)),
     tier1Earnings: value.tier1Earnings
   };
 }
@@ -46158,7 +46233,7 @@ function from_candid_variant_n27(_uploadFile, _downloadFile, value) {
 function from_candid_variant_n36(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "paid" in value ? "paid" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : value;
 }
-function from_candid_variant_n44(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n37(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46275,8 +46350,8 @@ async function to_candid_ExternalBlob_n175(_uploadFile, _downloadFile, value) {
 function to_candid_LockType_n163(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n164(_uploadFile, _downloadFile, value);
 }
-function to_candid_MarketCategory_n42(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n43(_uploadFile, _downloadFile, value);
+function to_candid_MarketCategory_n43(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n44(_uploadFile, _downloadFile, value);
 }
 function to_candid_MessageType_n166(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n167(_uploadFile, _downloadFile, value);
@@ -46287,14 +46362,14 @@ function to_candid_PlanType_n170(_uploadFile, _downloadFile, value) {
 function to_candid_PremiumPlan_n8(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function to_candid_SubscriptionPlan_n38(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n39(_uploadFile, _downloadFile, value);
+function to_candid_SubscriptionPlan_n39(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n40(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserProfile_n160(_uploadFile, _downloadFile, value) {
   return to_candid_record_n161(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole__1_n40(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n41(_uploadFile, _downloadFile, value);
+function to_candid_UserRole__1_n41(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n42(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n152(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n153(_uploadFile, _downloadFile, value);
@@ -46312,7 +46387,7 @@ function to_candid_opt_n12(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_opt_n120(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n42(_uploadFile, _downloadFile, value));
+  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n43(_uploadFile, _downloadFile, value));
 }
 function to_candid_opt_n15(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
@@ -46412,7 +46487,7 @@ function to_candid_variant_n172(_uploadFile, _downloadFile, value) {
     last24h: null
   } : value;
 }
-function to_candid_variant_n37(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n38(_uploadFile, _downloadFile, value) {
   return value == "paid" ? {
     paid: null
   } : value == "approved" ? {
@@ -46421,7 +46496,7 @@ function to_candid_variant_n37(_uploadFile, _downloadFile, value) {
     rejected: null
   } : value;
 }
-function to_candid_variant_n39(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
   return value == "twelveMonths" ? {
     twelveMonths: null
   } : value == "threeMonths" ? {
@@ -46430,7 +46505,7 @@ function to_candid_variant_n39(_uploadFile, _downloadFile, value) {
     oneMonth: null
   } : value;
 }
-function to_candid_variant_n41(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n42(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -46439,7 +46514,7 @@ function to_candid_variant_n41(_uploadFile, _downloadFile, value) {
     guest: null
   } : value;
 }
-function to_candid_variant_n43(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n44(_uploadFile, _downloadFile, value) {
   return value == "vehicles" ? {
     vehicles: null
   } : value == "other" ? {
@@ -53046,6 +53121,518 @@ function PremiumAdminSection() {
       )
     ] })
   ] });
+}
+function requireActor(actor) {
+  if (!actor)
+    throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
+  return actor;
+}
+async function sha256hex$1(pwd) {
+  const data = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf)).map((b2) => b2.toString(16).padStart(2, "0")).join("");
+}
+function normalizeTxType(raw) {
+  const v2 = String(raw);
+  if (v2 === "cpalead") return "cpalead";
+  if (v2 === "referralBonus") return "referralBonus";
+  return "manualCredit";
+}
+function normalizeTxStatus(raw) {
+  const v2 = String(raw);
+  if (v2 === "credited") return "credited";
+  if (v2 === "reversed") return "reversed";
+  return "pending";
+}
+function normalizeWithdrawalStatus(raw) {
+  const v2 = String(raw);
+  if (v2 === "approved") return "approved";
+  if (v2 === "rejected") return "rejected";
+  if (v2 === "paid") return "paid";
+  return "pending";
+}
+function mapBackendOfferUser(raw) {
+  return {
+    id: raw.id,
+    userId: raw.userId,
+    email: raw.email,
+    passwordHash: raw.passwordHash ?? "",
+    referralCode: raw.referralCode,
+    referredBy: raw.referredBy,
+    totalEarnings: raw.totalEarnings,
+    pendingEarnings: raw.pendingEarnings,
+    createdAt: raw.createdAt
+  };
+}
+function useOfferPortalConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["offerPortalConfig"],
+    queryFn: async () => {
+      const defaultConfig = {
+        isEnabled: true,
+        cpaLeadWebhookSecret: "",
+        cpagripApiKey: "",
+        adminProfitPct: 60n,
+        userProfitPct: 40n
+      };
+      if (!actor) return defaultConfig;
+      try {
+        const pub = await actor.getOfferPortalConfigPublic();
+        const base = {
+          isEnabled: pub.isEnabled,
+          cpaLeadWebhookSecret: "",
+          cpagripApiKey: "",
+          adminProfitPct: pub.adminProfitPct,
+          userProfitPct: pub.userProfitPct
+        };
+        try {
+          const fullResult = await actor.getOfferPortalConfigFull();
+          if (fullResult && fullResult.__kind__ === "ok" && fullResult.ok) {
+            const full = fullResult.ok;
+            return {
+              isEnabled: full.isEnabled,
+              cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
+              cpagripApiKey: full.cpagripApiKey ?? "",
+              cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
+              cpagripOfferWallName: full.cpagripOfferWallName ?? "",
+              adminProfitPct: full.adminProfitPct,
+              userProfitPct: full.userProfitPct
+            };
+          }
+        } catch {
+        }
+        return base;
+      } catch {
+        return defaultConfig;
+      }
+    },
+    enabled: !isFetching,
+    refetchInterval: 6e4,
+    staleTime: 3e4,
+    retry: false
+  });
+}
+function useOfferEarningsSummary(offerUserId) {
+  const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
+  return useQuery({
+    queryKey: ["offerEarningsSummary", offerUserId == null ? void 0 : offerUserId.toString()],
+    queryFn: async () => {
+      const empty = {
+        totalEarnings: 0n,
+        pendingEarnings: 0n,
+        referralCode: "",
+        tier1Earnings: 0n,
+        tier2Earnings: 0n,
+        tier3Earnings: 0n,
+        tier4Earnings: 0n,
+        tier5Earnings: 0n
+      };
+      if (!actor || offerUserId == null) return empty;
+      try {
+        const raw = await requireActor(actor).getOfferEarningsSummary(offerUserId);
+        return {
+          totalEarnings: raw.totalEarnings,
+          pendingEarnings: raw.pendingEarnings,
+          referralCode: raw.referralCode,
+          tier1Earnings: raw.tier1Earnings ?? 0n,
+          tier2Earnings: raw.tier2Earnings ?? 0n,
+          tier3Earnings: raw.tier3Earnings ?? 0n,
+          tier4Earnings: raw.tier4Earnings ?? 0n,
+          tier5Earnings: raw.tier5Earnings ?? 0n
+        };
+      } catch {
+        return empty;
+      }
+    },
+    enabled,
+    refetchInterval: enabled ? 1e4 : false,
+    staleTime: 8e3
+  });
+}
+function useMyOfferTransactions(offerUserId) {
+  const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
+  return useQuery({
+    queryKey: ["myOfferTransactions", offerUserId == null ? void 0 : offerUserId.toString()],
+    queryFn: async () => {
+      if (!actor || offerUserId == null) return [];
+      try {
+        const raw = await requireActor(actor).getMyOfferTransactions(offerUserId);
+        return raw.map((t) => ({
+          id: t.id,
+          offerUserId: t.offerUserId,
+          txType: normalizeTxType(t.txType),
+          amount: t.amount,
+          description: t.description,
+          createdAt: t.createdAt,
+          status: normalizeTxStatus(t.status)
+        }));
+      } catch {
+        return [];
+      }
+    },
+    enabled,
+    refetchInterval: enabled ? 15e3 : false,
+    staleTime: 1e4
+  });
+}
+function useMyOfferWithdrawals(offerUserId) {
+  const { actor, isFetching } = useActor();
+  const enabled = !!actor && !isFetching && offerUserId != null;
+  return useQuery({
+    queryKey: ["myOfferWithdrawals", offerUserId == null ? void 0 : offerUserId.toString()],
+    queryFn: async () => {
+      if (!actor || offerUserId == null) return [];
+      try {
+        const raw = await requireActor(actor).getMyOfferWithdrawals(offerUserId);
+        return raw.map((w2) => ({
+          id: w2.id,
+          offerUserId: w2.offerUserId,
+          upiId: w2.upiId,
+          amount: w2.amount,
+          status: normalizeWithdrawalStatus(w2.status),
+          requestedAt: w2.requestedAt,
+          processedAt: w2.processedAt,
+          adminNote: w2.adminNote
+        }));
+      } catch {
+        return [];
+      }
+    },
+    enabled,
+    refetchInterval: enabled ? 15e3 : false,
+    staleTime: 1e4
+  });
+}
+function useRegisterOfferUser() {
+  const { actor } = useActor();
+  const { login } = useOfferAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      email,
+      password,
+      referralCode,
+      mobile
+    }) => {
+      const a2 = requireActor(actor);
+      const hash = await sha256hex$1(password);
+      try {
+        let regResult;
+        try {
+          if (mobile) {
+            regResult = await a2.registerOfferUser(
+              email,
+              hash,
+              referralCode ?? null,
+              mobile
+            );
+          } else {
+            regResult = await a2.registerOfferUser(
+              email,
+              hash,
+              referralCode ?? null
+            );
+          }
+        } catch {
+          regResult = await a2.registerOfferUser(
+            email,
+            hash,
+            referralCode ?? null
+          );
+        }
+        if (regResult && typeof regResult === "object" && "__kind__" in regResult && regResult.__kind__ === "err") {
+          const errMsg = regResult.err ?? "";
+          const lower = errMsg.toLowerCase();
+          if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
+            throw new Error("already_registered");
+          }
+          throw new Error(
+            "Registration mein kuch problem hua, dobara try karein"
+          );
+        }
+      } catch (err) {
+        const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
+        const lower = raw.toLowerCase();
+        if (raw === "already_registered") throw err;
+        if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
+          throw new Error("already_registered");
+        }
+        throw new Error(
+          lower.includes("actor") || lower.includes("canister") || lower.includes("method not found") ? "Service temporarily unavailable. Please try again." : "Registration mein kuch problem hua, dobara try karein"
+        );
+      }
+      try {
+        const loginResult = await a2.loginOfferUser(email, hash);
+        if (loginResult && typeof loginResult === "object" && "__kind__" in loginResult) {
+          if (loginResult.__kind__ === "ok") {
+            return mapBackendOfferUser(
+              loginResult.ok
+            );
+          }
+          throw new Error(
+            loginResult.err ?? "Login failed"
+          );
+        }
+        return mapBackendOfferUser(
+          loginResult
+        );
+      } catch (err) {
+        throw new Error(mapOfferLoginError(err));
+      }
+    },
+    onSuccess: (user) => {
+      login(user);
+      qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      if (msg === "already_registered" || msg.toLowerCase().includes("already")) {
+        ue.error("Yeh email pehle se register hai — Login karein");
+      } else {
+        ue.error(
+          msg || "Registration mein kuch problem hua, dobara try karein"
+        );
+      }
+    }
+  });
+}
+function mapOfferLoginError(err) {
+  const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+  if (lower.includes("ic0.trap") || lower.includes("reject code: 5") || lower.includes("reject code 5") || lower.includes("canister trapped") || lower.includes("trapped explicitly") || lower.includes("wrong") || lower.includes("galat") || lower.includes("invalid") || lower.includes("incorrect") || lower.includes("password") || lower.includes("mismatch")) {
+    return "Email ya password galat hai. Dobara try karein.";
+  }
+  if (lower.includes("not found") || lower.includes("no user") || lower.includes("does not exist")) {
+    return "Yeh email register nahi hai. Pehle sign up karein.";
+  }
+  if (/-[a-z0-9]+-cai/i.test(raw)) {
+    return "Connection error, please try again";
+  }
+  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("network error")) {
+    return "Backend se connect nahi ho pa raha — thoda wait karein";
+  }
+  if (lower.includes("timeout") || lower.includes("timed out")) {
+    return "Connection timeout — please try again";
+  }
+  if (lower.includes("actor") || lower.includes("canister") || lower.includes("method not found")) {
+    return "Service temporarily unavailable. Please try again.";
+  }
+  return "Email ya password galat hai. Dobara try karein.";
+}
+function useLoginOfferUser() {
+  const { actor } = useActor();
+  const { login } = useOfferAuth();
+  return useMutation({
+    mutationFn: async ({
+      email,
+      password
+    }) => {
+      const a2 = requireActor(actor);
+      const hash = await sha256hex$1(password);
+      try {
+        const result = await a2.loginOfferUser(email, hash);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if (result.__kind__ === "ok") {
+            return mapBackendOfferUser(
+              result.ok
+            );
+          }
+          throw new Error(result.err ?? "Login failed");
+        }
+        return mapBackendOfferUser(
+          result
+        );
+      } catch (err) {
+        throw new Error(mapOfferLoginError(err));
+      }
+    },
+    onSuccess: (user) => {
+      login(user);
+    },
+    onError: (err) => {
+      const msg = mapOfferLoginError(err);
+      ue.error(msg);
+    }
+  });
+}
+function useRequestOfferWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      offerUserId,
+      upiId,
+      amount
+    }) => {
+      return requireActor(actor).requestOfferWithdrawal(
+        offerUserId,
+        upiId,
+        amount
+      );
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({
+        queryKey: ["myOfferWithdrawals", vars.offerUserId.toString()]
+      });
+      qc.invalidateQueries({
+        queryKey: ["offerEarningsSummary", vars.offerUserId.toString()]
+      });
+    }
+  });
+}
+function useRequestOfferPasswordReset() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({ email }) => {
+      const a2 = requireActor(actor);
+      try {
+        const result = await a2.requestOfferPasswordReset(email);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if (result.__kind__ === "err") {
+            const errMsg = result.err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (lower.includes("not found") || lower.includes("no user") || lower.includes("does not exist")) {
+              throw new Error(
+                "Yeh email register nahi hai. Pehle sign up karein."
+              );
+            }
+            throw new Error(
+              errMsg || "OTP bhejne mein problem hua. Dobara try karein."
+            );
+          }
+        }
+      } catch (err) {
+        const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("method not found") || lower.includes("no update method")) {
+          throw new Error(
+            "OTP service abhi available nahi hai. Admin se contact karein."
+          );
+        }
+        if (lower.includes("not found") || lower.includes("no user") || lower.includes("does not exist")) {
+          throw new Error("Yeh email register nahi hai. Pehle sign up karein.");
+        }
+        if (lower.includes("actor") || lower.includes("canister")) {
+          throw new Error("Service temporarily unavailable. Please try again.");
+        }
+        throw err;
+      }
+    },
+    onError: (err) => {
+      ue.error(
+        err instanceof Error ? err.message : "OTP request fail hua. Dobara try karein."
+      );
+    }
+  });
+}
+function useResetOfferPassword() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      email,
+      otp,
+      newPasswordHash
+    }) => {
+      const a2 = requireActor(actor);
+      try {
+        const result = await a2.resetOfferPassword(email, otp, newPasswordHash);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if (result.__kind__ === "err") {
+            const errMsg = result.err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (lower.includes("expired") || lower.includes("expire")) {
+              throw new Error("OTP expire ho gaya, dobara request karein");
+            }
+            if (lower.includes("invalid") || lower.includes("wrong") || lower.includes("mismatch") || lower.includes("incorrect")) {
+              throw new Error("OTP galat hai, fir koshish karein");
+            }
+            if (lower.includes("too many") || lower.includes("limit") || lower.includes("attempts")) {
+              throw new Error("Bahut zyada koshish, naya OTP request karein");
+            }
+            throw new Error(
+              errMsg || "Password reset fail hua. Dobara try karein."
+            );
+          }
+        }
+      } catch (err) {
+        const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("method not found") || lower.includes("no update method")) {
+          throw new Error(
+            "Reset service abhi available nahi hai. Admin se contact karein."
+          );
+        }
+        if (lower.includes("expired") || lower.includes("expire")) {
+          throw new Error("OTP expire ho gaya, dobara request karein");
+        }
+        if (lower.includes("invalid") || lower.includes("wrong") || lower.includes("mismatch") || lower.includes("incorrect")) {
+          throw new Error("OTP galat hai, fir koshish karein");
+        }
+        if (lower.includes("too many") || lower.includes("limit") || lower.includes("attempts")) {
+          throw new Error("Bahut zyada koshish, naya OTP request karein");
+        }
+        throw err;
+      }
+    },
+    onError: (err) => {
+      ue.error(
+        err instanceof Error ? err.message : "Password reset fail hua. Dobara try karein."
+      );
+    }
+  });
+}
+function useAdminResetOfferUserPassword() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      targetEmail,
+      newPasswordHash
+    }) => {
+      if (!actor)
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein"
+        );
+      try {
+        const result = await actor.adminResetOfferPassword(
+          getAdminToken(),
+          targetEmail,
+          newPasswordHash
+        );
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if (result.__kind__ === "err") {
+            const errMsg = result.err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (lower.includes("unauthorized"))
+              throw new Error("Admin permission required.");
+            if (lower.includes("not found")) throw new Error("User nahi mila.");
+            throw new Error(errMsg || "Password reset fail hua.");
+          }
+        }
+      } catch (err) {
+        const msg = (err == null ? void 0 : err.message) ?? String(err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("method not found") || lower.includes("no update method")) {
+          throw new Error(
+            "Admin reset service abhi available nahi hai. Canister upgrade karein."
+          );
+        }
+        if (lower.includes("unauthorized"))
+          throw new Error("Admin permission required.");
+        throw new Error(msg);
+      }
+    },
+    onSuccess: () => {
+      ue.success("Password reset ho gaya ✅");
+    },
+    onError: (err) => {
+      ue.error(
+        err instanceof Error ? err.message : "Password reset fail hua. Dobara try karein."
+      );
+    }
+  });
 }
 const ERROR_MAP = [
   {
@@ -62748,6 +63335,7 @@ function OfferSystemToggleTab() {
     load();
   }, [actor]);
   const handleToggle = async () => {
+    var _a3, _b3, _c2;
     setSaving(true);
     try {
       const next = !isEnabled;
@@ -62756,6 +63344,8 @@ function OfferSystemToggleTab() {
         let currentCpaKey = "";
         let currentAdminPct = BigInt(60);
         let currentUserPct = BigInt(40);
+        let currentCpagripWebhookSecret = "";
+        let currentCpagripOfferWallName = "Digital Zindagi Offers";
         try {
           const fullResult = await actor.getOfferPortalConfigFull();
           if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
@@ -62773,14 +63363,24 @@ function OfferSystemToggleTab() {
           } catch {
           }
         }
+        try {
+          const adminToken = sessionStorage.getItem("dz_admin_token");
+          const cpagripData = await actor.getCpagripSettings(adminToken);
+          currentCpagripWebhookSecret = ((_a3 = cpagripData.webhookSecret) == null ? void 0 : _a3.trim()) ?? "";
+          currentCpagripOfferWallName = ((_b3 = cpagripData.offerWallName) == null ? void 0 : _b3.trim()) || "Digital Zindagi Offers";
+          if ((_c2 = cpagripData.apiKey) == null ? void 0 : _c2.trim()) {
+            currentCpaKey = cpagripData.apiKey.trim();
+          }
+        } catch {
+        }
         const ok = await actor.updateOfferPortalConfig(
           next,
           currentSecret,
           currentCpaKey,
           currentAdminPct,
           currentUserPct,
-          "",
-          ""
+          currentCpagripWebhookSecret,
+          currentCpagripOfferWallName
         );
         if (ok && typeof ok === "object" && "__kind__" in ok && ok.__kind__ === "err") {
           ue.error("Setting save nahi ho saki");
@@ -62938,8 +63538,7 @@ function OfferApiKeysTab() {
     };
     load();
   }, [actor]);
-  const canisterId = typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "your-canister-id";
-  const postbackUrl = `https://${canisterId}.icp0.io/cpalead-postback`;
+  const postbackUrl = `${window.location.protocol}//${window.location.host}/cpalead-postback`;
   const handleSave = async () => {
     var _a3, _b3, _c2;
     const savedWebhookSecret = webhookSecret.trim();
@@ -63516,6 +64115,11 @@ function OfferUserListTab() {
   const [users, setUsers] = reactExports.useState([]);
   const [loading, setLoading] = reactExports.useState(true);
   const [search, setSearch] = reactExports.useState("");
+  const [resetTarget, setResetTarget] = reactExports.useState(null);
+  const [newPwd, setNewPwd] = reactExports.useState("");
+  const [confirmPwd, setConfirmPwd] = reactExports.useState("");
+  const [resetError, setResetError] = reactExports.useState("");
+  const adminResetMutation = useAdminResetOfferUserPassword();
   reactExports.useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -63543,6 +64147,43 @@ function OfferUserListTab() {
     (s2, u2) => s2 + Number(u2.pendingEarnings ?? 0n),
     0
   );
+  const handleOpenReset = (email) => {
+    setResetTarget(email);
+    setNewPwd("");
+    setConfirmPwd("");
+    setResetError("");
+  };
+  const handleCancelReset = () => {
+    setResetTarget(null);
+    setNewPwd("");
+    setConfirmPwd("");
+    setResetError("");
+  };
+  const handleAdminReset = async (e) => {
+    e.preventDefault();
+    setResetError("");
+    if (!newPwd || newPwd.length < 6) {
+      setResetError("Password kam se kam 6 characters ka hona chahiye");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setResetError("Dono passwords match nahi karte");
+      return;
+    }
+    if (!resetTarget) return;
+    const hash = await hashPassword(newPwd);
+    adminResetMutation.mutate(
+      { targetEmail: resetTarget, newPasswordHash: hash },
+      {
+        onSuccess: () => {
+          handleCancelReset();
+        },
+        onError: (err) => {
+          setResetError(err instanceof Error ? err.message : "Reset fail hua.");
+        }
+      }
+    );
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-3 gap-3", children: [
       {
@@ -63608,29 +64249,130 @@ function OfferUserListTab() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell", children: "User ID" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-4 py-3 font-semibold whitespace-nowrap", children: "Total Earned" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-4 py-3 font-semibold whitespace-nowrap", children: "Pending" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-4 py-3 font-semibold whitespace-nowrap hidden md:table-cell", children: "Withdrawals" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-4 py-3 font-semibold whitespace-nowrap", children: "Actions" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: filtered.map((u2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "tr",
-        {
-          "data-ocid": `offer.user_row.${i + 1}`,
-          className: "border-t border-border hover:bg-muted/30 transition-colors",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 font-medium truncate max-w-[180px]", children: u2.email }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 hidden sm:table-cell", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-mono font-semibold", children: u2.userId }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-4 py-3 text-right font-bold text-emerald-700", children: [
-              "₹",
-              (Number(u2.totalEarnings ?? 0n) / 100).toFixed(2)
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-4 py-3 text-right font-medium text-yellow-600", children: [
-              "₹",
-              (Number(u2.pendingEarnings ?? 0n) / 100).toFixed(2)
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 text-right text-muted-foreground hidden md:table-cell", children: "—" })
-          ]
-        },
-        String(u2.id)
-      )) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: filtered.map((u2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "tr",
+          {
+            "data-ocid": `offer.user_row.${i + 1}`,
+            className: "border-t border-border hover:bg-muted/30 transition-colors",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 font-medium truncate max-w-[180px]", children: u2.email }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 hidden sm:table-cell", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-mono font-semibold", children: u2.userId }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-4 py-3 text-right font-bold text-emerald-700", children: [
+                "₹",
+                (Number(u2.totalEarnings ?? 0n) / 100).toFixed(2)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-4 py-3 text-right font-medium text-yellow-600", children: [
+                "₹",
+                (Number(u2.pendingEarnings ?? 0n) / 100).toFixed(2)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  "data-ocid": `offer.user_reset_password_button.${i + 1}`,
+                  onClick: () => resetTarget === u2.email ? handleCancelReset() : handleOpenReset(u2.email),
+                  className: "text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors whitespace-nowrap",
+                  children: resetTarget === u2.email ? "Cancel" : "Reset Password"
+                }
+              ) })
+            ]
+          },
+          String(u2.id)
+        ),
+        resetTarget === u2.email && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "tr",
+          {
+            className: "border-t border-amber-200 bg-amber-50/60",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("td", { colSpan: 5, className: "px-4 py-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "form",
+              {
+                onSubmit: handleAdminReset,
+                className: "flex flex-col gap-2 max-w-md",
+                "data-ocid": `offer.user_reset_password_form.${i + 1}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs font-semibold text-amber-800 mb-1", children: [
+                    "🔑 Reset password for:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: u2.email })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        type: "password",
+                        "data-ocid": `offer.user_reset_new_password_input.${i + 1}`,
+                        placeholder: "Naya password (min 6)",
+                        value: newPwd,
+                        onChange: (e) => setNewPwd(e.target.value),
+                        className: "flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-background min-w-0",
+                        autoComplete: "new-password",
+                        required: true
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        type: "password",
+                        "data-ocid": `offer.user_reset_confirm_password_input.${i + 1}`,
+                        placeholder: "Confirm password",
+                        value: confirmPwd,
+                        onChange: (e) => setConfirmPwd(e.target.value),
+                        className: "flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-background min-w-0",
+                        autoComplete: "new-password",
+                        required: true
+                      }
+                    )
+                  ] }),
+                  resetError && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      "data-ocid": `offer.user_reset_error_state.${i + 1}`,
+                      className: "text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-1.5",
+                      children: resetError
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "submit",
+                        "data-ocid": `offer.user_reset_confirm_button.${i + 1}`,
+                        disabled: adminResetMutation.isPending,
+                        className: "flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60",
+                        children: adminResetMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            LoaderCircle,
+                            {
+                              size: 12,
+                              className: "animate-spin"
+                            }
+                          ),
+                          " ",
+                          "Resetting..."
+                        ] }) : "Reset Karein"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        "data-ocid": `offer.user_reset_cancel_button.${i + 1}`,
+                        onClick: handleCancelReset,
+                        className: "text-xs font-medium px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors",
+                        children: "Cancel"
+                      }
+                    )
+                  ] })
+                ]
+              }
+            ) })
+          },
+          `reset-${String(u2.id)}`
+        )
+      ] })) })
     ] }) }) })
   ] });
 }
@@ -81728,348 +82470,6 @@ function NewsPage() {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Footer, {})
   ] });
 }
-function requireActor(actor) {
-  if (!actor)
-    throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
-  return actor;
-}
-async function sha256hex(pwd) {
-  const data = new TextEncoder().encode(pwd);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf)).map((b2) => b2.toString(16).padStart(2, "0")).join("");
-}
-function normalizeTxType(raw) {
-  const v2 = String(raw);
-  if (v2 === "cpalead") return "cpalead";
-  if (v2 === "referralBonus") return "referralBonus";
-  return "manualCredit";
-}
-function normalizeTxStatus(raw) {
-  const v2 = String(raw);
-  if (v2 === "credited") return "credited";
-  if (v2 === "reversed") return "reversed";
-  return "pending";
-}
-function normalizeWithdrawalStatus(raw) {
-  const v2 = String(raw);
-  if (v2 === "approved") return "approved";
-  if (v2 === "rejected") return "rejected";
-  if (v2 === "paid") return "paid";
-  return "pending";
-}
-function mapBackendOfferUser(raw) {
-  return {
-    id: raw.id,
-    userId: raw.userId,
-    email: raw.email,
-    passwordHash: raw.passwordHash ?? "",
-    referralCode: raw.referralCode,
-    referredBy: raw.referredBy,
-    totalEarnings: raw.totalEarnings,
-    pendingEarnings: raw.pendingEarnings,
-    createdAt: raw.createdAt
-  };
-}
-function useOfferPortalConfig() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["offerPortalConfig"],
-    queryFn: async () => {
-      const defaultConfig = {
-        isEnabled: true,
-        cpaLeadWebhookSecret: "",
-        cpagripApiKey: "",
-        adminProfitPct: 60n,
-        userProfitPct: 40n
-      };
-      if (!actor) return defaultConfig;
-      try {
-        const pub = await actor.getOfferPortalConfigPublic();
-        const base = {
-          isEnabled: pub.isEnabled,
-          cpaLeadWebhookSecret: "",
-          cpagripApiKey: "",
-          adminProfitPct: pub.adminProfitPct,
-          userProfitPct: pub.userProfitPct
-        };
-        try {
-          const fullResult = await actor.getOfferPortalConfigFull();
-          if (fullResult && fullResult.__kind__ === "ok" && fullResult.ok) {
-            const full = fullResult.ok;
-            return {
-              isEnabled: full.isEnabled,
-              cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
-              cpagripApiKey: full.cpagripApiKey ?? "",
-              cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
-              cpagripOfferWallName: full.cpagripOfferWallName ?? "",
-              adminProfitPct: full.adminProfitPct,
-              userProfitPct: full.userProfitPct
-            };
-          }
-        } catch {
-        }
-        return base;
-      } catch {
-        return defaultConfig;
-      }
-    },
-    enabled: !isFetching,
-    refetchInterval: 6e4,
-    staleTime: 3e4,
-    retry: false
-  });
-}
-function useOfferEarningsSummary(offerUserId) {
-  const { actor, isFetching } = useActor();
-  const enabled = !!actor && !isFetching && offerUserId != null;
-  return useQuery({
-    queryKey: ["offerEarningsSummary", offerUserId == null ? void 0 : offerUserId.toString()],
-    queryFn: async () => {
-      const empty = {
-        totalEarnings: 0n,
-        pendingEarnings: 0n,
-        referralCode: "",
-        tier1Earnings: 0n,
-        tier2Earnings: 0n,
-        tier3Earnings: 0n,
-        tier4Earnings: 0n,
-        tier5Earnings: 0n
-      };
-      if (!actor || offerUserId == null) return empty;
-      try {
-        const raw = await requireActor(actor).getOfferEarningsSummary(offerUserId);
-        return {
-          totalEarnings: raw.totalEarnings,
-          pendingEarnings: raw.pendingEarnings,
-          referralCode: raw.referralCode,
-          tier1Earnings: raw.tier1Earnings ?? 0n,
-          tier2Earnings: raw.tier2Earnings ?? 0n,
-          tier3Earnings: raw.tier3Earnings ?? 0n,
-          tier4Earnings: raw.tier4Earnings ?? 0n,
-          tier5Earnings: raw.tier5Earnings ?? 0n
-        };
-      } catch {
-        return empty;
-      }
-    },
-    enabled,
-    refetchInterval: enabled ? 1e4 : false,
-    staleTime: 8e3
-  });
-}
-function useMyOfferTransactions(offerUserId) {
-  const { actor, isFetching } = useActor();
-  const enabled = !!actor && !isFetching && offerUserId != null;
-  return useQuery({
-    queryKey: ["myOfferTransactions", offerUserId == null ? void 0 : offerUserId.toString()],
-    queryFn: async () => {
-      if (!actor || offerUserId == null) return [];
-      try {
-        const raw = await requireActor(actor).getMyOfferTransactions(offerUserId);
-        return raw.map((t) => ({
-          id: t.id,
-          offerUserId: t.offerUserId,
-          txType: normalizeTxType(t.txType),
-          amount: t.amount,
-          description: t.description,
-          createdAt: t.createdAt,
-          status: normalizeTxStatus(t.status)
-        }));
-      } catch {
-        return [];
-      }
-    },
-    enabled,
-    refetchInterval: enabled ? 15e3 : false,
-    staleTime: 1e4
-  });
-}
-function useMyOfferWithdrawals(offerUserId) {
-  const { actor, isFetching } = useActor();
-  const enabled = !!actor && !isFetching && offerUserId != null;
-  return useQuery({
-    queryKey: ["myOfferWithdrawals", offerUserId == null ? void 0 : offerUserId.toString()],
-    queryFn: async () => {
-      if (!actor || offerUserId == null) return [];
-      try {
-        const raw = await requireActor(actor).getMyOfferWithdrawals(offerUserId);
-        return raw.map((w2) => ({
-          id: w2.id,
-          offerUserId: w2.offerUserId,
-          upiId: w2.upiId,
-          amount: w2.amount,
-          status: normalizeWithdrawalStatus(w2.status),
-          requestedAt: w2.requestedAt,
-          processedAt: w2.processedAt,
-          adminNote: w2.adminNote
-        }));
-      } catch {
-        return [];
-      }
-    },
-    enabled,
-    refetchInterval: enabled ? 15e3 : false,
-    staleTime: 1e4
-  });
-}
-function useRegisterOfferUser() {
-  const { actor } = useActor();
-  const { login } = useOfferAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      email,
-      password,
-      referralCode
-    }) => {
-      const a2 = requireActor(actor);
-      const hash = await sha256hex(password);
-      try {
-        const regResult = await a2.registerOfferUser(
-          email,
-          hash,
-          referralCode ?? null
-        );
-        if (regResult && typeof regResult === "object" && "__kind__" in regResult && regResult.__kind__ === "err") {
-          const errMsg = regResult.err ?? "";
-          const lower = errMsg.toLowerCase();
-          if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
-            throw new Error("already_registered");
-          }
-          throw new Error(
-            "Registration mein kuch problem hua, dobara try karein"
-          );
-        }
-      } catch (err) {
-        const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
-        const lower = raw.toLowerCase();
-        if (raw === "already_registered") throw err;
-        if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
-          throw new Error("already_registered");
-        }
-        throw new Error(
-          lower.includes("actor") || lower.includes("canister") || lower.includes("method not found") ? "Service temporarily unavailable. Please try again." : "Registration mein kuch problem hua, dobara try karein"
-        );
-      }
-      try {
-        const loginResult = await a2.loginOfferUser(email, hash);
-        if (loginResult && typeof loginResult === "object" && "__kind__" in loginResult) {
-          if (loginResult.__kind__ === "ok") {
-            return mapBackendOfferUser(
-              loginResult.ok
-            );
-          }
-          throw new Error(
-            loginResult.err ?? "Login failed"
-          );
-        }
-        return mapBackendOfferUser(
-          loginResult
-        );
-      } catch (err) {
-        throw new Error(mapOfferLoginError(err));
-      }
-    },
-    onSuccess: (user) => {
-      login(user);
-      qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
-    },
-    onError: (err) => {
-      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      if (msg === "already_registered" || msg.toLowerCase().includes("already")) {
-        ue.error("Yeh email pehle se register hai — Login karein");
-      } else {
-        ue.error(
-          msg || "Registration mein kuch problem hua, dobara try karein"
-        );
-      }
-    }
-  });
-}
-function mapOfferLoginError(err) {
-  const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
-  const lower = raw.toLowerCase();
-  if (lower.includes("ic0.trap") || lower.includes("reject code: 5") || lower.includes("reject code 5") || lower.includes("canister trapped") || lower.includes("trapped explicitly") || lower.includes("wrong") || lower.includes("galat") || lower.includes("invalid") || lower.includes("incorrect") || lower.includes("password") || lower.includes("mismatch")) {
-    return "Email ya password galat hai. Dobara try karein.";
-  }
-  if (lower.includes("not found") || lower.includes("no user") || lower.includes("does not exist")) {
-    return "Yeh email register nahi hai. Pehle sign up karein.";
-  }
-  if (/-[a-z0-9]+-cai/i.test(raw)) {
-    return "Connection error, please try again";
-  }
-  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("network error")) {
-    return "Backend se connect nahi ho pa raha — thoda wait karein";
-  }
-  if (lower.includes("timeout") || lower.includes("timed out")) {
-    return "Connection timeout — please try again";
-  }
-  if (lower.includes("actor") || lower.includes("canister") || lower.includes("method not found")) {
-    return "Service temporarily unavailable. Please try again.";
-  }
-  return "Email ya password galat hai. Dobara try karein.";
-}
-function useLoginOfferUser() {
-  const { actor } = useActor();
-  const { login } = useOfferAuth();
-  return useMutation({
-    mutationFn: async ({
-      email,
-      password
-    }) => {
-      const a2 = requireActor(actor);
-      const hash = await sha256hex(password);
-      try {
-        const result = await a2.loginOfferUser(email, hash);
-        if (result && typeof result === "object" && "__kind__" in result) {
-          if (result.__kind__ === "ok") {
-            return mapBackendOfferUser(
-              result.ok
-            );
-          }
-          throw new Error(result.err ?? "Login failed");
-        }
-        return mapBackendOfferUser(
-          result
-        );
-      } catch (err) {
-        throw new Error(mapOfferLoginError(err));
-      }
-    },
-    onSuccess: (user) => {
-      login(user);
-    },
-    onError: (err) => {
-      const msg = mapOfferLoginError(err);
-      ue.error(msg);
-    }
-  });
-}
-function useRequestOfferWithdrawal() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      offerUserId,
-      upiId,
-      amount
-    }) => {
-      return requireActor(actor).requestOfferWithdrawal(
-        offerUserId,
-        upiId,
-        amount
-      );
-    },
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({
-        queryKey: ["myOfferWithdrawals", vars.offerUserId.toString()]
-      });
-      qc.invalidateQueries({
-        queryKey: ["offerEarningsSummary", vars.offerUserId.toString()]
-      });
-    }
-  });
-}
 function formatRupees(amount) {
   return `₹${(Number(amount) / 100).toFixed(2)}`;
 }
@@ -82238,7 +82638,8 @@ function OfferPortalPage() {
         {
           onSuccess: () => setView("dashboard"),
           onSignup: () => setView("signup"),
-          onBack: () => setView("landing")
+          onBack: () => setView("landing"),
+          onForgotPassword: () => setView("forgotPassword")
         },
         "login"
       ),
@@ -82250,6 +82651,14 @@ function OfferPortalPage() {
           onBack: () => setView("landing")
         },
         "signup"
+      ),
+      view === "forgotPassword" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ForgotPasswordView,
+        {
+          onBack: () => setView("login"),
+          onSuccess: () => setView("login")
+        },
+        "forgotPassword"
       ),
       view === "dashboard" && currentOfferUser && /* @__PURE__ */ jsxRuntimeExports.jsx(DashboardView, { onRedeem: () => setView("redeem") }, "dashboard"),
       view === "redeem" && currentOfferUser && /* @__PURE__ */ jsxRuntimeExports.jsx(RedeemView, { onBack: () => setView("dashboard") }, "redeem")
@@ -82401,7 +82810,8 @@ function LandingView({
 function LoginView({
   onSuccess,
   onSignup,
-  onBack
+  onBack,
+  onForgotPassword
 }) {
   const [email, setEmail] = reactExports.useState("");
   const [password, setPassword] = reactExports.useState("");
@@ -82509,7 +82919,17 @@ function LoginView({
                 autoComplete: "current-password",
                 required: true
               }
-            )
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-end mt-1.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                "data-ocid": "offer_portal.forgot_password_link",
+                onClick: onForgotPassword,
+                className: "text-xs text-primary hover:underline font-medium",
+                children: "Forgot Password?"
+              }
+            ) })
           ] }),
           errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
@@ -82561,6 +82981,7 @@ function SignupView({
 }) {
   const [email, setEmail] = reactExports.useState("");
   const [password, setPassword] = reactExports.useState("");
+  const [mobile, setMobile] = reactExports.useState("");
   const [errorMsg, setErrorMsg] = reactExports.useState("");
   const [referralCode, setReferralCode] = reactExports.useState(() => {
     try {
@@ -82583,6 +83004,10 @@ function SignupView({
       setErrorMsg("Password kam se kam 6 characters ka hona chahiye");
       return;
     }
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
+      setErrorMsg("Mobile number 10 digits ka hona chahiye (6/7/8/9 se shuru)");
+      return;
+    }
     if (actorLoading) {
       setErrorMsg("Portal abhi load ho raha hai, ek second wait karein...");
       return;
@@ -82591,7 +83016,8 @@ function SignupView({
       {
         email: email.trim(),
         password,
-        referralCode: referralCode.trim().toUpperCase() || void 0
+        referralCode: referralCode.trim().toUpperCase() || void 0,
+        mobile: mobile.trim() || void 0
       },
       {
         onSuccess: (user) => {
@@ -82711,6 +83137,35 @@ function SignupView({
               }
             )
           ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "label",
+              {
+                htmlFor: "op-signup-mobile",
+                className: "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5",
+                children: [
+                  "Mobile Number",
+                  " ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground font-normal normal-case", children: "(OTP recovery ke liye)" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "op-signup-mobile",
+                "data-ocid": "offer_portal.input",
+                type: "tel",
+                inputMode: "numeric",
+                placeholder: "10-digit mobile (optional)",
+                value: mobile,
+                onChange: (e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)),
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                maxLength: 10
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Agar password bhool jaao to OTP is number par aayega" })
+          ] }),
           errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
             {
@@ -82747,6 +83202,295 @@ function SignupView({
               onClick: onLogin,
               className: "text-primary font-semibold hover:underline",
               children: "Login Karein"
+            }
+          )
+        ] })
+      ]
+    }
+  );
+}
+async function sha256hex(pwd) {
+  const data = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf)).map((b2) => b2.toString(16).padStart(2, "0")).join("");
+}
+function ForgotPasswordView({
+  onBack,
+  onSuccess
+}) {
+  const [step, setStep] = reactExports.useState(1);
+  const [email, setEmail] = reactExports.useState("");
+  const [otp, setOtp] = reactExports.useState("");
+  const [newPassword, setNewPassword] = reactExports.useState("");
+  const [confirmPassword, setConfirmPassword] = reactExports.useState("");
+  const [errorMsg, setErrorMsg] = reactExports.useState("");
+  const [otpSentMsg, setOtpSentMsg] = reactExports.useState("");
+  const requestOtpMutation = useRequestOfferPasswordReset();
+  const resetPasswordMutation = useResetOfferPassword();
+  const handleRequestOtp = (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!email.trim()) {
+      setErrorMsg("Email daalo");
+      return;
+    }
+    requestOtpMutation.mutate(
+      { email: email.trim() },
+      {
+        onSuccess: () => {
+          setOtpSentMsg(
+            "OTP आपके registered mobile पर भेज दिया गया है। अगर SMS नहीं आया, तो Admin से संपर्क करें।"
+          );
+          setStep(2);
+        },
+        onError: (err) => {
+          setErrorMsg(
+            err instanceof Error ? err.message : "OTP bhejne mein problem hua. Dobara try karein."
+          );
+        }
+      }
+    );
+  };
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!otp.trim() || otp.length !== 6) {
+      setErrorMsg("6-digit OTP daalo");
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setErrorMsg("Naya password kam se kam 6 characters ka hona chahiye");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg("Dono passwords match nahi karte");
+      return;
+    }
+    const hash = await sha256hex(newPassword);
+    resetPasswordMutation.mutate(
+      { email: email.trim(), otp: otp.trim(), newPasswordHash: hash },
+      {
+        onSuccess: () => {
+          ue.success(
+            "Password reset ho gaya! Ab naye password se login karein. ✅"
+          );
+          onSuccess();
+        },
+        onError: (err) => {
+          setErrorMsg(
+            err instanceof Error ? err.message : "Password reset fail hua. Dobara try karein."
+          );
+        }
+      }
+    );
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.div,
+    {
+      initial: { opacity: 0, x: 40 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -40 },
+      transition: { duration: 0.25 },
+      className: "flex-1 px-4 py-8 max-w-md mx-auto w-full",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            onClick: onBack,
+            className: "flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { size: 15 }),
+              " Login par wapas jao"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-8", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-2xl", "aria-hidden": true, children: "🔑" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-heading font-bold text-2xl text-foreground", children: "Password Bhool Gaye?" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm mt-1", children: step === 1 ? "Apni email daalo — OTP registered mobile par aayega" : "OTP aur naya password daalo" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-center gap-2 mb-7", children: [
+          [1, 2].map((s2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: `w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === s2 ? "bg-emerald-600 text-white shadow-md" : step > s2 ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`,
+                children: step > s2 ? "✓" : s2
+              }
+            ),
+            s2 < 2 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: `w-12 h-0.5 rounded-full ${step > s2 ? "bg-emerald-400" : "bg-border"}`
+              }
+            )
+          ] }, s2)),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "sr-only", children: [
+            "Step ",
+            step,
+            " of 2: ",
+            step === 1 ? "Request OTP" : "Reset Password"
+          ] })
+        ] }),
+        step === 1 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleRequestOtp, className: "space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "fp-email",
+                className: "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5",
+                children: "Registered Email"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "fp-email",
+                "data-ocid": "offer_portal.forgot_password_email_input",
+                type: "email",
+                placeholder: "aapka@email.com",
+                value: email,
+                onChange: (e) => setEmail(e.target.value),
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                autoComplete: "email",
+                required: true
+              }
+            )
+          ] }),
+          errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              "data-ocid": "offer_portal.forgot_password.error_state",
+              className: "text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2",
+              children: errorMsg
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "submit",
+              "data-ocid": "offer_portal.forgot_password_send_otp_button",
+              disabled: requestOtpMutation.isPending,
+              className: "w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all disabled:opacity-60 text-sm shadow-md flex items-center justify-center gap-2",
+              children: requestOtpMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 15, className: "animate-spin" }),
+                " OTP bhej raha hai..."
+              ] }) : "OTP Bhejo →"
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleResetPassword, className: "space-y-4", children: [
+          otpSentMsg && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-start gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg mt-0.5 flex-shrink-0", "aria-hidden": true, children: "📱" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-emerald-800 text-xs leading-relaxed", children: otpSentMsg })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "fp-otp",
+                className: "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5",
+                children: "OTP (6 digits)"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "fp-otp",
+                "data-ocid": "offer_portal.forgot_password_otp_input",
+                type: "text",
+                inputMode: "numeric",
+                placeholder: "6-digit OTP",
+                value: otp,
+                onChange: (e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)),
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background tracking-widest font-mono text-center text-lg",
+                maxLength: 6,
+                autoComplete: "one-time-code"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "fp-newpwd",
+                className: "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5",
+                children: "Naya Password (min 6 chars)"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "fp-newpwd",
+                "data-ocid": "offer_portal.forgot_password_new_password_input",
+                type: "password",
+                placeholder: "Strong password banayein",
+                value: newPassword,
+                onChange: (e) => setNewPassword(e.target.value),
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                autoComplete: "new-password"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "fp-confirmpwd",
+                className: "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5",
+                children: "Password Confirm Karein"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "fp-confirmpwd",
+                "data-ocid": "offer_portal.forgot_password_confirm_password_input",
+                type: "password",
+                placeholder: "Dobara same password daalo",
+                value: confirmPassword,
+                onChange: (e) => setConfirmPassword(e.target.value),
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                autoComplete: "new-password"
+              }
+            )
+          ] }),
+          errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              "data-ocid": "offer_portal.forgot_password.error_state",
+              className: "text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2",
+              children: errorMsg
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "submit",
+              "data-ocid": "offer_portal.forgot_password_reset_button",
+              disabled: resetPasswordMutation.isPending,
+              className: "w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all disabled:opacity-60 text-sm shadow-md flex items-center justify-center gap-2",
+              children: resetPasswordMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 15, className: "animate-spin" }),
+                " Resetting..."
+              ] }) : "Password Reset Karein →"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              "data-ocid": "offer_portal.forgot_password_resend_otp_button",
+              onClick: () => {
+                setStep(1);
+                setOtp("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setErrorMsg("");
+                setOtpSentMsg("");
+              },
+              className: "w-full text-primary text-sm font-medium hover:underline py-2",
+              children: "OTP nahi aaya? Dobara request karein"
             }
           )
         ] })
@@ -82996,6 +83740,27 @@ function DashboardView({ onRedeem }) {
               ]
             }
           )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleDollarSign, { size: 15, className: "text-emerald-600" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-foreground text-sm", children: "Available Offers" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-2xl overflow-hidden border border-border shadow-sm bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "iframe",
+            {
+              src: "https://www.cpagrip.com/view.php?id=1889594",
+              style: {
+                width: "100%",
+                height: "600px",
+                border: "none",
+                borderRadius: "8px"
+              },
+              title: "CPAGrip Offer Wall",
+              sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center px-2", children: "💡 Complete offers above to earn points. Earnings update within a few minutes." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "font-bold text-foreground text-sm mb-3 flex items-center gap-2", children: [

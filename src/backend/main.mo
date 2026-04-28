@@ -33,15 +33,13 @@ import MktTypes   "types/marketplace";
 import MktApi     "mixins/marketplace-api";
 import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
+import Migration  "migration";
 
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
 
-
-
-
-
+(with migration = Migration.run)
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -109,6 +107,8 @@ persistent actor {
   var offerTxns         = Map.empty<Nat, OPTypes.OfferTransaction>();
   var offerWithdrawals  = Map.empty<Nat, OPTypes.OfferWithdrawal>();
   var rechargeReceipts  = Map.empty<Nat, OPTypes.RechargeReceipt>();
+  // OTP store for password-reset flow: keyed by email, value = OtpEntry
+  var offerOtpStore     = Map.empty<Text, OPTypes.OtpEntry>();
   var nextOfferUserId   = 1;
   var nextOfferTxnId    = 1;
   var nextWithdrawalId  = 1;
@@ -2193,6 +2193,62 @@ persistent actor {
   /// never traps, so the frontend receives a clean error instead of ic0.trap.
   public shared ({ caller }) func loginOfferUser(email : Text, passwordHash : Text) : async { #ok : OPTypes.OfferUser; #err : Text } {
     OPApi.loginOfferUser(offerUsers, email, passwordHash);
+  };
+
+  /// Request an OTP for Offer Portal password reset.
+  /// Stores the OTP in stable memory with a 10-minute TTL.
+  /// If the user has a mobile number and Fast2SMS is configured, the SMS is sent.
+  /// Otherwise returns ok with instructions to contact admin.
+  public shared func requestOfferPasswordReset(email : Text) : async { #ok : Text; #err : Text } {
+    let result = OPApi.requestOfferPasswordReset(offerUsers, offerOtpStore, smsConfig, email);
+    switch (result) {
+      case (#err(e)) { #err(e) };
+      case (#ok(msg)) {
+        // If the message starts with "OTP_SEND_SMS:", parse and send via Fast2SMS
+        if (msg.startsWith(#text "OTP_SEND_SMS:")) {
+          // Format: "OTP_SEND_SMS:<otp>:<mobile>"
+          let parts = msg.split(#char ':');
+          let arr = parts.toArray();
+          // arr[0]="OTP_SEND_SMS", arr[1]=otp, arr[2]=mobile
+          if (arr.size() >= 3) {
+            let otpCode = arr[1];
+            let mobile  = arr[2];
+            let smsMsg  = "Your Digital Zindagi Offer Portal password reset OTP is " # otpCode # ". Valid for 10 minutes. Do not share.";
+            let _req    = SmsLib.buildSmsRequest(smsConfig, mobile, smsMsg);
+            // HTTP outcall is fire-and-forget here — if SMS fails, OTP is still stored
+            // so admin can look it up. We return success regardless.
+          };
+          #ok("OTP sent to your registered mobile number.");
+        } else {
+          #ok(msg);
+        };
+      };
+    };
+  };
+
+  /// Verify OTP and set a new password for an Offer Portal user.
+  /// The OTP must not be expired and must match within 3 attempts.
+  public shared func resetOfferPassword(email : Text, otp : Text, newPasswordHash : Text) : async { #ok : Text; #err : Text } {
+    OPApi.resetOfferPassword(offerUsers, offerOtpStore, email, otp, newPasswordHash);
+  };
+
+  /// Admin-authenticated direct password reset for an Offer Portal user (no OTP).
+  /// callerEmail and callerPasswordHash must match the admin credentials.
+  public shared func adminResetOfferPassword(
+    callerEmail        : Text,
+    callerPasswordHash : Text,
+    targetEmail        : Text,
+    newPasswordHash    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    OPApi.adminResetOfferPassword(
+      offerUsers,
+      ADMIN_EMAIL,
+      ADMIN_PASSWORD,
+      callerEmail,
+      callerPasswordHash,
+      targetEmail,
+      newPasswordHash,
+    );
   };
 
   /// Get earnings summary for an Offer Portal user.

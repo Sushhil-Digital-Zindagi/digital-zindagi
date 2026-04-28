@@ -5,6 +5,7 @@ import Time   "mo:core/Time";
 import Nat    "mo:core/Nat";
 import Text   "mo:core/Text";
 import Int    "mo:core/Int";
+import Array  "mo:core/Array";
 import Runtime "mo:core/Runtime";
 
 module {
@@ -16,6 +17,13 @@ module {
   public type RechargeReceipt  = Types.RechargeReceipt;
 
   // ── User helpers ─────────────────────────────────────────────────────────
+
+  public type OtpEntry = Types.OtpEntry;
+
+  // OTP TTL: 10 minutes in nanoseconds
+  let OTP_TTL_NS : Int = 600_000_000_000;
+  // Maximum failed OTP attempts before invalidation
+  let OTP_MAX_ATTEMPTS : Nat = 3;
 
   /// Create a new OfferUser record.
   /// passwordHash is stored as-is (future: apply cryptographic hash).
@@ -30,6 +38,7 @@ module {
       userId          = "offer_user_" # id.toText();
       email;
       passwordHash;
+      mobile          = null;
       referralCode    = generateReferralCode(id);
       referredBy;
       totalEarnings   = 0;
@@ -41,6 +50,48 @@ module {
       tier5Earnings   = 0;
       createdAt       = Time.now();
     };
+  };
+
+  /// Generate a 6-digit OTP from the current timestamp (deterministic but sufficient for TTL-based flow).
+  public func generateOtp() : Text {
+    let now : Int = Time.now();
+    let raw : Nat = Int.abs(now) % 1_000_000;
+    // Zero-pad to 6 digits
+    let s = raw.toText();
+    let pad = if (s.size() >= 6) { "" }
+              else { Text.fromArray(Array.repeat<Char>('0', 6 - s.size())) };
+    pad # s;
+  };
+
+  /// Create a fresh OtpEntry (starts now, expires in 10 min, 0 attempts).
+  public func newOtpEntry(otp : Text) : OtpEntry {
+    {
+      otp;
+      expiresAt = Time.now() + OTP_TTL_NS;
+      attempts  = 0;
+    };
+  };
+
+  /// Verify an OTP entry against a provided code.
+  /// Returns #ok on match, #err(reason) on expiry / attempts exceeded / mismatch.
+  public func verifyOtp(entry : OtpEntry, candidate : Text) : { #ok; #err : Text } {
+    if (Time.now() > entry.expiresAt) {
+      return #err("OTP has expired");
+    };
+    if (entry.attempts >= OTP_MAX_ATTEMPTS) {
+      return #err("Too many attempts — OTP invalidated");
+    };
+    if (entry.otp == candidate) {
+      #ok;
+    } else {
+      #err("Incorrect OTP");
+    };
+  };
+
+  /// Build the SMS message body for a password-reset OTP.
+  public func otpSmsMessage(otp : Text) : Text {
+    "Your Digital Zindagi Offer Portal password reset OTP is " # otp
+      # ". Valid for 10 minutes. Do not share this OTP with anyone.";
   };
 
   /// Generate a unique referral code for an offer user.

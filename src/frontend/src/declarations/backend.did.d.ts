@@ -335,6 +335,7 @@ export interface OfferUser {
   'tier2Earnings' : bigint,
   'passwordHash' : string,
   'totalEarnings' : bigint,
+  'mobile' : [] | [string],
   'tier1Earnings' : bigint,
 }
 export interface OfferWithdrawal {
@@ -804,6 +805,15 @@ export interface _SERVICE {
   'adminRejectUpiUnlock' : ActorMethod<
     [bigint],
     { 'ok' : null } |
+      { 'err' : string }
+  >,
+  /**
+   * / Admin-authenticated direct password reset for an Offer Portal user (no OTP).
+   * / callerEmail and callerPasswordHash must match the admin credentials.
+   */
+  'adminResetOfferPassword' : ActorMethod<
+    [string, string, string, string],
+    { 'ok' : string } |
       { 'err' : string }
   >,
   /**
@@ -1334,6 +1344,17 @@ export interface _SERVICE {
   >,
   'requestApproval' : ActorMethod<[], undefined>,
   /**
+   * / Request an OTP for Offer Portal password reset.
+   * / Stores the OTP in stable memory with a 10-minute TTL.
+   * / If the user has a mobile number and Fast2SMS is configured, the SMS is sent.
+   * / Otherwise returns ok with instructions to contact admin.
+   */
+  'requestOfferPasswordReset' : ActorMethod<
+    [string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  /**
    * / Submit a UPI withdrawal request from the Offer Portal.
    */
   'requestOfferWithdrawal' : ActorMethod<[bigint, string, bigint], bigint>,
@@ -1341,6 +1362,15 @@ export interface _SERVICE {
    * / Request admin to top-up your wallet.  Returns the new request ID.
    */
   'requestWalletTopup' : ActorMethod<[number, string], bigint>,
+  /**
+   * / Verify OTP and set a new password for an Offer Portal user.
+   * / The OTP must not be expired and must match within 3 attempts.
+   */
+  'resetOfferPassword' : ActorMethod<
+    [string, string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   /**
    * / Alias for updateCpagripSettings — matches frontend method name saveCPAGripKeys.
    * / Saves API key, Webhook Secret, and Offer Wall Name atomically — admin only.

@@ -32,6 +32,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { motion } from "motion/react";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ExternalBlob } from "../backend";
@@ -41,6 +42,7 @@ import VideoPlayer from "../components/VideoPlayer";
 import ChatAdminPanel from "../components/chat/ChatAdminPanel";
 import { hashPassword, useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
+import { useAdminResetOfferUserPassword } from "../hooks/useOfferQueries";
 import {
   useActiveBanners,
   useAddCategory,
@@ -11001,13 +11003,15 @@ function OfferSystemToggleTab() {
     try {
       const next = !isEnabled;
       if (actor && "updateOfferPortalConfig" in actor) {
-        // Fetch current public config to preserve existing values
+        // Fetch current config to preserve ALL existing values (especially CPAGrip fields)
         let currentSecret = "";
         let currentCpaKey = "";
         let currentAdminPct = BigInt(60);
         let currentUserPct = BigInt(40);
+        let currentCpagripWebhookSecret = "";
+        let currentCpagripOfferWallName = "Digital Zindagi Offers";
         try {
-          // Try full admin config first for complete picture
+          // Try full admin config first for secret + cpaKey + profit pcts
           const fullResult = await (
             actor as unknown as {
               getOfferPortalConfigFull: () => Promise<
@@ -11055,6 +11059,29 @@ function OfferSystemToggleTab() {
           }
         }
 
+        // Also fetch CPAGrip-specific fields so we don't overwrite them with empty strings
+        try {
+          const adminToken = sessionStorage.getItem("dz_admin_token");
+          const cpagripData = await (
+            actor as unknown as {
+              getCpagripSettings: (token: string | null) => Promise<{
+                apiKey: string;
+                webhookSecret: string;
+                offerWallName: string;
+              }>;
+            }
+          ).getCpagripSettings(adminToken);
+          currentCpagripWebhookSecret = cpagripData.webhookSecret?.trim() ?? "";
+          currentCpagripOfferWallName =
+            cpagripData.offerWallName?.trim() || "Digital Zindagi Offers";
+          // cpagripApiKey from getCpagripSettings overrides fullResult if available
+          if (cpagripData.apiKey?.trim()) {
+            currentCpaKey = cpagripData.apiKey.trim();
+          }
+        } catch {
+          /* keep defaults — don't fail the toggle for this */
+        }
+
         const ok = await (
           actor as unknown as {
             updateOfferPortalConfig: (
@@ -11075,8 +11102,8 @@ function OfferSystemToggleTab() {
           currentCpaKey,
           currentAdminPct,
           currentUserPct,
-          "",
-          "",
+          currentCpagripWebhookSecret,
+          currentCpagripOfferWallName,
         );
         if (
           ok &&
@@ -11301,11 +11328,7 @@ function OfferApiKeysTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actor]);
 
-  const canisterId =
-    typeof window !== "undefined"
-      ? window.location.hostname.split(".")[0]
-      : "your-canister-id";
-  const postbackUrl = `https://${canisterId}.icp0.io/cpalead-postback`;
+  const postbackUrl = `${window.location.protocol}//${window.location.host}/cpalead-postback`;
 
   const handleSave = async () => {
     // Capture current values before async ops — state reads inside closures can be stale
@@ -11987,6 +12010,11 @@ function OfferUserListTab() {
   const [users, setUsers] = useState<OfferUserLocal[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [resetTarget, setResetTarget] = useState<string | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [resetError, setResetError] = useState("");
+  const adminResetMutation = useAdminResetOfferUserPassword();
 
   useEffect(() => {
     const load = async () => {
@@ -12024,6 +12052,46 @@ function OfferUserListTab() {
     (s, u) => s + Number(u.pendingEarnings ?? 0n),
     0,
   );
+
+  const handleOpenReset = (email: string) => {
+    setResetTarget(email);
+    setNewPwd("");
+    setConfirmPwd("");
+    setResetError("");
+  };
+
+  const handleCancelReset = () => {
+    setResetTarget(null);
+    setNewPwd("");
+    setConfirmPwd("");
+    setResetError("");
+  };
+
+  const handleAdminReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    if (!newPwd || newPwd.length < 6) {
+      setResetError("Password kam se kam 6 characters ka hona chahiye");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setResetError("Dono passwords match nahi karte");
+      return;
+    }
+    if (!resetTarget) return;
+    const hash = await hashPassword(newPwd);
+    adminResetMutation.mutate(
+      { targetEmail: resetTarget, newPasswordHash: hash },
+      {
+        onSuccess: () => {
+          handleCancelReset();
+        },
+        onError: (err) => {
+          setResetError(err instanceof Error ? err.message : "Reset fail hua.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -12106,36 +12174,128 @@ function OfferUserListTab() {
                   <th className="text-right px-4 py-3 font-semibold whitespace-nowrap">
                     Pending
                   </th>
-                  <th className="text-right px-4 py-3 font-semibold whitespace-nowrap hidden md:table-cell">
-                    Withdrawals
+                  <th className="text-right px-4 py-3 font-semibold whitespace-nowrap">
+                    Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((u, i) => (
-                  <tr
-                    key={String(u.id)}
-                    data-ocid={`offer.user_row.${i + 1}`}
-                    className="border-t border-border hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-4 py-3 font-medium truncate max-w-[180px]">
-                      {u.email}
-                    </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-mono font-semibold">
-                        {u.userId}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-700">
-                      ₹{(Number(u.totalEarnings ?? 0n) / 100).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-yellow-600">
-                      ₹{(Number(u.pendingEarnings ?? 0n) / 100).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-muted-foreground hidden md:table-cell">
-                      —
-                    </td>
-                  </tr>
+                  <>
+                    <tr
+                      key={String(u.id)}
+                      data-ocid={`offer.user_row.${i + 1}`}
+                      className="border-t border-border hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium truncate max-w-[180px]">
+                        {u.email}
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-mono font-semibold">
+                          {u.userId}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-emerald-700">
+                        ₹{(Number(u.totalEarnings ?? 0n) / 100).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-yellow-600">
+                        ₹{(Number(u.pendingEarnings ?? 0n) / 100).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          data-ocid={`offer.user_reset_password_button.${i + 1}`}
+                          onClick={() =>
+                            resetTarget === u.email
+                              ? handleCancelReset()
+                              : handleOpenReset(u.email)
+                          }
+                          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors whitespace-nowrap"
+                        >
+                          {resetTarget === u.email
+                            ? "Cancel"
+                            : "Reset Password"}
+                        </button>
+                      </td>
+                    </tr>
+                    {resetTarget === u.email && (
+                      <tr
+                        key={`reset-${String(u.id)}`}
+                        className="border-t border-amber-200 bg-amber-50/60"
+                      >
+                        <td colSpan={5} className="px-4 py-4">
+                          <form
+                            onSubmit={handleAdminReset}
+                            className="flex flex-col gap-2 max-w-md"
+                            data-ocid={`offer.user_reset_password_form.${i + 1}`}
+                          >
+                            <p className="text-xs font-semibold text-amber-800 mb-1">
+                              🔑 Reset password for:{" "}
+                              <span className="font-mono">{u.email}</span>
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="password"
+                                data-ocid={`offer.user_reset_new_password_input.${i + 1}`}
+                                placeholder="Naya password (min 6)"
+                                value={newPwd}
+                                onChange={(e) => setNewPwd(e.target.value)}
+                                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-background min-w-0"
+                                autoComplete="new-password"
+                                required
+                              />
+                              <input
+                                type="password"
+                                data-ocid={`offer.user_reset_confirm_password_input.${i + 1}`}
+                                placeholder="Confirm password"
+                                value={confirmPwd}
+                                onChange={(e) => setConfirmPwd(e.target.value)}
+                                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring bg-background min-w-0"
+                                autoComplete="new-password"
+                                required
+                              />
+                            </div>
+                            {resetError && (
+                              <p
+                                data-ocid={`offer.user_reset_error_state.${i + 1}`}
+                                className="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-1.5"
+                              >
+                                {resetError}
+                              </p>
+                            )}
+                            <div className="flex gap-2">
+                              <button
+                                type="submit"
+                                data-ocid={`offer.user_reset_confirm_button.${i + 1}`}
+                                disabled={adminResetMutation.isPending}
+                                className="flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                              >
+                                {adminResetMutation.isPending ? (
+                                  <>
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />{" "}
+                                    Resetting...
+                                  </>
+                                ) : (
+                                  "Reset Karein"
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                data-ocid={`offer.user_reset_cancel_button.${i + 1}`}
+                                onClick={handleCancelReset}
+                                className="text-xs font-medium px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>

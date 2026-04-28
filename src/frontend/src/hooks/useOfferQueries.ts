@@ -274,21 +274,43 @@ export function useRegisterOfferUser() {
       email,
       password,
       referralCode,
+      mobile,
     }: {
       email: string;
       password: string;
       referralCode?: string;
+      mobile?: string;
     }): Promise<OfferUser> => {
       const a = requireActor(actor);
       const hash = await sha256hex(password);
 
       try {
         // Step 1: Register — returns Result<OfferUser, String>
-        const regResult = await a.registerOfferUser(
-          email,
-          hash,
-          referralCode ?? null,
-        );
+        // Try with mobile param; backend may not accept 4th arg — try without if it fails
+        let regResult: unknown;
+        try {
+          if (mobile) {
+            regResult = await a.registerOfferUser(
+              email,
+              hash,
+              referralCode ?? null,
+              mobile,
+            );
+          } else {
+            regResult = await a.registerOfferUser(
+              email,
+              hash,
+              referralCode ?? null,
+            );
+          }
+        } catch {
+          // Fallback to 3-arg call if 4-arg throws method mismatch
+          regResult = await a.registerOfferUser(
+            email,
+            hash,
+            referralCode ?? null,
+          );
+        }
         // Handle Result variant from backend
         if (
           regResult &&
@@ -296,7 +318,7 @@ export function useRegisterOfferUser() {
           "__kind__" in regResult &&
           (regResult as { __kind__: string }).__kind__ === "err"
         ) {
-          const errMsg = (regResult as { err: string }).err ?? "";
+          const errMsg = (regResult as unknown as { err: string }).err ?? "";
           const lower = errMsg.toLowerCase();
           if (
             lower.includes("already") ||
@@ -768,6 +790,221 @@ export function useAdminListPendingWithdrawals() {
     enabled: !!actor && !isFetching,
     refetchInterval: 15_000,
     staleTime: 10_000,
+  });
+}
+
+// ============================================================
+// Forgot Password: Request OTP (sends via Fast2SMS to registered mobile)
+// ============================================================
+export function useRequestOfferPasswordReset() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async ({ email }: { email: string }): Promise<void> => {
+      const a = requireActor(actor);
+      try {
+        const result = await a.requestOfferPasswordReset(email);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if ((result as { __kind__: string }).__kind__ === "err") {
+            const errMsg = (result as { err: string }).err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (
+              lower.includes("not found") ||
+              lower.includes("no user") ||
+              lower.includes("does not exist")
+            ) {
+              throw new Error(
+                "Yeh email register nahi hai. Pehle sign up karein.",
+              );
+            }
+            throw new Error(
+              errMsg || "OTP bhejne mein problem hua. Dobara try karein.",
+            );
+          }
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes("method not found") ||
+          lower.includes("no update method")
+        ) {
+          // Backend method not yet available — still show friendly message
+          throw new Error(
+            "OTP service abhi available nahi hai. Admin se contact karein.",
+          );
+        }
+        if (
+          lower.includes("not found") ||
+          lower.includes("no user") ||
+          lower.includes("does not exist")
+        ) {
+          throw new Error("Yeh email register nahi hai. Pehle sign up karein.");
+        }
+        if (lower.includes("actor") || lower.includes("canister")) {
+          throw new Error("Service temporarily unavailable. Please try again.");
+        }
+        throw err;
+      }
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "OTP request fail hua. Dobara try karein.",
+      );
+    },
+  });
+}
+
+// ============================================================
+// Forgot Password: Reset with OTP
+// ============================================================
+export function useResetOfferPassword() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async ({
+      email,
+      otp,
+      newPasswordHash,
+    }: {
+      email: string;
+      otp: string;
+      newPasswordHash: string;
+    }): Promise<void> => {
+      const a = requireActor(actor);
+      try {
+        const result = await a.resetOfferPassword(email, otp, newPasswordHash);
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if ((result as { __kind__: string }).__kind__ === "err") {
+            const errMsg = (result as { err: string }).err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (lower.includes("expired") || lower.includes("expire")) {
+              throw new Error("OTP expire ho gaya, dobara request karein");
+            }
+            if (
+              lower.includes("invalid") ||
+              lower.includes("wrong") ||
+              lower.includes("mismatch") ||
+              lower.includes("incorrect")
+            ) {
+              throw new Error("OTP galat hai, fir koshish karein");
+            }
+            if (
+              lower.includes("too many") ||
+              lower.includes("limit") ||
+              lower.includes("attempts")
+            ) {
+              throw new Error("Bahut zyada koshish, naya OTP request karein");
+            }
+            throw new Error(
+              errMsg || "Password reset fail hua. Dobara try karein.",
+            );
+          }
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes("method not found") ||
+          lower.includes("no update method")
+        ) {
+          throw new Error(
+            "Reset service abhi available nahi hai. Admin se contact karein.",
+          );
+        }
+        if (lower.includes("expired") || lower.includes("expire")) {
+          throw new Error("OTP expire ho gaya, dobara request karein");
+        }
+        if (
+          lower.includes("invalid") ||
+          lower.includes("wrong") ||
+          lower.includes("mismatch") ||
+          lower.includes("incorrect")
+        ) {
+          throw new Error("OTP galat hai, fir koshish karein");
+        }
+        if (
+          lower.includes("too many") ||
+          lower.includes("limit") ||
+          lower.includes("attempts")
+        ) {
+          throw new Error("Bahut zyada koshish, naya OTP request karein");
+        }
+        throw err;
+      }
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Password reset fail hua. Dobara try karein.",
+      );
+    },
+  });
+}
+
+// ============================================================
+// Admin: Reset any offer user's password directly
+// ============================================================
+export function useAdminResetOfferUserPassword() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async ({
+      targetEmail,
+      newPasswordHash,
+    }: {
+      targetEmail: string;
+      newPasswordHash: string;
+    }): Promise<void> => {
+      if (!actor)
+        throw new Error(
+          "Backend se connect nahi ho pa raha — thoda wait karein",
+        );
+      try {
+        const result = await (actor as AnyActor).adminResetOfferPassword(
+          getAdminToken(),
+          targetEmail,
+          newPasswordHash,
+        );
+        if (result && typeof result === "object" && "__kind__" in result) {
+          if ((result as { __kind__: string }).__kind__ === "err") {
+            const errMsg = (result as { err: string }).err ?? "";
+            const lower = errMsg.toLowerCase();
+            if (lower.includes("unauthorized"))
+              throw new Error("Admin permission required.");
+            if (lower.includes("not found")) throw new Error("User nahi mila.");
+            throw new Error(errMsg || "Password reset fail hua.");
+          }
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? String(err);
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes("method not found") ||
+          lower.includes("no update method")
+        ) {
+          throw new Error(
+            "Admin reset service abhi available nahi hai. Canister upgrade karein.",
+          );
+        }
+        if (lower.includes("unauthorized"))
+          throw new Error("Admin permission required.");
+        throw new Error(msg);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Password reset ho gaya ✅");
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Password reset fail hua. Dobara try karein.",
+      );
+    },
   });
 }
 

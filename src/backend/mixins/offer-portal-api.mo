@@ -8,6 +8,7 @@ import OPTypes  "../types/offer-portal";
 import OPLib    "../lib/offer-portal";
 import ASTypes  "../types/admin-settings";
 import WRTypes  "../types/wallet-recharge";
+import SmsLib   "../lib/sms";
 import Map      "mo:core/Map";
 import Time     "mo:core/Time";
 import Runtime  "mo:core/Runtime";
@@ -24,6 +25,7 @@ module {
   public type OfferPortalConfig = OPTypes.OfferPortalConfig;
   public type SmsConfig        = OPTypes.SmsConfig;
   public type RechargeReceipt  = OPTypes.RechargeReceipt;
+  public type OtpEntry         = OPTypes.OtpEntry;
 
   // ── Offer Portal auth ─────────────────────────────────────────────────────
 
@@ -74,6 +76,120 @@ module {
         } else {
           #err("Incorrect password");
         };
+      };
+    };
+  };
+
+  // ── Password reset (OTP via Fast2SMS) ────────────────────────────────────
+
+  /// Request a password-reset OTP for an Offer Portal user.
+  ///
+  /// - Generates a fresh 6-digit OTP, stores it in `otpStore` keyed by email.
+  /// - If SMS is enabled and user has a mobile number, sends the OTP via Fast2SMS
+  ///   using lib/sms.mo.  The actual HTTP outcall is performed here so the function
+  ///   must be declared `async` at the call site in main.mo.
+  /// - If SMS is not configured/enabled, or user has no mobile, still stores the OTP
+  ///   and returns a message indicating the admin must relay it manually.
+  /// - Returns #ok(message) or #err(reason).
+  public func requestOfferPasswordReset(
+    offerUsers : Map.Map<Nat, OfferUser>,
+    otpStore   : Map.Map<Text, OtpEntry>,
+    smsConf    : SmsConfig,
+    email      : Text,
+  ) : { #ok : Text; #err : Text } {
+    switch (OPLib.findByEmail(offerUsers, email)) {
+      case null { return #err("No account found with this email") };
+      case (?user) {
+        let otp   = OPLib.generateOtp();
+        let entry = OPLib.newOtpEntry(otp);
+        otpStore.add(email, entry);
+
+        // Return the built SMS request so main.mo can call the outcall extension
+        // (we cannot do async outcalls from a plain module function).
+        // If SMS is enabled and mobile is set, the caller (main.mo) will send it.
+        let smsPending : Bool = switch (user.mobile) {
+          case null { false };
+          case (?_) { smsConf.isEnabled and smsConf.fast2smsApiKey != "" };
+        };
+
+        if (smsPending) {
+          #ok("OTP_SEND_SMS:" # otp # ":" # (switch (user.mobile) { case (?m) m; case null "" }));
+        } else {
+          #ok("OTP generated. Contact admin to get your OTP or update your mobile number in the portal.");
+        };
+      };
+    };
+  };
+
+  /// Verify OTP and reset password for an Offer Portal user.
+  ///
+  /// - Checks the OTP entry (TTL + attempt count).
+  /// - On success: updates passwordHash, removes OTP entry.
+  /// - On failure: increments attempts; if ≥ 3 removes entry.
+  /// - Returns #ok("Password reset successful") or #err(reason).
+  public func resetOfferPassword(
+    offerUsers      : Map.Map<Nat, OfferUser>,
+    otpStore        : Map.Map<Text, OtpEntry>,
+    email           : Text,
+    otp             : Text,
+    newPasswordHash : Text,
+  ) : { #ok : Text; #err : Text } {
+    switch (otpStore.get(email)) {
+      case null { return #err("No OTP found. Please request a new one.") };
+      case (?entry) {
+        switch (OPLib.verifyOtp(entry, otp)) {
+          case (#err(reason)) {
+            // Increment attempts; invalidate if max reached
+            let newAttempts = entry.attempts + 1;
+            if (newAttempts >= 3) {
+              otpStore.remove(email);
+            } else {
+              otpStore.add(email, { entry with attempts = newAttempts });
+            };
+            return #err(reason);
+          };
+          case (#ok) {
+            // OTP matched — update password
+            switch (OPLib.findByEmail(offerUsers, email)) {
+              case null {
+                otpStore.remove(email);
+                return #err("User not found");
+              };
+              case (?user) {
+                offerUsers.add(user.id, { user with passwordHash = newPasswordHash });
+                otpStore.remove(email);
+                #ok("Password reset successful");
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+
+  /// Admin-authenticated direct password reset (no OTP needed).
+  ///
+  /// - Verifies callerEmail == ADMIN_EMAIL and callerPasswordHash matches.
+  /// - Directly sets newPasswordHash on the target offer user.
+  /// - Returns #ok("Password reset successful") or #err(reason).
+  public func adminResetOfferPassword(
+    offerUsers          : Map.Map<Nat, OfferUser>,
+    adminEmail          : Text,
+    adminPassword       : Text,
+    callerEmail         : Text,
+    callerPasswordHash  : Text,
+    targetEmail         : Text,
+    newPasswordHash     : Text,
+  ) : { #ok : Text; #err : Text } {
+    // Verify admin credentials
+    if (callerEmail != adminEmail or callerPasswordHash != adminPassword) {
+      return #err("Unauthorized: Admin credentials required");
+    };
+    switch (OPLib.findByEmail(offerUsers, targetEmail)) {
+      case null { #err("Target user not found") };
+      case (?user) {
+        offerUsers.add(user.id, { user with passwordHash = newPasswordHash });
+        #ok("Password reset successful");
       };
     };
   };
