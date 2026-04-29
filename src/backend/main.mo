@@ -33,13 +33,13 @@ import MktTypes   "types/marketplace";
 import MktApi     "mixins/marketplace-api";
 import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
-import Migration  "migration";
+
 
 
 
 // The persistent actor sculpture, defined with `persistent` fields:
 
-(with migration = Migration.run)
+
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {

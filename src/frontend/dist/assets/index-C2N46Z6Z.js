@@ -53127,6 +53127,46 @@ function requireActor(actor) {
     throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
   return actor;
 }
+async function waitForActor(actorRef, maxWaitMs = 1e4) {
+  const interval = 500;
+  const maxAttempts = Math.ceil(maxWaitMs / interval);
+  for (let i = 0; i < maxAttempts; i++) {
+    if (actorRef.current) return actorRef.current;
+    await new Promise((r2) => setTimeout(r2, interval));
+  }
+  throw new Error(
+    "Server se connect nahi ho paa raha. Thodi der baad try karein."
+  );
+}
+function mapRegistrationError(err) {
+  const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+  if (raw === "already_registered" || lower.includes("already_registered"))
+    return "Yeh email pehle se registered hai. Login karein.";
+  if (lower.includes("already") || lower.includes("exists") || lower.includes("registered"))
+    return "Yeh email pehle se registered hai. Login karein.";
+  if (lower.includes("invalid_email") || lower.includes("invalid") && lower.includes("email"))
+    return "Email sahi nahin hai. Check karein.";
+  if (lower.includes("password_too_short") || lower.includes("password") && lower.includes("short"))
+    return "Password kam se kam 6 characters ka hona chahiye.";
+  if (lower.includes("server se connect nahi") || lower.includes("thodi der baad"))
+    return raw;
+  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("network error"))
+    return "Connection slow hai. Thodi der baad try karein.";
+  if (lower.includes("timeout") || lower.includes("timed out"))
+    return "Connection slow hai. Thodi der baad try karein.";
+  if (lower.includes("ic0.trap") || lower.includes("reject code") || lower.includes("canister trapped") || lower.includes("trapped explicitly") || /-[a-z0-9]+-cai/i.test(raw))
+    return "Account banana fail hua. Dobara try karein.";
+  if (lower.includes("method not found") || lower.includes("no update method"))
+    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+  if (lower.includes("actor") || lower.includes("canister"))
+    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+  return "Account banana fail hua. Dobara try karein.";
+}
+function isBusinessError(msg) {
+  const lower = msg.toLowerCase();
+  return lower.includes("already_registered") || lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("invalid_email") || lower.includes("password_too_short") || lower.includes("password kam se kam");
+}
 async function sha256hex$1(pwd) {
   const data = new TextEncoder().encode(pwd);
   const buf = await crypto.subtle.digest("SHA-256", data);
@@ -53307,7 +53347,9 @@ function useMyOfferWithdrawals(offerUserId) {
   });
 }
 function useRegisterOfferUser() {
-  const { actor } = useActor();
+  const actorResult = useActor();
+  const actorRef = { current: actorResult.actor };
+  actorRef.current = actorResult.actor;
   const { login } = useOfferAuth();
   const qc = useQueryClient();
   return useMutation({
@@ -53315,55 +53357,57 @@ function useRegisterOfferUser() {
       email,
       password,
       referralCode,
-      mobile
+      mobile,
+      onStatusChange
     }) => {
-      const a2 = requireActor(actor);
+      const setStatus = onStatusChange ?? (() => {
+      });
+      setStatus("Connecting to server...");
+      const a2 = await waitForActor(actorRef, 1e4);
       const hash = await sha256hex$1(password);
-      try {
-        let regResult;
+      const refCode = referralCode && referralCode.trim().length > 0 ? referralCode.trim() : null;
+      const mobileVal = mobile && mobile.trim().length > 0 ? mobile.trim() : void 0;
+      setStatus("Account bana rahe hain...");
+      async function doRegister() {
         try {
-          if (mobile) {
-            regResult = await a2.registerOfferUser(
-              email,
-              hash,
-              referralCode ?? null,
-              mobile
-            );
-          } else {
-            regResult = await a2.registerOfferUser(
-              email,
-              hash,
-              referralCode ?? null
-            );
+          if (mobileVal) {
+            return await a2.registerOfferUser(email, hash, refCode, mobileVal);
           }
-        } catch {
-          regResult = await a2.registerOfferUser(
-            email,
-            hash,
-            referralCode ?? null
-          );
-        }
-        if (regResult && typeof regResult === "object" && "__kind__" in regResult && regResult.__kind__ === "err") {
-          const errMsg = regResult.err ?? "";
-          const lower = errMsg.toLowerCase();
-          if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
-            throw new Error("already_registered");
+          return await a2.registerOfferUser(email, hash, refCode);
+        } catch (firstErr) {
+          const msg = (firstErr == null ? void 0 : firstErr.message) ?? (typeof firstErr === "string" ? firstErr : "");
+          if (isBusinessError(msg)) throw firstErr;
+          try {
+            return await a2.registerOfferUser(email, hash, refCode);
+          } catch {
+            throw firstErr;
           }
-          throw new Error(
-            "Registration mein kuch problem hua, dobara try karein"
-          );
         }
-      } catch (err) {
-        const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
-        const lower = raw.toLowerCase();
-        if (raw === "already_registered") throw err;
-        if (lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("already_registered")) {
-          throw new Error("already_registered");
-        }
-        throw new Error(
-          lower.includes("actor") || lower.includes("canister") || lower.includes("method not found") ? "Service temporarily unavailable. Please try again." : "Registration mein kuch problem hua, dobara try karein"
-        );
       }
+      let regResult;
+      try {
+        regResult = await doRegister();
+      } catch (firstAttemptErr) {
+        const firstMsg = (firstAttemptErr == null ? void 0 : firstAttemptErr.message) ?? (typeof firstAttemptErr === "string" ? firstAttemptErr : "");
+        if (isBusinessError(firstMsg)) {
+          throw new Error(mapRegistrationError(firstAttemptErr));
+        }
+        setStatus("Dobara try kar rahe hain...");
+        await new Promise((r2) => setTimeout(r2, 2e3));
+        try {
+          regResult = await doRegister();
+        } catch (retryErr) {
+          throw new Error(mapRegistrationError(retryErr));
+        }
+      }
+      if (regResult && typeof regResult === "object" && "__kind__" in regResult) {
+        const kind = regResult.__kind__;
+        if (kind === "err") {
+          const errMsg = regResult.err ?? "";
+          throw new Error(mapRegistrationError(new Error(errMsg)));
+        }
+      }
+      setStatus("Login ho rahe hain...");
       try {
         const loginResult = await a2.loginOfferUser(email, hash);
         if (loginResult && typeof loginResult === "object" && "__kind__" in loginResult) {
@@ -53373,7 +53417,7 @@ function useRegisterOfferUser() {
             );
           }
           throw new Error(
-            loginResult.err ?? "Login failed"
+            loginResult.err ?? "Auto-login failed"
           );
         }
         return mapBackendOfferUser(
@@ -53388,14 +53432,8 @@ function useRegisterOfferUser() {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
     },
     onError: (err) => {
-      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
-      if (msg === "already_registered" || msg.toLowerCase().includes("already")) {
-        ue.error("Yeh email pehle se register hai — Login karein");
-      } else {
-        ue.error(
-          msg || "Registration mein kuch problem hua, dobara try karein"
-        );
-      }
+      const msg = err instanceof Error ? err.message : "Account banana fail hua. Dobara try karein.";
+      ue.error(msg);
     }
   });
 }
@@ -82983,6 +83021,8 @@ function SignupView({
   const [password, setPassword] = reactExports.useState("");
   const [mobile, setMobile] = reactExports.useState("");
   const [errorMsg, setErrorMsg] = reactExports.useState("");
+  const [statusMsg, setStatusMsg] = reactExports.useState("");
+  const [successMsg, setSuccessMsg] = reactExports.useState("");
   const [referralCode, setReferralCode] = reactExports.useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -82992,46 +83032,49 @@ function SignupView({
     }
   });
   const registerMutation = useRegisterOfferUser();
-  const { isFetching: actorLoading } = useActor();
+  const isSubmitting = registerMutation.isPending;
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg("");
+    setStatusMsg("");
+    setSuccessMsg("");
     if (!email.trim()) {
       setErrorMsg("Email daalo");
       return;
     }
     if (!password.trim() || password.length < 6) {
-      setErrorMsg("Password kam se kam 6 characters ka hona chahiye");
+      setErrorMsg("Password kam se kam 6 characters ka hona chahiye.");
       return;
     }
     if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
       setErrorMsg("Mobile number 10 digits ka hona chahiye (6/7/8/9 se shuru)");
       return;
     }
-    if (actorLoading) {
-      setErrorMsg("Portal abhi load ho raha hai, ek second wait karein...");
-      return;
-    }
+    const refCodeArg = referralCode.trim().length > 0 ? referralCode.trim().toUpperCase() : void 0;
+    const mobileArg = mobile.trim().length > 0 ? mobile.trim() : void 0;
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
-        referralCode: referralCode.trim().toUpperCase() || void 0,
-        mobile: mobile.trim() || void 0
+        referralCode: refCodeArg,
+        mobile: mobileArg,
+        onStatusChange: (msg) => setStatusMsg(msg)
       },
       {
         onSuccess: (user) => {
-          ue.success(`Welcome! DZ Offer ID: ${user.id} 🎉`);
-          onSuccess();
+          setStatusMsg("");
+          setSuccessMsg(`Account ban gaya! Welcome aboard 🎉 (ID: ${user.id})`);
+          setTimeout(() => {
+            onSuccess();
+          }, 1500);
         },
         onError: (err) => {
-          const msg = getOfferErrorMessage(
-            err,
-            "Account banana fail hua. Dobara try karein."
-          );
-          const isAlreadyRegistered = msg.toLowerCase().includes("already") || err instanceof Error && ((err.message ?? "").toLowerCase().includes("already") || (err.message ?? "").toLowerCase().includes("exists") || (err.message ?? "").toLowerCase().includes("registered"));
+          setStatusMsg("");
+          const msg = err instanceof Error ? err.message : "Account banana fail hua. Dobara try karein.";
+          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered");
           if (isAlreadyRegistered) {
-            ue.error("User already registered — Login karein");
+            ue.error("Yeh email pehle se registered hai — Login karein");
             setErrorMsg("");
           } else {
             setErrorMsg(msg);
@@ -83054,7 +83097,8 @@ function SignupView({
           {
             type: "button",
             onClick: onBack,
-            className: "flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors",
+            disabled: isSubmitting,
+            className: "flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors disabled:opacity-40",
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { size: 15 }),
               " Back"
@@ -83066,6 +83110,19 @@ function SignupView({
           /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-heading font-bold text-2xl text-foreground", children: "Free mein Join Karein" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm mt-1", children: "Unique DZ Offer ID milega" })
         ] }),
+        successMsg && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          motion.div,
+          {
+            initial: { opacity: 0, scale: 0.95 },
+            animate: { opacity: 1, scale: 1 },
+            className: "mb-4 bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-2",
+            "data-ocid": "offer_portal.success_state",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg flex-shrink-0", "aria-hidden": true, children: "✅" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-emerald-800 text-sm font-semibold", children: successMsg })
+            ]
+          }
+        ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-3.5", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -83080,12 +83137,13 @@ function SignupView({
               "input",
               {
                 id: "op-signup-email",
-                "data-ocid": "offer_portal.input",
+                "data-ocid": "offer_portal.signup_email_input",
                 type: "email",
                 placeholder: "aapka@email.com",
                 value: email,
                 onChange: (e) => setEmail(e.target.value),
-                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                disabled: isSubmitting,
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60",
                 autoComplete: "email",
                 required: true
               }
@@ -83104,12 +83162,13 @@ function SignupView({
               "input",
               {
                 id: "op-signup-password",
-                "data-ocid": "offer_portal.input",
+                "data-ocid": "offer_portal.signup_password_input",
                 type: "password",
                 placeholder: "Strong password banayein",
                 value: password,
                 onChange: (e) => setPassword(e.target.value),
-                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                disabled: isSubmitting,
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60",
                 autoComplete: "new-password",
                 required: true
               }
@@ -83128,12 +83187,13 @@ function SignupView({
               "input",
               {
                 id: "op-referral",
-                "data-ocid": "offer_portal.input",
+                "data-ocid": "offer_portal.signup_referral_input",
                 type: "text",
                 placeholder: "Kisi ka referral code hai?",
                 value: referralCode,
                 onChange: (e) => setReferralCode(e.target.value.toUpperCase()),
-                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+                disabled: isSubmitting,
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono disabled:opacity-60"
               }
             )
           ] }),
@@ -83154,22 +83214,34 @@ function SignupView({
               "input",
               {
                 id: "op-signup-mobile",
-                "data-ocid": "offer_portal.input",
+                "data-ocid": "offer_portal.signup_mobile_input",
                 type: "tel",
                 inputMode: "numeric",
                 placeholder: "10-digit mobile (optional)",
                 value: mobile,
                 onChange: (e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)),
-                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background",
+                disabled: isSubmitting,
+                className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60",
                 maxLength: 10
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Agar password bhool jaao to OTP is number par aayega" })
           ] }),
+          isSubmitting && statusMsg && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              "data-ocid": "offer_portal.loading_state",
+              className: "flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 14, className: "animate-spin flex-shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium", children: statusMsg })
+              ]
+            }
+          ),
           errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
             {
-              "data-ocid": "offer_portal.error_msg",
+              "data-ocid": "offer_portal.error_state",
               className: "text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2",
               children: errorMsg
             }
@@ -83179,14 +83251,11 @@ function SignupView({
             {
               type: "submit",
               "data-ocid": "offer_portal.submit_button",
-              disabled: registerMutation.isPending || actorLoading,
+              disabled: isSubmitting,
               className: "w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-emerald-900 font-extrabold py-3.5 rounded-xl hover:from-amber-500 hover:to-yellow-600 transition-all disabled:opacity-60 text-sm shadow-md mt-1 flex items-center justify-center gap-2",
-              children: registerMutation.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 15, className: "animate-spin" }),
-                " Creating Account..."
-              ] }) : actorLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 15, className: "animate-spin" }),
-                " Loading..."
+                statusMsg || "Creating Account..."
               ] }) : "Join & Earn Now →"
             }
           )
@@ -83200,7 +83269,8 @@ function SignupView({
               type: "button",
               "data-ocid": "offer_portal.link",
               onClick: onLogin,
-              className: "text-primary font-semibold hover:underline",
+              disabled: isSubmitting,
+              className: "text-primary font-semibold hover:underline disabled:opacity-40",
               children: "Login Karein"
             }
           )

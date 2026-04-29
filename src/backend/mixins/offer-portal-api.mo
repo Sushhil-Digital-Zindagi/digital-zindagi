@@ -40,19 +40,23 @@ module {
     passwordHash  : Text,
     referralCode  : ?Text,
   ) : { #ok : OfferUser; #err : Text } {
-    // Reject duplicate emails
+    // Reject duplicate emails — return clean message
     switch (OPLib.findByEmail(offerUsers, email)) {
-      case (?_) { return #err("User already registered") };
+      case (?_) { return #err("already_registered") };
       case null {};
     };
 
-    // Resolve referredBy — verify referral code is valid if provided
+    // Resolve referredBy — if referral code provided but not found, silently ignore it
+    // (never error on bad/missing referral code — registration must succeed)
     let referredBy : ?Text = switch (referralCode) {
       case null { null };
       case (?code) {
-        switch (OPLib.findByReferralCode(offerUsers, code)) {
-          case null { return #err("Invalid referral code") };
-          case (?_) { ?code };
+        if (code == "") { null }
+        else {
+          switch (OPLib.findByReferralCode(offerUsers, code)) {
+            case null { null };  // ignore invalid/unknown referral codes
+            case (?_) { ?code };
+          };
         };
       };
     };

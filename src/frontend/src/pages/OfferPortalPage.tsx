@@ -642,6 +642,8 @@ function SignupView({
   const [password, setPassword] = useState("");
   const [mobile, setMobile] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [referralCode, setReferralCode] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -651,57 +653,66 @@ function SignupView({
     }
   });
 
-  // useRegisterOfferUser now handles register + auto-login in one step
+  // useRegisterOfferUser handles register + auto-login + waitForActor + retry
   const registerMutation = useRegisterOfferUser();
-  const { isFetching: actorLoading } = useActor();
+  const isSubmitting = registerMutation.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // prevent double-submit
     setErrorMsg("");
+    setStatusMsg("");
+    setSuccessMsg("");
+
     if (!email.trim()) {
       setErrorMsg("Email daalo");
       return;
     }
     if (!password.trim() || password.length < 6) {
-      setErrorMsg("Password kam se kam 6 characters ka hona chahiye");
+      setErrorMsg("Password kam se kam 6 characters ka hona chahiye.");
       return;
     }
     if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
       setErrorMsg("Mobile number 10 digits ka hona chahiye (6/7/8/9 se shuru)");
       return;
     }
-    if (actorLoading) {
-      setErrorMsg("Portal abhi load ho raha hai, ek second wait karein...");
-      return;
-    }
+
+    // Normalize: empty string → null/undefined (never pass "" to backend)
+    const refCodeArg =
+      referralCode.trim().length > 0
+        ? referralCode.trim().toUpperCase()
+        : undefined;
+    const mobileArg = mobile.trim().length > 0 ? mobile.trim() : undefined;
 
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
-        referralCode: referralCode.trim().toUpperCase() || undefined,
-        mobile: mobile.trim() || undefined,
+        referralCode: refCodeArg,
+        mobile: mobileArg,
+        onStatusChange: (msg) => setStatusMsg(msg),
       },
       {
         onSuccess: (user) => {
-          // useRegisterOfferUser already calls login() internally
-          toast.success(`Welcome! DZ Offer ID: ${user.id} 🎉`);
-          onSuccess();
+          setStatusMsg("");
+          setSuccessMsg(`Account ban gaya! Welcome aboard 🎉 (ID: ${user.id})`);
+          // Redirect to dashboard after 1.5s
+          setTimeout(() => {
+            onSuccess();
+          }, 1500);
         },
         onError: (err) => {
-          const msg = getOfferErrorMessage(
-            err,
-            "Account banana fail hua. Dobara try karein.",
-          );
-          // Show toast (not red error) if user already exists
+          setStatusMsg("");
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Account banana fail hua. Dobara try karein.";
           const isAlreadyRegistered =
             msg.toLowerCase().includes("already") ||
-            (err instanceof Error &&
-              ((err.message ?? "").toLowerCase().includes("already") ||
-                (err.message ?? "").toLowerCase().includes("exists") ||
-                (err.message ?? "").toLowerCase().includes("registered")));
+            msg.toLowerCase().includes("pehle se registered");
           if (isAlreadyRegistered) {
-            toast.error("User already registered — Login karein");
+            // Guide user to login instead of showing error in form
+            toast.error("Yeh email pehle se registered hai — Login karein");
             setErrorMsg("");
           } else {
             setErrorMsg(msg);
@@ -722,7 +733,8 @@ function SignupView({
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors"
+        disabled={isSubmitting}
+        className="flex items-center gap-1.5 text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors disabled:opacity-40"
       >
         <ArrowLeft size={15} /> Back
       </button>
@@ -740,6 +752,21 @@ function SignupView({
         </p>
       </div>
 
+      {/* Success banner */}
+      {successMsg && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-4 bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-2"
+          data-ocid="offer_portal.success_state"
+        >
+          <span className="text-lg flex-shrink-0" aria-hidden>
+            ✅
+          </span>
+          <p className="text-emerald-800 text-sm font-semibold">{successMsg}</p>
+        </motion.div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div>
           <label
@@ -750,12 +777,13 @@ function SignupView({
           </label>
           <input
             id="op-signup-email"
-            data-ocid="offer_portal.input"
+            data-ocid="offer_portal.signup_email_input"
             type="email"
             placeholder="aapka@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+            disabled={isSubmitting}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60"
             autoComplete="email"
             required
           />
@@ -769,12 +797,13 @@ function SignupView({
           </label>
           <input
             id="op-signup-password"
-            data-ocid="offer_portal.input"
+            data-ocid="offer_portal.signup_password_input"
             type="password"
             placeholder="Strong password banayein"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+            disabled={isSubmitting}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60"
             autoComplete="new-password"
             required
           />
@@ -788,12 +817,13 @@ function SignupView({
           </label>
           <input
             id="op-referral"
-            data-ocid="offer_portal.input"
+            data-ocid="offer_portal.signup_referral_input"
             type="text"
             placeholder="Kisi ka referral code hai?"
             value={referralCode}
             onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+            disabled={isSubmitting}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono disabled:opacity-60"
           />
         </div>
         <div>
@@ -808,7 +838,7 @@ function SignupView({
           </label>
           <input
             id="op-signup-mobile"
-            data-ocid="offer_portal.input"
+            data-ocid="offer_portal.signup_mobile_input"
             type="tel"
             inputMode="numeric"
             placeholder="10-digit mobile (optional)"
@@ -816,34 +846,45 @@ function SignupView({
             onChange={(e) =>
               setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
             }
-            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+            disabled={isSubmitting}
+            className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring bg-background disabled:opacity-60"
             maxLength={10}
           />
           <p className="text-xs text-muted-foreground mt-1">
             Agar password bhool jaao to OTP is number par aayega
           </p>
         </div>
+
+        {/* Step-by-step status indicator */}
+        {isSubmitting && statusMsg && (
+          <div
+            data-ocid="offer_portal.loading_state"
+            className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2"
+          >
+            <Loader2 size={14} className="animate-spin flex-shrink-0" />
+            <span className="text-sm font-medium">{statusMsg}</span>
+          </div>
+        )}
+
         {errorMsg && (
           <p
-            data-ocid="offer_portal.error_msg"
+            data-ocid="offer_portal.error_state"
             className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"
           >
             {errorMsg}
           </p>
         )}
+
         <button
           type="submit"
           data-ocid="offer_portal.submit_button"
-          disabled={registerMutation.isPending || actorLoading}
+          disabled={isSubmitting}
           className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-emerald-900 font-extrabold py-3.5 rounded-xl hover:from-amber-500 hover:to-yellow-600 transition-all disabled:opacity-60 text-sm shadow-md mt-1 flex items-center justify-center gap-2"
         >
-          {registerMutation.isPending ? (
+          {isSubmitting ? (
             <>
-              <Loader2 size={15} className="animate-spin" /> Creating Account...
-            </>
-          ) : actorLoading ? (
-            <>
-              <Loader2 size={15} className="animate-spin" /> Loading...
+              <Loader2 size={15} className="animate-spin" />
+              {statusMsg || "Creating Account..."}
             </>
           ) : (
             "Join & Earn Now →"
@@ -857,7 +898,8 @@ function SignupView({
           type="button"
           data-ocid="offer_portal.link"
           onClick={onLogin}
-          className="text-primary font-semibold hover:underline"
+          disabled={isSubmitting}
+          className="text-primary font-semibold hover:underline disabled:opacity-40"
         >
           Login Karein
         </button>

@@ -30,6 +30,103 @@ function requireActor(actor: unknown): AnyActor {
   return actor as AnyActor;
 }
 
+/**
+ * Waits for actor to become non-null, polling every 500ms.
+ * Resolves with the actor once ready, or rejects after maxWaitMs.
+ * Used before registration to prevent race conditions at page load.
+ */
+async function waitForActor(
+  actorRef: { current: unknown },
+  maxWaitMs = 10_000,
+): Promise<AnyActor> {
+  const interval = 500;
+  const maxAttempts = Math.ceil(maxWaitMs / interval);
+  for (let i = 0; i < maxAttempts; i++) {
+    if (actorRef.current) return actorRef.current as AnyActor;
+    await new Promise((r) => setTimeout(r, interval));
+  }
+  throw new Error(
+    "Server se connect nahi ho paa raha. Thodi der baad try karein.",
+  );
+}
+
+/** Maps a raw error to a clean Hindi/English user-facing message. Never exposes raw backend strings. */
+function mapRegistrationError(err: unknown): string {
+  const raw =
+    (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
+  const lower = raw.toLowerCase();
+
+  // Business errors — specific clean messages
+  if (raw === "already_registered" || lower.includes("already_registered"))
+    return "Yeh email pehle se registered hai. Login karein.";
+  if (
+    lower.includes("already") ||
+    lower.includes("exists") ||
+    lower.includes("registered")
+  )
+    return "Yeh email pehle se registered hai. Login karein.";
+  if (
+    lower.includes("invalid_email") ||
+    (lower.includes("invalid") && lower.includes("email"))
+  )
+    return "Email sahi nahin hai. Check karein.";
+  if (
+    lower.includes("password_too_short") ||
+    (lower.includes("password") && lower.includes("short"))
+  )
+    return "Password kam se kam 6 characters ka hona chahiye.";
+
+  // Actor/server not ready
+  if (
+    lower.includes("server se connect nahi") ||
+    lower.includes("thodi der baad")
+  )
+    return raw; // already user-friendly
+
+  // Network errors
+  if (
+    lower.includes("failed to fetch") ||
+    lower.includes("networkerror") ||
+    lower.includes("network error")
+  )
+    return "Connection slow hai. Thodi der baad try karein.";
+  if (lower.includes("timeout") || lower.includes("timed out"))
+    return "Connection slow hai. Thodi der baad try karein.";
+
+  // Raw IC / canister jargon — never show these
+  if (
+    lower.includes("ic0.trap") ||
+    lower.includes("reject code") ||
+    lower.includes("canister trapped") ||
+    lower.includes("trapped explicitly") ||
+    /-[a-z0-9]+-cai/i.test(raw)
+  )
+    return "Account banana fail hua. Dobara try karein.";
+
+  if (lower.includes("method not found") || lower.includes("no update method"))
+    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+
+  if (lower.includes("actor") || lower.includes("canister"))
+    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+
+  // Generic fallback
+  return "Account banana fail hua. Dobara try karein.";
+}
+
+/** Returns true for "business" errors that should NOT be retried. */
+function isBusinessError(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes("already_registered") ||
+    lower.includes("already") ||
+    lower.includes("exists") ||
+    lower.includes("registered") ||
+    lower.includes("invalid_email") ||
+    lower.includes("password_too_short") ||
+    lower.includes("password kam se kam")
+  );
+}
+
 // ---------- password hash util ----------
 async function sha256hex(pwd: string): Promise<string> {
   const data = new TextEncoder().encode(pwd);
@@ -262,105 +359,114 @@ export function useMyOfferWithdrawals(offerUserId: bigint | null | undefined) {
 }
 
 // ============================================================
-// Register — backend returns bigint (user ID), then auto-login
+// Register — with actor-wait, retry, and clean error messages
 // ============================================================
 export function useRegisterOfferUser() {
-  const { actor } = useActor();
+  const actorResult = useActor();
+  // Keep a ref so waitForActor can poll without stale closure
+  const actorRef = { current: actorResult.actor as unknown };
+  actorRef.current = actorResult.actor;
+
   const { login } = useOfferAuth();
   const qc = useQueryClient();
 
+  // Expose a status setter so the UI can show step messages
+  // We store it in the mutation context via onMutate / onSettled
   return useMutation({
     mutationFn: async ({
       email,
       password,
       referralCode,
       mobile,
+      onStatusChange,
     }: {
       email: string;
       password: string;
       referralCode?: string;
       mobile?: string;
+      onStatusChange?: (msg: string) => void;
     }): Promise<OfferUser> => {
-      const a = requireActor(actor);
-      const hash = await sha256hex(password);
+      const setStatus = onStatusChange ?? (() => {});
 
-      try {
-        // Step 1: Register — returns Result<OfferUser, String>
-        // Try with mobile param; backend may not accept 4th arg — try without if it fails
-        let regResult: unknown;
+      // Step 0: Wait for actor to be ready (up to 10s)
+      setStatus("Connecting to server...");
+      const a = await waitForActor(actorRef, 10_000);
+
+      const hash = await sha256hex(password);
+      // Normalize referral: empty string → null
+      const refCode =
+        referralCode && referralCode.trim().length > 0
+          ? referralCode.trim()
+          : null;
+      // Normalize mobile: empty string → undefined (not passed to backend)
+      const mobileVal =
+        mobile && mobile.trim().length > 0 ? mobile.trim() : undefined;
+
+      setStatus("Account bana rahe hain...");
+
+      // Inner registration call — tries 4-arg then 3-arg fallback
+      async function doRegister(): Promise<unknown> {
         try {
-          if (mobile) {
-            regResult = await a.registerOfferUser(
-              email,
-              hash,
-              referralCode ?? null,
-              mobile,
-            );
-          } else {
-            regResult = await a.registerOfferUser(
-              email,
-              hash,
-              referralCode ?? null,
-            );
+          if (mobileVal) {
+            return await a.registerOfferUser(email, hash, refCode, mobileVal);
           }
-        } catch {
-          // Fallback to 3-arg call if 4-arg throws method mismatch
-          regResult = await a.registerOfferUser(
-            email,
-            hash,
-            referralCode ?? null,
-          );
-        }
-        // Handle Result variant from backend
-        if (
-          regResult &&
-          typeof regResult === "object" &&
-          "__kind__" in regResult &&
-          (regResult as { __kind__: string }).__kind__ === "err"
-        ) {
-          const errMsg = (regResult as unknown as { err: string }).err ?? "";
-          const lower = errMsg.toLowerCase();
-          if (
-            lower.includes("already") ||
-            lower.includes("exists") ||
-            lower.includes("registered") ||
-            lower.includes("already_registered")
-          ) {
-            throw new Error("already_registered");
+          return await a.registerOfferUser(email, hash, refCode);
+        } catch (firstErr) {
+          const msg =
+            (firstErr as Error)?.message ??
+            (typeof firstErr === "string" ? firstErr : "");
+          // If it's a business error, don't retry with different arity
+          if (isBusinessError(msg)) throw firstErr;
+          // Method arity mismatch — try 3-arg
+          try {
+            return await a.registerOfferUser(email, hash, refCode);
+          } catch {
+            throw firstErr; // surface original error
           }
-          throw new Error(
-            "Registration mein kuch problem hua, dobara try karein",
-          );
         }
-      } catch (err) {
-        const raw =
-          (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
-        const lower = raw.toLowerCase();
-        // Re-throw already_registered as-is
-        if (raw === "already_registered") throw err;
-        // "already registered" = user exists, treat gracefully
-        if (
-          lower.includes("already") ||
-          lower.includes("exists") ||
-          lower.includes("registered") ||
-          lower.includes("already_registered")
-        ) {
-          throw new Error("already_registered");
-        }
-        // Other errors — sanitize before throwing
-        throw new Error(
-          lower.includes("actor") ||
-            lower.includes("canister") ||
-            lower.includes("method not found")
-            ? "Service temporarily unavailable. Please try again."
-            : "Registration mein kuch problem hua, dobara try karein",
-        );
       }
 
-      // Step 2: Immediately login with same credentials (backend returns Result<OfferUser>)
+      let regResult: unknown;
+      try {
+        regResult = await doRegister();
+      } catch (firstAttemptErr) {
+        const firstMsg =
+          (firstAttemptErr as Error)?.message ??
+          (typeof firstAttemptErr === "string" ? firstAttemptErr : "");
+
+        // Business errors → never retry, throw immediately with clean message
+        if (isBusinessError(firstMsg)) {
+          throw new Error(mapRegistrationError(firstAttemptErr));
+        }
+
+        // Network / transient errors → retry once after 2s
+        setStatus("Dobara try kar rahe hain...");
+        await new Promise((r) => setTimeout(r, 2_000));
+        try {
+          regResult = await doRegister();
+        } catch (retryErr) {
+          throw new Error(mapRegistrationError(retryErr));
+        }
+      }
+
+      // Handle Result<OfferUser, String> variant from backend
+      if (
+        regResult &&
+        typeof regResult === "object" &&
+        "__kind__" in regResult
+      ) {
+        const kind = (regResult as { __kind__: string }).__kind__;
+        if (kind === "err") {
+          const errMsg = (regResult as unknown as { err: string }).err ?? "";
+          throw new Error(mapRegistrationError(new Error(errMsg)));
+        }
+        // kind === "ok" → registration succeeded, fall through to login
+      }
+
+      // Step 2: Auto-login with same credentials
+      setStatus("Login ho rahe hain...");
       try {
         const loginResult = await a.loginOfferUser(email, hash);
-        // Handle Result variant
         if (
           loginResult &&
           typeof loginResult === "object" &&
@@ -368,16 +474,15 @@ export function useRegisterOfferUser() {
         ) {
           if ((loginResult as { __kind__: string }).__kind__ === "ok") {
             return mapBackendOfferUser(
-              (loginResult as { ok: typeof loginResult }).ok as Parameters<
-                typeof mapBackendOfferUser
-              >[0],
+              (loginResult as { ok: Parameters<typeof mapBackendOfferUser>[0] })
+                .ok,
             );
           }
           throw new Error(
-            (loginResult as { err: string }).err ?? "Login failed",
+            (loginResult as { err: string }).err ?? "Auto-login failed",
           );
         }
-        // Fallback: backend returned the user directly (old format)
+        // Fallback: backend returned user directly (legacy format)
         return mapBackendOfferUser(
           loginResult as Parameters<typeof mapBackendOfferUser>[0],
         );
@@ -386,7 +491,6 @@ export function useRegisterOfferUser() {
       }
     },
     onSuccess: (user) => {
-      // Auto-login the user after successful registration
       login(user);
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
     },
@@ -394,17 +498,8 @@ export function useRegisterOfferUser() {
       const msg =
         err instanceof Error
           ? err.message
-          : "Registration failed. Please try again.";
-      if (
-        msg === "already_registered" ||
-        msg.toLowerCase().includes("already")
-      ) {
-        toast.error("Yeh email pehle se register hai — Login karein");
-      } else {
-        toast.error(
-          msg || "Registration mein kuch problem hua, dobara try karein",
-        );
-      }
+          : "Account banana fail hua. Dobara try karein.";
+      toast.error(msg);
     },
   });
 }
