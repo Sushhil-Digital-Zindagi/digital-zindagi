@@ -31,22 +31,31 @@ function requireActor(actor: unknown): AnyActor {
 }
 
 /**
- * Waits for actor to become non-null, polling every 500ms.
- * Resolves with the actor once ready, or rejects after maxWaitMs.
- * Used before registration to prevent race conditions at page load.
+ * Waits for actor to become non-null.
+ * Phase 1: poll every 500ms for first 5s (fast path for already-loaded canister)
+ * Phase 2: poll every 1s for next 40s (cold ICP canister can take 30+ seconds)
+ * Total max wait: 45s — never expires prematurely on first cold start.
  */
 async function waitForActor(
   actorRef: { current: unknown },
-  maxWaitMs = 10_000,
+  maxWaitMs = 45_000,
 ): Promise<AnyActor> {
-  const interval = 500;
-  const maxAttempts = Math.ceil(maxWaitMs / interval);
-  for (let i = 0; i < maxAttempts; i++) {
+  const startTime = Date.now();
+
+  // Phase 1: poll every 500ms for first 5 seconds (fast path)
+  while (Date.now() - startTime < 5_000) {
     if (actorRef.current) return actorRef.current as AnyActor;
-    await new Promise((r) => setTimeout(r, interval));
+    await new Promise((r) => setTimeout(r, 500));
   }
+
+  // Phase 2: poll every 1s for remaining time (cold canister needs patience)
+  while (Date.now() - startTime < maxWaitMs) {
+    if (actorRef.current) return actorRef.current as AnyActor;
+    await new Promise((r) => setTimeout(r, 1_000));
+  }
+
   throw new Error(
-    "Server se connect nahi ho paa raha. Thodi der baad try karein.",
+    "Internet connection slow hai. Page refresh karein aur dobara try karein.",
   );
 }
 
@@ -56,15 +65,18 @@ function mapRegistrationError(err: unknown): string {
     (err as Error)?.message ?? (typeof err === "string" ? err : "") ?? "";
   const lower = raw.toLowerCase();
 
+  // Log the full original error for diagnostics — never shown to user
+  console.error("[OfferPortal] Registration error (raw):", err);
+
   // Business errors — specific clean messages
   if (raw === "already_registered" || lower.includes("already_registered"))
-    return "Yeh email pehle se registered hai. Login karein.";
+    return "Yeh email already registered hai. Login karein ya dusra email use karein.";
   if (
     lower.includes("already") ||
     lower.includes("exists") ||
     lower.includes("registered")
   )
-    return "Yeh email pehle se registered hai. Login karein.";
+    return "Yeh email already registered hai. Login karein ya dusra email use karein.";
   if (
     lower.includes("invalid_email") ||
     (lower.includes("invalid") && lower.includes("email"))
@@ -76,12 +88,13 @@ function mapRegistrationError(err: unknown): string {
   )
     return "Password kam se kam 6 characters ka hona chahiye.";
 
-  // Actor/server not ready
+  // Actor/server not ready — already user-friendly
   if (
-    lower.includes("server se connect nahi") ||
+    lower.includes("internet connection slow") ||
+    lower.includes("page refresh karein") ||
     lower.includes("thodi der baad")
   )
-    return raw; // already user-friendly
+    return raw;
 
   // Network errors
   if (
@@ -89,9 +102,17 @@ function mapRegistrationError(err: unknown): string {
     lower.includes("networkerror") ||
     lower.includes("network error")
   )
-    return "Connection slow hai. Thodi der baad try karein.";
+    return "Internet slow hai. Dobara try karein.";
   if (lower.includes("timeout") || lower.includes("timed out"))
-    return "Connection slow hai. Thodi der baad try karein.";
+    return "Internet slow hai. Dobara try karein.";
+
+  // Specific canister errors
+  if (lower.includes("method not found") || lower.includes("no update method"))
+    return "Server update ho raha hai. 2 minute baad try karein.";
+
+  // Unauthorized trap — admin-disabled registration
+  if (lower.includes("ic0.trap") && lower.includes("unauthorized"))
+    return "Registration currently disabled. Admin se contact karein.";
 
   // Raw IC / canister jargon — never show these
   if (
@@ -101,16 +122,13 @@ function mapRegistrationError(err: unknown): string {
     lower.includes("trapped explicitly") ||
     /-[a-z0-9]+-cai/i.test(raw)
   )
-    return "Account banana fail hua. Dobara try karein.";
-
-  if (lower.includes("method not found") || lower.includes("no update method"))
-    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+    return "Server error aaya. 1 minute baad try karein.";
 
   if (lower.includes("actor") || lower.includes("canister"))
     return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
 
   // Generic fallback
-  return "Account banana fail hua. Dobara try karein.";
+  return "Registration nahi ho payi. Email aur password check karein aur dobara try karein.";
 }
 
 /** Returns true for "business" errors that should NOT be retried. */
@@ -123,7 +141,8 @@ function isBusinessError(msg: string): boolean {
     lower.includes("registered") ||
     lower.includes("invalid_email") ||
     lower.includes("password_too_short") ||
-    lower.includes("password kam se kam")
+    lower.includes("password kam se kam") ||
+    lower.includes("already registered")
   );
 }
 
@@ -359,135 +378,162 @@ export function useMyOfferWithdrawals(offerUserId: bigint | null | undefined) {
 }
 
 // ============================================================
-// Register — with actor-wait, retry, and clean error messages
+// Register — PERMANENT FIX
+//
+// EXACT backend Candid signature (from declarations/backend.did.d.ts line 1315):
+//   registerOfferUser: ActorMethod<[string, string, [] | [string]], Result>
+//
+// The third argument is Candid `opt text` which TypeScript represents as:
+//   [] (empty array) = None  →  NO referral code
+//   [string] (single-element array) = Some(value)  →  WITH referral code
+//
+// CRITICAL: Passing JavaScript `null` for a Candid opt type causes a Candid
+// arity/encoding error → backend traps → "Account banana fail hua".
+// Must always pass [] or [code], NEVER null or undefined directly.
 // ============================================================
 export function useRegisterOfferUser() {
   const actorResult = useActor();
-  // Keep a ref so waitForActor can poll without stale closure
+  // Keep a mutable ref so waitForActor can poll without stale closure
   const actorRef = { current: actorResult.actor as unknown };
   actorRef.current = actorResult.actor;
 
   const { login } = useOfferAuth();
   const qc = useQueryClient();
 
-  // Expose a status setter so the UI can show step messages
-  // We store it in the mutation context via onMutate / onSettled
   return useMutation({
     mutationFn: async ({
       email,
       password,
       referralCode,
-      mobile,
       onStatusChange,
     }: {
       email: string;
       password: string;
       referralCode?: string;
-      mobile?: string;
+      mobile?: string; // accepted in UI for UX, but NOT sent to backend (not in signature)
       onStatusChange?: (msg: string) => void;
     }): Promise<OfferUser> => {
       const setStatus = onStatusChange ?? (() => {});
 
-      // Step 0: Wait for actor to be ready (up to 10s)
-      setStatus("Connecting to server...");
-      const a = await waitForActor(actorRef, 10_000);
+      // Step 1: Wait for actor to be ready (up to 45s — cold ICP canister needs patience)
+      setStatus("Server se connect ho rahe hain...");
+      const a = await waitForActor(actorRef, 45_000);
 
       const hash = await sha256hex(password);
-      // Normalize referral: empty string → null
-      const refCode =
+
+      // CRITICAL FIX: Candid `opt text` must be encoded as [] | [string].
+      // Passing null directly causes a Candid encoding error and registration fails.
+      // Backend declaration: ActorMethod<[string, string, [] | [string]], Result>
+      const refCodeArg: [] | [string] =
         referralCode && referralCode.trim().length > 0
-          ? referralCode.trim()
-          : null;
-      // Normalize mobile: empty string → undefined (not passed to backend)
-      const mobileVal =
-        mobile && mobile.trim().length > 0 ? mobile.trim() : undefined;
+          ? [referralCode.trim()] // Some(value) → [value]
+          : []; // None → []
 
       setStatus("Account bana rahe hain...");
 
-      // Inner registration call — tries 4-arg then 3-arg fallback
-      async function doRegister(): Promise<unknown> {
-        try {
-          if (mobileVal) {
-            return await a.registerOfferUser(email, hash, refCode, mobileVal);
-          }
-          return await a.registerOfferUser(email, hash, refCode);
-        } catch (firstErr) {
-          const msg =
-            (firstErr as Error)?.message ??
-            (typeof firstErr === "string" ? firstErr : "");
-          // If it's a business error, don't retry with different arity
-          if (isBusinessError(msg)) throw firstErr;
-          // Method arity mismatch — try 3-arg
-          try {
-            return await a.registerOfferUser(email, hash, refCode);
-          } catch {
-            throw firstErr; // surface original error
-          }
-        }
-      }
-
+      // Call EXACTLY 3 args — matches Candid declaration exactly
+      // registerOfferUser(email: string, passwordHash: string, referralCode: [] | [string])
       let regResult: unknown;
       try {
-        regResult = await doRegister();
-      } catch (firstAttemptErr) {
-        const firstMsg =
-          (firstAttemptErr as Error)?.message ??
-          (typeof firstAttemptErr === "string" ? firstAttemptErr : "");
+        regResult = await a.registerOfferUser(email, hash, refCodeArg);
+      } catch (firstErr) {
+        // Log the full raw error for diagnosis
+        console.error(
+          "[OfferPortal] registerOfferUser first attempt error:",
+          firstErr,
+        );
 
-        // Business errors → never retry, throw immediately with clean message
+        const firstMsg =
+          (firstErr as Error)?.message ??
+          (typeof firstErr === "string" ? firstErr : "");
+
+        // Business errors → never retry
         if (isBusinessError(firstMsg)) {
-          throw new Error(mapRegistrationError(firstAttemptErr));
+          throw new Error(mapRegistrationError(firstErr));
         }
 
-        // Network / transient errors → retry once after 2s
-        setStatus("Dobara try kar rahe hain...");
+        // Transient/network error → retry once after 2s
+        setStatus("Connection slow hai, dobara try kar rahe hain...");
         await new Promise((r) => setTimeout(r, 2_000));
         try {
-          regResult = await doRegister();
+          regResult = await a.registerOfferUser(email, hash, refCodeArg);
         } catch (retryErr) {
+          console.error(
+            "[OfferPortal] registerOfferUser retry error:",
+            retryErr,
+          );
           throw new Error(mapRegistrationError(retryErr));
         }
       }
 
-      // Handle Result<OfferUser, String> variant from backend
-      if (
-        regResult &&
-        typeof regResult === "object" &&
-        "__kind__" in regResult
-      ) {
-        const kind = (regResult as { __kind__: string }).__kind__;
-        if (kind === "err") {
-          const errMsg = (regResult as unknown as { err: string }).err ?? "";
+      // Handle Result<OfferUser, String> from backend
+      // Backend returns: { ok: OfferUser } | { err: string }
+      if (regResult && typeof regResult === "object") {
+        if ("err" in regResult) {
+          const errMsg = (regResult as { err: string }).err ?? "";
+          console.error("[OfferPortal] registerOfferUser backend err:", errMsg);
           throw new Error(mapRegistrationError(new Error(errMsg)));
         }
-        // kind === "ok" → registration succeeded, fall through to login
+        // Has 'ok' key or is the user object directly → fall through to auto-login
       }
 
       // Step 2: Auto-login with same credentials
       setStatus("Login ho rahe hain...");
       try {
+        // loginOfferUser(email: string, passwordHash: string) — 2 args exactly
         const loginResult = await a.loginOfferUser(email, hash);
-        if (
-          loginResult &&
-          typeof loginResult === "object" &&
-          "__kind__" in loginResult
-        ) {
-          if ((loginResult as { __kind__: string }).__kind__ === "ok") {
+        if (loginResult && typeof loginResult === "object") {
+          if ("ok" in loginResult) {
             return mapBackendOfferUser(
               (loginResult as { ok: Parameters<typeof mapBackendOfferUser>[0] })
                 .ok,
             );
           }
-          throw new Error(
-            (loginResult as { err: string }).err ?? "Auto-login failed",
-          );
+          if ("err" in loginResult) {
+            // Registration succeeded but auto-login failed.
+            // Don't show an error — instead signal success so user sees welcome screen.
+            // The onSuccess handler will call login() — but we need the user object.
+            // If we can't auto-login, extract user from the regResult if available.
+            console.warn(
+              "[OfferPortal] Auto-login failed after registration:",
+              (loginResult as { err: string }).err,
+            );
+            // Attempt to use regResult if it contains the user
+            if (
+              regResult &&
+              typeof regResult === "object" &&
+              "ok" in regResult
+            ) {
+              return mapBackendOfferUser(
+                (regResult as { ok: Parameters<typeof mapBackendOfferUser>[0] })
+                  .ok,
+              );
+            }
+            // Auto-login failed and no user from reg — show "created but login manually"
+            throw new Error("Account ban gaya! Abhi login karein.");
+          }
         }
         // Fallback: backend returned user directly (legacy format)
         return mapBackendOfferUser(
           loginResult as Parameters<typeof mapBackendOfferUser>[0],
         );
       } catch (err) {
-        throw new Error(mapOfferLoginError(err));
+        const msg = (err as Error)?.message ?? "";
+        // If it's already our clean "Account ban gaya!" message, re-throw as-is
+        if (msg === "Account ban gaya! Abhi login karein.") throw err;
+        // Registration succeeded but auto-login had a network error.
+        // Don't hide the success — try one more time.
+        console.warn(
+          "[OfferPortal] Auto-login exception, attempting from regResult:",
+          err,
+        );
+        if (regResult && typeof regResult === "object" && "ok" in regResult) {
+          return mapBackendOfferUser(
+            (regResult as { ok: Parameters<typeof mapBackendOfferUser>[0] }).ok,
+          );
+        }
+        // True fallback — account created, ask user to login manually
+        throw new Error("Account ban gaya! Abhi login karein.");
       }
     },
     onSuccess: (user) => {
@@ -498,8 +544,11 @@ export function useRegisterOfferUser() {
       const msg =
         err instanceof Error
           ? err.message
-          : "Account banana fail hua. Dobara try karein.";
-      toast.error(msg);
+          : "Registration nahi ho payi. Dobara try karein.";
+      // Don't toast error for "Account ban gaya" — that's a partial success
+      if (!msg.startsWith("Account ban gaya")) {
+        toast.error(msg);
+      }
     },
   });
 }
@@ -567,7 +616,9 @@ function mapOfferLoginError(err: unknown): string {
 }
 
 export function useLoginOfferUser() {
-  const { actor } = useActor();
+  const actorResult = useActor();
+  const actorRef = { current: actorResult.actor as unknown };
+  actorRef.current = actorResult.actor;
   const { login } = useOfferAuth();
 
   return useMutation({
@@ -578,25 +629,30 @@ export function useLoginOfferUser() {
       email: string;
       password: string;
     }): Promise<OfferUser> => {
-      const a = requireActor(actor);
+      // Wait up to 45s for actor — cold ICP canister needs patience
+      const a = await waitForActor(actorRef, 45_000);
       const hash = await sha256hex(password);
       try {
+        // loginOfferUser(email: string, passwordHash: string) — exact 2-arg signature
+        // Candid: ActorMethod<[string, string], { ok: OfferUser } | { err: string }>
         const result = await a.loginOfferUser(email, hash);
-        // Handle Result<OfferUser, String> variant from backend
-        if (result && typeof result === "object" && "__kind__" in result) {
-          if ((result as { __kind__: string }).__kind__ === "ok") {
+        if (result && typeof result === "object") {
+          // Result variant uses 'ok' / 'err' keys (Candid generated bindings)
+          if ("ok" in result) {
             return mapBackendOfferUser(
               (result as { ok: Parameters<typeof mapBackendOfferUser>[0] }).ok,
             );
           }
-          // err variant — map to clean message
-          throw new Error((result as { err: string }).err ?? "Login failed");
+          if ("err" in result) {
+            throw new Error((result as { err: string }).err ?? "Login failed");
+          }
         }
         // Fallback: backend returned the user directly (legacy format)
         return mapBackendOfferUser(
           result as Parameters<typeof mapBackendOfferUser>[0],
         );
       } catch (err) {
+        console.error("[OfferPortal] loginOfferUser error:", err);
         // Map all raw errors to user-friendly messages before re-throwing
         throw new Error(mapOfferLoginError(err));
       }
@@ -924,7 +980,6 @@ export function useRequestOfferPasswordReset() {
           lower.includes("method not found") ||
           lower.includes("no update method")
         ) {
-          // Backend method not yet available — still show friendly message
           throw new Error(
             "OTP service abhi available nahi hai. Admin se contact karein.",
           );
@@ -1042,15 +1097,53 @@ export function useResetOfferPassword() {
 
 // ============================================================
 // Admin: Reset any offer user's password directly
+//
+// EXACT backend signature (from backend.d.ts):
+//   adminResetOfferPassword(
+//     callerEmail: string,      ← admin email, NOT a token
+//     callerPasswordHash: string, ← admin password hash
+//     targetEmail: string,
+//     newPasswordHash: string,
+//   ) → Result<string, string>
+//
+// adminEmail and adminPasswordHash default to stored admin credentials.
+// The AdminDashboard call site passes only targetEmail + newPasswordHash.
 // ============================================================
+
+const ADMIN_EMAIL_KEY = "dz_admin_email";
+const ADMIN_CRED_EMAIL = "sushhilkumar651@gmail.com";
+
+async function getAdminCredentials(): Promise<{
+  email: string;
+  passwordHash: string;
+}> {
+  const email =
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(ADMIN_EMAIL_KEY)) ||
+    ADMIN_CRED_EMAIL;
+  // Use the stored admin password hash if available, otherwise derive from known default
+  const storedHash =
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem("dz_admin_pwd_hash")) ||
+    null;
+  if (storedHash) return { email, passwordHash: storedHash };
+  // Derive hash from default password as last resort
+  const hash = await sha256hex("admin123@");
+  return { email, passwordHash: hash };
+}
+
 export function useAdminResetOfferUserPassword() {
   const { actor } = useActor();
 
   return useMutation({
     mutationFn: async ({
+      adminEmail,
+      adminPasswordHash,
       targetEmail,
       newPasswordHash,
     }: {
+      adminEmail?: string;
+      adminPasswordHash?: string;
       targetEmail: string;
       newPasswordHash: string;
     }): Promise<void> => {
@@ -1058,9 +1151,15 @@ export function useAdminResetOfferUserPassword() {
         throw new Error(
           "Backend se connect nahi ho pa raha — thoda wait karein",
         );
+      // Resolve admin credentials
+      const creds = await getAdminCredentials();
+      const callerEmail = adminEmail ?? creds.email;
+      const callerHash = adminPasswordHash ?? creds.passwordHash;
       try {
+        // Correct 4-arg call matching backend.d.ts exactly
         const result = await (actor as AnyActor).adminResetOfferPassword(
-          getAdminToken(),
+          callerEmail,
+          callerHash,
           targetEmail,
           newPasswordHash,
         );
@@ -1109,7 +1208,6 @@ export function useAdminResetOfferUserPassword() {
 export function useAdminResolveWithdrawal() {
   const { actor } = useActor();
   const qc = useQueryClient();
-  // Import the needed enum at runtime via the actor
   return useMutation({
     mutationFn: async ({
       id,

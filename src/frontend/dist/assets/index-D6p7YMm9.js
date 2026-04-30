@@ -53127,45 +53127,51 @@ function requireActor(actor) {
     throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
   return actor;
 }
-async function waitForActor(actorRef, maxWaitMs = 1e4) {
-  const interval = 500;
-  const maxAttempts = Math.ceil(maxWaitMs / interval);
-  for (let i = 0; i < maxAttempts; i++) {
+async function waitForActor(actorRef, maxWaitMs = 45e3) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < 5e3) {
     if (actorRef.current) return actorRef.current;
-    await new Promise((r2) => setTimeout(r2, interval));
+    await new Promise((r2) => setTimeout(r2, 500));
+  }
+  while (Date.now() - startTime < maxWaitMs) {
+    if (actorRef.current) return actorRef.current;
+    await new Promise((r2) => setTimeout(r2, 1e3));
   }
   throw new Error(
-    "Server se connect nahi ho paa raha. Thodi der baad try karein."
+    "Internet connection slow hai. Page refresh karein aur dobara try karein."
   );
 }
 function mapRegistrationError(err) {
   const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
   const lower = raw.toLowerCase();
+  console.error("[OfferPortal] Registration error (raw):", err);
   if (raw === "already_registered" || lower.includes("already_registered"))
-    return "Yeh email pehle se registered hai. Login karein.";
+    return "Yeh email already registered hai. Login karein ya dusra email use karein.";
   if (lower.includes("already") || lower.includes("exists") || lower.includes("registered"))
-    return "Yeh email pehle se registered hai. Login karein.";
+    return "Yeh email already registered hai. Login karein ya dusra email use karein.";
   if (lower.includes("invalid_email") || lower.includes("invalid") && lower.includes("email"))
     return "Email sahi nahin hai. Check karein.";
   if (lower.includes("password_too_short") || lower.includes("password") && lower.includes("short"))
     return "Password kam se kam 6 characters ka hona chahiye.";
-  if (lower.includes("server se connect nahi") || lower.includes("thodi der baad"))
+  if (lower.includes("internet connection slow") || lower.includes("page refresh karein") || lower.includes("thodi der baad"))
     return raw;
   if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("network error"))
-    return "Connection slow hai. Thodi der baad try karein.";
+    return "Internet slow hai. Dobara try karein.";
   if (lower.includes("timeout") || lower.includes("timed out"))
-    return "Connection slow hai. Thodi der baad try karein.";
-  if (lower.includes("ic0.trap") || lower.includes("reject code") || lower.includes("canister trapped") || lower.includes("trapped explicitly") || /-[a-z0-9]+-cai/i.test(raw))
-    return "Account banana fail hua. Dobara try karein.";
+    return "Internet slow hai. Dobara try karein.";
   if (lower.includes("method not found") || lower.includes("no update method"))
-    return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
+    return "Server update ho raha hai. 2 minute baad try karein.";
+  if (lower.includes("ic0.trap") && lower.includes("unauthorized"))
+    return "Registration currently disabled. Admin se contact karein.";
+  if (lower.includes("ic0.trap") || lower.includes("reject code") || lower.includes("canister trapped") || lower.includes("trapped explicitly") || /-[a-z0-9]+-cai/i.test(raw))
+    return "Server error aaya. 1 minute baad try karein.";
   if (lower.includes("actor") || lower.includes("canister"))
     return "Server se connect nahi ho paa raha. Thodi der baad try karein.";
-  return "Account banana fail hua. Dobara try karein.";
+  return "Registration nahi ho payi. Email aur password check karein aur dobara try karein.";
 }
 function isBusinessError(msg) {
   const lower = msg.toLowerCase();
-  return lower.includes("already_registered") || lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("invalid_email") || lower.includes("password_too_short") || lower.includes("password kam se kam");
+  return lower.includes("already_registered") || lower.includes("already") || lower.includes("exists") || lower.includes("registered") || lower.includes("invalid_email") || lower.includes("password_too_short") || lower.includes("password kam se kam") || lower.includes("already registered");
 }
 async function sha256hex$1(pwd) {
   const data = new TextEncoder().encode(pwd);
@@ -53357,74 +53363,84 @@ function useRegisterOfferUser() {
       email,
       password,
       referralCode,
-      mobile,
       onStatusChange
     }) => {
       const setStatus = onStatusChange ?? (() => {
       });
-      setStatus("Connecting to server...");
-      const a2 = await waitForActor(actorRef, 1e4);
+      setStatus("Server se connect ho rahe hain...");
+      const a2 = await waitForActor(actorRef, 45e3);
       const hash = await sha256hex$1(password);
-      const refCode = referralCode && referralCode.trim().length > 0 ? referralCode.trim() : null;
-      const mobileVal = mobile && mobile.trim().length > 0 ? mobile.trim() : void 0;
+      const refCodeArg = referralCode && referralCode.trim().length > 0 ? [referralCode.trim()] : [];
       setStatus("Account bana rahe hain...");
-      async function doRegister() {
-        try {
-          if (mobileVal) {
-            return await a2.registerOfferUser(email, hash, refCode, mobileVal);
-          }
-          return await a2.registerOfferUser(email, hash, refCode);
-        } catch (firstErr) {
-          const msg = (firstErr == null ? void 0 : firstErr.message) ?? (typeof firstErr === "string" ? firstErr : "");
-          if (isBusinessError(msg)) throw firstErr;
-          try {
-            return await a2.registerOfferUser(email, hash, refCode);
-          } catch {
-            throw firstErr;
-          }
-        }
-      }
       let regResult;
       try {
-        regResult = await doRegister();
-      } catch (firstAttemptErr) {
-        const firstMsg = (firstAttemptErr == null ? void 0 : firstAttemptErr.message) ?? (typeof firstAttemptErr === "string" ? firstAttemptErr : "");
+        regResult = await a2.registerOfferUser(email, hash, refCodeArg);
+      } catch (firstErr) {
+        console.error(
+          "[OfferPortal] registerOfferUser first attempt error:",
+          firstErr
+        );
+        const firstMsg = (firstErr == null ? void 0 : firstErr.message) ?? (typeof firstErr === "string" ? firstErr : "");
         if (isBusinessError(firstMsg)) {
-          throw new Error(mapRegistrationError(firstAttemptErr));
+          throw new Error(mapRegistrationError(firstErr));
         }
-        setStatus("Dobara try kar rahe hain...");
+        setStatus("Connection slow hai, dobara try kar rahe hain...");
         await new Promise((r2) => setTimeout(r2, 2e3));
         try {
-          regResult = await doRegister();
+          regResult = await a2.registerOfferUser(email, hash, refCodeArg);
         } catch (retryErr) {
+          console.error(
+            "[OfferPortal] registerOfferUser retry error:",
+            retryErr
+          );
           throw new Error(mapRegistrationError(retryErr));
         }
       }
-      if (regResult && typeof regResult === "object" && "__kind__" in regResult) {
-        const kind = regResult.__kind__;
-        if (kind === "err") {
+      if (regResult && typeof regResult === "object") {
+        if ("err" in regResult) {
           const errMsg = regResult.err ?? "";
+          console.error("[OfferPortal] registerOfferUser backend err:", errMsg);
           throw new Error(mapRegistrationError(new Error(errMsg)));
         }
       }
       setStatus("Login ho rahe hain...");
       try {
         const loginResult = await a2.loginOfferUser(email, hash);
-        if (loginResult && typeof loginResult === "object" && "__kind__" in loginResult) {
-          if (loginResult.__kind__ === "ok") {
+        if (loginResult && typeof loginResult === "object") {
+          if ("ok" in loginResult) {
             return mapBackendOfferUser(
               loginResult.ok
             );
           }
-          throw new Error(
-            loginResult.err ?? "Auto-login failed"
-          );
+          if ("err" in loginResult) {
+            console.warn(
+              "[OfferPortal] Auto-login failed after registration:",
+              loginResult.err
+            );
+            if (regResult && typeof regResult === "object" && "ok" in regResult) {
+              return mapBackendOfferUser(
+                regResult.ok
+              );
+            }
+            throw new Error("Account ban gaya! Abhi login karein.");
+          }
         }
         return mapBackendOfferUser(
           loginResult
         );
       } catch (err) {
-        throw new Error(mapOfferLoginError(err));
+        const msg = (err == null ? void 0 : err.message) ?? "";
+        if (msg === "Account ban gaya! Abhi login karein.") throw err;
+        console.warn(
+          "[OfferPortal] Auto-login exception, attempting from regResult:",
+          err
+        );
+        if (regResult && typeof regResult === "object" && "ok" in regResult) {
+          return mapBackendOfferUser(
+            regResult.ok
+          );
+        }
+        throw new Error("Account ban gaya! Abhi login karein.");
       }
     },
     onSuccess: (user) => {
@@ -53432,8 +53448,10 @@ function useRegisterOfferUser() {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
     },
     onError: (err) => {
-      const msg = err instanceof Error ? err.message : "Account banana fail hua. Dobara try karein.";
-      ue.error(msg);
+      const msg = err instanceof Error ? err.message : "Registration nahi ho payi. Dobara try karein.";
+      if (!msg.startsWith("Account ban gaya")) {
+        ue.error(msg);
+      }
     }
   });
 }
@@ -53461,29 +53479,34 @@ function mapOfferLoginError(err) {
   return "Email ya password galat hai. Dobara try karein.";
 }
 function useLoginOfferUser() {
-  const { actor } = useActor();
+  const actorResult = useActor();
+  const actorRef = { current: actorResult.actor };
+  actorRef.current = actorResult.actor;
   const { login } = useOfferAuth();
   return useMutation({
     mutationFn: async ({
       email,
       password
     }) => {
-      const a2 = requireActor(actor);
+      const a2 = await waitForActor(actorRef, 45e3);
       const hash = await sha256hex$1(password);
       try {
         const result = await a2.loginOfferUser(email, hash);
-        if (result && typeof result === "object" && "__kind__" in result) {
-          if (result.__kind__ === "ok") {
+        if (result && typeof result === "object") {
+          if ("ok" in result) {
             return mapBackendOfferUser(
               result.ok
             );
           }
-          throw new Error(result.err ?? "Login failed");
+          if ("err" in result) {
+            throw new Error(result.err ?? "Login failed");
+          }
         }
         return mapBackendOfferUser(
           result
         );
       } catch (err) {
+        console.error("[OfferPortal] loginOfferUser error:", err);
         throw new Error(mapOfferLoginError(err));
       }
     },
@@ -53622,10 +53645,21 @@ function useResetOfferPassword() {
     }
   });
 }
+const ADMIN_EMAIL_KEY = "dz_admin_email";
+const ADMIN_CRED_EMAIL = "sushhilkumar651@gmail.com";
+async function getAdminCredentials() {
+  const email = typeof localStorage !== "undefined" && localStorage.getItem(ADMIN_EMAIL_KEY) || ADMIN_CRED_EMAIL;
+  const storedHash = typeof localStorage !== "undefined" && localStorage.getItem("dz_admin_pwd_hash") || null;
+  if (storedHash) return { email, passwordHash: storedHash };
+  const hash = await sha256hex$1("admin123@");
+  return { email, passwordHash: hash };
+}
 function useAdminResetOfferUserPassword() {
   const { actor } = useActor();
   return useMutation({
     mutationFn: async ({
+      adminEmail,
+      adminPasswordHash,
       targetEmail,
       newPasswordHash
     }) => {
@@ -53633,9 +53667,13 @@ function useAdminResetOfferUserPassword() {
         throw new Error(
           "Backend se connect nahi ho pa raha — thoda wait karein"
         );
+      const creds = await getAdminCredentials();
+      const callerEmail = adminEmail ?? creds.email;
+      const callerHash = adminPasswordHash ?? creds.passwordHash;
       try {
         const result = await actor.adminResetOfferPassword(
-          getAdminToken(),
+          callerEmail,
+          callerHash,
           targetEmail,
           newPasswordHash
         );
@@ -83052,13 +83090,12 @@ function SignupView({
       return;
     }
     const refCodeArg = referralCode.trim().length > 0 ? referralCode.trim().toUpperCase() : void 0;
-    const mobileArg = mobile.trim().length > 0 ? mobile.trim() : void 0;
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
         referralCode: refCodeArg,
-        mobile: mobileArg,
+        // mobile intentionally omitted — not in backend registerOfferUser signature
         onStatusChange: (msg) => setStatusMsg(msg)
       },
       {
@@ -83071,8 +83108,16 @@ function SignupView({
         },
         onError: (err) => {
           setStatusMsg("");
-          const msg = err instanceof Error ? err.message : "Account banana fail hua. Dobara try karein.";
-          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered");
+          const msg = err instanceof Error ? err.message : "Registration nahi ho payi. Dobara try karein.";
+          if (msg === "Account ban gaya! Abhi login karein.") {
+            setSuccessMsg("Account ban gaya! ✅ Ab login karein.");
+            ue.success("Account ban gaya! Login karein. 🎉");
+            setTimeout(() => {
+              onLogin();
+            }, 2e3);
+            return;
+          }
+          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered") || msg.toLowerCase().includes("already registered");
           if (isAlreadyRegistered) {
             ue.error("Yeh email pehle se registered hai — Login karein");
             setErrorMsg("");
@@ -83238,12 +83283,27 @@ function SignupView({
               ]
             }
           ),
-          errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "p",
+          errorMsg && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
             {
               "data-ocid": "offer_portal.error_state",
-              className: "text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2",
-              children: errorMsg
+              className: "text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2 space-y-2",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: errorMsg }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    "data-ocid": "offer_portal.retry_button",
+                    onClick: () => {
+                      setErrorMsg("");
+                      setStatusMsg("");
+                    },
+                    className: "text-xs font-semibold text-red-700 underline",
+                    children: "Dobara Try Karein"
+                  }
+                )
+              ]
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(

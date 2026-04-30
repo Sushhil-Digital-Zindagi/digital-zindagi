@@ -653,7 +653,7 @@ function SignupView({
     }
   });
 
-  // useRegisterOfferUser handles register + auto-login + waitForActor + retry
+  // useRegisterOfferUser handles register + auto-login + waitForActor (20s) + retry
   const registerMutation = useRegisterOfferUser();
   const isSubmitting = registerMutation.isPending;
 
@@ -677,19 +677,23 @@ function SignupView({
       return;
     }
 
-    // Normalize: empty string → null/undefined (never pass "" to backend)
+    // Normalize referral code — empty string → undefined (backend gets null)
     const refCodeArg =
       referralCode.trim().length > 0
         ? referralCode.trim().toUpperCase()
         : undefined;
-    const mobileArg = mobile.trim().length > 0 ? mobile.trim() : undefined;
+
+    // NOTE: mobile is collected for UX (OTP recovery) but is NOT passed to
+    // registerOfferUser — the backend method signature takes only 3 args:
+    // (email, passwordHash, referralCode). The mobile field in OfferUser is
+    // managed separately after registration if the backend ever adds that API.
 
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
         referralCode: refCodeArg,
-        mobile: mobileArg,
+        // mobile intentionally omitted — not in backend registerOfferUser signature
         onStatusChange: (msg) => setStatusMsg(msg),
       },
       {
@@ -706,10 +710,23 @@ function SignupView({
           const msg =
             err instanceof Error
               ? err.message
-              : "Account banana fail hua. Dobara try karein.";
+              : "Registration nahi ho payi. Dobara try karein.";
+
+          // "Account ban gaya! Abhi login karein." — registration succeeded but
+          // auto-login failed. Show success message and send user to login.
+          if (msg === "Account ban gaya! Abhi login karein.") {
+            setSuccessMsg("Account ban gaya! ✅ Ab login karein.");
+            toast.success("Account ban gaya! Login karein. 🎉");
+            setTimeout(() => {
+              onLogin();
+            }, 2000);
+            return;
+          }
+
           const isAlreadyRegistered =
             msg.toLowerCase().includes("already") ||
-            msg.toLowerCase().includes("pehle se registered");
+            msg.toLowerCase().includes("pehle se registered") ||
+            msg.toLowerCase().includes("already registered");
           if (isAlreadyRegistered) {
             // Guide user to login instead of showing error in form
             toast.error("Yeh email pehle se registered hai — Login karein");
@@ -867,12 +884,23 @@ function SignupView({
         )}
 
         {errorMsg && (
-          <p
+          <div
             data-ocid="offer_portal.error_state"
-            className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+            className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2 space-y-2"
           >
-            {errorMsg}
-          </p>
+            <p>{errorMsg}</p>
+            <button
+              type="button"
+              data-ocid="offer_portal.retry_button"
+              onClick={() => {
+                setErrorMsg("");
+                setStatusMsg("");
+              }}
+              className="text-xs font-semibold text-red-700 underline"
+            >
+              Dobara Try Karein
+            </button>
+          </div>
         )}
 
         <button
