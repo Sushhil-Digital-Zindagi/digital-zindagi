@@ -2262,10 +2262,11 @@ persistent actor {
   };
 
   /// Submit a UPI withdrawal request from the Offer Portal.
-  public shared ({ caller }) func requestOfferWithdrawal(offerUserId : Nat, upiId : Text, amount : Nat) : async Nat {
+  /// Returns #ok(withdrawalId) or #err(reason) — never traps.
+  public shared ({ caller }) func requestOfferWithdrawal(offerUserId : Nat, upiId : Text, amount : Nat) : async { #ok : Nat; #err : Text } {
     switch (OPApi.requestWithdrawal(offerUsers, offerWithdrawals, nextWithdrawalId, offerUserId, upiId, amount)) {
-      case (#ok(id))   { nextWithdrawalId += 1; id };
-      case (#err(msg)) { Runtime.trap(msg) };
+      case (#ok(id))   { nextWithdrawalId += 1; #ok(id) };
+      case (#err(msg)) { #err(msg) };
     };
   };
 
@@ -2299,29 +2300,33 @@ persistent actor {
   // ── OFFER PORTAL — admin (🚀 OFFER CONTROL CENTER) ───────────────────────
 
   /// List all Offer Portal users — admin only.
-  /// Returns empty array for non-admin callers (never traps).
-  public shared query ({ caller }) func adminListOfferUsers() : async [OPTypes.OfferUser] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return [];
+  /// Accepts adminToken for email+password auth flow (anonymous principal friendly).
+  /// Returns #ok([users]) for admin, #err("Unauthorized") for non-admin — never traps.
+  public shared ({ caller }) func adminListOfferUsers(adminToken : ?Text) : async { #ok : [OPTypes.OfferUser]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
     };
-    OPApi.adminListOfferUsers(offerUsers);
+    #ok(OPApi.adminListOfferUsers(offerUsers));
   };
 
   /// List all pending withdrawal requests — admin only.
-  /// Returns empty array for non-admin callers (never traps).
-  public shared query ({ caller }) func adminListPendingWithdrawals() : async [OPTypes.OfferWithdrawal] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return [];
+  /// Accepts adminToken for email+password auth flow.
+  /// Returns #ok([withdrawals]) for admin, #err("Unauthorized") for non-admin — never traps.
+  public shared ({ caller }) func adminListPendingWithdrawals(adminToken : ?Text) : async { #ok : [OPTypes.OfferWithdrawal]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
     };
-    OPApi.adminListPendingWithdrawals(offerWithdrawals);
+    #ok(OPApi.adminListPendingWithdrawals(offerWithdrawals));
   };
 
   /// Resolve a withdrawal request (approve/reject/paid) — admin only.
-  public shared ({ caller }) func adminResolveWithdrawal(id : Nat, newStatus : { #approved; #rejected; #paid }, adminNote : ?Text) : async Bool {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      return false;
+  /// Accepts adminToken for email+password auth flow.
+  /// Returns #ok(true) on success, #err("Unauthorized") for non-admin — never traps.
+  public shared ({ caller }) func adminResolveWithdrawal(adminToken : ?Text, id : Nat, newStatus : { #approved; #rejected; #paid }, adminNote : ?Text) : async { #ok : Bool; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
     };
-    OPApi.adminResolveWithdrawal(offerUsers, offerWithdrawals, id, newStatus, adminNote);
+    #ok(OPApi.adminResolveWithdrawal(offerUsers, offerWithdrawals, id, newStatus, adminNote));
   };
 
   /// Get Offer Portal global config.
@@ -2477,6 +2482,16 @@ persistent actor {
   /// Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
   public shared ({ caller }) func updateSmsConfig(fast2smsApiKey : Text, senderId : Text, isEnabled : Bool) : async { #ok : Bool; #err : Text } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return #err("Unauthorized: Admin only");
+    };
+    smsConfig := { fast2smsApiKey; senderId; isEnabled };
+    #ok(true);
+  };
+
+  /// Update SMS config with admin token — admin only (alias for email+password auth).
+  /// Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
+  public shared ({ caller }) func updateSmsConfigWithToken(adminToken : ?Text, fast2smsApiKey : Text, senderId : Text, isEnabled : Bool) : async { #ok : Bool; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
     smsConfig := { fast2smsApiKey; senderId; isEnabled };

@@ -864,11 +864,21 @@ service : {
   /// Returns empty array for non-admin callers (never traps).
   adminGetUpiUnlockRequests: () -> (vec LockedMessagePayment) query;
   /// List all Offer Portal users — admin only.
-  /// Returns empty array for non-admin callers (never traps).
-  adminListOfferUsers: () -> (vec OfferUser) query;
+  /// Accepts adminToken for email+password auth flow (anonymous principal friendly).
+  /// Returns #ok([users]) for admin, #err("Unauthorized") for non-admin — never traps.
+  adminListOfferUsers: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec OfferUser;
+    });
   /// List all pending withdrawal requests — admin only.
-  /// Returns empty array for non-admin callers (never traps).
-  adminListPendingWithdrawals: () -> (vec OfferWithdrawal) query;
+  /// Accepts adminToken for email+password auth flow.
+  /// Returns #ok([withdrawals]) for admin, #err("Unauthorized") for non-admin — never traps.
+  adminListPendingWithdrawals: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec OfferWithdrawal;
+    });
   adminRejectUpiPremium: (requestId: nat) -> (variant {
                                                 err: text;
                                                 ok;
@@ -887,12 +897,17 @@ service : {
       ok: text;
     });
   /// Resolve a withdrawal request (approve/reject/paid) — admin only.
-  adminResolveWithdrawal: (id: nat, newStatus:
+  /// Accepts adminToken for email+password auth flow.
+  /// Returns #ok(true) on success, #err("Unauthorized") for non-admin — never traps.
+  adminResolveWithdrawal: (adminToken: opt text, id: nat, newStatus:
    variant {
      approved;
      paid;
      rejected;
-   }, adminNote: opt text) -> (bool);
+   }, adminNote: opt text) -> (variant {
+                                 err: text;
+                                 ok: bool;
+                               });
   adminSeedChatDemoData: () -> (bool);
   adminSetPremiumPrices: (monthly: nat, quarterly: nat, annual: nat) ->
    (variant {
@@ -1303,8 +1318,12 @@ service : {
                                                  ok: text;
                                                });
   /// Submit a UPI withdrawal request from the Offer Portal.
+  /// Returns #ok(withdrawalId) or #err(reason) — never traps.
   requestOfferWithdrawal: (offerUserId: nat, upiId: text, amount: nat) ->
-   (nat);
+   (variant {
+      err: text;
+      ok: nat;
+    });
   /// Request admin to top-up your wallet.  Returns the new request ID.
   requestWalletTopup: (amount: float64, note: text) -> (nat);
   /// Verify OTP and set a new password for an Offer Portal user.
@@ -1487,6 +1506,13 @@ service : {
                err: text;
                ok: bool;
              });
+  /// Update SMS config with admin token — admin only (alias for email+password auth).
+  /// Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
+  updateSmsConfigWithToken: (adminToken: opt text, fast2smsApiKey: text,
+   senderId: text, isEnabled: bool) -> (variant {
+                                          err: text;
+                                          ok: bool;
+                                        });
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
   updateToggle: (adminToken: opt text, toggleName: text, value: bool) -> ();
   /// Update a customer. Caller must own the customer (shopId check).

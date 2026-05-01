@@ -848,11 +848,15 @@ export const idlService = IDL.Service({
       [IDL.Vec(LockedMessagePayment)],
       ['query'],
     ),
-  'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
-  'adminListPendingWithdrawals' : IDL.Func(
+  'adminListOfferUsers' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(OfferUser), 'err' : IDL.Text })],
       [],
-      [IDL.Vec(OfferWithdrawal)],
-      ['query'],
+    ),
+  'adminListPendingWithdrawals' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(OfferWithdrawal), 'err' : IDL.Text })],
+      [],
     ),
   'adminRejectUpiPremium' : IDL.Func(
       [IDL.Nat],
@@ -871,6 +875,7 @@ export const idlService = IDL.Service({
     ),
   'adminResolveWithdrawal' : IDL.Func(
       [
+        IDL.Opt(IDL.Text),
         IDL.Nat,
         IDL.Variant({
           'paid' : IDL.Null,
@@ -879,7 +884,7 @@ export const idlService = IDL.Service({
         }),
         IDL.Opt(IDL.Text),
       ],
-      [IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
   'adminSeedChatDemoData' : IDL.Func([], [IDL.Bool], []),
@@ -1351,7 +1356,7 @@ export const idlService = IDL.Service({
     ),
   'requestOfferWithdrawal' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Nat],
-      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
   'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
@@ -1601,6 +1606,11 @@ export const idlService = IDL.Service({
     ),
   'updateSmsConfig' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
+      [],
+    ),
+  'updateSmsConfigWithToken' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Bool],
       [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
       [],
     ),
@@ -2475,11 +2485,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(LockedMessagePayment)],
         ['query'],
       ),
-    'adminListOfferUsers' : IDL.Func([], [IDL.Vec(OfferUser)], ['query']),
-    'adminListPendingWithdrawals' : IDL.Func(
+    'adminListOfferUsers' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(OfferUser), 'err' : IDL.Text })],
         [],
-        [IDL.Vec(OfferWithdrawal)],
-        ['query'],
+      ),
+    'adminListPendingWithdrawals' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(OfferWithdrawal), 'err' : IDL.Text })],
+        [],
       ),
     'adminRejectUpiPremium' : IDL.Func(
         [IDL.Nat],
@@ -2498,6 +2512,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'adminResolveWithdrawal' : IDL.Func(
         [
+          IDL.Opt(IDL.Text),
           IDL.Nat,
           IDL.Variant({
             'paid' : IDL.Null,
@@ -2506,7 +2521,7 @@ export const idlFactory = ({ IDL }) => {
           }),
           IDL.Opt(IDL.Text),
         ],
-        [IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),
     'adminSeedChatDemoData' : IDL.Func([], [IDL.Bool], []),
@@ -2994,7 +3009,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'requestOfferWithdrawal' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Nat],
-        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
     'requestWalletTopup' : IDL.Func([IDL.Float64, IDL.Text], [IDL.Nat], []),
@@ -3254,6 +3269,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateSmsConfig' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
+        [],
+      ),
+    'updateSmsConfigWithToken' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Bool],
         [IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text })],
         [],
       ),

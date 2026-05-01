@@ -833,14 +833,28 @@ export interface backendInterface {
     adminGetUpiUnlockRequests(): Promise<Array<LockedMessagePayment>>;
     /**
      * / List all Offer Portal users — admin only.
-     * / Returns empty array for non-admin callers (never traps).
+     * / Accepts adminToken for email+password auth flow (anonymous principal friendly).
+     * / Returns #ok([users]) for admin, #err("Unauthorized") for non-admin — never traps.
      */
-    adminListOfferUsers(): Promise<Array<OfferUser>>;
+    adminListOfferUsers(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<OfferUser>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / List all pending withdrawal requests — admin only.
-     * / Returns empty array for non-admin callers (never traps).
+     * / Accepts adminToken for email+password auth flow.
+     * / Returns #ok([withdrawals]) for admin, #err("Unauthorized") for non-admin — never traps.
      */
-    adminListPendingWithdrawals(): Promise<Array<OfferWithdrawal>>;
+    adminListPendingWithdrawals(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<OfferWithdrawal>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     adminRejectUpiPremium(requestId: bigint): Promise<{
         __kind__: "ok";
         ok: null;
@@ -871,8 +885,16 @@ export interface backendInterface {
     }>;
     /**
      * / Resolve a withdrawal request (approve/reject/paid) — admin only.
+     * / Accepts adminToken for email+password auth flow.
+     * / Returns #ok(true) on success, #err("Unauthorized") for non-admin — never traps.
      */
-    adminResolveWithdrawal(id: bigint, newStatus: Variant_paid_approved_rejected, adminNote: string | null): Promise<boolean>;
+    adminResolveWithdrawal(adminToken: string | null, id: bigint, newStatus: Variant_paid_approved_rejected, adminNote: string | null): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     adminSeedChatDemoData(): Promise<boolean>;
     adminSetPremiumPrices(monthly: bigint, quarterly: bigint, annual: bigint): Promise<{
         __kind__: "ok";
@@ -1421,8 +1443,15 @@ export interface backendInterface {
     }>;
     /**
      * / Submit a UPI withdrawal request from the Offer Portal.
+     * / Returns #ok(withdrawalId) or #err(reason) — never traps.
      */
-    requestOfferWithdrawal(offerUserId: bigint, upiId: string, amount: bigint): Promise<bigint>;
+    requestOfferWithdrawal(offerUserId: bigint, upiId: string, amount: bigint): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Request admin to top-up your wallet.  Returns the new request ID.
      */
@@ -1644,6 +1673,17 @@ export interface backendInterface {
      * / Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
      */
     updateSmsConfig(fast2smsApiKey: string, senderId: string, isEnabled: boolean): Promise<{
+        __kind__: "ok";
+        ok: boolean;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Update SMS config with admin token — admin only (alias for email+password auth).
+     * / Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
+     */
+    updateSmsConfigWithToken(adminToken: string | null, fast2smsApiKey: string, senderId: string, isEnabled: boolean): Promise<{
         __kind__: "ok";
         ok: boolean;
     } | {

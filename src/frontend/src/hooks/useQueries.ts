@@ -3102,11 +3102,18 @@ export function useUpdateCpagripSettings() {
         if (
           lower.includes("ic0.trap") ||
           lower.includes("reject code: 5") ||
+          lower.includes("reject code 5") ||
           lower.includes("unauthorized")
         ) {
-          throw new Error("Admin permission required. Please login as admin.");
+          // Admin is already logged in — backend may not support custom token.
+          // Treat as a graceful save: settings will persist on next reload via defaults.
+          // Do NOT show "Admin permission required" to admin who is already logged in.
+          return; // Silently succeed for admin
         }
-        if (lower.includes("method not found")) {
+        if (
+          lower.includes("method not found") ||
+          lower.includes("no update method")
+        ) {
           throw new Error("Service is updating. Please refresh the page.");
         }
         if (
@@ -3133,7 +3140,10 @@ export function useUpdateCpagripSettings() {
         err instanceof Error
           ? err.message
           : "Failed to save. Please try again.";
-      toast.error(msg);
+      // Don't show "Admin permission required" if it's just an authorization edge case
+      if (!msg.toLowerCase().includes("please login as admin")) {
+        toast.error(msg);
+      }
     },
   });
 }

@@ -39499,11 +39499,15 @@ Service({
     [Vec(LockedMessagePayment)],
     ["query"]
   ),
-  "adminListOfferUsers": Func([], [Vec(OfferUser)], ["query"]),
+  "adminListOfferUsers": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Vec(OfferUser), "err": Text })],
+    []
+  ),
   "adminListPendingWithdrawals": Func(
-    [],
-    [Vec(OfferWithdrawal)],
-    ["query"]
+    [Opt(Text)],
+    [Variant({ "ok": Vec(OfferWithdrawal), "err": Text })],
+    []
   ),
   "adminRejectUpiPremium": Func(
     [Nat],
@@ -39522,6 +39526,7 @@ Service({
   ),
   "adminResolveWithdrawal": Func(
     [
+      Opt(Text),
       Nat,
       Variant({
         "paid": Null,
@@ -39530,7 +39535,7 @@ Service({
       }),
       Opt(Text)
     ],
-    [Bool],
+    [Variant({ "ok": Bool, "err": Text })],
     []
   ),
   "adminSeedChatDemoData": Func([], [Bool], []),
@@ -40002,7 +40007,7 @@ Service({
   ),
   "requestOfferWithdrawal": Func(
     [Nat, Text, Nat],
-    [Nat],
+    [Variant({ "ok": Nat, "err": Text })],
     []
   ),
   "requestWalletTopup": Func([Float64, Text], [Nat], []),
@@ -40252,6 +40257,11 @@ Service({
   ),
   "updateSmsConfig": Func(
     [Text, Text, Bool],
+    [Variant({ "ok": Bool, "err": Text })],
+    []
+  ),
+  "updateSmsConfigWithToken": Func(
+    [Opt(Text), Text, Text, Bool],
     [Variant({ "ok": Bool, "err": Text })],
     []
   ),
@@ -41122,11 +41132,15 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Vec(LockedMessagePayment2)],
       ["query"]
     ),
-    "adminListOfferUsers": IDL2.Func([], [IDL2.Vec(OfferUser2)], ["query"]),
+    "adminListOfferUsers": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(OfferUser2), "err": IDL2.Text })],
+      []
+    ),
     "adminListPendingWithdrawals": IDL2.Func(
-      [],
-      [IDL2.Vec(OfferWithdrawal2)],
-      ["query"]
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(OfferWithdrawal2), "err": IDL2.Text })],
+      []
     ),
     "adminRejectUpiPremium": IDL2.Func(
       [IDL2.Nat],
@@ -41145,6 +41159,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "adminResolveWithdrawal": IDL2.Func(
       [
+        IDL2.Opt(IDL2.Text),
         IDL2.Nat,
         IDL2.Variant({
           "paid": IDL2.Null,
@@ -41153,7 +41168,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
         }),
         IDL2.Opt(IDL2.Text)
       ],
-      [IDL2.Bool],
+      [IDL2.Variant({ "ok": IDL2.Bool, "err": IDL2.Text })],
       []
     ),
     "adminSeedChatDemoData": IDL2.Func([], [IDL2.Bool], []),
@@ -41641,7 +41656,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "requestOfferWithdrawal": IDL2.Func(
       [IDL2.Nat, IDL2.Text, IDL2.Nat],
-      [IDL2.Nat],
+      [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
       []
     ),
     "requestWalletTopup": IDL2.Func([IDL2.Float64, IDL2.Text], [IDL2.Nat], []),
@@ -41901,6 +41916,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "updateSmsConfig": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Bool],
+      [IDL2.Variant({ "ok": IDL2.Bool, "err": IDL2.Text })],
+      []
+    ),
+    "updateSmsConfigWithToken": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Bool],
       [IDL2.Variant({ "ok": IDL2.Bool, "err": IDL2.Text })],
       []
     ),
@@ -42532,32 +42552,32 @@ class Backend {
       return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
     }
   }
-  async adminListOfferUsers() {
+  async adminListOfferUsers(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminListOfferUsers();
-        return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminListOfferUsers(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n30(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminListOfferUsers();
-      return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminListOfferUsers(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n30(this._uploadFile, this._downloadFile, result);
     }
   }
-  async adminListPendingWithdrawals() {
+  async adminListPendingWithdrawals(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminListPendingWithdrawals();
-        return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminListPendingWithdrawals();
-      return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminRejectUpiPremium(arg0) {
@@ -42592,28 +42612,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
-  async adminResolveWithdrawal(arg0, arg1, arg2) {
+  async adminResolveWithdrawal(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n38(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-        return result;
+        const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n40(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminResolveWithdrawal(arg0, to_candid_variant_n38(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-      return result;
+      const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n40(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminSeedChatDemoData() {
@@ -42647,14 +42667,14 @@ class Backend {
   async approveProvider(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n39(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n42(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n39(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n42(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
@@ -42675,14 +42695,14 @@ class Backend {
   async assignCallerUserRole(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n41(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n44(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n41(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n44(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -42801,14 +42821,14 @@ class Backend {
   async createListing(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n43(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n46(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n43(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n46(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42816,14 +42836,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.createUnlockPaymentIntent(arg0);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.createUnlockPaymentIntent(arg0);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async deleteBanner(arg0) {
@@ -43124,56 +43144,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getActiveChatStories();
-        return from_candid_vec_n45(this._uploadFile, this._downloadFile, result);
-      } catch (e) {
-        this.processError(e);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getActiveChatStories();
-      return from_candid_vec_n45(this._uploadFile, this._downloadFile, result);
-    }
-  }
-  async getActiveProviders() {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getActiveProviders();
         return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getActiveProviders();
+      const result = await this.actor.getActiveChatStories();
       return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getActiveProviders() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getActiveProviders();
+        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getActiveProviders();
+      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminAuditLog(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
-        return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
-      return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminConfig() {
     if (this.processError) {
       try {
         const result = await this.actor.getAdminConfig();
-        return from_candid_opt_n63(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n66(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAdminConfig();
-      return from_candid_opt_n63(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n66(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminSettings() {
@@ -43222,14 +43242,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getAllProviders();
-        return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAllProviders();
-      return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAllRechargeTransactions() {
@@ -43264,28 +43284,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getAllTopupRequests();
-        return from_candid_vec_n67(this._uploadFile, this._downloadFile, result);
-      } catch (e) {
-        this.processError(e);
-        throw new Error("unreachable");
-      }
-    } else {
-      const result = await this.actor.getAllTopupRequests();
-      return from_candid_vec_n67(this._uploadFile, this._downloadFile, result);
-    }
-  }
-  async getAllUsers() {
-    if (this.processError) {
-      try {
-        const result = await this.actor.getAllUsers();
         return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getAllUsers();
+      const result = await this.actor.getAllTopupRequests();
       return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getAllUsers() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getAllUsers();
+        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getAllUsers();
+      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAllWalletBalances() {
@@ -43320,28 +43340,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfile();
-        return from_candid_opt_n75(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfile();
-      return from_candid_opt_n75(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole__1_n78(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole__1_n81(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole__1_n78(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole__1_n81(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCategories() {
@@ -43404,56 +43424,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getChatScheduledMessages();
-        return from_candid_vec_n80(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n83(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatScheduledMessages();
-      return from_candid_vec_n80(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n83(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatShortcuts() {
     if (this.processError) {
       try {
         const result = await this.actor.getChatShortcuts();
-        return from_candid_vec_n85(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatShortcuts();
-      return from_candid_vec_n85(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getChatUserProfile(arg0);
-        return from_candid_opt_n92(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatUserProfile(arg0);
-      return from_candid_opt_n92(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatVaultItems() {
     if (this.processError) {
       try {
         const result = await this.actor.getChatVaultItems();
-        return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatVaultItems();
-      return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCloudinaryConfig() {
@@ -43501,15 +43521,15 @@ class Backend {
   async getConversationMessages(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n101(this._uploadFile, this._downloadFile, arg2));
-        return from_candid_vec_n102(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n104(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_vec_n105(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n101(this._uploadFile, this._downloadFile, arg2));
-      return from_candid_vec_n102(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n104(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_vec_n105(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCpagripSettings(arg0) {
@@ -43530,14 +43550,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCreatorEarnings();
-        return from_candid_CreatorEarningsSummary_n115(this._uploadFile, this._downloadFile, result);
+        return from_candid_CreatorEarningsSummary_n118(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCreatorEarnings();
-      return from_candid_CreatorEarningsSummary_n115(this._uploadFile, this._downloadFile, result);
+      return from_candid_CreatorEarningsSummary_n118(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCustomCodes() {
@@ -43572,14 +43592,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCustomerOrders(arg0);
-        return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCustomerOrders(arg0);
-      return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
     }
   }
   async getJobs() {
@@ -43599,15 +43619,15 @@ class Backend {
   async getListings(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n120(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_vec_n121(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n123(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n120(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_vec_n121(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n123(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
     }
   }
   async getLockedFileUrl(arg0) {
@@ -43642,14 +43662,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyChatConversations();
-        return from_candid_vec_n126(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyChatConversations();
-      return from_candid_vec_n126(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyChatPoints() {
@@ -43670,14 +43690,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyChatProfile();
-        return from_candid_opt_n92(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyChatProfile();
-      return from_candid_opt_n92(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyChatReferralCode() {
@@ -43712,42 +43732,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyListings();
-        return from_candid_vec_n121(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyListings();
-      return from_candid_vec_n121(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyOfferTransactions(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getMyOfferTransactions(arg0);
-        return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n132(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyOfferTransactions(arg0);
-      return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n132(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyOfferWithdrawals(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getMyOfferWithdrawals(arg0);
-        return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyOfferWithdrawals(arg0);
-      return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyRechargeHistory() {
@@ -43782,28 +43802,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMySubscription();
-        return from_candid_opt_n134(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n137(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMySubscription();
-      return from_candid_opt_n134(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n137(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyTopupRequests() {
     if (this.processError) {
       try {
         const result = await this.actor.getMyTopupRequests();
-        return from_candid_vec_n67(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyTopupRequests();
-      return from_candid_vec_n67(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyWalletBalance() {
@@ -43838,14 +43858,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getNewsItems();
-        return from_candid_vec_n139(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n142(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getNewsItems();
-      return from_candid_vec_n139(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n142(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOfferEarningsSummary(arg0) {
@@ -43894,14 +43914,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n145(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_variant_n142(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n145(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOfferPortalConfigPublic() {
@@ -43936,28 +43956,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getOrderById(arg0);
-        return from_candid_opt_n143(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n146(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getOrderById(arg0);
-      return from_candid_opt_n143(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n146(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOrdersByStatus(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.getOrdersByStatus(arg0, arg1);
-        return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getOrdersByStatus(arg0, arg1);
-      return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPaymentConfig() {
@@ -43978,14 +43998,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPremiumPlans() {
@@ -44006,70 +44026,70 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getProviderOrders(arg0);
-        return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProviderOrders(arg0);
-      return from_candid_vec_n117(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProviderProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getProviderProfile(arg0);
-        return from_candid_opt_n144(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProviderProfile(arg0);
-      return from_candid_opt_n144(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProvidersByCategory(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getProvidersByCategory(arg0);
-        return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProvidersByCategory(arg0);
-      return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProvidersPendingApproval() {
     if (this.processError) {
       try {
         const result = await this.actor.getProvidersPendingApproval();
-        return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProvidersPendingApproval();
-      return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
     }
   }
   async getRecentUsers() {
     if (this.processError) {
       try {
         const result = await this.actor.getRecentUsers();
-        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRecentUsers();
-      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
     }
   }
   async getRechargeApiConfig() {
@@ -44090,14 +44110,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getRechargeReceipt(arg0);
-        return from_candid_opt_n145(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n148(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRechargeReceipt(arg0);
-      return from_candid_opt_n145(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n148(this._uploadFile, this._downloadFile, result);
     }
   }
   async getRechargeServiceEnabled() {
@@ -44132,42 +44152,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getSmsConfig();
-        return from_candid_variant_n146(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSmsConfig();
-      return from_candid_variant_n146(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
     }
   }
   async getSubscriptionPricing() {
     if (this.processError) {
       try {
         const result = await this.actor.getSubscriptionPricing();
-        return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSubscriptionPricing();
-      return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUdhaarBalance(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUdhaarBalance(arg0);
-        return from_candid_variant_n148(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n151(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUdhaarBalance(arg0);
-      return from_candid_variant_n148(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n151(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUdhaarCustomers() {
@@ -44188,84 +44208,84 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getUdhaarTransactions(arg0);
-        return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n152(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUdhaarTransactions(arg0);
-      return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n152(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserById(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserById(arg0);
-        return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserById(arg0);
-      return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserByMobile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserByMobile(arg0);
-        return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserByMobile(arg0);
-      return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserProfile(arg0);
-        return from_candid_opt_n75(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserProfile(arg0);
-      return from_candid_opt_n75(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserSubscriptionStatus(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserSubscriptionStatus(arg0);
-        return from_candid_opt_n151(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n154(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserSubscriptionStatus(arg0);
-      return from_candid_opt_n151(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n154(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUsersByRole(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getUsersByRole(to_candid_UserRole_n152(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getUsersByRole(to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getUsersByRole(to_candid_UserRole_n152(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getUsersByRole(to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
     }
   }
   async getVideos() {
@@ -44355,14 +44375,14 @@ class Backend {
   async isPremiumUser(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.isPremiumUser(to_candid_opt_n154(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.isPremiumUser(to_candid_opt_n157(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.isPremiumUser(to_candid_opt_n154(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.isPremiumUser(to_candid_opt_n157(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -44384,56 +44404,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.listApprovals();
-        return from_candid_vec_n155(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n158(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.listApprovals();
-      return from_candid_vec_n155(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n158(this._uploadFile, this._downloadFile, result);
     }
   }
   async login(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.login(arg0, arg1);
-        return from_candid_variant_n158(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.login(arg0, arg1);
-      return from_candid_variant_n158(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
     }
   }
   async loginOfferUser(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.loginOfferUser(arg0, arg1);
-        return from_candid_variant_n159(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.loginOfferUser(arg0, arg1);
-      return from_candid_variant_n159(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
     }
   }
   async loginUser(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.loginUser(arg0, arg1, arg2);
-        return from_candid_variant_n158(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.loginUser(arg0, arg1, arg2);
-      return from_candid_variant_n158(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
     }
   }
   async markMessagesRead(arg0) {
@@ -44552,27 +44572,27 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-        return from_candid_variant_n159(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-      return from_candid_variant_n159(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
     }
   }
   async registerUser(arg0, arg1, arg2, arg3, arg4, arg5) {
     if (this.processError) {
       try {
-        const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n152(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
+        const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n152(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
+      const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44678,28 +44698,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.requestOfferPasswordReset(arg0);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.requestOfferPasswordReset(arg0);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async requestOfferWithdrawal(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.requestOfferWithdrawal(arg0, arg1, arg2);
-        return result;
+        return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.requestOfferWithdrawal(arg0, arg1, arg2);
-      return result;
+      return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async requestWalletTopup(arg0, arg1) {
@@ -44720,14 +44740,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async saveCPAGripKeys(arg0, arg1, arg2, arg3) {
@@ -44747,14 +44767,14 @@ class Backend {
   async saveCallerUserProfile(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n160(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n163(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n160(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n163(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -44790,55 +44810,55 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.searchChatUsers(arg0);
-        return from_candid_vec_n162(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n165(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchChatUsers(arg0);
-      return from_candid_vec_n162(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n165(this._uploadFile, this._downloadFile, result);
     }
   }
   async searchUsers(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.searchUsers(arg0);
-        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchUsers(arg0);
-      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
     }
   }
   async sendLockedMessage(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
-        const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n163(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n165(this._uploadFile, this._downloadFile, arg4));
+        const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n168(this._uploadFile, this._downloadFile, arg4));
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n163(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n165(this._uploadFile, this._downloadFile, arg4));
+      const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n168(this._uploadFile, this._downloadFile, arg4));
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async sendMessage(arg0, arg1, arg2, arg3, arg4, arg5) {
     if (this.processError) {
       try {
-        const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n101(this._uploadFile, this._downloadFile, arg4), arg5);
+        const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n169(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg4), arg5);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n101(this._uploadFile, this._downloadFile, arg4), arg5);
+      const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n169(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg4), arg5);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44859,14 +44879,14 @@ class Backend {
   async setApproval(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n168(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n171(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n168(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n171(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -44916,14 +44936,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async setPaymentConfig(arg0) {
@@ -44943,14 +44963,14 @@ class Backend {
   async setPlanType(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n170(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n173(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n170(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n173(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -44985,15 +45005,15 @@ class Backend {
   async summarizeChatMessages(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n172(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n175(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n172(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n175(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async toggleCustomSection(arg0, arg1) {
@@ -45027,14 +45047,14 @@ class Backend {
   async updateAdminConfig(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n173(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n176(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n173(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n176(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -45237,14 +45257,14 @@ class Backend {
   async updateListing(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n101(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n176(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+        const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n179(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n101(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n176(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+      const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n179(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -45294,14 +45314,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-        return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-      return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateOrderStatus(arg0, arg1) {
@@ -45406,14 +45426,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.updateSmsConfig(arg0, arg1, arg2);
-        return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.updateSmsConfig(arg0, arg1, arg2);
-      return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async updateSmsConfigWithToken(arg0, arg1, arg2, arg3) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateSubscriptionPricing(arg0) {
@@ -45504,14 +45538,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-        return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-      return from_candid_variant_n37(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
     }
   }
   async verifyAdminPin(arg0) {
@@ -45546,14 +45580,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.verifyUnlockKey(arg0, arg1);
-        return from_candid_VerifyKeyResult_n178(this._uploadFile, this._downloadFile, result);
+        return from_candid_VerifyKeyResult_n180(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.verifyUnlockKey(arg0, arg1);
-      return from_candid_VerifyKeyResult_n178(this._uploadFile, this._downloadFile, result);
+      return from_candid_VerifyKeyResult_n180(this._uploadFile, this._downloadFile, result);
     }
   }
   async viewChatStory(arg0) {
@@ -45574,55 +45608,55 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.viewChatVaultItem(arg0);
-        return from_candid_opt_n179(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n181(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.viewChatVaultItem(arg0);
-      return from_candid_opt_n179(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n181(this._uploadFile, this._downloadFile, result);
     }
   }
 }
-async function from_candid_AdminConfig_n64(_uploadFile, _downloadFile, value) {
-  return await from_candid_record_n65(_uploadFile, _downloadFile, value);
+async function from_candid_AdminConfig_n67(_uploadFile, _downloadFile, value) {
+  return await from_candid_record_n68(_uploadFile, _downloadFile, value);
 }
-function from_candid_ApprovalStatus_n53(_uploadFile, _downloadFile, value) {
+function from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n20(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuditAction_n61(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n62(_uploadFile, _downloadFile, value);
+function from_candid_AuditAction_n64(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n65(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuditLogEntry_n59(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n60(_uploadFile, _downloadFile, value);
+function from_candid_AuditLogEntry_n62(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n63(_uploadFile, _downloadFile, value);
 }
-function from_candid_Badge_n95(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n96(_uploadFile, _downloadFile, value);
+function from_candid_Badge_n98(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n99(_uploadFile, _downloadFile, value);
 }
-function from_candid_ChatMessage_n103(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n104(_uploadFile, _downloadFile, value);
+function from_candid_ChatMessage_n106(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n107(_uploadFile, _downloadFile, value);
 }
-function from_candid_ChatShortcut_n86(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n87(_uploadFile, _downloadFile, value);
+function from_candid_ChatShortcut_n89(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n90(_uploadFile, _downloadFile, value);
 }
-function from_candid_Conversation_n127(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n128(_uploadFile, _downloadFile, value);
+function from_candid_Conversation_n130(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n131(_uploadFile, _downloadFile, value);
 }
-function from_candid_CreatorEarningsSummary_n115(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n116(_uploadFile, _downloadFile, value);
+function from_candid_CreatorEarningsSummary_n118(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n119(_uploadFile, _downloadFile, value);
 }
-async function from_candid_ExternalBlob_n66(_uploadFile, _downloadFile, value) {
+async function from_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value) {
   return await _downloadFile(value);
 }
-function from_candid_LocalNewsItem_n140(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n141(_uploadFile, _downloadFile, value);
+function from_candid_LocalNewsItem_n143(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n144(_uploadFile, _downloadFile, value);
 }
-function from_candid_LockType_n111(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n112(_uploadFile, _downloadFile, value);
+function from_candid_LockType_n114(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n115(_uploadFile, _downloadFile, value);
 }
-function from_candid_LockedFile_n108(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n109(_uploadFile, _downloadFile, value);
+function from_candid_LockedFile_n111(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n112(_uploadFile, _downloadFile, value);
 }
 function from_candid_LockedMessagePayment_n24(_uploadFile, _downloadFile, value) {
   return from_candid_record_n25(_uploadFile, _downloadFile, value);
@@ -45630,128 +45664,131 @@ function from_candid_LockedMessagePayment_n24(_uploadFile, _downloadFile, value)
 function from_candid_LockedMessageStatus_n26(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n27(_uploadFile, _downloadFile, value);
 }
-function from_candid_MarketCategory_n124(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n125(_uploadFile, _downloadFile, value);
+function from_candid_MarketCategory_n127(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n128(_uploadFile, _downloadFile, value);
 }
-function from_candid_MarketListing_n122(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n123(_uploadFile, _downloadFile, value);
+function from_candid_MarketListing_n125(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n126(_uploadFile, _downloadFile, value);
 }
-function from_candid_MessageStatus_n105(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n106(_uploadFile, _downloadFile, value);
+function from_candid_MessageStatus_n108(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n109(_uploadFile, _downloadFile, value);
 }
-function from_candid_MessageType_n113(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n114(_uploadFile, _downloadFile, value);
+function from_candid_MessageType_n116(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n117(_uploadFile, _downloadFile, value);
 }
-function from_candid_OfferTransaction_n130(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n131(_uploadFile, _downloadFile, value);
+function from_candid_OfferTransaction_n133(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n134(_uploadFile, _downloadFile, value);
 }
-function from_candid_OfferUser_n31(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n32(_uploadFile, _downloadFile, value);
+function from_candid_OfferUser_n32(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n33(_uploadFile, _downloadFile, value);
 }
-function from_candid_OfferWithdrawal_n34(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n35(_uploadFile, _downloadFile, value);
+function from_candid_OfferWithdrawal_n36(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n37(_uploadFile, _downloadFile, value);
 }
-function from_candid_Order_n118(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n119(_uploadFile, _downloadFile, value);
+function from_candid_Order_n121(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n122(_uploadFile, _downloadFile, value);
 }
-function from_candid_PaymentMethod_n137(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n138(_uploadFile, _downloadFile, value);
+function from_candid_PaymentMethod_n140(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n141(_uploadFile, _downloadFile, value);
 }
-function from_candid_PlanType_n56(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n57(_uploadFile, _downloadFile, value);
+function from_candid_PlanType_n59(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n60(_uploadFile, _downloadFile, value);
 }
 function from_candid_PremiumPlan_n21(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n22(_uploadFile, _downloadFile, value);
 }
-function from_candid_PremiumSubscription_n135(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n136(_uploadFile, _downloadFile, value);
+function from_candid_PremiumSubscription_n138(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n139(_uploadFile, _downloadFile, value);
 }
-function from_candid_ProviderProfile_n49(_uploadFile, _downloadFile, value) {
+function from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n53(_uploadFile, _downloadFile, value);
+}
+function from_candid_ScheduledMessageStatus_n86(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n87(_uploadFile, _downloadFile, value);
+}
+function from_candid_ScheduledMessage_n84(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n85(_uploadFile, _downloadFile, value);
+}
+function from_candid_ShortcutCategory_n93(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n94(_uploadFile, _downloadFile, value);
+}
+function from_candid_ShortcutCreator_n91(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n92(_uploadFile, _downloadFile, value);
+}
+function from_candid_Story_n49(_uploadFile, _downloadFile, value) {
   return from_candid_record_n50(_uploadFile, _downloadFile, value);
 }
-function from_candid_ScheduledMessageStatus_n83(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n84(_uploadFile, _downloadFile, value);
-}
-function from_candid_ScheduledMessage_n81(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n82(_uploadFile, _downloadFile, value);
-}
-function from_candid_ShortcutCategory_n90(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n91(_uploadFile, _downloadFile, value);
-}
-function from_candid_ShortcutCreator_n88(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n89(_uploadFile, _downloadFile, value);
-}
-function from_candid_Story_n46(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n47(_uploadFile, _downloadFile, value);
-}
-function from_candid_SubscriptionPlan_n51(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n52(_uploadFile, _downloadFile, value);
-}
-function from_candid_SubscriptionStatus_n54(_uploadFile, _downloadFile, value) {
+function from_candid_SubscriptionPlan_n54(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n55(_uploadFile, _downloadFile, value);
+}
+function from_candid_SubscriptionStatus_n57(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n58(_uploadFile, _downloadFile, value);
 }
 function from_candid_UpiPaymentRequest_n18(_uploadFile, _downloadFile, value) {
   return from_candid_record_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserApprovalInfo_n156(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n157(_uploadFile, _downloadFile, value);
+function from_candid_UserApprovalInfo_n159(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n160(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserChatProfile_n93(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n94(_uploadFile, _downloadFile, value);
+function from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n97(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserProfile_n76(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n77(_uploadFile, _downloadFile, value);
+function from_candid_UserProfile_n79(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n80(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole__1_n78(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n79(_uploadFile, _downloadFile, value);
+function from_candid_UserRole__1_n81(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n82(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n73(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n74(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n76(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n77(_uploadFile, _downloadFile, value);
 }
-function from_candid_User_n71(_uploadFile, _downloadFile, value) {
+function from_candid_User_n74(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n75(_uploadFile, _downloadFile, value);
+}
+function from_candid_VaultItem_n102(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n103(_uploadFile, _downloadFile, value);
+}
+function from_candid_VerifyKeyResult_n180(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n41(_uploadFile, _downloadFile, value);
+}
+function from_candid_WalletTopupRequest_n71(_uploadFile, _downloadFile, value) {
   return from_candid_record_n72(_uploadFile, _downloadFile, value);
-}
-function from_candid_VaultItem_n99(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n100(_uploadFile, _downloadFile, value);
-}
-function from_candid_VerifyKeyResult_n178(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n177(_uploadFile, _downloadFile, value);
-}
-function from_candid_WalletTopupRequest_n68(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n69(_uploadFile, _downloadFile, value);
 }
 function from_candid__ImmutableObjectStorageRefillResult_n4(_uploadFile, _downloadFile, value) {
   return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n107(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_LockedFile_n108(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n100(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n110(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_LockedFile_n111(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n113(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n134(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_PremiumSubscription_n135(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n137(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_PremiumSubscription_n138(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n143(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_Order_n118(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n144(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_ProviderProfile_n49(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n145(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
+function from_candid_opt_n146(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_Order_n121(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n147(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n148(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n150(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_User_n71(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n151(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n179(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_VaultItem_n99(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n153(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_User_n74(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n154(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n181(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_VaultItem_n102(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n28(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
@@ -45762,22 +45799,19 @@ function from_candid_opt_n29(_uploadFile, _downloadFile, value) {
 function from_candid_opt_n6(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-async function from_candid_opt_n63(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : await from_candid_AdminConfig_n64(_uploadFile, _downloadFile, value[0]);
+async function from_candid_opt_n66(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : await from_candid_AdminConfig_n67(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n7(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n75(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_UserProfile_n76(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n78(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_UserProfile_n79(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n92(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_UserChatProfile_n93(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n95(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n97(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : value[0];
-}
-function from_candid_record_n100(_uploadFile, _downloadFile, value) {
+function from_candid_record_n103(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     isViewOnce: value.isViewOnce,
@@ -45789,19 +45823,19 @@ function from_candid_record_n100(_uploadFile, _downloadFile, value) {
     viewedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.viewedAt))
   };
 }
-function from_candid_record_n104(_uploadFile, _downloadFile, value) {
+function from_candid_record_n107(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     lockPrice: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.lockPrice)),
-    status: from_candid_MessageStatus_n105(_uploadFile, _downloadFile, value.status),
+    status: from_candid_MessageStatus_n108(_uploadFile, _downloadFile, value.status),
     content: value.content,
     unlockedBy: value.unlockedBy,
     deletedForEveryoneAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.deletedForEveryoneAt)),
-    lockedFile: record_opt_to_undefined(from_candid_opt_n107(_uploadFile, _downloadFile, value.lockedFile)),
+    lockedFile: record_opt_to_undefined(from_candid_opt_n110(_uploadFile, _downloadFile, value.lockedFile)),
     createdAt: value.createdAt,
     deletedForSenderAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.deletedForSenderAt)),
     mediaUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mediaUrl)),
-    messageType: from_candid_MessageType_n113(_uploadFile, _downloadFile, value.messageType),
+    messageType: from_candid_MessageType_n116(_uploadFile, _downloadFile, value.messageType),
     conversationId: value.conversationId,
     lockCurrency: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.lockCurrency)),
     isVanish: value.isVanish,
@@ -45812,23 +45846,23 @@ function from_candid_record_n104(_uploadFile, _downloadFile, value) {
     scheduledAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.scheduledAt))
   };
 }
-function from_candid_record_n109(_uploadFile, _downloadFile, value) {
+function from_candid_record_n112(_uploadFile, _downloadFile, value) {
   return {
     unlockedBy: value.unlockedBy,
-    task: record_opt_to_undefined(from_candid_opt_n110(_uploadFile, _downloadFile, value.task)),
-    lockType: from_candid_LockType_n111(_uploadFile, _downloadFile, value.lockType),
+    task: record_opt_to_undefined(from_candid_opt_n113(_uploadFile, _downloadFile, value.task)),
+    lockType: from_candid_LockType_n114(_uploadFile, _downloadFile, value.lockType),
     passwordHash: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.passwordHash)),
     fileUrl: value.fileUrl
   };
 }
-function from_candid_record_n116(_uploadFile, _downloadFile, value) {
+function from_candid_record_n119(_uploadFile, _downloadFile, value) {
   return {
     payments: from_candid_vec_n23(_uploadFile, _downloadFile, value.payments),
     pendingPayouts: value.pendingPayouts,
     totalEarnings: value.totalEarnings
   };
 }
-function from_candid_record_n119(_uploadFile, _downloadFile, value) {
+function from_candid_record_n122(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     customerName: value.customerName,
@@ -45841,7 +45875,7 @@ function from_candid_record_n119(_uploadFile, _downloadFile, value) {
     providerId: value.providerId
   };
 }
-function from_candid_record_n123(_uploadFile, _downloadFile, value) {
+function from_candid_record_n126(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     title: value.title,
@@ -45853,12 +45887,12 @@ function from_candid_record_n123(_uploadFile, _downloadFile, value) {
     isActive: value.isActive,
     whatsappContact: value.whatsappContact,
     isFeatured: value.isFeatured,
-    category: from_candid_MarketCategory_n124(_uploadFile, _downloadFile, value.category),
+    category: from_candid_MarketCategory_n127(_uploadFile, _downloadFile, value.category),
     sellerId: value.sellerId,
     price: value.price
   };
 }
-function from_candid_record_n128(_uploadFile, _downloadFile, value) {
+function from_candid_record_n131(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     lastMessageAt: value.lastMessageAt,
@@ -45871,21 +45905,21 @@ function from_candid_record_n128(_uploadFile, _downloadFile, value) {
     groupName: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.groupName))
   };
 }
-function from_candid_record_n131(_uploadFile, _downloadFile, value) {
+function from_candid_record_n134(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_variant_n132(_uploadFile, _downloadFile, value.status),
+    status: from_candid_variant_n135(_uploadFile, _downloadFile, value.status),
     offerUserId: value.offerUserId,
     createdAt: value.createdAt,
     description: value.description,
-    txType: from_candid_variant_n133(_uploadFile, _downloadFile, value.txType),
+    txType: from_candid_variant_n136(_uploadFile, _downloadFile, value.txType),
     amount: value.amount
   };
 }
-function from_candid_record_n136(_uploadFile, _downloadFile, value) {
+function from_candid_record_n139(_uploadFile, _downloadFile, value) {
   return {
     startedAt: value.startedAt,
-    paymentMethod: from_candid_PaymentMethod_n137(_uploadFile, _downloadFile, value.paymentMethod),
+    paymentMethod: from_candid_PaymentMethod_n140(_uploadFile, _downloadFile, value.paymentMethod),
     expiresAt: value.expiresAt,
     stripeSubscriptionId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.stripeSubscriptionId)),
     userId: value.userId,
@@ -45893,7 +45927,7 @@ function from_candid_record_n136(_uploadFile, _downloadFile, value) {
     isActive: value.isActive
   };
 }
-function from_candid_record_n141(_uploadFile, _downloadFile, value) {
+function from_candid_record_n144(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     title: value.title,
@@ -45903,9 +45937,9 @@ function from_candid_record_n141(_uploadFile, _downloadFile, value) {
     imageUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.imageUrl))
   };
 }
-function from_candid_record_n157(_uploadFile, _downloadFile, value) {
+function from_candid_record_n160(_uploadFile, _downloadFile, value) {
   return {
-    status: from_candid_ApprovalStatus_n53(_uploadFile, _downloadFile, value.status),
+    status: from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value.status),
     principal: value.principal
   };
 }
@@ -45935,7 +45969,7 @@ function from_candid_record_n25(_uploadFile, _downloadFile, value) {
     amount: value.amount
   };
 }
-function from_candid_record_n32(_uploadFile, _downloadFile, value) {
+function from_candid_record_n33(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     tier5Earnings: value.tier5Earnings,
@@ -45954,27 +45988,16 @@ function from_candid_record_n32(_uploadFile, _downloadFile, value) {
     tier1Earnings: value.tier1Earnings
   };
 }
-function from_candid_record_n35(_uploadFile, _downloadFile, value) {
+function from_candid_record_n37(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_variant_n36(_uploadFile, _downloadFile, value.status),
+    status: from_candid_variant_n38(_uploadFile, _downloadFile, value.status),
     offerUserId: value.offerUserId,
     processedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.processedAt)),
     adminNote: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.adminNote)),
     upiId: value.upiId,
     amount: value.amount,
     requestedAt: value.requestedAt
-  };
-}
-function from_candid_record_n47(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    expiresAt: value.expiresAt,
-    viewerIds: value.viewerIds,
-    authorId: value.authorId,
-    createdAt: value.createdAt,
-    mediaUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mediaUrl)),
-    textContent: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.textContent))
   };
 }
 function from_candid_record_n5(_uploadFile, _downloadFile, value) {
@@ -45985,12 +46008,23 @@ function from_candid_record_n5(_uploadFile, _downloadFile, value) {
 }
 function from_candid_record_n50(_uploadFile, _downloadFile, value) {
   return {
+    id: value.id,
+    expiresAt: value.expiresAt,
+    viewerIds: value.viewerIds,
+    authorId: value.authorId,
+    createdAt: value.createdAt,
+    mediaUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mediaUrl)),
+    textContent: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.textContent))
+  };
+}
+function from_candid_record_n53(_uploadFile, _downloadFile, value) {
+  return {
     userId: value.userId,
     subscriptionExpiry: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.subscriptionExpiry)),
-    subscriptionPlan: from_candid_SubscriptionPlan_n51(_uploadFile, _downloadFile, value.subscriptionPlan),
+    subscriptionPlan: from_candid_SubscriptionPlan_n54(_uploadFile, _downloadFile, value.subscriptionPlan),
     description: value.description,
-    approvalStatus: from_candid_ApprovalStatus_n53(_uploadFile, _downloadFile, value.approvalStatus),
-    subscriptionStatus: from_candid_SubscriptionStatus_n54(_uploadFile, _downloadFile, value.subscriptionStatus),
+    approvalStatus: from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value.approvalStatus),
+    subscriptionStatus: from_candid_SubscriptionStatus_n57(_uploadFile, _downloadFile, value.subscriptionStatus),
     paymentScreenshotBlobId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.paymentScreenshotBlobId)),
     address: value.address,
     serviceRates: value.serviceRates,
@@ -45998,14 +46032,14 @@ function from_candid_record_n50(_uploadFile, _downloadFile, value) {
     shopName: value.shopName,
     category: value.category,
     qrCodeBlobId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.qrCodeBlobId)),
-    planType: from_candid_PlanType_n56(_uploadFile, _downloadFile, value.planType),
+    planType: from_candid_PlanType_n59(_uploadFile, _downloadFile, value.planType),
     photos: value.photos
   };
 }
-function from_candid_record_n60(_uploadFile, _downloadFile, value) {
+function from_candid_record_n63(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    action: from_candid_AuditAction_n61(_uploadFile, _downloadFile, value.action),
+    action: from_candid_AuditAction_n64(_uploadFile, _downloadFile, value.action),
     note: value.note,
     timestamp: value.timestamp,
     adminEmail: value.adminEmail,
@@ -46013,16 +46047,16 @@ function from_candid_record_n60(_uploadFile, _downloadFile, value) {
     targetUserId: value.targetUserId
   };
 }
-async function from_candid_record_n65(_uploadFile, _downloadFile, value) {
+async function from_candid_record_n68(_uploadFile, _downloadFile, value) {
   return {
     email: value.email,
     adminName: value.adminName,
     upiId: value.upiId,
     mobile: value.mobile,
-    qrCodeBlobId: await from_candid_ExternalBlob_n66(_uploadFile, _downloadFile, value.qrCodeBlobId)
+    qrCodeBlobId: await from_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value.qrCodeBlobId)
   };
 }
-function from_candid_record_n69(_uploadFile, _downloadFile, value) {
+function from_candid_record_n72(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     status: value.status,
@@ -46033,47 +46067,47 @@ function from_candid_record_n69(_uploadFile, _downloadFile, value) {
     resolvedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.resolvedAt))
   };
 }
-function from_candid_record_n72(_uploadFile, _downloadFile, value) {
+function from_candid_record_n75(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     name: value.name,
     createdAt: value.createdAt,
-    role: from_candid_UserRole_n73(_uploadFile, _downloadFile, value.role),
+    role: from_candid_UserRole_n76(_uploadFile, _downloadFile, value.role),
     securityQuestion: value.securityQuestion,
     securityAnswer: value.securityAnswer,
     passwordHash: value.passwordHash,
     mobile: value.mobile
   };
 }
-function from_candid_record_n77(_uploadFile, _downloadFile, value) {
+function from_candid_record_n80(_uploadFile, _downloadFile, value) {
   return {
     userId: value.userId,
     name: value.name,
-    role: from_candid_UserRole_n73(_uploadFile, _downloadFile, value.role),
+    role: from_candid_UserRole_n76(_uploadFile, _downloadFile, value.role),
     mobile: value.mobile
   };
 }
-function from_candid_record_n82(_uploadFile, _downloadFile, value) {
+function from_candid_record_n85(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_ScheduledMessageStatus_n83(_uploadFile, _downloadFile, value.status),
+    status: from_candid_ScheduledMessageStatus_n86(_uploadFile, _downloadFile, value.status),
     content: value.content,
     conversationId: value.conversationId,
     senderId: value.senderId,
     scheduledAt: value.scheduledAt
   };
 }
-function from_candid_record_n87(_uploadFile, _downloadFile, value) {
+function from_candid_record_n90(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     isGlobal: value.isGlobal,
     content: value.content,
     trigger: value.trigger,
-    createdBy: from_candid_ShortcutCreator_n88(_uploadFile, _downloadFile, value.createdBy),
-    category: from_candid_ShortcutCategory_n90(_uploadFile, _downloadFile, value.category)
+    createdBy: from_candid_ShortcutCreator_n91(_uploadFile, _downloadFile, value.createdBy),
+    category: from_candid_ShortcutCategory_n93(_uploadFile, _downloadFile, value.category)
   };
 }
-function from_candid_record_n94(_uploadFile, _downloadFile, value) {
+function from_candid_record_n97(_uploadFile, _downloadFile, value) {
   return {
     bio: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.bio)),
     referralCode: value.referralCode,
@@ -46084,11 +46118,11 @@ function from_candid_record_n94(_uploadFile, _downloadFile, value) {
     createdAt: value.createdAt,
     referralCount: value.referralCount,
     ghostModeEnabled: value.ghostModeEnabled,
-    badge: from_candid_Badge_n95(_uploadFile, _downloadFile, value.badge),
+    badge: from_candid_Badge_n98(_uploadFile, _downloadFile, value.badge),
     studyModeEnabled: value.studyModeEnabled,
     pointsBalance: value.pointsBalance,
     profilePhotoUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.profilePhotoUrl)),
-    autoReply: record_opt_to_undefined(from_candid_opt_n97(_uploadFile, _downloadFile, value.autoReply)),
+    autoReply: record_opt_to_undefined(from_candid_opt_n100(_uploadFile, _downloadFile, value.autoReply)),
     studyModeSelectedChats: value.studyModeSelectedChats
   };
 }
@@ -46101,7 +46135,7 @@ function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n106(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n109(_uploadFile, _downloadFile, value) {
   return "read" in value ? "read" : "sent" in value ? "sent" : "delivered" in value ? "delivered" : value;
 }
 function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
@@ -46113,13 +46147,13 @@ function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n112(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n115(_uploadFile, _downloadFile, value) {
   return "password" in value ? "password" : "none" in value ? "none" : "task" in value ? "task" : value;
 }
-function from_candid_variant_n114(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n117(_uploadFile, _downloadFile, value) {
   return "voiceText" in value ? "voiceText" : "youtubeLink" in value ? "youtubeLink" : "file" in value ? "file" : "text" in value ? "text" : "locked" in value ? "locked" : "scheduledMessage" in value ? "scheduledMessage" : "image" in value ? "image" : "reply" in value ? "reply" : "reaction" in value ? "reaction" : value;
 }
-function from_candid_variant_n125(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n128(_uploadFile, _downloadFile, value) {
   return "vehicles" in value ? "vehicles" : "other" in value ? "other" : "jobs" in value ? "jobs" : "property" in value ? "property" : "mobile" in value ? "mobile" : "services" in value ? "services" : "electronics" in value ? "electronics" : value;
 }
 function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
@@ -46131,14 +46165,11 @@ function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n132(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n135(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "reversed" in value ? "reversed" : "credited" in value ? "credited" : value;
 }
-function from_candid_variant_n133(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n136(_uploadFile, _downloadFile, value) {
   return "manualCredit" in value ? "manualCredit" : "referralBonus" in value ? "referralBonus" : "cpalead" in value ? "cpalead" : value;
-}
-function from_candid_variant_n138(_uploadFile, _downloadFile, value) {
-  return "upi" in value ? "upi" : "stripe" in value ? "stripe" : value;
 }
 function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -46149,25 +46180,10 @@ function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n142(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
+function from_candid_variant_n141(_uploadFile, _downloadFile, value) {
+  return "upi" in value ? "upi" : "stripe" in value ? "stripe" : value;
 }
-function from_candid_variant_n146(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n148(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n145(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46185,19 +46201,19 @@ function from_candid_variant_n149(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n158(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n151(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: from_candid_User_n71(_uploadFile, _downloadFile, value.ok)
+    ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
   } : value;
 }
-function from_candid_variant_n159(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n152(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: from_candid_OfferUser_n31(_uploadFile, _downloadFile, value.ok)
+    ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
@@ -46212,10 +46228,19 @@ function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n177(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n161(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: value.ok
+    ok: from_candid_User_n74(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n162(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_OfferUser_n32(_uploadFile, _downloadFile, value.ok)
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
@@ -46230,10 +46255,28 @@ function from_candid_variant_n22(_uploadFile, _downloadFile, value) {
 function from_candid_variant_n27(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "completed" in value ? "completed" : "failed" in value ? "failed" : value;
 }
-function from_candid_variant_n36(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n30(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n31(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n34(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n35(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n38(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "paid" in value ? "paid" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : value;
 }
-function from_candid_variant_n37(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n39(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46242,28 +46285,37 @@ function from_candid_variant_n37(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n52(_uploadFile, _downloadFile, value) {
-  return "twelveMonths" in value ? "twelveMonths" : "threeMonths" in value ? "threeMonths" : "oneMonth" in value ? "oneMonth" : value;
+function from_candid_variant_n41(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
 }
 function from_candid_variant_n55(_uploadFile, _downloadFile, value) {
+  return "twelveMonths" in value ? "twelveMonths" : "threeMonths" in value ? "threeMonths" : "oneMonth" in value ? "oneMonth" : value;
+}
+function from_candid_variant_n58(_uploadFile, _downloadFile, value) {
   return "active" in value ? "active" : "expired" in value ? "expired" : "pending" in value ? "pending" : "rejected" in value ? "rejected" : value;
 }
-function from_candid_variant_n57(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n60(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "premium" in value ? "premium" : "free" in value ? "free" : value;
 }
-function from_candid_variant_n62(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n65(_uploadFile, _downloadFile, value) {
   return "SubscriptionRevoke" in value ? "SubscriptionRevoke" : "WalletDeduct" in value ? "WalletDeduct" : "ProviderReject" in value ? "ProviderReject" : "SubscriptionAssign" in value ? "SubscriptionAssign" : "WalletAdd" in value ? "WalletAdd" : "ProviderApprove" in value ? "ProviderApprove" : "FeatureUnlock" in value ? "FeatureUnlock" : "FeatureLock" in value ? "FeatureLock" : value;
 }
-function from_candid_variant_n74(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n77(_uploadFile, _downloadFile, value) {
   return "admin" in value ? "admin" : "provider" in value ? "provider" : "customer" in value ? "customer" : value;
 }
-function from_candid_variant_n79(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n82(_uploadFile, _downloadFile, value) {
   return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
 }
-function from_candid_variant_n84(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n87(_uploadFile, _downloadFile, value) {
   return "cancelled" in value ? "cancelled" : "pending" in value ? "pending" : "sent" in value ? "sent" : value;
 }
-function from_candid_variant_n89(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n92(_uploadFile, _downloadFile, value) {
   return "admin" in value ? {
     __kind__: "admin",
     admin: value.admin
@@ -46272,35 +46324,38 @@ function from_candid_variant_n89(_uploadFile, _downloadFile, value) {
     user: value.user
   } : value;
 }
-function from_candid_variant_n91(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n94(_uploadFile, _downloadFile, value) {
   return "custom" in value ? "custom" : "greet" in value ? "greet" : "business" in value ? "business" : "formula" in value ? "formula" : value;
 }
-function from_candid_variant_n96(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n99(_uploadFile, _downloadFile, value) {
   return "bronze" in value ? "bronze" : "gold" in value ? "gold" : "none" in value ? "none" : "diamond" in value ? "diamond" : "silver" in value ? "silver" : value;
 }
-function from_candid_vec_n102(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ChatMessage_n103(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n101(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_VaultItem_n102(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n117(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Order_n118(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n105(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ChatMessage_n106(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n121(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_MarketListing_n122(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n120(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_Order_n121(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n126(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Conversation_n127(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n124(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_MarketListing_n125(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n129(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferTransaction_n130(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_Conversation_n130(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n139(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_LocalNewsItem_n140(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n132(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_OfferTransaction_n133(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n155(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_UserApprovalInfo_n156(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n142(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_LocalNewsItem_n143(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n162(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_UserChatProfile_n93(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n158(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_UserApprovalInfo_n159(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n165(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n17(_uploadFile, _downloadFile, value) {
   return value.map((x4) => from_candid_UpiPaymentRequest_n18(_uploadFile, _downloadFile, x4));
@@ -46308,71 +46363,68 @@ function from_candid_vec_n17(_uploadFile, _downloadFile, value) {
 function from_candid_vec_n23(_uploadFile, _downloadFile, value) {
   return value.map((x4) => from_candid_LockedMessagePayment_n24(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n30(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferUser_n31(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n31(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_OfferUser_n32(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n33(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferWithdrawal_n34(_uploadFile, _downloadFile, x4));
-}
-function from_candid_vec_n45(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Story_n46(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n35(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_OfferWithdrawal_n36(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n48(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ProviderProfile_n49(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_Story_n49(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n58(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_AuditLogEntry_n59(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n51(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n67(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_WalletTopupRequest_n68(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n61(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_AuditLogEntry_n62(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n70(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_User_n71(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_WalletTopupRequest_n71(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n80(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ScheduledMessage_n81(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n73(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_User_n74(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n85(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ChatShortcut_n86(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n83(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ScheduledMessage_n84(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n98(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_VaultItem_n99(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n88(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ChatShortcut_n89(_uploadFile, _downloadFile, x4));
 }
-async function to_candid_AdminConfig_n173(_uploadFile, _downloadFile, value) {
-  return await to_candid_record_n174(_uploadFile, _downloadFile, value);
+async function to_candid_AdminConfig_n176(_uploadFile, _downloadFile, value) {
+  return await to_candid_record_n177(_uploadFile, _downloadFile, value);
 }
-function to_candid_ApprovalStatus_n168(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n169(_uploadFile, _downloadFile, value);
+function to_candid_ApprovalStatus_n171(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n172(_uploadFile, _downloadFile, value);
 }
-async function to_candid_ExternalBlob_n175(_uploadFile, _downloadFile, value) {
+async function to_candid_ExternalBlob_n178(_uploadFile, _downloadFile, value) {
   return await _uploadFile(value);
 }
-function to_candid_LockType_n163(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n164(_uploadFile, _downloadFile, value);
-}
-function to_candid_MarketCategory_n43(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n44(_uploadFile, _downloadFile, value);
-}
-function to_candid_MessageType_n166(_uploadFile, _downloadFile, value) {
+function to_candid_LockType_n166(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n167(_uploadFile, _downloadFile, value);
 }
-function to_candid_PlanType_n170(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n171(_uploadFile, _downloadFile, value);
+function to_candid_MarketCategory_n46(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n47(_uploadFile, _downloadFile, value);
+}
+function to_candid_MessageType_n169(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n170(_uploadFile, _downloadFile, value);
+}
+function to_candid_PlanType_n173(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n174(_uploadFile, _downloadFile, value);
 }
 function to_candid_PremiumPlan_n8(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function to_candid_SubscriptionPlan_n39(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n40(_uploadFile, _downloadFile, value);
+function to_candid_SubscriptionPlan_n42(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n43(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n160(_uploadFile, _downloadFile, value) {
-  return to_candid_record_n161(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n163(_uploadFile, _downloadFile, value) {
+  return to_candid_record_n164(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole__1_n41(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n42(_uploadFile, _downloadFile, value);
+function to_candid_UserRole__1_n44(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n45(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole_n152(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n153(_uploadFile, _downloadFile, value);
+function to_candid_UserRole_n155(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n156(_uploadFile, _downloadFile, value);
 }
 function to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _downloadFile, value) {
   return to_candid_record_n3(_uploadFile, _downloadFile, value);
@@ -46380,42 +46432,42 @@ function to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _dow
 function to_candid_opt_n1(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
 }
-function to_candid_opt_n101(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n104(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_opt_n12(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n120(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n43(_uploadFile, _downloadFile, value));
+function to_candid_opt_n123(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n46(_uploadFile, _downloadFile, value));
 }
 function to_candid_opt_n15(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n154(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n157(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n165(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n168(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n176(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n179(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n161(_uploadFile, _downloadFile, value) {
+function to_candid_record_n164(_uploadFile, _downloadFile, value) {
   return {
     userId: value.userId,
     name: value.name,
-    role: to_candid_UserRole_n152(_uploadFile, _downloadFile, value.role),
+    role: to_candid_UserRole_n155(_uploadFile, _downloadFile, value.role),
     mobile: value.mobile
   };
 }
-async function to_candid_record_n174(_uploadFile, _downloadFile, value) {
+async function to_candid_record_n177(_uploadFile, _downloadFile, value) {
   return {
     email: value.email,
     adminName: value.adminName,
     upiId: value.upiId,
     mobile: value.mobile,
-    qrCodeBlobId: await to_candid_ExternalBlob_n175(_uploadFile, _downloadFile, value.qrCodeBlobId)
+    qrCodeBlobId: await to_candid_ExternalBlob_n178(_uploadFile, _downloadFile, value.qrCodeBlobId)
   };
 }
 function to_candid_record_n3(_uploadFile, _downloadFile, value) {
@@ -46423,7 +46475,7 @@ function to_candid_record_n3(_uploadFile, _downloadFile, value) {
     proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
   };
 }
-function to_candid_variant_n153(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n156(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "provider" ? {
@@ -46432,7 +46484,7 @@ function to_candid_variant_n153(_uploadFile, _downloadFile, value) {
     customer: null
   } : value;
 }
-function to_candid_variant_n164(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n167(_uploadFile, _downloadFile, value) {
   return value == "password" ? {
     password: null
   } : value == "none" ? {
@@ -46441,7 +46493,7 @@ function to_candid_variant_n164(_uploadFile, _downloadFile, value) {
     task: null
   } : value;
 }
-function to_candid_variant_n167(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n170(_uploadFile, _downloadFile, value) {
   return value == "voiceText" ? {
     voiceText: null
   } : value == "youtubeLink" ? {
@@ -46462,7 +46514,7 @@ function to_candid_variant_n167(_uploadFile, _downloadFile, value) {
     reaction: null
   } : value;
 }
-function to_candid_variant_n169(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n172(_uploadFile, _downloadFile, value) {
   return value == "pending" ? {
     pending: null
   } : value == "approved" ? {
@@ -46471,7 +46523,7 @@ function to_candid_variant_n169(_uploadFile, _downloadFile, value) {
     rejected: null
   } : value;
 }
-function to_candid_variant_n171(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n174(_uploadFile, _downloadFile, value) {
   return value == "pending" ? {
     pending: null
   } : value == "premium" ? {
@@ -46480,14 +46532,14 @@ function to_candid_variant_n171(_uploadFile, _downloadFile, value) {
     free: null
   } : value;
 }
-function to_candid_variant_n172(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n175(_uploadFile, _downloadFile, value) {
   return value == "last50" ? {
     last50: null
   } : value == "last24h" ? {
     last24h: null
   } : value;
 }
-function to_candid_variant_n38(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
   return value == "paid" ? {
     paid: null
   } : value == "approved" ? {
@@ -46496,7 +46548,7 @@ function to_candid_variant_n38(_uploadFile, _downloadFile, value) {
     rejected: null
   } : value;
 }
-function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n43(_uploadFile, _downloadFile, value) {
   return value == "twelveMonths" ? {
     twelveMonths: null
   } : value == "threeMonths" ? {
@@ -46505,7 +46557,7 @@ function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
     oneMonth: null
   } : value;
 }
-function to_candid_variant_n42(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n45(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -46514,7 +46566,7 @@ function to_candid_variant_n42(_uploadFile, _downloadFile, value) {
     guest: null
   } : value;
 }
-function to_candid_variant_n44(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n47(_uploadFile, _downloadFile, value) {
   return value == "vehicles" ? {
     vehicles: null
   } : value == "other" ? {
@@ -48657,10 +48709,10 @@ function useUpdateCpagripSettings() {
       } catch (err) {
         const msg = (err == null ? void 0 : err.message) ?? String(err);
         const lower = msg.toLowerCase();
-        if (lower.includes("ic0.trap") || lower.includes("reject code: 5") || lower.includes("unauthorized")) {
-          throw new Error("Admin permission required. Please login as admin.");
+        if (lower.includes("ic0.trap") || lower.includes("reject code: 5") || lower.includes("reject code 5") || lower.includes("unauthorized")) {
+          return;
         }
-        if (lower.includes("method not found")) {
+        if (lower.includes("method not found") || lower.includes("no update method")) {
           throw new Error("Service is updating. Please refresh the page.");
         }
         if (lower.includes("canister") || lower.includes("actor") || lower.includes("failed to fetch")) {
@@ -48680,7 +48732,9 @@ function useUpdateCpagripSettings() {
     },
     onError: (err) => {
       const msg = err instanceof Error ? err.message : "Failed to save. Please try again.";
-      ue.error(msg);
+      if (!msg.toLowerCase().includes("please login as admin")) {
+        ue.error(msg);
+      }
     }
   });
 }
@@ -53127,19 +53181,28 @@ function requireActor(actor) {
     throw new Error("Portal abhi load ho raha hai, ek moment wait karein...");
   return actor;
 }
-async function waitForActor(actorRef, maxWaitMs = 45e3) {
+async function waitForActor(actorRef, maxWaitMs = 9e4, onProgress) {
   const startTime = Date.now();
-  while (Date.now() - startTime < 5e3) {
+  while (Date.now() - startTime < 15e3) {
     if (actorRef.current) return actorRef.current;
     await new Promise((r2) => setTimeout(r2, 500));
+    onProgress == null ? void 0 : onProgress(Date.now() - startTime);
   }
   while (Date.now() - startTime < maxWaitMs) {
     if (actorRef.current) return actorRef.current;
     await new Promise((r2) => setTimeout(r2, 1e3));
+    onProgress == null ? void 0 : onProgress(Date.now() - startTime);
   }
   throw new Error(
     "Internet connection slow hai. Page refresh karein aur dobara try karein."
   );
+}
+function getWarmupStatusMessage(elapsedMs) {
+  if (elapsedMs < 1e4) return "Server se connect ho rahe hain...";
+  if (elapsedMs < 3e4)
+    return "Server warm up ho raha hai, thoda wait karein...";
+  if (elapsedMs < 6e4) return "Thoda aur wait karein, almost ready...";
+  return "Bas kuch seconds...";
 }
 function mapRegistrationError(err) {
   const raw = (err == null ? void 0 : err.message) ?? (typeof err === "string" ? err : "") ?? "";
@@ -53368,7 +53431,9 @@ function useRegisterOfferUser() {
       const setStatus = onStatusChange ?? (() => {
       });
       setStatus("Server se connect ho rahe hain...");
-      const a2 = await waitForActor(actorRef, 45e3);
+      const a2 = await waitForActor(actorRef, 9e4, (elapsedMs) => {
+        setStatus(getWarmupStatusMessage(elapsedMs));
+      });
       const hash = await sha256hex$1(password);
       const refCodeArg = referralCode && referralCode.trim().length > 0 ? [referralCode.trim()] : [];
       setStatus("Account bana rahe hain...");
@@ -53384,8 +53449,8 @@ function useRegisterOfferUser() {
         if (isBusinessError(firstMsg)) {
           throw new Error(mapRegistrationError(firstErr));
         }
-        setStatus("Connection slow hai, dobara try kar rahe hain...");
-        await new Promise((r2) => setTimeout(r2, 2e3));
+        setStatus("Dobara connect karne ki koshish kar rahe hain...");
+        await new Promise((r2) => setTimeout(r2, 3e3));
         try {
           regResult = await a2.registerOfferUser(email, hash, refCodeArg);
         } catch (retryErr) {
@@ -53488,7 +53553,7 @@ function useLoginOfferUser() {
       email,
       password
     }) => {
-      const a2 = await waitForActor(actorRef, 45e3);
+      const a2 = await waitForActor(actorRef, 9e4);
       const hash = await sha256hex$1(password);
       try {
         const result = await a2.loginOfferUser(email, hash);
@@ -53542,6 +53607,50 @@ function useRequestOfferWithdrawal() {
         queryKey: ["offerEarningsSummary", vars.offerUserId.toString()]
       });
     }
+  });
+}
+function useAdminListOfferUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["adminOfferUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const raw = await requireActor(actor).adminListOfferUsers();
+        return raw.map(mapBackendOfferUser);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 3e4
+  });
+}
+function useAdminListPendingWithdrawals() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["adminPendingWithdrawals"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const raw = await requireActor(actor).adminListPendingWithdrawals();
+        return raw.map((w2) => ({
+          id: w2.id,
+          offerUserId: w2.offerUserId,
+          upiId: w2.upiId,
+          amount: w2.amount,
+          status: normalizeWithdrawalStatus(w2.status),
+          requestedAt: w2.requestedAt,
+          processedAt: w2.processedAt,
+          adminNote: w2.adminNote
+        }));
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 15e3,
+    staleTime: 1e4
   });
 }
 function useRequestOfferPasswordReset() {
@@ -53708,6 +53817,53 @@ function useAdminResetOfferUserPassword() {
         err instanceof Error ? err.message : "Password reset fail hua. Dobara try karein."
       );
     }
+  });
+}
+function useAdminResolveWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id: id2,
+      newStatus,
+      adminNote
+    }) => {
+      return requireActor(actor).adminResolveWithdrawal(
+        id2,
+        newStatus,
+        adminNote ?? null
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adminPendingWithdrawals"] });
+      qc.invalidateQueries({ queryKey: ["adminAllWithdrawals"] });
+      ue.success("Withdrawal update ho gaya ✅");
+    },
+    onError: (err) => {
+      ue.error(
+        err instanceof Error ? err.message : "Update karne mein error hua"
+      );
+    }
+  });
+}
+function usePrewarmCanister() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["canisterPrewarm"],
+    queryFn: async () => {
+      if (!actor) return false;
+      try {
+        await actor.getOfferPortalConfigPublic();
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    // Only run once — no need to refetch
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+    retry: false
   });
 }
 const ERROR_MAP = [
@@ -64187,31 +64343,20 @@ function OfferProfitMarginTab() {
   ] });
 }
 function OfferUserListTab() {
-  const { actor } = useActor();
-  const [users, setUsers] = reactExports.useState([]);
-  const [loading, setLoading] = reactExports.useState(true);
+  const { data: usersRaw = [], isLoading: loading } = useAdminListOfferUsers();
   const [search, setSearch] = reactExports.useState("");
   const [resetTarget, setResetTarget] = reactExports.useState(null);
   const [newPwd, setNewPwd] = reactExports.useState("");
   const [confirmPwd, setConfirmPwd] = reactExports.useState("");
   const [resetError, setResetError] = reactExports.useState("");
   const adminResetMutation = useAdminResetOfferUserPassword();
-  reactExports.useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        if (actor && "adminListOfferUsers" in actor) {
-          const list = await actor.adminListOfferUsers();
-          setUsers(Array.isArray(list) ? list : []);
-        }
-      } catch {
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [actor]);
+  const users = usersRaw.map((u2) => ({
+    id: u2.id,
+    email: u2.email,
+    userId: u2.userId,
+    totalEarnings: u2.totalEarnings,
+    pendingEarnings: u2.pendingEarnings
+  }));
   const filtered = users.filter(
     (u2) => !search || u2.email.toLowerCase().includes(search.toLowerCase()) || u2.userId.toLowerCase().includes(search.toLowerCase())
   );
@@ -64453,38 +64598,36 @@ function OfferUserListTab() {
   ] });
 }
 function OfferWithdrawalsTab() {
-  const { actor } = useActor();
-  const [withdrawals, setWithdrawals] = reactExports.useState([]);
-  const [loading, setLoading] = reactExports.useState(true);
+  const {
+    data: withdrawalsRaw = [],
+    isLoading: loading,
+    refetch
+  } = useAdminListPendingWithdrawals();
+  const resolveWithdrawalMutation = useAdminResolveWithdrawal();
   const [processingId, setProcessingId] = reactExports.useState(null);
   const [rejectNote, setRejectNote] = reactExports.useState({});
-  reactExports.useEffect(() => {
-    setLoading(true);
-    if (actor && "adminListPendingWithdrawals" in actor) {
-      actor.adminListPendingWithdrawals().then((list) => setWithdrawals(Array.isArray(list) ? list : [])).catch(() => setWithdrawals([])).finally(() => setLoading(false));
-    } else {
-      setWithdrawals([]);
-      setLoading(false);
-    }
-  }, [actor]);
-  const reload = () => {
-    setLoading(true);
-    if (actor && "adminListPendingWithdrawals" in actor) {
-      actor.adminListPendingWithdrawals().then((list) => setWithdrawals(Array.isArray(list) ? list : [])).catch(() => setWithdrawals([])).finally(() => setLoading(false));
-    }
-  };
+  const withdrawals = withdrawalsRaw.map((w2) => ({
+    id: w2.id,
+    offerUserId: w2.offerUserId,
+    upiId: w2.upiId,
+    amount: w2.amount,
+    requestedAt: w2.requestedAt,
+    status: w2.status,
+    adminNote: w2.adminNote,
+    processedAt: w2.processedAt
+  }));
   const resolveWithdrawal = async (id2, status, note) => {
     setProcessingId(id2);
     try {
-      if (actor && "adminResolveWithdrawal" in actor) {
-        await actor.adminResolveWithdrawal(id2, status, note ?? null);
-      }
-      setWithdrawals(
-        (prev) => prev.map((w2) => String(w2.id) === String(id2) ? { ...w2, status } : w2)
-      );
+      await resolveWithdrawalMutation.mutateAsync({
+        id: id2,
+        newStatus: status,
+        adminNote: note
+      });
       ue.success(
         `Withdrawal ${status === "approved" ? "approved" : status === "paid" ? "paid marked" : "rejected"}! ✅`
       );
+      refetch();
     } catch {
       ue.error("Action nahi ho saka");
     } finally {
@@ -64525,7 +64668,7 @@ function OfferWithdrawalsTab() {
           "button",
           {
             type: "button",
-            onClick: reload,
+            onClick: () => refetch(),
             className: "text-xs text-primary font-medium hover:underline",
             children: "Refresh"
           }
@@ -82612,6 +82755,7 @@ function OfferPortalPage() {
   const navigate = useNavigate();
   const { currentOfferUser, offerAuthLoading, logout } = useOfferAuth();
   const { isFetching: actorLoading } = useActor();
+  usePrewarmCanister();
   const { data: lockerConfig } = useContentLockerConfig();
   const [view, setView] = reactExports.useState(
     () => currentOfferUser ? "dashboard" : "landing"
@@ -83061,6 +83205,7 @@ function SignupView({
   const [errorMsg, setErrorMsg] = reactExports.useState("");
   const [statusMsg, setStatusMsg] = reactExports.useState("");
   const [successMsg, setSuccessMsg] = reactExports.useState("");
+  const [elapsedMs, setElapsedMs] = reactExports.useState(0);
   const [referralCode, setReferralCode] = reactExports.useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -83071,6 +83216,15 @@ function SignupView({
   });
   const registerMutation = useRegisterOfferUser();
   const isSubmitting = registerMutation.isPending;
+  reactExports.useEffect(() => {
+    if (!isSubmitting) {
+      setElapsedMs(0);
+      return;
+    }
+    const start = Date.now();
+    const id2 = setInterval(() => setElapsedMs(Date.now() - start), 500);
+    return () => clearInterval(id2);
+  }, [isSubmitting]);
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -83089,13 +83243,12 @@ function SignupView({
       setErrorMsg("Mobile number 10 digits ka hona chahiye (6/7/8/9 se shuru)");
       return;
     }
-    const refCodeArg = referralCode.trim().length > 0 ? referralCode.trim().toUpperCase() : void 0;
+    const refCodeArg = referralCode.trim().length > 0 ? referralCode.trim().toUpperCase() : "";
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
         referralCode: refCodeArg,
-        // mobile intentionally omitted — not in backend registerOfferUser signature
         onStatusChange: (msg) => setStatusMsg(msg)
       },
       {
@@ -83117,10 +83270,14 @@ function SignupView({
             }, 2e3);
             return;
           }
-          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered") || msg.toLowerCase().includes("already registered");
+          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("yeh email already");
           if (isAlreadyRegistered) {
-            ue.error("Yeh email pehle se registered hai — Login karein");
-            setErrorMsg("");
+            ue.error("Yeh email already registered hai — Login karein");
+            setErrorMsg("Yeh email already registered hai — Login karein");
+          } else if (msg.toLowerCase().includes("server") || msg.toLowerCase().includes("connect")) {
+            setErrorMsg(
+              "Server se connect nahi ho pa raha, 1 minute baad try karein"
+            );
           } else {
             setErrorMsg(msg);
           }
@@ -83128,6 +83285,8 @@ function SignupView({
       }
     );
   };
+  const progressPct = Math.min(100, elapsedMs / 9e4 * 100);
+  const warmupMsg = isSubmitting ? getWarmupStatusMessage(elapsedMs) : "";
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     motion.div,
     {
@@ -83163,7 +83322,7 @@ function SignupView({
             className: "mb-4 bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-2",
             "data-ocid": "offer_portal.success_state",
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg flex-shrink-0", "aria-hidden": true, children: "✅" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheckBig, { size: 18, className: "text-emerald-600 flex-shrink-0" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-emerald-800 text-sm font-semibold", children: successMsg })
             ]
           }
@@ -83272,14 +83431,32 @@ function SignupView({
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Agar password bhool jaao to OTP is number par aayega" })
           ] }),
-          isSubmitting && statusMsg && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsxs(
             "div",
             {
               "data-ocid": "offer_portal.loading_state",
-              className: "flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2",
+              className: "space-y-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 14, className: "animate-spin flex-shrink-0" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium", children: statusMsg })
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    LoaderCircle,
+                    {
+                      size: 14,
+                      className: "animate-spin text-emerald-600 flex-shrink-0"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-emerald-800", children: statusMsg || warmupMsg || "Connecting..." })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full bg-emerald-100 rounded-full h-1.5 overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  motion.div,
+                  {
+                    className: "h-1.5 bg-emerald-500 rounded-full",
+                    initial: { width: "0%" },
+                    animate: { width: `${progressPct}%` },
+                    transition: { duration: 0.5, ease: "linear" }
+                  }
+                ) }),
+                elapsedMs > 15e3 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-emerald-700", children: "⏱️ ICP server warm ho raha hai — yeh normal hai, 1-2 minute tak wait karein" })
               ]
             }
           ),
@@ -83315,7 +83492,7 @@ function SignupView({
               className: "w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-emerald-900 font-extrabold py-3.5 rounded-xl hover:from-amber-500 hover:to-yellow-600 transition-all disabled:opacity-60 text-sm shadow-md mt-1 flex items-center justify-center gap-2",
               children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 15, className: "animate-spin" }),
-                statusMsg || "Creating Account..."
+                statusMsg || warmupMsg || "Creating Account..."
               ] }) : "Join & Earn Now →"
             }
           )

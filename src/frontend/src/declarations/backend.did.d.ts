@@ -786,14 +786,24 @@ export interface _SERVICE {
   'adminGetUpiUnlockRequests' : ActorMethod<[], Array<LockedMessagePayment>>,
   /**
    * / List all Offer Portal users — admin only.
-   * / Returns empty array for non-admin callers (never traps).
+   * / Accepts adminToken for email+password auth flow (anonymous principal friendly).
+   * / Returns #ok([users]) for admin, #err("Unauthorized") for non-admin — never traps.
    */
-  'adminListOfferUsers' : ActorMethod<[], Array<OfferUser>>,
+  'adminListOfferUsers' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<OfferUser> } |
+      { 'err' : string }
+  >,
   /**
    * / List all pending withdrawal requests — admin only.
-   * / Returns empty array for non-admin callers (never traps).
+   * / Accepts adminToken for email+password auth flow.
+   * / Returns #ok([withdrawals]) for admin, #err("Unauthorized") for non-admin — never traps.
    */
-  'adminListPendingWithdrawals' : ActorMethod<[], Array<OfferWithdrawal>>,
+  'adminListPendingWithdrawals' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<OfferWithdrawal> } |
+      { 'err' : string }
+  >,
   'adminRejectUpiPremium' : ActorMethod<
     [bigint],
     { 'ok' : null } |
@@ -818,16 +828,20 @@ export interface _SERVICE {
   >,
   /**
    * / Resolve a withdrawal request (approve/reject/paid) — admin only.
+   * / Accepts adminToken for email+password auth flow.
+   * / Returns #ok(true) on success, #err("Unauthorized") for non-admin — never traps.
    */
   'adminResolveWithdrawal' : ActorMethod<
     [
+      [] | [string],
       bigint,
       { 'paid' : null } |
         { 'approved' : null } |
         { 'rejected' : null },
       [] | [string],
     ],
-    boolean
+    { 'ok' : boolean } |
+      { 'err' : string }
   >,
   'adminSeedChatDemoData' : ActorMethod<[], boolean>,
   'adminSetPremiumPrices' : ActorMethod<
@@ -1356,8 +1370,13 @@ export interface _SERVICE {
   >,
   /**
    * / Submit a UPI withdrawal request from the Offer Portal.
+   * / Returns #ok(withdrawalId) or #err(reason) — never traps.
    */
-  'requestOfferWithdrawal' : ActorMethod<[bigint, string, bigint], bigint>,
+  'requestOfferWithdrawal' : ActorMethod<
+    [bigint, string, bigint],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   /**
    * / Request admin to top-up your wallet.  Returns the new request ID.
    */
@@ -1622,6 +1641,15 @@ export interface _SERVICE {
    */
   'updateSmsConfig' : ActorMethod<
     [string, string, boolean],
+    { 'ok' : boolean } |
+      { 'err' : string }
+  >,
+  /**
+   * / Update SMS config with admin token — admin only (alias for email+password auth).
+   * / Returns #ok(true) or #err("Unauthorized: Admin only") — never traps.
+   */
+  'updateSmsConfigWithToken' : ActorMethod<
+    [[] | [string], string, string, boolean],
     { 'ok' : boolean } |
       { 'err' : string }
   >,

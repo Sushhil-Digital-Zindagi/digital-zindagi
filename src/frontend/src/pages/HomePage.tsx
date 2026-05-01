@@ -877,7 +877,6 @@ export default function HomePage() {
 
   // Direct DOM injection fallback: ensures custom codes appear even if React
   // rendering is delayed or missed (e.g. async data load after first paint).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-inject when codes change
   useEffect(() => {
     if (!customCodes || customCodes.length === 0) return;
     const timer = setTimeout(() => {

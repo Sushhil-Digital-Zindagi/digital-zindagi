@@ -12,6 +12,7 @@
  */
 import {
   ArrowLeft,
+  CheckCircle,
   ChevronRight,
   CircleDollarSign,
   Copy,
@@ -20,6 +21,7 @@ import {
   Loader2,
   LogOut,
   Save,
+  Search,
   Settings,
   Star,
   TrendingUp,
@@ -34,6 +36,8 @@ import ContentLockerOverlay from "../components/ContentLockerOverlay";
 import { useOfferAuth } from "../contexts/OfferAuthContext";
 import { useActor } from "../hooks/useActor";
 import {
+  getWarmupStatusMessage,
+  useAdminListAllWithdrawals,
   useAdminListOfferUsers,
   useAdminListPendingWithdrawals,
   useAdminResolveWithdrawal,
@@ -42,6 +46,7 @@ import {
   useMyOfferWithdrawals,
   useOfferEarningsSummary,
   useOfferPortalConfig,
+  usePrewarmCanister,
   useRegisterOfferUser,
   useRequestOfferPasswordReset,
   useRequestOfferWithdrawal,
@@ -170,6 +175,11 @@ export default function OfferPortalPage() {
   const navigate = useNavigate();
   const { currentOfferUser, offerAuthLoading, logout } = useOfferAuth();
   const { isFetching: actorLoading } = useActor();
+
+  // Pre-warm the canister as soon as this page mounts.
+  // This fires a lightweight read query immediately so the canister wakes up
+  // BEFORE the user fills out the registration form and clicks Register.
+  usePrewarmCanister();
 
   // Content locker — fail-open if loading/errored
   const { data: lockerConfig } = useContentLockerConfig();
@@ -644,6 +654,7 @@ function SignupView({
   const [errorMsg, setErrorMsg] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
   const [referralCode, setReferralCode] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -653,9 +664,20 @@ function SignupView({
     }
   });
 
-  // useRegisterOfferUser handles register + auto-login + waitForActor (20s) + retry
+  // useRegisterOfferUser handles register + auto-login + waitForActor (90s) + retry
   const registerMutation = useRegisterOfferUser();
   const isSubmitting = registerMutation.isPending;
+
+  // Elapsed time ticker while submitting — drives the progress indicator
+  useEffect(() => {
+    if (!isSubmitting) {
+      setElapsedMs(0);
+      return;
+    }
+    const start = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - start), 500);
+    return () => clearInterval(id);
+  }, [isSubmitting]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -677,30 +699,21 @@ function SignupView({
       return;
     }
 
-    // Normalize referral code — empty string → undefined (backend gets null)
+    // Normalize referral code — empty string means no referral (hook encodes as [] for None)
     const refCodeArg =
-      referralCode.trim().length > 0
-        ? referralCode.trim().toUpperCase()
-        : undefined;
-
-    // NOTE: mobile is collected for UX (OTP recovery) but is NOT passed to
-    // registerOfferUser — the backend method signature takes only 3 args:
-    // (email, passwordHash, referralCode). The mobile field in OfferUser is
-    // managed separately after registration if the backend ever adds that API.
+      referralCode.trim().length > 0 ? referralCode.trim().toUpperCase() : "";
 
     registerMutation.mutate(
       {
         email: email.trim(),
         password,
         referralCode: refCodeArg,
-        // mobile intentionally omitted — not in backend registerOfferUser signature
         onStatusChange: (msg) => setStatusMsg(msg),
       },
       {
         onSuccess: (user) => {
           setStatusMsg("");
           setSuccessMsg(`Account ban gaya! Welcome aboard 🎉 (ID: ${user.id})`);
-          // Redirect to dashboard after 1.5s
           setTimeout(() => {
             onSuccess();
           }, 1500);
@@ -712,8 +725,6 @@ function SignupView({
               ? err.message
               : "Registration nahi ho payi. Dobara try karein.";
 
-          // "Account ban gaya! Abhi login karein." — registration succeeded but
-          // auto-login failed. Show success message and send user to login.
           if (msg === "Account ban gaya! Abhi login karein.") {
             setSuccessMsg("Account ban gaya! ✅ Ab login karein.");
             toast.success("Account ban gaya! Login karein. 🎉");
@@ -726,11 +737,18 @@ function SignupView({
           const isAlreadyRegistered =
             msg.toLowerCase().includes("already") ||
             msg.toLowerCase().includes("pehle se registered") ||
-            msg.toLowerCase().includes("already registered");
+            msg.toLowerCase().includes("already registered") ||
+            msg.toLowerCase().includes("yeh email already");
           if (isAlreadyRegistered) {
-            // Guide user to login instead of showing error in form
-            toast.error("Yeh email pehle se registered hai — Login karein");
-            setErrorMsg("");
+            toast.error("Yeh email already registered hai — Login karein");
+            setErrorMsg("Yeh email already registered hai — Login karein");
+          } else if (
+            msg.toLowerCase().includes("server") ||
+            msg.toLowerCase().includes("connect")
+          ) {
+            setErrorMsg(
+              "Server se connect nahi ho pa raha, 1 minute baad try karein",
+            );
           } else {
             setErrorMsg(msg);
           }
@@ -738,6 +756,10 @@ function SignupView({
       },
     );
   };
+
+  // Determine progress percentage (0–100) based on elapsed time
+  const progressPct = Math.min(100, (elapsedMs / 90_000) * 100);
+  const warmupMsg = isSubmitting ? getWarmupStatusMessage(elapsedMs) : "";
 
   return (
     <motion.div
@@ -777,9 +799,7 @@ function SignupView({
           className="mb-4 bg-emerald-50 border border-emerald-300 rounded-xl px-4 py-3 flex items-center gap-2"
           data-ocid="offer_portal.success_state"
         >
-          <span className="text-lg flex-shrink-0" aria-hidden>
-            ✅
-          </span>
+          <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
           <p className="text-emerald-800 text-sm font-semibold">{successMsg}</p>
         </motion.div>
       )}
@@ -872,14 +892,36 @@ function SignupView({
           </p>
         </div>
 
-        {/* Step-by-step status indicator */}
-        {isSubmitting && statusMsg && (
+        {/* Animated warm-up progress indicator */}
+        {isSubmitting && (
           <div
             data-ocid="offer_portal.loading_state"
-            className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2"
+            className="space-y-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3"
           >
-            <Loader2 size={14} className="animate-spin flex-shrink-0" />
-            <span className="text-sm font-medium">{statusMsg}</span>
+            <div className="flex items-center gap-2">
+              <Loader2
+                size={14}
+                className="animate-spin text-emerald-600 flex-shrink-0"
+              />
+              <span className="text-sm font-medium text-emerald-800">
+                {statusMsg || warmupMsg || "Connecting..."}
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full bg-emerald-100 rounded-full h-1.5 overflow-hidden">
+              <motion.div
+                className="h-1.5 bg-emerald-500 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.5, ease: "linear" }}
+              />
+            </div>
+            {elapsedMs > 15_000 && (
+              <p className="text-xs text-emerald-700">
+                ⏱️ ICP server warm ho raha hai — yeh normal hai, 1-2 minute tak
+                wait karein
+              </p>
+            )}
           </div>
         )}
 
@@ -912,7 +954,7 @@ function SignupView({
           {isSubmitting ? (
             <>
               <Loader2 size={15} className="animate-spin" />
-              {statusMsg || "Creating Account..."}
+              {statusMsg || warmupMsg || "Creating Account..."}
             </>
           ) : (
             "Join & Earn Now →"
@@ -1857,6 +1899,7 @@ export function OfferControlCenter() {
   const { data: offerUsers = [], isLoading: usersLoading } =
     useAdminListOfferUsers();
   const { data: pendingWithdrawals = [] } = useAdminListPendingWithdrawals();
+  const { data: allWithdrawals = [] } = useAdminListAllWithdrawals();
   const resolveWithdrawal = useAdminResolveWithdrawal();
 
   const [isEnabled, setIsEnabled] = useState<boolean>(true);
@@ -1867,7 +1910,15 @@ export function OfferControlCenter() {
   const [adminPct, setAdminPct] = useState("60");
   const [userPct, setUserPct] = useState("40");
 
-  // Hydrate fields when config loads — use useEffect to avoid render-time setState
+  // User list search
+  const [userSearch, setUserSearch] = useState("");
+
+  // Withdrawal tab: "pending" | "all"
+  const [withdrawalTab, setWithdrawalTab] = useState<"pending" | "all">(
+    "pending",
+  );
+
+  // Hydrate fields when config loads
   useEffect(() => {
     if (!config) return;
     setIsEnabled(config.isEnabled);
@@ -1896,6 +1947,19 @@ export function OfferControlCenter() {
       newOfferWallName: cpagripOfferWallName.trim(),
     });
   };
+
+  const filteredUsers = userSearch.trim()
+    ? offerUsers.filter((u) =>
+        u.email.toLowerCase().includes(userSearch.toLowerCase()),
+      )
+    : offerUsers;
+
+  const displayedWithdrawals =
+    withdrawalTab === "pending"
+      ? pendingWithdrawals
+      : allWithdrawals
+          .slice()
+          .sort((a, b) => Number(b.requestedAt - a.requestedAt));
 
   if (configLoading) {
     return (
@@ -2091,49 +2155,91 @@ export function OfferControlCenter() {
         </button>
       </div>
 
-      {/* User List */}
+      {/* ── User List with search ── */}
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2">
-          <Users size={15} className="text-emerald-600" />
-          Offer Portal Users{" "}
-          {!usersLoading && (
-            <span className="text-xs text-muted-foreground font-normal">
-              ({offerUsers.length})
-            </span>
-          )}
-        </h3>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+            <Users size={15} className="text-emerald-600" />
+            Registered Users
+            {!usersLoading && (
+              <span className="ml-1 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                {offerUsers.length}
+              </span>
+            )}
+          </h3>
+        </div>
+
+        {/* Search bar */}
+        <div className="relative mb-3">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="text"
+            data-ocid="offer_control.user_search_input"
+            placeholder="Email se search karein..."
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
+          />
+        </div>
+
         {usersLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm py-3">
             <Loader2 size={14} className="animate-spin" /> Loading users...
           </div>
-        ) : offerUsers.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <p
             data-ocid="offer_control.empty_users"
             className="text-muted-foreground text-sm py-2"
           >
-            Koi user abhi join nahi kiya
+            {userSearch
+              ? "Koi user nahi mila is email ke liye"
+              : "Koi user abhi join nahi kiya"}
           </p>
         ) : (
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {offerUsers.map((u) => (
+          <div className="space-y-0 max-h-80 overflow-y-auto divide-y divide-border">
+            {filteredUsers.map((u, idx) => (
               <div
                 key={u.id.toString()}
-                data-ocid="offer_control.user_row"
-                className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0"
+                data-ocid={`offer_control.user_row.${idx + 1}`}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0"
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {u.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    ID: {u.id.toString()} • Ref: {u.referralCode}
-                  </p>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700 text-xs font-bold">
+                    {(u.email ?? "U").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {u.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      ID #{u.id.toString()} • Ref:{" "}
+                      <span className="font-mono">{u.referralCode}</span>
+                      {u.referredBy && (
+                        <span className="ml-1 text-blue-600">
+                          via {u.referredBy}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Joined:{" "}
+                      {new Date(
+                        Number(u.createdAt) / 1_000_000,
+                      ).toLocaleDateString("en-IN")}
+                    </p>
+                  </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-xs font-bold text-emerald-600">
                     {formatRupees(u.totalEarnings)}
                   </p>
                   <p className="text-xs text-muted-foreground">earned</p>
+                  <p className="text-xs font-semibold text-amber-600">
+                    {formatRupees(u.pendingEarnings)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">pending</p>
                 </div>
               </div>
             ))}
@@ -2141,56 +2247,105 @@ export function OfferControlCenter() {
         )}
       </div>
 
-      {/* Pending Withdrawals */}
+      {/* ── Withdrawal Management ── */}
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2">
-          <Wallet size={15} className="text-amber-500" />
-          Withdrawal Requests{" "}
-          {pendingWithdrawals.length > 0 && (
-            <span className="ml-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              {pendingWithdrawals.length}
-            </span>
-          )}
-        </h3>
-        {pendingWithdrawals.length === 0 ? (
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+            <Wallet size={15} className="text-amber-500" />
+            Withdrawal Requests
+            {pendingWithdrawals.length > 0 && (
+              <span className="ml-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {pendingWithdrawals.length} pending
+              </span>
+            )}
+          </h3>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 bg-muted rounded-xl p-1 mb-4" role="tablist">
+          {(["pending", "all"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              data-ocid={`offer_control.withdrawal_tab.${tab}`}
+              aria-selected={withdrawalTab === tab}
+              onClick={() => setWithdrawalTab(tab)}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                withdrawalTab === tab
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "pending" ? "⏳ Pending" : "📋 All"}
+            </button>
+          ))}
+        </div>
+
+        {displayedWithdrawals.length === 0 ? (
           <p
             data-ocid="offer_control.empty_withdrawals"
             className="text-muted-foreground text-sm py-2"
           >
-            Koi pending withdrawal nahi
+            {withdrawalTab === "pending"
+              ? "Koi pending withdrawal nahi"
+              : "Abhi koi withdrawal request nahi"}
           </p>
         ) : (
-          <div className="space-y-3">
-            {pendingWithdrawals.map((w) => (
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {displayedWithdrawals.map((w, idx) => (
               <div
                 key={w.id.toString()}
-                data-ocid="offer_control.withdrawal_row"
-                className="border border-border rounded-xl p-3 space-y-2"
+                data-ocid={`offer_control.withdrawal_row.${idx + 1}`}
+                className="border border-border rounded-xl p-4 space-y-3"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground">
-                      {formatRupees(w.amount)}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-base font-bold text-foreground">
+                        {formatRupees(w.amount)}
+                      </p>
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          w.status === "paid"
+                            ? "bg-blue-100 text-blue-700"
+                            : w.status === "approved"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : w.status === "rejected"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {w.status === "paid"
+                          ? "💸 Paid"
+                          : w.status === "approved"
+                            ? "✅ Approved"
+                            : w.status === "rejected"
+                              ? "❌ Rejected"
+                              : "⏳ Pending"}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-mono truncate">
+                      UPI: {w.upiId}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {w.upiId}
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      User #{w.offerUserId.toString()} •{" "}
+                      {new Date(
+                        Number(w.requestedAt) / 1_000_000,
+                      ).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      User #{w.offerUserId.toString()}
-                    </p>
+                    {w.adminNote && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">
+                        Note: {w.adminNote}
+                      </p>
+                    )}
                   </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 ${
-                      w.status === "paid" || w.status === "approved"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : w.status === "rejected"
-                          ? "bg-red-100 text-red-600"
-                          : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
-                    {w.status}
-                  </span>
                 </div>
+
                 {w.status === "pending" && (
                   <div className="flex gap-2">
                     <button
@@ -2203,7 +2358,7 @@ export function OfferControlCenter() {
                         })
                       }
                       disabled={resolveWithdrawal.isPending}
-                      className="flex-1 bg-emerald-500 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-60"
+                      className="flex-1 bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-60"
                     >
                       ✅ Approve
                     </button>
@@ -2217,7 +2372,7 @@ export function OfferControlCenter() {
                         })
                       }
                       disabled={resolveWithdrawal.isPending}
-                      className="flex-1 bg-blue-500 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
+                      className="flex-1 bg-blue-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
                     >
                       💸 Mark Paid
                     </button>
@@ -2231,11 +2386,28 @@ export function OfferControlCenter() {
                         })
                       }
                       disabled={resolveWithdrawal.isPending}
-                      className="flex-1 bg-red-500 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
+                      className="flex-1 bg-red-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
                     >
                       ❌ Reject
                     </button>
                   </div>
+                )}
+
+                {w.status === "approved" && (
+                  <button
+                    type="button"
+                    data-ocid="offer_control.paid_btn"
+                    onClick={() =>
+                      resolveWithdrawal.mutate({
+                        id: w.id,
+                        newStatus: "paid",
+                      })
+                    }
+                    disabled={resolveWithdrawal.isPending}
+                    className="w-full bg-blue-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
+                  >
+                    💸 Mark as Paid (Payment Bhej Diya)
+                  </button>
                 )}
               </div>
             ))}

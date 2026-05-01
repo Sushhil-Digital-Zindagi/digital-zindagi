@@ -42,7 +42,12 @@ import VideoPlayer from "../components/VideoPlayer";
 import ChatAdminPanel from "../components/chat/ChatAdminPanel";
 import { hashPassword, useAuth } from "../contexts/AuthContext";
 import { useActor } from "../hooks/useActor";
-import { useAdminResetOfferUserPassword } from "../hooks/useOfferQueries";
+import {
+  useAdminListOfferUsers,
+  useAdminListPendingWithdrawals,
+  useAdminResetOfferUserPassword,
+  useAdminResolveWithdrawal,
+} from "../hooks/useOfferQueries";
 import {
   useActiveBanners,
   useAddCategory,
@@ -12006,9 +12011,7 @@ function OfferProfitMarginTab() {
 
 // (D) Offer User List Tab
 function OfferUserListTab() {
-  const { actor } = useActor();
-  const [users, setUsers] = useState<OfferUserLocal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: usersRaw = [], isLoading: loading } = useAdminListOfferUsers();
   const [search, setSearch] = useState("");
   const [resetTarget, setResetTarget] = useState<string | null>(null);
   const [newPwd, setNewPwd] = useState("");
@@ -12016,26 +12019,14 @@ function OfferUserListTab() {
   const [resetError, setResetError] = useState("");
   const adminResetMutation = useAdminResetOfferUserPassword();
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        if (actor && "adminListOfferUsers" in actor) {
-          const list = await (
-            actor as unknown as {
-              adminListOfferUsers: () => Promise<OfferUserLocal[]>;
-            }
-          ).adminListOfferUsers();
-          setUsers(Array.isArray(list) ? list : []);
-        }
-      } catch {
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [actor]);
+  // Map to local shape
+  const users: OfferUserLocal[] = usersRaw.map((u) => ({
+    id: u.id,
+    email: u.email,
+    userId: u.userId,
+    totalEarnings: u.totalEarnings,
+    pendingEarnings: u.pendingEarnings,
+  }));
 
   const filtered = users.filter(
     (u) =>
@@ -12308,45 +12299,26 @@ function OfferUserListTab() {
 
 // (E) Withdrawal Requests Tab
 function OfferWithdrawalsTab() {
-  const { actor } = useActor();
-  const [withdrawals, setWithdrawals] = useState<OfferWithdrawalLocal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: withdrawalsRaw = [],
+    isLoading: loading,
+    refetch,
+  } = useAdminListPendingWithdrawals();
+  const resolveWithdrawalMutation = useAdminResolveWithdrawal();
   const [processingId, setProcessingId] = useState<bigint | null>(null);
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setLoading(true);
-    if (actor && "adminListPendingWithdrawals" in actor) {
-      (
-        actor as unknown as {
-          adminListPendingWithdrawals: () => Promise<OfferWithdrawalLocal[]>;
-        }
-      )
-        .adminListPendingWithdrawals()
-        .then((list) => setWithdrawals(Array.isArray(list) ? list : []))
-
-        .catch(() => setWithdrawals([]))
-        .finally(() => setLoading(false));
-    } else {
-      setWithdrawals([]);
-      setLoading(false);
-    }
-  }, [actor]);
-
-  const reload = () => {
-    setLoading(true);
-    if (actor && "adminListPendingWithdrawals" in actor) {
-      (
-        actor as unknown as {
-          adminListPendingWithdrawals: () => Promise<OfferWithdrawalLocal[]>;
-        }
-      )
-        .adminListPendingWithdrawals()
-        .then((list) => setWithdrawals(Array.isArray(list) ? list : []))
-        .catch(() => setWithdrawals([]))
-        .finally(() => setLoading(false));
-    }
-  };
+  // Map to local shape
+  const withdrawals: OfferWithdrawalLocal[] = withdrawalsRaw.map((w) => ({
+    id: w.id,
+    offerUserId: w.offerUserId,
+    upiId: w.upiId,
+    amount: w.amount,
+    requestedAt: w.requestedAt,
+    status: w.status,
+    adminNote: w.adminNote,
+    processedAt: w.processedAt,
+  }));
 
   const resolveWithdrawal = async (
     id: bigint,
@@ -12355,23 +12327,15 @@ function OfferWithdrawalsTab() {
   ) => {
     setProcessingId(id);
     try {
-      if (actor && "adminResolveWithdrawal" in actor) {
-        await (
-          actor as unknown as {
-            adminResolveWithdrawal: (
-              id: bigint,
-              status: string,
-              note: string | null,
-            ) => Promise<boolean>;
-          }
-        ).adminResolveWithdrawal(id, status, note ?? null);
-      }
-      setWithdrawals((prev) =>
-        prev.map((w) => (String(w.id) === String(id) ? { ...w, status } : w)),
-      );
+      await resolveWithdrawalMutation.mutateAsync({
+        id,
+        newStatus: status,
+        adminNote: note,
+      });
       toast.success(
         `Withdrawal ${status === "approved" ? "approved" : status === "paid" ? "paid marked" : "rejected"}! ✅`,
       );
+      refetch();
     } catch {
       toast.error("Action nahi ho saka");
     } finally {
@@ -12420,7 +12384,7 @@ function OfferWithdrawalsTab() {
           </div>
           <button
             type="button"
-            onClick={reload}
+            onClick={() => refetch()}
             className="text-xs text-primary font-medium hover:underline"
           >
             Refresh
