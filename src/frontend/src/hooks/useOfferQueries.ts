@@ -747,9 +747,15 @@ export function useUpdateOfferPortalConfig() {
         throw new Error(
           "Backend se connect nahi ho pa raha — thoda wait karein",
         );
+
+      // CRITICAL FIX: Candid `opt text` must be encoded as [] | [string].
+      // getAdminToken() returns string | null — null must become [], not passed as null.
+      const rawToken = getAdminToken();
+      const adminTokenArg: [] | [string] = rawToken ? [rawToken] : [];
+
       try {
         const result = await (actor as AnyActor).updateOfferPortalConfig(
-          getAdminToken(),
+          adminTokenArg,
           isEnabled,
           cpaLeadWebhookSecret,
           cpagripApiKey,
@@ -764,6 +770,10 @@ export function useUpdateOfferPortalConfig() {
           }
           return true;
         }
+        // If result is a plain boolean or Result<bool, text>
+        if (result && typeof result === "object" && "ok" in result) return true;
+        if (result && typeof result === "object" && "err" in result)
+          throw new Error(String((result as { err: string }).err));
         return Boolean(result);
       } catch (err) {
         const msg = (err as Error)?.message ?? String(err);
@@ -771,9 +781,11 @@ export function useUpdateOfferPortalConfig() {
         if (lower.includes("method not found"))
           throw new Error("Service is updating. Please refresh the page.");
         if (lower.includes("unauthorized"))
-          // Admin is logged in — backend may use ICP principal not custom token.
-          // Return true so caller treats as success and doesn't block the UI.
-          return true;
+          // Backend uses ICP principal auth. If admin is in panel, still try to save.
+          // Re-throw as a clear error so admin knows to re-login.
+          throw new Error(
+            "Setting save nahi ho saki — Admin session expire ho gaya. Dobara login karein.",
+          );
         if (lower.includes("ic0.trap") || lower.includes("reject code"))
           throw new Error("Something went wrong. Please try again.");
         throw new Error(msg);
@@ -781,7 +793,7 @@ export function useUpdateOfferPortalConfig() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["offerPortalConfig"] });
-      toast.success("Settings Updated Successfully ✅");
+      toast.success("Settings saved! ✅");
     },
     onError: (err) => {
       toast.error(

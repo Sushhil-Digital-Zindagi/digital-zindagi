@@ -316,7 +316,11 @@ export default function OfferPortalPage() {
             />
           )}
           {view === "dashboard" && currentOfferUser && (
-            <DashboardView key="dashboard" onRedeem={() => setView("redeem")} />
+            <DashboardView
+              key="dashboard"
+              onRedeem={() => setView("redeem")}
+              isEnabled={config?.isEnabled ?? true}
+            />
           )}
           {view === "redeem" && currentOfferUser && (
             <RedeemView key="redeem" onBack={() => setView("dashboard")} />
@@ -1288,7 +1292,13 @@ function ForgotPasswordView({
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function DashboardView({ onRedeem }: { onRedeem: () => void }) {
+function DashboardView({
+  onRedeem,
+  isEnabled = true,
+}: {
+  onRedeem: () => void;
+  isEnabled?: boolean;
+}) {
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = currentOfferUser?.id ?? undefined;
 
@@ -1362,6 +1372,49 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
           />
         )}
       </div>
+
+      {/* CPAGrip Offer Wall — PROMINENT at top, before stats */}
+      {isEnabled ? (
+        <div className="space-y-3" data-ocid="offer_portal.offers_top_section">
+          <div className="flex items-center gap-2">
+            <CircleDollarSign size={16} className="text-emerald-600" />
+            <h3 className="font-heading font-bold text-foreground text-base">
+              Offers Complete Karein - Paisa Kamaein 💰
+            </h3>
+          </div>
+          <div className="rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card">
+            <iframe
+              src="https://www.cpagrip.com/view.php?id=1889594"
+              style={{
+                width: "100%",
+                height: "600px",
+                border: "none",
+              }}
+              title="CPAGrip Offer Wall"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground text-center px-2">
+            💡 Upar diye gaye offers complete karo aur kamaai karo. Earnings
+            kuch minutes mein update ho jaate hain.
+          </p>
+        </div>
+      ) : (
+        <div
+          data-ocid="offer_portal.offers_disabled_state"
+          className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center space-y-2"
+        >
+          <span className="text-3xl" aria-hidden>
+            🔒
+          </span>
+          <p className="font-bold text-amber-800 text-sm">
+            Offer Portal abhi band hai
+          </p>
+          <p className="text-amber-700 text-xs">
+            Admin ne temporarily disable kiya hai. Baad mein dobara try karein.
+          </p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
@@ -1586,33 +1639,6 @@ function DashboardView({ onRedeem }: { onRedeem: () => void }) {
           <ExternalLink size={14} />
           Share Referral Link
         </button>
-      </div>
-
-      {/* CPAGrip Offer Wall */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <CircleDollarSign size={15} className="text-emerald-600" />
-          <h3 className="font-bold text-foreground text-sm">
-            Available Offers
-          </h3>
-        </div>
-        <div className="rounded-2xl overflow-hidden border border-border shadow-sm bg-card">
-          <iframe
-            src="https://www.cpagrip.com/view.php?id=1889594"
-            style={{
-              width: "100%",
-              height: "600px",
-              border: "none",
-              borderRadius: "8px",
-            }}
-            title="CPAGrip Offer Wall"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground text-center px-2">
-          💡 Complete offers above to earn points. Earnings update within a few
-          minutes.
-        </p>
       </div>
 
       {/* Earnings List */}

@@ -82880,7 +82880,14 @@ function OfferPortalPage() {
         },
         "forgotPassword"
       ),
-      view === "dashboard" && currentOfferUser && /* @__PURE__ */ jsxRuntimeExports.jsx(DashboardView, { onRedeem: () => setView("redeem") }, "dashboard"),
+      view === "dashboard" && currentOfferUser && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        DashboardView,
+        {
+          onRedeem: () => setView("redeem"),
+          isEnabled: (config == null ? void 0 : config.isEnabled) ?? true
+        },
+        "dashboard"
+      ),
       view === "redeem" && currentOfferUser && /* @__PURE__ */ jsxRuntimeExports.jsx(RedeemView, { onBack: () => setView("dashboard") }, "redeem")
     ] })
   ] }) });
@@ -83805,7 +83812,10 @@ function ForgotPasswordView({
     }
   );
 }
-function DashboardView({ onRedeem }) {
+function DashboardView({
+  onRedeem,
+  isEnabled = true
+}) {
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = (currentOfferUser == null ? void 0 : currentOfferUser.id) ?? void 0;
   const { data: summary, isLoading: summaryLoading } = useOfferEarningsSummary(offerUserId);
@@ -83863,6 +83873,37 @@ function DashboardView({ onRedeem }) {
             }
           )
         ] }),
+        isEnabled ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", "data-ocid": "offer_portal.offers_top_section", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleDollarSign, { size: 16, className: "text-emerald-600" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-bold text-foreground text-base", children: "Offers Complete Karein - Paisa Kamaein 💰" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "iframe",
+            {
+              src: "https://www.cpagrip.com/view.php?id=1889594",
+              style: {
+                width: "100%",
+                height: "600px",
+                border: "none"
+              },
+              title: "CPAGrip Offer Wall",
+              sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center px-2", children: "💡 Upar diye gaye offers complete karo aur kamaai karo. Earnings kuch minutes mein update ho jaate hain." })
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            "data-ocid": "offer_portal.offers_disabled_state",
+            className: "rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center space-y-2",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-3xl", "aria-hidden": true, children: "🔒" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-bold text-amber-800 text-sm", children: "Offer Portal abhi band hai" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-amber-700 text-xs", children: "Admin ne temporarily disable kiya hai. Baad mein dobara try karein." })
+            ]
+          }
+        ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             StatCard,
@@ -84047,27 +84088,6 @@ function DashboardView({ onRedeem }) {
               ]
             }
           )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleDollarSign, { size: 15, className: "text-emerald-600" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-bold text-foreground text-sm", children: "Available Offers" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-2xl overflow-hidden border border-border shadow-sm bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "iframe",
-            {
-              src: "https://www.cpagrip.com/view.php?id=1889594",
-              style: {
-                width: "100%",
-                height: "600px",
-                border: "none",
-                borderRadius: "8px"
-              },
-              title: "CPAGrip Offer Wall",
-              sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-            }
-          ) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center px-2", children: "💡 Complete offers above to earn points. Earnings update within a few minutes." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "font-bold text-foreground text-sm mb-3 flex items-center gap-2", children: [
