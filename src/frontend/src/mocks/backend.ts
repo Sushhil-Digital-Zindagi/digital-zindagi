@@ -363,9 +363,8 @@ export const mockBackend: backendInterface = {
     userProfitPct: BigInt(40),
   }}),
   getOfferPortalConfigPublic: async () => ({
-    adminProfitPct: BigInt(60),
     isEnabled: true,
-    userProfitPct: BigInt(40),
+    cpagripOfferWallUrl: "",
   }),
   getOfferPortalConfigForUser: async () => ({
     adminProfitPct: BigInt(60),

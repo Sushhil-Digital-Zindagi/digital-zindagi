@@ -1188,9 +1188,8 @@ export const idlService = IDL.Service({
       [],
       [
         IDL.Record({
-          'adminProfitPct' : IDL.Nat,
           'isEnabled' : IDL.Bool,
-          'userProfitPct' : IDL.Nat,
+          'cpagripOfferWallUrl' : IDL.Text,
         }),
       ],
       ['query'],
@@ -2837,9 +2836,8 @@ export const idlFactory = ({ IDL }) => {
         [],
         [
           IDL.Record({
-            'adminProfitPct' : IDL.Nat,
             'isEnabled' : IDL.Bool,
-            'userProfitPct' : IDL.Nat,
+            'cpagripOfferWallUrl' : IDL.Text,
           }),
         ],
         ['query'],

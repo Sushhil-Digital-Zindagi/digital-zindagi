@@ -65,6 +65,8 @@ export interface OfferPortalConfig {
   /** CPAGrip-specific fields — only present for admin */
   cpagripWebhookSecret?: string;
   cpagripOfferWallName?: string;
+  /** Configurable offer wall embed URL (iframe src). Falls back to default CPAGrip URL. */
+  cpagripOfferWallUrl?: string;
   adminProfitPct: bigint;
   userProfitPct: bigint;
 }

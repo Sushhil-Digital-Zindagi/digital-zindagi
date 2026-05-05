@@ -707,6 +707,7 @@ actor {
       retailerSharePct : Float
     };
   stable var cpagripOfferWallName : Text;
+  stable var cpagripOfferWallUrl : Text;
   stable var cpagripWebhookSecret : Text;
   stable var customCodes :
     {

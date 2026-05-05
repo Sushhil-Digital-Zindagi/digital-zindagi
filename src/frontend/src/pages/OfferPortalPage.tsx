@@ -36,6 +36,7 @@ import ContentLockerOverlay from "../components/ContentLockerOverlay";
 import { useOfferAuth } from "../contexts/OfferAuthContext";
 import { useActor } from "../hooks/useActor";
 import {
+  DEFAULT_CPAGRIP_OFFER_WALL_URL,
   getWarmupStatusMessage,
   useAdminListAllWithdrawals,
   useAdminListOfferUsers,
@@ -179,7 +180,26 @@ export default function OfferPortalPage() {
   // Pre-warm the canister as soon as this page mounts.
   // This fires a lightweight read query immediately so the canister wakes up
   // BEFORE the user fills out the registration form and clicks Register.
-  usePrewarmCanister();
+  const { isLoading: prewarmLoading } = usePrewarmCanister();
+
+  // Show a "Connecting to server..." message while the warmup is in progress
+  // but only for the first few seconds (don't block forever on warmup failure)
+  const [warmupDone, setWarmupDone] = useState(false);
+  const [warmupElapsed, setWarmupElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!prewarmLoading) {
+      setWarmupDone(true);
+      return;
+    }
+    // After 15s, stop blocking even if warmup is still in progress
+    const timeout = setTimeout(() => setWarmupDone(true), 15_000);
+    const interval = setInterval(() => setWarmupElapsed((e) => e + 500), 500);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [prewarmLoading]);
 
   // Content locker — fail-open if loading/errored
   const { data: lockerConfig } = useContentLockerConfig();
@@ -215,6 +235,36 @@ export default function OfferPortalPage() {
           <Loader2 size={16} className="animate-spin" />
           <span>Loading...</span>
         </div>
+      </div>
+    );
+  }
+
+  // Show canister warmup progress before showing login/signup forms
+  // (not shown once user is already logged in / on dashboard)
+  if (!currentOfferUser && !warmupDone && prewarmLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-6">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+          style={{ background: "linear-gradient(135deg, #064e3b, #065f46)" }}
+        >
+          <span className="text-3xl" aria-hidden>
+            🚀
+          </span>
+        </div>
+        <p className="font-heading font-bold text-foreground text-base">
+          Digital Zindagi Offer Portal
+        </p>
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Loader2 size={16} className="animate-spin" />
+          <span>{getWarmupStatusMessage(warmupElapsed)}</span>
+        </div>
+        {warmupElapsed > 10_000 && (
+          <p className="text-xs text-muted-foreground text-center max-w-xs">
+            ⏱️ ICP server warm ho raha hai — yeh normal hai, 1-2 minute tak wait
+            karein
+          </p>
+        )}
       </div>
     );
   }
@@ -319,7 +369,9 @@ export default function OfferPortalPage() {
             <DashboardView
               key="dashboard"
               onRedeem={() => setView("redeem")}
-              isEnabled={config?.isEnabled ?? true}
+              offerWallUrl={
+                config?.cpagripOfferWallUrl ?? DEFAULT_CPAGRIP_OFFER_WALL_URL
+              }
             />
           )}
           {view === "redeem" && currentOfferUser && (
@@ -1294,10 +1346,10 @@ function ForgotPasswordView({
 
 function DashboardView({
   onRedeem,
-  isEnabled = true,
+  offerWallUrl = DEFAULT_CPAGRIP_OFFER_WALL_URL,
 }: {
   onRedeem: () => void;
-  isEnabled?: boolean;
+  offerWallUrl?: string;
 }) {
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = currentOfferUser?.id ?? undefined;
@@ -1373,48 +1425,35 @@ function DashboardView({
         )}
       </div>
 
-      {/* CPAGrip Offer Wall — PROMINENT at top, before stats */}
-      {isEnabled ? (
-        <div className="space-y-3" data-ocid="offer_portal.offers_top_section">
-          <div className="flex items-center gap-2">
-            <CircleDollarSign size={16} className="text-emerald-600" />
-            <h3 className="font-heading font-bold text-foreground text-base">
-              Offers Complete Karein - Paisa Kamaein 💰
-            </h3>
-          </div>
-          <div className="rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card">
-            <iframe
-              src="https://www.cpagrip.com/view.php?id=1889594"
-              style={{
-                width: "100%",
-                height: "600px",
-                border: "none",
-              }}
-              title="CPAGrip Offer Wall"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground text-center px-2">
-            💡 Upar diye gaye offers complete karo aur kamaai karo. Earnings
-            kuch minutes mein update ho jaate hain.
-          </p>
+      {/* CPAGrip Offer Wall — always visible after login (toggle only controls portal access, not offer display) */}
+      <div className="space-y-3" data-ocid="offer_portal.offers_top_section">
+        <div className="flex items-center gap-2">
+          <CircleDollarSign size={16} className="text-emerald-600" />
+          <h3 className="font-heading font-bold text-foreground text-base">
+            Offers Dekhein - Paisa Kamaein 💰
+          </h3>
         </div>
-      ) : (
-        <div
-          data-ocid="offer_portal.offers_disabled_state"
-          className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center space-y-2"
-        >
-          <span className="text-3xl" aria-hidden>
-            🔒
-          </span>
-          <p className="font-bold text-amber-800 text-sm">
-            Offer Portal abhi band hai
-          </p>
-          <p className="text-amber-700 text-xs">
-            Admin ne temporarily disable kiya hai. Baad mein dobara try karein.
-          </p>
+        <div className="rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card">
+          <iframe
+            src={offerWallUrl}
+            width="100%"
+            height="600px"
+            frameBorder="0"
+            scrolling="yes"
+            title="CPAGrip Offer Wall"
+            style={{
+              borderRadius: "8px",
+              minHeight: "500px",
+              display: "block",
+            }}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+          />
         </div>
-      )}
+        <p className="text-xs text-muted-foreground text-center px-2">
+          💡 Upar diye gaye offers complete karo aur kamaai karo. Earnings kuch
+          minutes mein update ho jaate hain.
+        </p>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
@@ -1933,6 +1972,9 @@ export function OfferControlCenter() {
   const [cpagripApiKey, setCpagripApiKey] = useState("");
   const [cpagripWebhookSecret, setCpagripWebhookSecret] = useState("");
   const [cpagripOfferWallName, setCpagripOfferWallName] = useState("");
+  const [cpagripOfferWallUrl, setCpagripOfferWallUrl] = useState(
+    DEFAULT_CPAGRIP_OFFER_WALL_URL,
+  );
   const [adminPct, setAdminPct] = useState("60");
   const [userPct, setUserPct] = useState("40");
 
@@ -1952,6 +1994,9 @@ export function OfferControlCenter() {
     setCpagripApiKey(config.cpagripApiKey ?? "");
     setCpagripWebhookSecret(config.cpagripWebhookSecret ?? "");
     setCpagripOfferWallName(config.cpagripOfferWallName ?? "");
+    setCpagripOfferWallUrl(
+      config.cpagripOfferWallUrl ?? DEFAULT_CPAGRIP_OFFER_WALL_URL,
+    );
     setAdminPct(config.adminProfitPct?.toString() ?? "60");
     setUserPct(config.userProfitPct?.toString() ?? "40");
   }, [config]);
@@ -2111,6 +2156,27 @@ export function OfferControlCenter() {
               onChange={(e) => setCpagripOfferWallName(e.target.value)}
               className="w-full border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring bg-background"
             />
+          </div>
+          <div>
+            <label
+              htmlFor="oc-cpagrip-url"
+              className="block text-xs text-muted-foreground mb-1"
+            >
+              Offer Wall Embed URL (iframe src)
+            </label>
+            <input
+              id="oc-cpagrip-url"
+              data-ocid="offer_control.offer_wall_url_input"
+              type="url"
+              placeholder="https://www.cpagrip.com/view.php?id=..."
+              value={cpagripOfferWallUrl}
+              onChange={(e) => setCpagripOfferWallUrl(e.target.value)}
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring bg-background font-mono"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              CPAGrip ya kisi bhi offer wall ka embed link yahan paste karein.
+              Khali chhodne par default CPAGrip URL use hogi.
+            </p>
           </div>
         </div>
 

@@ -216,6 +216,10 @@ function mapBackendOfferUser(raw: {
   };
 }
 
+// Default CPAGrip offer wall URL — used as fallback when no config-driven URL is set
+export const DEFAULT_CPAGRIP_OFFER_WALL_URL =
+  "https://www.cpagrip.com/view.php?id=1889594";
+
 // ============================================================
 // Offer Portal Config — uses public endpoint for non-admins.
 // Admin gets full config via getOfferPortalConfigFull (Result<T,E>).
@@ -230,6 +234,7 @@ export function useOfferPortalConfig() {
         isEnabled: true,
         cpaLeadWebhookSecret: "",
         cpagripApiKey: "",
+        cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
         adminProfitPct: 60n,
         userProfitPct: 40n,
       };
@@ -239,32 +244,45 @@ export function useOfferPortalConfig() {
       try {
         const pub = await (actor as AnyActor).getOfferPortalConfigPublic();
         const base: OfferPortalConfig = {
-          isEnabled: pub.isEnabled,
+          isEnabled: pub.isEnabled ?? true,
           cpaLeadWebhookSecret: "",
           cpagripApiKey: "",
+          cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
           adminProfitPct: pub.adminProfitPct,
           userProfitPct: pub.userProfitPct,
         };
 
         // Try to get full admin config — only succeeds for admin
         try {
-          const fullResult = await (
-            actor as AnyActor
-          ).getOfferPortalConfigFull();
-          if (fullResult && fullResult.__kind__ === "ok" && fullResult.ok) {
+          const adminTok = getAdminToken();
+          const adminTokArg: [] | [string] = adminTok ? [adminTok] : [];
+          const fullResult = await (actor as AnyActor).getOfferPortalConfigFull(
+            adminTokArg,
+          );
+          if (
+            fullResult &&
+            typeof fullResult === "object" &&
+            "ok" in fullResult &&
+            fullResult.ok
+          ) {
             const full = fullResult.ok;
+            // cpagripOfferWallUrl: prefer backend-stored URL, fall back to default
+            const offerWallUrl =
+              (full.cpagripOfferWallUrl as string | undefined)?.trim() ||
+              DEFAULT_CPAGRIP_OFFER_WALL_URL;
             return {
               isEnabled: full.isEnabled,
               cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
               cpagripApiKey: full.cpagripApiKey ?? "",
               cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
               cpagripOfferWallName: full.cpagripOfferWallName ?? "",
+              cpagripOfferWallUrl: offerWallUrl,
               adminProfitPct: full.adminProfitPct,
               userProfitPct: full.userProfitPct,
             };
           }
         } catch {
-          // Non-admin — just return public info
+          // Non-admin — just return public info with default offer wall URL
         }
         return base;
       } catch {
@@ -407,7 +425,11 @@ export function useMyOfferWithdrawals(offerUserId: bigint | null | undefined) {
 // ============================================================
 export function useRegisterOfferUser() {
   const actorResult = useActor();
-  // Keep a mutable ref so waitForActor can poll without stale closure
+  // Use a getter function instead of a ref — the mutation closure captures this function,
+  // and the function always reads the latest actorResult.actor from the outer scope.
+  // This avoids the stale-closure problem where actorRef.current never updates after mutation starts.
+  const getActor = () => actorResult.actor;
+  // Also keep a mutable ref for waitForActor polling (needs an object to mutate across async iterations)
   const actorRef = { current: actorResult.actor as unknown };
   actorRef.current = actorResult.actor;
 
@@ -430,6 +452,8 @@ export function useRegisterOfferUser() {
       const setStatus = onStatusChange ?? (() => {});
 
       // Step 1: Wait for actor to be ready (up to 90s — cold ICP canister can take 50-60s)
+      // Update actorRef with current value before starting wait
+      actorRef.current = getActor();
       setStatus("Server se connect ho rahe hain...");
       const a = await waitForActor(actorRef, 90_000, (elapsedMs) => {
         setStatus(getWarmupStatusMessage(elapsedMs));
@@ -764,16 +788,11 @@ export function useUpdateOfferPortalConfig() {
           newWebhookSecret ?? "",
           newOfferWallName ?? "",
         );
-        if (result && typeof result === "object" && "__kind__" in result) {
-          if ((result as { __kind__: string }).__kind__ === "err") {
-            throw new Error(String((result as { err: string }).err));
-          }
-          return true;
-        }
-        // If result is a plain boolean or Result<bool, text>
-        if (result && typeof result === "object" && "ok" in result) return true;
-        if (result && typeof result === "object" && "err" in result)
+        // Candid Result<T,E> returns { ok: T } | { err: E } — never uses __kind__
+        if (result && typeof result === "object" && "err" in result) {
           throw new Error(String((result as { err: string }).err));
+        }
+        if (result && typeof result === "object" && "ok" in result) return true;
         return Boolean(result);
       } catch (err) {
         const msg = (err as Error)?.message ?? String(err);
@@ -822,9 +841,9 @@ export function useGetCpagripSettings() {
       };
       if (!actor) return empty;
       try {
-        const data = await (actor as AnyActor).getCpagripSettings(
-          getAdminToken(),
-        );
+        const rawToken = getAdminToken();
+        const tokenArg: [] | [string] = rawToken ? [rawToken] : [];
+        const data = await (actor as AnyActor).getCpagripSettings(tokenArg);
         return {
           apiKey: data.apiKey ?? "",
           webhookSecret: data.webhookSecret ?? "",
@@ -863,10 +882,14 @@ export function useSaveCPAGripKeys() {
           "Backend se connect nahi ho pa raha — thoda wait karein",
         );
       try {
+        const rawCpagripToken = getAdminToken();
+        const cpagripTokenArg: [] | [string] = rawCpagripToken
+          ? [rawCpagripToken]
+          : [];
         const result = await (
           actor as unknown as {
             saveCPAGripKeys(
-              adminToken: string | null,
+              adminToken: [] | [string],
               a: string,
               w: string,
               n: string,
@@ -875,7 +898,7 @@ export function useSaveCPAGripKeys() {
             >;
           }
         ).saveCPAGripKeys(
-          getAdminToken(),
+          cpagripTokenArg,
           apiKey.trim(),
           webhookSecret.trim(),
           offerWallName.trim(),

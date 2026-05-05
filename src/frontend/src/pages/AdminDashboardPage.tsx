@@ -10992,7 +10992,7 @@ function OfferSystemToggleTab() {
               }>;
             }
           ).getOfferPortalConfigPublic();
-          setIsEnabled(pub.isEnabled ?? false);
+          setIsEnabled(pub.isEnabled ?? true);
         }
       } catch {
         /* ignore — show default OFF state */
@@ -11007,21 +11007,27 @@ function OfferSystemToggleTab() {
     setSaving(true);
     try {
       const next = !isEnabled;
-      if (actor && "updateOfferPortalConfig" in actor) {
+      if (actor) {
         // Fetch current config to preserve ALL existing values (especially CPAGrip fields)
         let currentSecret = "";
-        let currentCpaKey = "";
+        let currentCpaKey = "914ebf2f2ed06fd6da511be81d502acd"; // default CPAGrip API key
         let currentAdminPct = BigInt(60);
         let currentUserPct = BigInt(40);
-        let currentCpagripWebhookSecret = "";
+        let currentCpagripWebhookSecret = "DZ_OfferWall_2026@Secret#123"; // default
         let currentCpagripOfferWallName = "Digital Zindagi Offers";
+
+        // CRITICAL: adminToken must be [] | [string] for Candid opt type
+        const rawAdminToken = sessionStorage.getItem("dz_admin_token");
+        const adminTokenArg: [] | [string] = rawAdminToken
+          ? [rawAdminToken]
+          : [];
+
         try {
           // Try full admin config first for secret + cpaKey + profit pcts
           const fullResult = await (
             actor as unknown as {
-              getOfferPortalConfigFull: () => Promise<
+              getOfferPortalConfigFull: (token: [] | [string]) => Promise<
                 | {
-                    __kind__: "ok";
                     ok: {
                       isEnabled: boolean;
                       cpaLeadWebhookSecret: string;
@@ -11030,19 +11036,16 @@ function OfferSystemToggleTab() {
                       userProfitPct: bigint;
                     };
                   }
-                | { __kind__: "err"; err: string }
+                | { err: string }
               >;
             }
-          ).getOfferPortalConfigFull();
-          if (
-            fullResult &&
-            "__kind__" in fullResult &&
-            fullResult.__kind__ === "ok" &&
-            "ok" in fullResult
-          ) {
+          ).getOfferPortalConfigFull(adminTokenArg);
+          // Candid Result<T,E> returns { ok: T } | { err: E } — check 'ok' key
+          if (fullResult && "ok" in fullResult && fullResult.ok) {
             const full = fullResult.ok;
             currentSecret = full.cpaLeadWebhookSecret ?? "";
-            currentCpaKey = full.cpagripApiKey ?? "";
+            if (full.cpagripApiKey?.trim())
+              currentCpaKey = full.cpagripApiKey.trim();
             currentAdminPct = full.adminProfitPct ?? BigInt(60);
             currentUserPct = full.userProfitPct ?? BigInt(40);
           }
@@ -11066,19 +11069,21 @@ function OfferSystemToggleTab() {
 
         // Also fetch CPAGrip-specific fields so we don't overwrite them with empty strings
         try {
-          const adminToken = sessionStorage.getItem("dz_admin_token");
           const cpagripData = await (
             actor as unknown as {
-              getCpagripSettings: (token: string | null) => Promise<{
+              getCpagripSettings: (token: [] | [string]) => Promise<{
                 apiKey: string;
                 webhookSecret: string;
                 offerWallName: string;
               }>;
             }
-          ).getCpagripSettings(adminToken);
-          currentCpagripWebhookSecret = cpagripData.webhookSecret?.trim() ?? "";
-          currentCpagripOfferWallName =
-            cpagripData.offerWallName?.trim() || "Digital Zindagi Offers";
+          ).getCpagripSettings(adminTokenArg);
+          if (cpagripData.webhookSecret?.trim()) {
+            currentCpagripWebhookSecret = cpagripData.webhookSecret.trim();
+          }
+          if (cpagripData.offerWallName?.trim()) {
+            currentCpagripOfferWallName = cpagripData.offerWallName.trim();
+          }
           // cpagripApiKey from getCpagripSettings overrides fullResult if available
           if (cpagripData.apiKey?.trim()) {
             currentCpaKey = cpagripData.apiKey.trim();
@@ -11087,9 +11092,14 @@ function OfferSystemToggleTab() {
           /* keep defaults — don't fail the toggle for this */
         }
 
-        const ok = await (
+        // CRITICAL FIX: Must pass ALL 8 args in exact order:
+        // (adminToken: opt Text, isEnabled: Bool, cpaLeadWebhookSecret: Text,
+        //  cpagripApiKey: Text, adminProfitPct: Nat, userProfitPct: Nat,
+        //  newWebhookSecret: Text, newOfferWallName: Text)
+        const updateResult = await (
           actor as unknown as {
             updateOfferPortalConfig: (
+              adminToken: [] | [string],
               e: boolean,
               s: string,
               k: string,
@@ -11097,11 +11107,10 @@ function OfferSystemToggleTab() {
               u: bigint,
               ws: string,
               wn: string,
-            ) => Promise<
-              { __kind__: "ok"; ok: boolean } | { __kind__: "err"; err: string }
-            >;
+            ) => Promise<{ ok: boolean } | { err: string } | boolean>;
           }
         ).updateOfferPortalConfig(
+          adminTokenArg,
           next,
           currentSecret,
           currentCpaKey,
@@ -11110,13 +11119,17 @@ function OfferSystemToggleTab() {
           currentCpagripWebhookSecret,
           currentCpagripOfferWallName,
         );
+        // Candid Result<bool, text>: check for err key
         if (
-          ok &&
-          typeof ok === "object" &&
-          "__kind__" in ok &&
-          ok.__kind__ === "err"
+          updateResult &&
+          typeof updateResult === "object" &&
+          "err" in updateResult
         ) {
-          toast.error("Setting save nahi ho saki");
+          const errMsg = (updateResult as { err: string }).err ?? "";
+          console.error("[OfferToggle] updateOfferPortalConfig err:", errMsg);
+          toast.error(
+            `Setting save nahi ho saki — ${errMsg || "Please try again"}`,
+          );
           return;
         }
         setIsEnabled(next);
@@ -11124,9 +11137,10 @@ function OfferSystemToggleTab() {
           `Offer Portal ${next ? "ACTIVE ✅" : "BAND ⛔"} ho gaya!`,
         );
       } else {
-        toast.error("Actor available nahi — please reload karein");
+        toast.error("Backend load ho raha hai — please wait karein");
       }
-    } catch {
+    } catch (err) {
+      console.error("[OfferToggle] handleToggle error:", err);
       toast.error("Setting save nahi ho saki — please try again");
     } finally {
       setSaving(false);
@@ -11248,17 +11262,20 @@ function OfferApiKeysTab() {
         // FIX: Always load ALL 3 CPAGrip fields, passing the admin token so backend authorizes the call
         if (actor) {
           try {
-            // Get adminToken from sessionStorage — must be set before calling admin-only methods
-            const adminToken = sessionStorage.getItem("dz_admin_token");
+            // FIX: getCpagripSettings requires Candid opt Text — must be [] | [string]
+            const adminTokenRaw = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt: [] | [string] = adminTokenRaw
+              ? [adminTokenRaw]
+              : [];
             const cpagripData = await (
               actor as unknown as {
-                getCpagripSettings: (token: string | null) => Promise<{
+                getCpagripSettings: (token: [] | [string]) => Promise<{
                   apiKey: string;
                   webhookSecret: string;
                   offerWallName: string;
                 }>;
               }
-            ).getCpagripSettings(adminToken);
+            ).getCpagripSettings(adminTokenOpt);
             // Always set — do NOT check for truthy so empty string overrides stale state
             // Seed known defaults if backend returns empty (first-time setup)
             setCpagripApiKey(
@@ -11281,9 +11298,13 @@ function OfferApiKeysTab() {
         // Load generic webhook secret from full admin config (never from admin-only trap method)
         if (actor) {
           try {
+            const adminTokenRaw2 = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt2: [] | [string] = adminTokenRaw2
+              ? [adminTokenRaw2]
+              : [];
             const fullResult = await (
               actor as unknown as {
-                getOfferPortalConfigFull: () => Promise<
+                getOfferPortalConfigFull: (token: [] | [string]) => Promise<
                   | {
                       __kind__: "ok";
                       ok: {
@@ -11297,7 +11318,7 @@ function OfferApiKeysTab() {
                   | { __kind__: "err"; err: string }
                 >;
               }
-            ).getOfferPortalConfigFull();
+            ).getOfferPortalConfigFull(adminTokenOpt2);
             if (
               fullResult &&
               "__kind__" in fullResult &&
@@ -11369,10 +11390,16 @@ function OfferApiKeysTab() {
         } catch {
           /* use defaults */
         }
+        // CRITICAL FIX: adminToken is first arg as Candid opt Text = [] | [string]
+        const adminTokenForSave = sessionStorage.getItem("dz_admin_token");
+        const adminTokenSaveArg: [] | [string] = adminTokenForSave
+          ? [adminTokenForSave]
+          : [];
         try {
           await (
             actor as unknown as {
               updateOfferPortalConfig: (
+                adminToken: [] | [string],
                 e: boolean,
                 s: string,
                 k: string,
@@ -11386,6 +11413,7 @@ function OfferApiKeysTab() {
               >;
             }
           ).updateOfferPortalConfig(
+            adminTokenSaveArg,
             currentIsEnabled,
             savedWebhookSecret,
             currentCpaKey,
@@ -11450,16 +11478,19 @@ function OfferApiKeysTab() {
       // Step 4: Always re-fetch CPAGrip to verify what was actually persisted in canister
       if (actor && cpagripSaved) {
         try {
-          const adminToken = sessionStorage.getItem("dz_admin_token");
+          const adminTokenVerify = sessionStorage.getItem("dz_admin_token");
+          const adminTokenVerifyArg: [] | [string] = adminTokenVerify
+            ? [adminTokenVerify]
+            : [];
           const verifiedData = await (
             actor as unknown as {
-              getCpagripSettings: (token: string | null) => Promise<{
+              getCpagripSettings: (token: [] | [string]) => Promise<{
                 apiKey: string;
                 webhookSecret: string;
                 offerWallName: string;
               }>;
             }
-          ).getCpagripSettings(adminToken);
+          ).getCpagripSettings(adminTokenVerifyArg);
           // Always update state from canister — never from stale local values
           // Preserve typed values if canister returns empty (backend not persisting yet)
           setCpagripApiKey(verifiedData.apiKey?.trim() || savedCpagripApiKey);
@@ -11816,9 +11847,13 @@ function OfferProfitMarginTab() {
           currentIsEnabled = pub.isEnabled;
           // Try to also get webhook secret from full admin config
           try {
+            const adminTokenRaw3 = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt3: [] | [string] = adminTokenRaw3
+              ? [adminTokenRaw3]
+              : [];
             const fullResult = await (
               actor as unknown as {
-                getOfferPortalConfigFull: () => Promise<
+                getOfferPortalConfigFull: (token: [] | [string]) => Promise<
                   | {
                       __kind__: "ok";
                       ok: {
@@ -11829,7 +11864,7 @@ function OfferProfitMarginTab() {
                   | { __kind__: "err"; err: string }
                 >;
               }
-            ).getOfferPortalConfigFull();
+            ).getOfferPortalConfigFull(adminTokenOpt3);
             if (
               fullResult &&
               "__kind__" in fullResult &&
@@ -11845,9 +11880,15 @@ function OfferProfitMarginTab() {
         } catch {
           /* use defaults */
         }
+        // CRITICAL FIX: adminToken is first arg as Candid opt Text = [] | [string]
+        const adminTokenProfitSave = sessionStorage.getItem("dz_admin_token");
+        const adminTokenProfitArg: [] | [string] = adminTokenProfitSave
+          ? [adminTokenProfitSave]
+          : [];
         await (
           actor as unknown as {
             updateOfferPortalConfig: (
+              adminToken: [] | [string],
               e: boolean,
               s: string,
               k: string,
@@ -11860,6 +11901,7 @@ function OfferProfitMarginTab() {
             >;
           }
         ).updateOfferPortalConfig(
+          adminTokenProfitArg,
           currentIsEnabled,
           currentSecret,
           currentCpaKey,

@@ -39839,9 +39839,8 @@ Service({
     [],
     [
       Record({
-        "adminProfitPct": Nat,
         "isEnabled": Bool,
-        "userProfitPct": Nat
+        "cpagripOfferWallUrl": Text
       })
     ],
     ["query"]
@@ -41484,9 +41483,8 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [],
       [
         IDL2.Record({
-          "adminProfitPct": IDL2.Nat,
           "isEnabled": IDL2.Bool,
-          "userProfitPct": IDL2.Nat
+          "cpagripOfferWallUrl": IDL2.Text
         })
       ],
       ["query"]
@@ -53273,15 +53271,18 @@ function mapBackendOfferUser(raw) {
     createdAt: raw.createdAt
   };
 }
+const DEFAULT_CPAGRIP_OFFER_WALL_URL = "https://www.cpagrip.com/view.php?id=1889594";
 function useOfferPortalConfig() {
   const { actor, isFetching } = useActor();
   return useQuery({
     queryKey: ["offerPortalConfig"],
     queryFn: async () => {
+      var _a3;
       const defaultConfig = {
         isEnabled: true,
         cpaLeadWebhookSecret: "",
         cpagripApiKey: "",
+        cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
         adminProfitPct: 60n,
         userProfitPct: 40n
       };
@@ -53289,22 +53290,29 @@ function useOfferPortalConfig() {
       try {
         const pub = await actor.getOfferPortalConfigPublic();
         const base = {
-          isEnabled: pub.isEnabled,
+          isEnabled: pub.isEnabled ?? true,
           cpaLeadWebhookSecret: "",
           cpagripApiKey: "",
+          cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
           adminProfitPct: pub.adminProfitPct,
           userProfitPct: pub.userProfitPct
         };
         try {
-          const fullResult = await actor.getOfferPortalConfigFull();
-          if (fullResult && fullResult.__kind__ === "ok" && fullResult.ok) {
+          const adminTok = getAdminToken();
+          const adminTokArg = adminTok ? [adminTok] : [];
+          const fullResult = await actor.getOfferPortalConfigFull(
+            adminTokArg
+          );
+          if (fullResult && typeof fullResult === "object" && "ok" in fullResult && fullResult.ok) {
             const full = fullResult.ok;
+            const offerWallUrl = ((_a3 = full.cpagripOfferWallUrl) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_OFFER_WALL_URL;
             return {
               isEnabled: full.isEnabled,
               cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
               cpagripApiKey: full.cpagripApiKey ?? "",
               cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
               cpagripOfferWallName: full.cpagripOfferWallName ?? "",
+              cpagripOfferWallUrl: offerWallUrl,
               adminProfitPct: full.adminProfitPct,
               userProfitPct: full.userProfitPct
             };
@@ -53417,6 +53425,7 @@ function useMyOfferWithdrawals(offerUserId) {
 }
 function useRegisterOfferUser() {
   const actorResult = useActor();
+  const getActor = () => actorResult.actor;
   const actorRef = { current: actorResult.actor };
   actorRef.current = actorResult.actor;
   const { login } = useOfferAuth();
@@ -53430,6 +53439,7 @@ function useRegisterOfferUser() {
     }) => {
       const setStatus = onStatusChange ?? (() => {
       });
+      actorRef.current = getActor();
       setStatus("Server se connect ho rahe hain...");
       const a2 = await waitForActor(actorRef, 9e4, (elapsedMs) => {
         setStatus(getWarmupStatusMessage(elapsedMs));
@@ -63557,7 +63567,7 @@ function OfferSystemToggleTab() {
       try {
         if (actor) {
           const pub = await actor.getOfferPortalConfigPublic();
-          setIsEnabled(pub.isEnabled ?? false);
+          setIsEnabled(pub.isEnabled ?? true);
         }
       } catch {
       } finally {
@@ -63567,23 +63577,26 @@ function OfferSystemToggleTab() {
     load();
   }, [actor]);
   const handleToggle = async () => {
-    var _a3, _b3, _c2;
+    var _a3, _b3, _c2, _d2;
     setSaving(true);
     try {
       const next = !isEnabled;
-      if (actor && "updateOfferPortalConfig" in actor) {
+      if (actor) {
         let currentSecret = "";
-        let currentCpaKey = "";
+        let currentCpaKey = "914ebf2f2ed06fd6da511be81d502acd";
         let currentAdminPct = BigInt(60);
         let currentUserPct = BigInt(40);
-        let currentCpagripWebhookSecret = "";
+        let currentCpagripWebhookSecret = "DZ_OfferWall_2026@Secret#123";
         let currentCpagripOfferWallName = "Digital Zindagi Offers";
+        const rawAdminToken = sessionStorage.getItem("dz_admin_token");
+        const adminTokenArg = rawAdminToken ? [rawAdminToken] : [];
         try {
-          const fullResult = await actor.getOfferPortalConfigFull();
-          if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
+          const fullResult = await actor.getOfferPortalConfigFull(adminTokenArg);
+          if (fullResult && "ok" in fullResult && fullResult.ok) {
             const full = fullResult.ok;
             currentSecret = full.cpaLeadWebhookSecret ?? "";
-            currentCpaKey = full.cpagripApiKey ?? "";
+            if ((_a3 = full.cpagripApiKey) == null ? void 0 : _a3.trim())
+              currentCpaKey = full.cpagripApiKey.trim();
             currentAdminPct = full.adminProfitPct ?? BigInt(60);
             currentUserPct = full.userProfitPct ?? BigInt(40);
           }
@@ -63596,16 +63609,20 @@ function OfferSystemToggleTab() {
           }
         }
         try {
-          const adminToken = sessionStorage.getItem("dz_admin_token");
-          const cpagripData = await actor.getCpagripSettings(adminToken);
-          currentCpagripWebhookSecret = ((_a3 = cpagripData.webhookSecret) == null ? void 0 : _a3.trim()) ?? "";
-          currentCpagripOfferWallName = ((_b3 = cpagripData.offerWallName) == null ? void 0 : _b3.trim()) || "Digital Zindagi Offers";
-          if ((_c2 = cpagripData.apiKey) == null ? void 0 : _c2.trim()) {
+          const cpagripData = await actor.getCpagripSettings(adminTokenArg);
+          if ((_b3 = cpagripData.webhookSecret) == null ? void 0 : _b3.trim()) {
+            currentCpagripWebhookSecret = cpagripData.webhookSecret.trim();
+          }
+          if ((_c2 = cpagripData.offerWallName) == null ? void 0 : _c2.trim()) {
+            currentCpagripOfferWallName = cpagripData.offerWallName.trim();
+          }
+          if ((_d2 = cpagripData.apiKey) == null ? void 0 : _d2.trim()) {
             currentCpaKey = cpagripData.apiKey.trim();
           }
         } catch {
         }
-        const ok = await actor.updateOfferPortalConfig(
+        const updateResult = await actor.updateOfferPortalConfig(
+          adminTokenArg,
           next,
           currentSecret,
           currentCpaKey,
@@ -63614,8 +63631,12 @@ function OfferSystemToggleTab() {
           currentCpagripWebhookSecret,
           currentCpagripOfferWallName
         );
-        if (ok && typeof ok === "object" && "__kind__" in ok && ok.__kind__ === "err") {
-          ue.error("Setting save nahi ho saki");
+        if (updateResult && typeof updateResult === "object" && "err" in updateResult) {
+          const errMsg = updateResult.err ?? "";
+          console.error("[OfferToggle] updateOfferPortalConfig err:", errMsg);
+          ue.error(
+            `Setting save nahi ho saki — ${errMsg || "Please try again"}`
+          );
           return;
         }
         setIsEnabled(next);
@@ -63623,9 +63644,10 @@ function OfferSystemToggleTab() {
           `Offer Portal ${next ? "ACTIVE ✅" : "BAND ⛔"} ho gaya!`
         );
       } else {
-        ue.error("Actor available nahi — please reload karein");
+        ue.error("Backend load ho raha hai — please wait karein");
       }
-    } catch {
+    } catch (err) {
+      console.error("[OfferToggle] handleToggle error:", err);
       ue.error("Setting save nahi ho saki — please try again");
     } finally {
       setSaving(false);
@@ -63732,8 +63754,9 @@ function OfferApiKeysTab() {
       try {
         if (actor) {
           try {
-            const adminToken = sessionStorage.getItem("dz_admin_token");
-            const cpagripData = await actor.getCpagripSettings(adminToken);
+            const adminTokenRaw = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt = adminTokenRaw ? [adminTokenRaw] : [];
+            const cpagripData = await actor.getCpagripSettings(adminTokenOpt);
             setCpagripApiKey(
               ((_a3 = cpagripData.apiKey) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_API_KEY
             );
@@ -63751,7 +63774,9 @@ function OfferApiKeysTab() {
         }
         if (actor) {
           try {
-            const fullResult = await actor.getOfferPortalConfigFull();
+            const adminTokenRaw2 = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt2 = adminTokenRaw2 ? [adminTokenRaw2] : [];
+            const fullResult = await actor.getOfferPortalConfigFull(adminTokenOpt2);
             if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
               setWebhookSecret(fullResult.ok.cpaLeadWebhookSecret ?? "");
             }
@@ -63793,8 +63818,11 @@ function OfferApiKeysTab() {
           currentUserPct = pub.userProfitPct ?? BigInt(40);
         } catch {
         }
+        const adminTokenForSave = sessionStorage.getItem("dz_admin_token");
+        const adminTokenSaveArg = adminTokenForSave ? [adminTokenForSave] : [];
         try {
           await actor.updateOfferPortalConfig(
+            adminTokenSaveArg,
             currentIsEnabled,
             savedWebhookSecret,
             currentCpaKey,
@@ -63831,8 +63859,9 @@ function OfferApiKeysTab() {
       }
       if (actor && cpagripSaved) {
         try {
-          const adminToken = sessionStorage.getItem("dz_admin_token");
-          const verifiedData = await actor.getCpagripSettings(adminToken);
+          const adminTokenVerify = sessionStorage.getItem("dz_admin_token");
+          const adminTokenVerifyArg = adminTokenVerify ? [adminTokenVerify] : [];
+          const verifiedData = await actor.getCpagripSettings(adminTokenVerifyArg);
           setCpagripApiKey(((_a3 = verifiedData.apiKey) == null ? void 0 : _a3.trim()) || savedCpagripApiKey);
           setCpagripWebhookSecret(
             ((_b3 = verifiedData.webhookSecret) == null ? void 0 : _b3.trim()) || savedCpagripWebhookSecret
@@ -64167,7 +64196,9 @@ function OfferProfitMarginTab() {
           const pub = await actor.getOfferPortalConfigPublic();
           currentIsEnabled = pub.isEnabled;
           try {
-            const fullResult = await actor.getOfferPortalConfigFull();
+            const adminTokenRaw3 = sessionStorage.getItem("dz_admin_token");
+            const adminTokenOpt3 = adminTokenRaw3 ? [adminTokenRaw3] : [];
+            const fullResult = await actor.getOfferPortalConfigFull(adminTokenOpt3);
             if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
               currentSecret = fullResult.ok.cpaLeadWebhookSecret ?? "";
               currentCpaKey = fullResult.ok.cpagripApiKey ?? "";
@@ -64176,7 +64207,10 @@ function OfferProfitMarginTab() {
           }
         } catch {
         }
+        const adminTokenProfitSave = sessionStorage.getItem("dz_admin_token");
+        const adminTokenProfitArg = adminTokenProfitSave ? [adminTokenProfitSave] : [];
         await actor.updateOfferPortalConfig(
+          adminTokenProfitArg,
           currentIsEnabled,
           currentSecret,
           currentCpaKey,
@@ -82755,7 +82789,21 @@ function OfferPortalPage() {
   const navigate = useNavigate();
   const { currentOfferUser, offerAuthLoading, logout } = useOfferAuth();
   const { isFetching: actorLoading } = useActor();
-  usePrewarmCanister();
+  const { isLoading: prewarmLoading } = usePrewarmCanister();
+  const [warmupDone, setWarmupDone] = reactExports.useState(false);
+  const [warmupElapsed, setWarmupElapsed] = reactExports.useState(0);
+  reactExports.useEffect(() => {
+    if (!prewarmLoading) {
+      setWarmupDone(true);
+      return;
+    }
+    const timeout2 = setTimeout(() => setWarmupDone(true), 15e3);
+    const interval = setInterval(() => setWarmupElapsed((e) => e + 500), 500);
+    return () => {
+      clearTimeout(timeout2);
+      clearInterval(interval);
+    };
+  }, [prewarmLoading]);
   const { data: lockerConfig } = useContentLockerConfig();
   const [view, setView] = reactExports.useState(
     () => currentOfferUser ? "dashboard" : "landing"
@@ -82781,6 +82829,24 @@ function OfferPortalPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 16, className: "animate-spin" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Loading..." })
       ] })
+    ] });
+  }
+  if (!currentOfferUser && !warmupDone && prewarmLoading) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg",
+          style: { background: "linear-gradient(135deg, #064e3b, #065f46)" },
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-3xl", "aria-hidden": true, children: "🚀" })
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-heading font-bold text-foreground text-base", children: "Digital Zindagi Offer Portal" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 text-muted-foreground text-sm", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 16, className: "animate-spin" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: getWarmupStatusMessage(warmupElapsed) })
+      ] }),
+      warmupElapsed > 1e4 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center max-w-xs", children: "⏱️ ICP server warm ho raha hai — yeh normal hai, 1-2 minute tak wait karein" })
     ] });
   }
   if (config && !config.isEnabled) {
@@ -82884,7 +82950,7 @@ function OfferPortalPage() {
         DashboardView,
         {
           onRedeem: () => setView("redeem"),
-          isEnabled: (config == null ? void 0 : config.isEnabled) ?? true
+          offerWallUrl: (config == null ? void 0 : config.cpagripOfferWallUrl) ?? DEFAULT_CPAGRIP_OFFER_WALL_URL
         },
         "dashboard"
       ),
@@ -83814,7 +83880,7 @@ function ForgotPasswordView({
 }
 function DashboardView({
   onRedeem,
-  isEnabled = true
+  offerWallUrl = DEFAULT_CPAGRIP_OFFER_WALL_URL
 }) {
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = (currentOfferUser == null ? void 0 : currentOfferUser.id) ?? void 0;
@@ -83873,37 +83939,30 @@ function DashboardView({
             }
           )
         ] }),
-        isEnabled ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", "data-ocid": "offer_portal.offers_top_section", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", "data-ocid": "offer_portal.offers_top_section", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(CircleDollarSign, { size: 16, className: "text-emerald-600" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-bold text-foreground text-base", children: "Offers Complete Karein - Paisa Kamaein 💰" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-bold text-foreground text-base", children: "Offers Dekhein - Paisa Kamaein 💰" })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
             "iframe",
             {
-              src: "https://www.cpagrip.com/view.php?id=1889594",
-              style: {
-                width: "100%",
-                height: "600px",
-                border: "none"
-              },
+              src: offerWallUrl,
+              width: "100%",
+              height: "600px",
+              frameBorder: "0",
+              scrolling: "yes",
               title: "CPAGrip Offer Wall",
+              style: {
+                borderRadius: "8px",
+                minHeight: "500px",
+                display: "block"
+              },
               sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
             }
           ) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center px-2", children: "💡 Upar diye gaye offers complete karo aur kamaai karo. Earnings kuch minutes mein update ho jaate hain." })
-        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            "data-ocid": "offer_portal.offers_disabled_state",
-            className: "rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center space-y-2",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-3xl", "aria-hidden": true, children: "🔒" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-bold text-amber-800 text-sm", children: "Offer Portal abhi band hai" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-amber-700 text-xs", children: "Admin ne temporarily disable kiya hai. Baad mein dobara try karein." })
-            ]
-          }
-        ),
+        ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             StatCard,

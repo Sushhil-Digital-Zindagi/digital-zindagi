@@ -163,7 +163,7 @@ persistent actor {
     cpagripApiKey       = "914ebf2f2ed06fd6da511be81d502acd";
     cloudinaryCloudName = "dquyiiu7o";
     cloudinaryApiKey    = "199372638334688";
-    cloudinaryApiSecret = "[-bMdmPrWDfdfSsj8LckbC-4zmvg";
+    cloudinaryApiSecret = "-bMdmPrWDfdfSsj8LckbC-4zmvg";
     ludoEnabled         = true;
     rewardsEnabled      = true;
     gameEnabled         = true;
@@ -172,6 +172,7 @@ persistent actor {
   // Separate stable vars for new CPAGrip fields (upgrade-safe)
   var cpagripWebhookSecret : Text = "DZ_OfferWall_2026@Secret#123";
   var cpagripOfferWallName : Text = "Digital Zindagi Offers";
+  var cpagripOfferWallUrl  : Text = "https://www.cpagrip.com/view.php?id=1889594";
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -2375,14 +2376,12 @@ persistent actor {
   };
 
   /// Get Offer Portal global config — public (no auth required).
-  /// Returns the config so any visitor can check whether the portal is enabled
-  /// before showing the login/signup UI.  Webhook secrets are NOT included
-  /// in this method — admin-only fields remain protected via getOfferPortalConfig.
-  public shared query ({ caller }) func getOfferPortalConfigPublic() : async { isEnabled : Bool; adminProfitPct : Nat; userProfitPct : Nat } {
+  /// Returns only non-sensitive fields: isEnabled and cpagripOfferWallUrl.
+  /// Never traps for any caller — safe for anonymous/regular users.
+  public query func getOfferPortalConfigPublic() : async { isEnabled : Bool; cpagripOfferWallUrl : Text } {
     {
-      isEnabled      = offerPortalConfig.isEnabled;
-      adminProfitPct = offerPortalConfig.adminProfitPct;
-      userProfitPct  = offerPortalConfig.userProfitPct;
+      isEnabled         = offerPortalConfig.isEnabled;
+      cpagripOfferWallUrl = cpagripOfferWallUrl;
     };
   };
 

@@ -1304,14 +1304,12 @@ export interface backendInterface {
     }>;
     /**
      * / Get Offer Portal global config — public (no auth required).
-     * / Returns the config so any visitor can check whether the portal is enabled
-     * / before showing the login/signup UI.  Webhook secrets are NOT included
-     * / in this method — admin-only fields remain protected via getOfferPortalConfig.
+     * / Returns only non-sensitive fields: isEnabled and cpagripOfferWallUrl.
+     * / Never traps for any caller — safe for anonymous/regular users.
      */
     getOfferPortalConfigPublic(): Promise<{
-        adminProfitPct: bigint;
         isEnabled: boolean;
-        userProfitPct: bigint;
+        cpagripOfferWallUrl: string;
     }>;
     getOrCreateChatConversation(otherUserId: Principal): Promise<{
         __kind__: "ok";
@@ -3976,9 +3974,8 @@ export class Backend implements backendInterface {
         }
     }
     async getOfferPortalConfigPublic(): Promise<{
-        adminProfitPct: bigint;
         isEnabled: boolean;
-        userProfitPct: bigint;
+        cpagripOfferWallUrl: string;
     }> {
         if (this.processError) {
             try {
