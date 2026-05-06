@@ -1354,6 +1354,14 @@ function DashboardView({
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = currentOfferUser?.id ?? undefined;
 
+  // Append user email as subid so CPAGrip can track per-user earnings
+  const offerWallUrlWithSubid = (() => {
+    const email = currentOfferUser?.email ?? "";
+    if (!email) return offerWallUrl;
+    const separator = offerWallUrl.includes("?") ? "&" : "?";
+    return `${offerWallUrl}${separator}sub=${encodeURIComponent(email)}`;
+  })();
+
   const { data: summary, isLoading: summaryLoading } =
     useOfferEarningsSummary(offerUserId);
   const { data: transactions = [] } = useMyOfferTransactions(offerUserId);
@@ -1430,12 +1438,12 @@ function DashboardView({
         <div className="flex items-center gap-2">
           <CircleDollarSign size={16} className="text-emerald-600" />
           <h3 className="font-heading font-bold text-foreground text-base">
-            Offers Dekhein - Paisa Kamaein 💰
+            Available Offers — Complete offers to earn money! 💰
           </h3>
         </div>
         <div className="rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card">
           <iframe
-            src={offerWallUrl}
+            src={offerWallUrlWithSubid}
             width="100%"
             height="600px"
             frameBorder="0"
@@ -1443,7 +1451,7 @@ function DashboardView({
             title="CPAGrip Offer Wall"
             style={{
               borderRadius: "8px",
-              minHeight: "500px",
+              minHeight: "600px",
               display: "block",
             }}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"

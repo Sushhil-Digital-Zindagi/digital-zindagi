@@ -1684,6 +1684,66 @@ export default function HomePage() {
       {/* Ad Banner — Footer position */}
       <AdBanners position="footer" />
 
+      {/* ── DIGITAL INVEST SECTION ────────────────────────────────── */}
+      {(() => {
+        const cryptoEnabled =
+          localStorage.getItem("dz_crypto_enabled") !== "false";
+        if (!cryptoEnabled) return null;
+        return (
+          <section
+            className="px-4 pb-4 max-w-7xl mx-auto"
+            data-ocid="digital_invest.section"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <button
+                type="button"
+                data-ocid="digital_invest.primary_button"
+                onClick={() => navigate("/crypto")}
+                className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl hover:shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all active:scale-[0.99]"
+              >
+                {/* Subtle shimmer overlay */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at top right, rgba(255,255,255,0.12) 0%, transparent 60%)",
+                  }}
+                />
+                <div className="relative px-6 py-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-3xl" aria-hidden>
+                        💎
+                      </span>
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-heading font-extrabold text-white text-lg tracking-tight">
+                          Digital Invest
+                        </h3>
+                        <span className="inline-flex items-center bg-white/20 border border-white/30 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                          NEW
+                        </span>
+                      </div>
+                      <p className="text-white/80 text-sm">
+                        Live Trading • Earn &amp; Grow
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 bg-white/20 border border-white/30 text-white font-bold px-5 py-2.5 rounded-xl text-sm whitespace-nowrap hover:bg-white/30 transition-colors">
+                    Trade Now →
+                  </div>
+                </div>
+              </button>
+            </motion.div>
+          </section>
+        );
+      })()}
+
       {/* ── OFFER PORTAL SECTION ─────────────────────────────────── */}
       {(() => {
         const offerEnabled =

@@ -166,6 +166,69 @@ export interface CreatorEarningsSummary {
   'pendingPayouts' : bigint,
   'totalEarnings' : bigint,
 }
+export interface CryptoCoin {
+  'id' : string,
+  'isListed' : boolean,
+  'name' : string,
+  'createdAt' : bigint,
+  'coinGeckoId' : string,
+  'logoUrl' : string,
+  'symbol' : string,
+}
+export interface CryptoInvestConfig {
+  'buyFeePercent' : number,
+  'highRiskThreshold' : number,
+  'isEnabled' : boolean,
+  'maxWithdrawal' : number,
+  'minWithdrawal' : number,
+  'sellFeePercent' : number,
+  'dailyRewardAmount' : number,
+  'isDailyRewardEnabled' : boolean,
+}
+export interface CryptoTransaction {
+  'id' : string,
+  'status' : TxStatus,
+  'priceAtTime' : [] | [number],
+  'feeAmount' : [] | [number],
+  'netAmount' : number,
+  'userId' : string,
+  'createdAt' : bigint,
+  'coinSymbol' : [] | [string],
+  'adminNote' : [] | [string],
+  'updatedAt' : bigint,
+  'totalAmount' : number,
+  'quantity' : [] | [number],
+  'feePercent' : [] | [number],
+  'txType' : TxType,
+  'coinId' : [] | [string],
+}
+export interface CryptoWallet {
+  'dailyRewardStreak' : bigint,
+  'mpinHash' : string,
+  'balance' : number,
+  'mpinLockedUntil' : bigint,
+  'userId' : string,
+  'mpinFailedAttempts' : bigint,
+  'createdAt' : bigint,
+  'lastDailyRewardClaimed' : bigint,
+  'updatedAt' : bigint,
+  'totalWithdrawn' : number,
+  'totalDeposited' : number,
+  'mpinSetAt' : bigint,
+}
+export interface CryptoWithdrawal {
+  'id' : string,
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : null },
+  'userEmail' : string,
+  'userId' : string,
+  'createdAt' : bigint,
+  'adminNote' : [] | [string],
+  'upiId' : string,
+  'amount' : number,
+  'resolvedAt' : [] | [bigint],
+}
 export interface CustomCode {
   'id' : bigint,
   'title' : string,
@@ -378,6 +441,17 @@ export interface PointsHistoryEntry {
   'action' : string,
   'points' : bigint,
 }
+export interface PortfolioHolding {
+  'id' : string,
+  'userId' : string,
+  'coinSymbol' : string,
+  'totalCost' : number,
+  'updatedAt' : bigint,
+  'coinName' : string,
+  'quantity' : number,
+  'coinId' : string,
+  'avgBuyPrice' : number,
+}
 export type PremiumPlan = { 'annual' : null } |
   { 'quarterly' : null } |
   { 'monthly' : null };
@@ -510,6 +584,48 @@ export type SubscriptionStatus = { 'active' : null } |
   { 'expired' : null } |
   { 'pending' : null } |
   { 'rejected' : null };
+export interface SupportTicket {
+  'id' : string,
+  'status' : TicketStatus,
+  'userEmail' : string,
+  'subject' : string,
+  'userId' : string,
+  'createdAt' : bigint,
+  'description' : string,
+  'updatedAt' : bigint,
+  'category' : TicketCategory,
+  'priority' : TicketPriority,
+}
+export type TicketCategory = { 'coinInquiry' : null } |
+  { 'general' : null } |
+  { 'withdrawalQuery' : null } |
+  { 'bugReport' : null };
+export type TicketPriority = { 'low' : null } |
+  { 'high' : null } |
+  { 'medium' : null };
+export interface TicketReply {
+  'id' : string,
+  'authorId' : string,
+  'createdAt' : bigint,
+  'authorRole' : { 'admin' : null } |
+    { 'user' : null },
+  'ticketId' : string,
+  'message' : string,
+}
+export type TicketStatus = { 'resolved' : null } |
+  { 'open' : null } |
+  { 'inProgress' : null };
+export type TxStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'pendingApproval' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null } |
+  { 'failed' : null };
+export type TxType = { 'buy' : null } |
+  { 'sell' : null } |
+  { 'deposit' : null } |
+  { 'withdrawal' : null } |
+  { 'dailyReward' : null };
 export interface UdhaarCustomer {
   'id' : string,
   'shopId' : string,
@@ -670,6 +786,11 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'addCoin' : ActorMethod<
+    [[] | [string], string, string, string, string],
+    { 'ok' : CryptoCoin } |
+      { 'err' : string }
+  >,
   'addCustomCode' : ActorMethod<
     [
       string,
@@ -749,6 +870,16 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'adminApproveCryptoWithdrawal' : ActorMethod<
+    [[] | [string], string, [] | [string]],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'adminApproveDeposit' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'adminApproveUpiPremium' : ActorMethod<
     [bigint],
     { 'ok' : null } |
@@ -777,7 +908,34 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'adminGetAllCryptoUsers' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<CryptoWallet> } |
+      { 'err' : string }
+  >,
+  'adminGetAllTickets' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<SupportTicket> } |
+      { 'err' : string }
+  >,
+  'adminGetAllWithdrawals' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<CryptoWithdrawal> } |
+      { 'err' : string }
+  >,
   'adminGetChatStats' : ActorMethod<[], ChatStats>,
+  'adminGetCryptoStats' : ActorMethod<
+    [[] | [string]],
+    {
+        'ok' : {
+          'totalCommissions' : number,
+          'totalVolume' : number,
+          'totalUsers' : bigint,
+          'totalBalance' : number,
+        }
+      } |
+      { 'err' : string }
+  >,
   'adminGetUpiPremiumRequests' : ActorMethod<[], Array<UpiPaymentRequest>>,
   /**
    * / Return all pending UPI unlock requests — admin only.
@@ -804,6 +962,11 @@ export interface _SERVICE {
     { 'ok' : Array<OfferWithdrawal> } |
       { 'err' : string }
   >,
+  'adminRejectCryptoWithdrawal' : ActorMethod<
+    [[] | [string], string, [] | [string]],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'adminRejectUpiPremium' : ActorMethod<
     [bigint],
     { 'ok' : null } |
@@ -814,6 +977,11 @@ export interface _SERVICE {
    */
   'adminRejectUpiUnlock' : ActorMethod<
     [bigint],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'adminResetMpin' : ActorMethod<
+    [[] | [string], string],
     { 'ok' : null } |
       { 'err' : string }
   >,
@@ -859,13 +1027,33 @@ export interface _SERVICE {
   'approveTopupRequest' : ActorMethod<[bigint, boolean], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'awardChatPoints' : ActorMethod<[string, bigint], boolean>,
+  'blockCryptoUser' : ActorMethod<
+    [[] | [string], string, boolean, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'buyCoin' : ActorMethod<
+    [string, string, number, number, string],
+    { 'ok' : CryptoTransaction } |
+      { 'err' : string }
+  >,
   'cancelChatScheduledMessage' : ActorMethod<[bigint], boolean>,
   'changeAdminPin' : ActorMethod<[string, string], undefined>,
+  'changeMpin' : ActorMethod<
+    [string, string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   /**
    * / Validate an admin session token — public query.
    * / Returns true if the token is valid and not expired.
    */
   'checkAdminToken' : ActorMethod<[string], boolean>,
+  'claimDailyReward' : ActorMethod<
+    [string],
+    { 'ok' : number } |
+      { 'err' : string }
+  >,
   'cleanupExpiredChatStories' : ActorMethod<[], bigint>,
   'cleanupExpiredChatVaultItems' : ActorMethod<[], bigint>,
   /**
@@ -886,6 +1074,11 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'createSupportTicket' : ActorMethod<
+    [string, string, string, string, string, string],
+    { 'ok' : SupportTicket } |
+      { 'err' : string }
+  >,
   /**
    * / Create a Stripe PaymentIntent for a locked message and return clientSecret.
    */
@@ -900,6 +1093,11 @@ export interface _SERVICE {
   'deleteChatNote' : ActorMethod<[bigint], boolean>,
   'deleteChatShortcut' : ActorMethod<[bigint], boolean>,
   'deleteChatVaultItem' : ActorMethod<[bigint], boolean>,
+  'deleteCoin' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'deleteCustomCode' : ActorMethod<[bigint], boolean>,
   'deleteCustomSection' : ActorMethod<[bigint], boolean>,
   'deleteJob' : ActorMethod<[bigint], boolean>,
@@ -937,6 +1135,11 @@ export interface _SERVICE {
   'forwardChatMessage' : ActorMethod<
     [bigint, bigint],
     { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'freezeCryptoUser' : ActorMethod<
+    [[] | [string], string, boolean, string],
+    { 'ok' : null } |
       { 'err' : string }
   >,
   'getActiveBanners' : ActorMethod<[], Array<Banner>>,
@@ -984,6 +1187,11 @@ export interface _SERVICE {
       'interstitialId' : string,
       'bannerUnitId' : string,
     }
+  >,
+  'getAllCoins' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<CryptoCoin> } |
+      { 'err' : string }
   >,
   'getAllProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
@@ -1046,10 +1254,13 @@ export interface _SERVICE {
    * / Return the caller's pay-to-unlock creator earnings.
    */
   'getCreatorEarnings' : ActorMethod<[], CreatorEarningsSummary>,
+  'getCryptoConfig' : ActorMethod<[[] | [string]], CryptoInvestConfig>,
+  'getCryptoConfigPublic' : ActorMethod<[], { 'isEnabled' : boolean }>,
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
+  'getListedCoins' : ActorMethod<[], Array<CryptoCoin>>,
   'getListings' : ActorMethod<
     [[] | [string], [] | [MarketCategory]],
     Array<MarketListing>
@@ -1164,12 +1375,16 @@ export interface _SERVICE {
   >,
   /**
    * / Get Offer Portal global config — public (no auth required).
-   * / Returns only non-sensitive fields: isEnabled and cpagripOfferWallUrl.
+   * / Returns only non-sensitive fields: isEnabled, cpagripOfferWallUrl, and offerWallName.
    * / Never traps for any caller — safe for anonymous/regular users.
    */
   'getOfferPortalConfigPublic' : ActorMethod<
     [],
-    { 'isEnabled' : boolean, 'cpagripOfferWallUrl' : string }
+    {
+      'offerWallName' : string,
+      'isEnabled' : boolean,
+      'cpagripOfferWallUrl' : string,
+    }
   >,
   'getOrCreateChatConversation' : ActorMethod<
     [Principal],
@@ -1193,6 +1408,15 @@ export interface _SERVICE {
   'getProviderProfile' : ActorMethod<[bigint], [] | [ProviderProfile]>,
   'getProvidersByCategory' : ActorMethod<[string], Array<ProviderProfile>>,
   'getProvidersPendingApproval' : ActorMethod<[], Array<ProviderProfile>>,
+  /**
+   * / getPublicOfferPortalConfig — FIX 8: public query returning isEnabled + offerWallUrl + offerWallName.
+   * / This is the canonical method for portal open/closed check — no admin token required.
+   * / Never traps for any caller (anonymous, regular user, admin).
+   */
+  'getPublicOfferPortalConfig' : ActorMethod<
+    [],
+    { 'offerWallName' : string, 'isEnabled' : boolean, 'offerWallUrl' : string }
+  >,
   'getRecentUsers' : ActorMethod<[], Array<User>>,
   /**
    * / Return the current recharge API config — admin only.
@@ -1214,6 +1438,7 @@ export interface _SERVICE {
    */
   'getSmsConfig' : ActorMethod<[], { 'ok' : SmsConfig } | { 'err' : string }>,
   'getSubscriptionPricing' : ActorMethod<[], [] | [SubscriptionPricing]>,
+  'getTicketReplies' : ActorMethod<[string], Array<TicketReply>>,
   /**
    * / Return balance for a customer. Caller must own the customer.
    */
@@ -1237,11 +1462,16 @@ export interface _SERVICE {
   >,
   'getUserById' : ActorMethod<[bigint], [] | [User]>,
   'getUserByMobile' : ActorMethod<[MobileNumber], [] | [User]>,
+  'getUserCryptoTransactions' : ActorMethod<[string], Array<CryptoTransaction>>,
+  'getUserCryptoWallet' : ActorMethod<[string], CryptoWallet>,
+  'getUserCryptoWithdrawals' : ActorMethod<[string], Array<CryptoWithdrawal>>,
+  'getUserPortfolio' : ActorMethod<[string], Array<PortfolioHolding>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   /**
    * / Get the current subscription status for a given user.
    */
   'getUserSubscriptionStatus' : ActorMethod<[string], [] | [UserSubscription]>,
+  'getUserTickets' : ActorMethod<[string], Array<SupportTicket>>,
   'getUsersByRole' : ActorMethod<[UserRole], Array<User>>,
   'getVideos' : ActorMethod<[], Array<VideoItem>>,
   /**
@@ -1351,7 +1581,22 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'replyToTicket' : ActorMethod<
+    [string, string, string, boolean, [] | [string]],
+    { 'ok' : TicketReply } |
+      { 'err' : string }
+  >,
   'requestApproval' : ActorMethod<[], undefined>,
+  'requestCryptoWithdrawal' : ActorMethod<
+    [string, string, number, string, string],
+    { 'ok' : CryptoWithdrawal } |
+      { 'err' : string }
+  >,
+  'requestDeposit' : ActorMethod<
+    [string, number],
+    { 'ok' : CryptoTransaction } |
+      { 'err' : string }
+  >,
   /**
    * / Request an OTP for Offer Portal password reset.
    * / Stores the OTP in stable memory with a 10-minute TTL.
@@ -1408,6 +1653,11 @@ export interface _SERVICE {
   >,
   'searchChatUsers' : ActorMethod<[string], Array<UserChatProfile>>,
   'searchUsers' : ActorMethod<[string], Array<User>>,
+  'sellCoin' : ActorMethod<
+    [string, string, number, number, string],
+    { 'ok' : CryptoTransaction } |
+      { 'err' : string }
+  >,
   'sendLockedMessage' : ActorMethod<
     [bigint, string, LockType, [] | [string], [] | [LockedFileTask]],
     { 'ok' : bigint } |
@@ -1436,6 +1686,11 @@ export interface _SERVICE {
   'setLockedFeature' : ActorMethod<
     [string, string, string],
     { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'setMpin' : ActorMethod<
+    [string, string],
+    { 'ok' : null } |
       { 'err' : string }
   >,
   /**
@@ -1511,6 +1766,11 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'updateCoin' : ActorMethod<
+    [[] | [string], string, boolean],
+    { 'ok' : CryptoCoin } |
+      { 'err' : string }
+  >,
   /**
    * / Update commission config — admin only.
    * / Validates: retailerPct + adminPct must equal globalPct.
@@ -1529,6 +1789,11 @@ export interface _SERVICE {
   'updateCpagripSettings' : ActorMethod<
     [[] | [string], string, string, string],
     boolean
+  >,
+  'updateCryptoConfig' : ActorMethod<
+    [[] | [string], CryptoInvestConfig],
+    { 'ok' : null } |
+      { 'err' : string }
   >,
   'updateCustomCode' : ActorMethod<
     [
@@ -1649,6 +1914,11 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'updateSubscriptionPricing' : ActorMethod<[SubscriptionPricing], undefined>,
+  'updateTicketStatus' : ActorMethod<
+    [[] | [string], string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'updateToggle' : ActorMethod<[[] | [string], string, boolean], undefined>,
   /**
    * / Update a customer. Caller must own the customer (shopId check).

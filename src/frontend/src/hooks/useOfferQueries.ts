@@ -247,39 +247,51 @@ export function useOfferPortalConfig() {
           isEnabled: pub.isEnabled ?? true,
           cpaLeadWebhookSecret: "",
           cpagripApiKey: "",
-          cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
-          adminProfitPct: pub.adminProfitPct,
-          userProfitPct: pub.userProfitPct,
+          // getOfferPortalConfigPublic returns cpagripOfferWallUrl
+          cpagripOfferWallUrl:
+            (pub.cpagripOfferWallUrl as string | undefined)?.trim() ||
+            DEFAULT_CPAGRIP_OFFER_WALL_URL,
+          adminProfitPct: pub.adminProfitPct ?? 60n,
+          userProfitPct: pub.userProfitPct ?? 40n,
         };
 
         // Try to get full admin config — only succeeds for admin
         try {
           const adminTok = getAdminToken();
-          const adminTokArg: [] | [string] = adminTok ? [adminTok] : [];
           const fullResult = await (actor as AnyActor).getOfferPortalConfigFull(
-            adminTokArg,
+            adminTok,
           );
           if (
             fullResult &&
             typeof fullResult === "object" &&
-            "ok" in fullResult &&
-            fullResult.ok
+            ("ok" in fullResult ||
+              ("__kind__" in fullResult &&
+                (fullResult as { __kind__: string }).__kind__ === "ok"))
           ) {
-            const full = fullResult.ok;
-            // cpagripOfferWallUrl: prefer backend-stored URL, fall back to default
-            const offerWallUrl =
-              (full.cpagripOfferWallUrl as string | undefined)?.trim() ||
-              DEFAULT_CPAGRIP_OFFER_WALL_URL;
-            return {
-              isEnabled: full.isEnabled,
-              cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
-              cpagripApiKey: full.cpagripApiKey ?? "",
-              cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
-              cpagripOfferWallName: full.cpagripOfferWallName ?? "",
-              cpagripOfferWallUrl: offerWallUrl,
-              adminProfitPct: full.adminProfitPct,
-              userProfitPct: full.userProfitPct,
-            };
+            const full = (
+              "ok" in fullResult
+                ? fullResult.ok
+                : (fullResult as { ok: unknown }).ok
+            ) as Record<string, unknown>;
+            if (full) {
+              // cpagripOfferWallUrl: prefer backend-stored URL, fall back to default
+              const offerWallUrl =
+                (full.cpagripOfferWallUrl as string | undefined)?.trim() ||
+                DEFAULT_CPAGRIP_OFFER_WALL_URL;
+              return {
+                isEnabled: (full.isEnabled as boolean) ?? true,
+                cpaLeadWebhookSecret:
+                  (full.cpaLeadWebhookSecret as string) ?? "",
+                cpagripApiKey: (full.cpagripApiKey as string) ?? "",
+                cpagripWebhookSecret:
+                  (full.cpagripWebhookSecret as string) ?? "",
+                cpagripOfferWallName:
+                  (full.cpagripOfferWallName as string) ?? "",
+                cpagripOfferWallUrl: offerWallUrl,
+                adminProfitPct: (full.adminProfitPct as bigint) ?? 60n,
+                userProfitPct: (full.userProfitPct as bigint) ?? 40n,
+              };
+            }
           }
         } catch {
           // Non-admin — just return public info with default offer wall URL
@@ -464,10 +476,12 @@ export function useRegisterOfferUser() {
       // CRITICAL FIX: Candid `opt text` must be encoded as [] | [string].
       // Passing null directly causes a Candid encoding error and registration fails.
       // Backend declaration: ActorMethod<[string, string, [] | [string]], Result>
-      const refCodeArg: [] | [string] =
+      // backend.d.ts: registerOfferUser(email, passwordHash, referralCode: string | null)
+      // The generated wrapper handles Candid opt encoding — pass string or null directly.
+      const refCodeArg: string | null =
         referralCode && referralCode.trim().length > 0
-          ? [referralCode.trim()] // Some(value) → [value]
-          : []; // None → []
+          ? referralCode.trim()
+          : null;
 
       setStatus("Account bana rahe hain...");
 
@@ -772,10 +786,9 @@ export function useUpdateOfferPortalConfig() {
           "Backend se connect nahi ho pa raha — thoda wait karein",
         );
 
-      // CRITICAL FIX: Candid `opt text` must be encoded as [] | [string].
-      // getAdminToken() returns string | null — null must become [], not passed as null.
-      const rawToken = getAdminToken();
-      const adminTokenArg: [] | [string] = rawToken ? [rawToken] : [];
+      // Admin token: backend.d.ts uses string | null (TypeScript optional).
+      // The generated actor wrapper handles Candid encoding automatically.
+      const adminTokenArg = getAdminToken();
 
       try {
         const result = await (actor as AnyActor).updateOfferPortalConfig(
@@ -788,11 +801,24 @@ export function useUpdateOfferPortalConfig() {
           newWebhookSecret ?? "",
           newOfferWallName ?? "",
         );
-        // Candid Result<T,E> returns { ok: T } | { err: E } — never uses __kind__
-        if (result && typeof result === "object" && "err" in result) {
-          throw new Error(String((result as { err: string }).err));
+        // Candid Result uses __kind__: "ok" / "err"
+        if (result && typeof result === "object") {
+          if (
+            "__kind__" in result &&
+            (result as { __kind__: string }).__kind__ === "err"
+          ) {
+            throw new Error(String((result as { err: string }).err));
+          }
+          if ("err" in result && !("ok" in result)) {
+            throw new Error(String((result as { err: string }).err));
+          }
+          if (
+            "ok" in result ||
+            ("__kind__" in result &&
+              (result as { __kind__: string }).__kind__ === "ok")
+          )
+            return true;
         }
-        if (result && typeof result === "object" && "ok" in result) return true;
         return Boolean(result);
       } catch (err) {
         const msg = (err as Error)?.message ?? String(err);
@@ -841,8 +867,7 @@ export function useGetCpagripSettings() {
       };
       if (!actor) return empty;
       try {
-        const rawToken = getAdminToken();
-        const tokenArg: [] | [string] = rawToken ? [rawToken] : [];
+        const tokenArg = getAdminToken();
         const data = await (actor as AnyActor).getCpagripSettings(tokenArg);
         return {
           apiKey: data.apiKey ?? "",
@@ -882,14 +907,11 @@ export function useSaveCPAGripKeys() {
           "Backend se connect nahi ho pa raha — thoda wait karein",
         );
       try {
-        const rawCpagripToken = getAdminToken();
-        const cpagripTokenArg: [] | [string] = rawCpagripToken
-          ? [rawCpagripToken]
-          : [];
+        const cpagripTokenArg = getAdminToken();
         const result = await (
           actor as unknown as {
             saveCPAGripKeys(
-              adminToken: [] | [string],
+              adminToken: string | null,
               a: string,
               w: string,
               n: string,
@@ -970,7 +992,9 @@ export function useAdminListOfferUsers() {
     queryFn: async (): Promise<OfferUser[]> => {
       if (!actor) return [];
       try {
-        const raw = await requireActor(actor).adminListOfferUsers();
+        const raw = await requireActor(actor).adminListOfferUsers(
+          getAdminToken(),
+        );
         return raw.map(mapBackendOfferUser);
       } catch {
         return [];
@@ -991,7 +1015,9 @@ export function useAdminListPendingWithdrawals() {
     queryFn: async (): Promise<OfferWithdrawal[]> => {
       if (!actor) return [];
       try {
-        const raw = await requireActor(actor).adminListPendingWithdrawals();
+        const raw = await requireActor(actor).adminListPendingWithdrawals(
+          getAdminToken(),
+        );
         return raw.map((w) => ({
           id: w.id,
           offerUserId: w.offerUserId,
@@ -1289,6 +1315,7 @@ export function useAdminResolveWithdrawal() {
       // The backend expects the Variant_paid_approved_rejected enum
       // At runtime on ICP this is passed as a variant object; cast via unknown
       return requireActor(actor).adminResolveWithdrawal(
+        getAdminToken(),
         id,
         newStatus as unknown,
         adminNote ?? null,
@@ -1322,7 +1349,9 @@ export function useAdminListAllWithdrawals() {
           try {
             return await requireActor(actor).adminListAllWithdrawals();
           } catch {
-            return await requireActor(actor).adminListPendingWithdrawals();
+            return await requireActor(actor).adminListPendingWithdrawals(
+              getAdminToken(),
+            );
           }
         })();
         return raw.map((w) => ({

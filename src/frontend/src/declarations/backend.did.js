@@ -24,6 +24,15 @@ export const PremiumPlan = IDL.Variant({
   'quarterly' : IDL.Null,
   'monthly' : IDL.Null,
 });
+export const CryptoCoin = IDL.Record({
+  'id' : IDL.Text,
+  'isListed' : IDL.Bool,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'coinGeckoId' : IDL.Text,
+  'logoUrl' : IDL.Text,
+  'symbol' : IDL.Text,
+});
 export const ServiceRate = IDL.Record({
   'name' : IDL.Text,
   'description' : IDL.Text,
@@ -47,6 +56,63 @@ export const UdhaarTransaction = IDL.Record({
   'createdAt' : IDL.Int,
   'customerId' : IDL.Text,
   'amount' : IDL.Float64,
+});
+export const CryptoWallet = IDL.Record({
+  'dailyRewardStreak' : IDL.Nat,
+  'mpinHash' : IDL.Text,
+  'balance' : IDL.Float64,
+  'mpinLockedUntil' : IDL.Int,
+  'userId' : IDL.Text,
+  'mpinFailedAttempts' : IDL.Nat,
+  'createdAt' : IDL.Int,
+  'lastDailyRewardClaimed' : IDL.Int,
+  'updatedAt' : IDL.Int,
+  'totalWithdrawn' : IDL.Float64,
+  'totalDeposited' : IDL.Float64,
+  'mpinSetAt' : IDL.Int,
+});
+export const TicketStatus = IDL.Variant({
+  'resolved' : IDL.Null,
+  'open' : IDL.Null,
+  'inProgress' : IDL.Null,
+});
+export const TicketCategory = IDL.Variant({
+  'coinInquiry' : IDL.Null,
+  'general' : IDL.Null,
+  'withdrawalQuery' : IDL.Null,
+  'bugReport' : IDL.Null,
+});
+export const TicketPriority = IDL.Variant({
+  'low' : IDL.Null,
+  'high' : IDL.Null,
+  'medium' : IDL.Null,
+});
+export const SupportTicket = IDL.Record({
+  'id' : IDL.Text,
+  'status' : TicketStatus,
+  'userEmail' : IDL.Text,
+  'subject' : IDL.Text,
+  'userId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'description' : IDL.Text,
+  'updatedAt' : IDL.Int,
+  'category' : TicketCategory,
+  'priority' : TicketPriority,
+});
+export const CryptoWithdrawal = IDL.Record({
+  'id' : IDL.Text,
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  }),
+  'userEmail' : IDL.Text,
+  'userId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'adminNote' : IDL.Opt(IDL.Text),
+  'upiId' : IDL.Text,
+  'amount' : IDL.Float64,
+  'resolvedAt' : IDL.Opt(IDL.Int),
 });
 export const ChatStats = IDL.Record({
   'totalMessages' : IDL.Nat,
@@ -126,6 +192,38 @@ export const UserRole__1 = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
+});
+export const TxStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+  'pendingApproval' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+  'failed' : IDL.Null,
+});
+export const TxType = IDL.Variant({
+  'buy' : IDL.Null,
+  'sell' : IDL.Null,
+  'deposit' : IDL.Null,
+  'withdrawal' : IDL.Null,
+  'dailyReward' : IDL.Null,
+});
+export const CryptoTransaction = IDL.Record({
+  'id' : IDL.Text,
+  'status' : TxStatus,
+  'priceAtTime' : IDL.Opt(IDL.Float64),
+  'feeAmount' : IDL.Opt(IDL.Float64),
+  'netAmount' : IDL.Float64,
+  'userId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'coinSymbol' : IDL.Opt(IDL.Text),
+  'adminNote' : IDL.Opt(IDL.Text),
+  'updatedAt' : IDL.Int,
+  'totalAmount' : IDL.Float64,
+  'quantity' : IDL.Opt(IDL.Float64),
+  'feePercent' : IDL.Opt(IDL.Float64),
+  'txType' : TxType,
+  'coinId' : IDL.Opt(IDL.Text),
 });
 export const MarketCategory = IDL.Variant({
   'vehicles' : IDL.Null,
@@ -473,6 +571,16 @@ export const CreatorEarningsSummary = IDL.Record({
   'pendingPayouts' : IDL.Nat,
   'totalEarnings' : IDL.Nat,
 });
+export const CryptoInvestConfig = IDL.Record({
+  'buyFeePercent' : IDL.Float64,
+  'highRiskThreshold' : IDL.Float64,
+  'isEnabled' : IDL.Bool,
+  'maxWithdrawal' : IDL.Float64,
+  'minWithdrawal' : IDL.Float64,
+  'sellFeePercent' : IDL.Float64,
+  'dailyRewardAmount' : IDL.Float64,
+  'isDailyRewardEnabled' : IDL.Bool,
+});
 export const CustomCode = IDL.Record({
   'id' : IDL.Nat,
   'title' : IDL.Text,
@@ -656,6 +764,25 @@ export const SubscriptionPricing = IDL.Record({
   'twelveMonthPrice' : IDL.Nat,
   'oneMonthPrice' : IDL.Nat,
 });
+export const TicketReply = IDL.Record({
+  'id' : IDL.Text,
+  'authorId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'authorRole' : IDL.Variant({ 'admin' : IDL.Null, 'user' : IDL.Null }),
+  'ticketId' : IDL.Text,
+  'message' : IDL.Text,
+});
+export const PortfolioHolding = IDL.Record({
+  'id' : IDL.Text,
+  'userId' : IDL.Text,
+  'coinSymbol' : IDL.Text,
+  'totalCost' : IDL.Float64,
+  'updatedAt' : IDL.Int,
+  'coinName' : IDL.Text,
+  'quantity' : IDL.Float64,
+  'coinId' : IDL.Text,
+  'avgBuyPrice' : IDL.Float64,
+});
 export const UserSubscription = IDL.Record({
   'status' : IDL.Text,
   'assignedByAdmin' : IDL.Bool,
@@ -734,6 +861,11 @@ export const idlService = IDL.Service({
   'addChatVaultItem' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Int)],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'addCoin' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : CryptoCoin, 'err' : IDL.Text })],
       [],
     ),
   'addCustomCode' : IDL.Func(
@@ -815,6 +947,16 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
       [],
     ),
+  'adminApproveCryptoWithdrawal' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminApproveDeposit' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'adminApproveUpiPremium' : IDL.Func(
       [IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -837,7 +979,37 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'adminGetAllCryptoUsers' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(CryptoWallet), 'err' : IDL.Text })],
+      [],
+    ),
+  'adminGetAllTickets' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(SupportTicket), 'err' : IDL.Text })],
+      [],
+    ),
+  'adminGetAllWithdrawals' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(CryptoWithdrawal), 'err' : IDL.Text })],
+      [],
+    ),
   'adminGetChatStats' : IDL.Func([], [ChatStats], ['query']),
+  'adminGetCryptoStats' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [
+        IDL.Variant({
+          'ok' : IDL.Record({
+            'totalCommissions' : IDL.Float64,
+            'totalVolume' : IDL.Float64,
+            'totalUsers' : IDL.Nat,
+            'totalBalance' : IDL.Float64,
+          }),
+          'err' : IDL.Text,
+        }),
+      ],
+      [],
+    ),
   'adminGetUpiPremiumRequests' : IDL.Func(
       [],
       [IDL.Vec(UpiPaymentRequest)],
@@ -858,6 +1030,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Vec(OfferWithdrawal), 'err' : IDL.Text })],
       [],
     ),
+  'adminRejectCryptoWithdrawal' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'adminRejectUpiPremium' : IDL.Func(
       [IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -865,6 +1042,11 @@ export const idlService = IDL.Service({
     ),
   'adminRejectUpiUnlock' : IDL.Func(
       [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminResetMpin' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -901,9 +1083,29 @@ export const idlService = IDL.Service({
   'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+  'blockCryptoUser' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'buyCoin' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64, IDL.Text],
+      [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'changeMpin' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+  'claimDailyReward' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
+      [],
+    ),
   'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
   'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
   'confirmUpiUnlock' : IDL.Func(
@@ -929,6 +1131,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
+  'createSupportTicket' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : SupportTicket, 'err' : IDL.Text })],
+      [],
+    ),
   'createUnlockPaymentIntent' : IDL.Func(
       [IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -940,6 +1147,11 @@ export const idlService = IDL.Service({
   'deleteChatNote' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteCoin' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -978,6 +1190,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
+  'freezeCryptoUser' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
   'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
@@ -1014,6 +1231,11 @@ export const idlService = IDL.Service({
         }),
       ],
       ['query'],
+    ),
+  'getAllCoins' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(CryptoCoin), 'err' : IDL.Text })],
+      [],
     ),
   'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAllRechargeTransactions' : IDL.Func(
@@ -1084,10 +1306,17 @@ export const idlService = IDL.Service({
       [],
     ),
   'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
+  'getCryptoConfig' : IDL.Func([IDL.Opt(IDL.Text)], [CryptoInvestConfig], []),
+  'getCryptoConfigPublic' : IDL.Func(
+      [],
+      [IDL.Record({ 'isEnabled' : IDL.Bool })],
+      ['query'],
+    ),
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
   'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
   'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+  'getListedCoins' : IDL.Func([], [IDL.Vec(CryptoCoin)], ['query']),
   'getListings' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(MarketCategory)],
       [IDL.Vec(MarketListing)],
@@ -1188,6 +1417,7 @@ export const idlService = IDL.Service({
       [],
       [
         IDL.Record({
+          'offerWallName' : IDL.Text,
           'isEnabled' : IDL.Bool,
           'cpagripOfferWallUrl' : IDL.Text,
         }),
@@ -1228,6 +1458,17 @@ export const idlService = IDL.Service({
       [IDL.Vec(ProviderProfile)],
       ['query'],
     ),
+  'getPublicOfferPortalConfig' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'offerWallName' : IDL.Text,
+          'isEnabled' : IDL.Bool,
+          'offerWallUrl' : IDL.Text,
+        }),
+      ],
+      ['query'],
+    ),
   'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'getRechargeApiConfig' : IDL.Func([], [RechargeApiConfig], ['query']),
   'getRechargeReceipt' : IDL.Func(
@@ -1247,6 +1488,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(SubscriptionPricing)],
       ['query'],
     ),
+  'getTicketReplies' : IDL.Func([IDL.Text], [IDL.Vec(TicketReply)], []),
   'getUdhaarBalance' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
@@ -1260,6 +1502,18 @@ export const idlService = IDL.Service({
     ),
   'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
   'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
+  'getUserCryptoTransactions' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(CryptoTransaction)],
+      [],
+    ),
+  'getUserCryptoWallet' : IDL.Func([IDL.Text], [CryptoWallet], []),
+  'getUserCryptoWithdrawals' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(CryptoWithdrawal)],
+      [],
+    ),
+  'getUserPortfolio' : IDL.Func([IDL.Text], [IDL.Vec(PortfolioHolding)], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -1270,6 +1524,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserSubscription)],
       ['query'],
     ),
+  'getUserTickets' : IDL.Func([IDL.Text], [IDL.Vec(SupportTicket)], []),
   'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
   'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
   'getWalletBalanceByUserId' : IDL.Func([IDL.Nat], [IDL.Float64], ['query']),
@@ -1347,7 +1602,22 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
+  'replyToTicket' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : TicketReply, 'err' : IDL.Text })],
+      [],
+    ),
   'requestApproval' : IDL.Func([], [], []),
+  'requestCryptoWithdrawal' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : CryptoWithdrawal, 'err' : IDL.Text })],
+      [],
+    ),
+  'requestDeposit' : IDL.Func(
+      [IDL.Text, IDL.Float64],
+      [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'requestOfferPasswordReset' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -1386,6 +1656,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
+  'sellCoin' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64, IDL.Text],
+      [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+      [],
+    ),
   'sendLockedMessage' : IDL.Func(
       [IDL.Nat, IDL.Text, LockType, IDL.Opt(IDL.Text), IDL.Opt(LockedFileTask)],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
@@ -1415,6 +1690,11 @@ export const idlService = IDL.Service({
   'setLockedFeature' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'setMpin' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
@@ -1473,6 +1753,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'updateCoin' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : CryptoCoin, 'err' : IDL.Text })],
+      [],
+    ),
   'updateCommissionConfig' : IDL.Func(
       [IDL.Float64, IDL.Float64, IDL.Float64],
       [IDL.Bool],
@@ -1482,6 +1767,11 @@ export const idlService = IDL.Service({
   'updateCpagripSettings' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
       [IDL.Bool],
+      [],
+    ),
+  'updateCryptoConfig' : IDL.Func(
+      [IDL.Opt(IDL.Text), CryptoInvestConfig],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'updateCustomCode' : IDL.Func(
@@ -1614,6 +1904,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
+  'updateTicketStatus' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'updateToggle' : IDL.Func([IDL.Opt(IDL.Text), IDL.Text, IDL.Bool], [], []),
   'updateUdhaarCustomer' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -1666,6 +1961,15 @@ export const idlFactory = ({ IDL }) => {
     'quarterly' : IDL.Null,
     'monthly' : IDL.Null,
   });
+  const CryptoCoin = IDL.Record({
+    'id' : IDL.Text,
+    'isListed' : IDL.Bool,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'coinGeckoId' : IDL.Text,
+    'logoUrl' : IDL.Text,
+    'symbol' : IDL.Text,
+  });
   const ServiceRate = IDL.Record({
     'name' : IDL.Text,
     'description' : IDL.Text,
@@ -1689,6 +1993,63 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'customerId' : IDL.Text,
     'amount' : IDL.Float64,
+  });
+  const CryptoWallet = IDL.Record({
+    'dailyRewardStreak' : IDL.Nat,
+    'mpinHash' : IDL.Text,
+    'balance' : IDL.Float64,
+    'mpinLockedUntil' : IDL.Int,
+    'userId' : IDL.Text,
+    'mpinFailedAttempts' : IDL.Nat,
+    'createdAt' : IDL.Int,
+    'lastDailyRewardClaimed' : IDL.Int,
+    'updatedAt' : IDL.Int,
+    'totalWithdrawn' : IDL.Float64,
+    'totalDeposited' : IDL.Float64,
+    'mpinSetAt' : IDL.Int,
+  });
+  const TicketStatus = IDL.Variant({
+    'resolved' : IDL.Null,
+    'open' : IDL.Null,
+    'inProgress' : IDL.Null,
+  });
+  const TicketCategory = IDL.Variant({
+    'coinInquiry' : IDL.Null,
+    'general' : IDL.Null,
+    'withdrawalQuery' : IDL.Null,
+    'bugReport' : IDL.Null,
+  });
+  const TicketPriority = IDL.Variant({
+    'low' : IDL.Null,
+    'high' : IDL.Null,
+    'medium' : IDL.Null,
+  });
+  const SupportTicket = IDL.Record({
+    'id' : IDL.Text,
+    'status' : TicketStatus,
+    'userEmail' : IDL.Text,
+    'subject' : IDL.Text,
+    'userId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'description' : IDL.Text,
+    'updatedAt' : IDL.Int,
+    'category' : TicketCategory,
+    'priority' : TicketPriority,
+  });
+  const CryptoWithdrawal = IDL.Record({
+    'id' : IDL.Text,
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'approved' : IDL.Null,
+      'rejected' : IDL.Null,
+    }),
+    'userEmail' : IDL.Text,
+    'userId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'adminNote' : IDL.Opt(IDL.Text),
+    'upiId' : IDL.Text,
+    'amount' : IDL.Float64,
+    'resolvedAt' : IDL.Opt(IDL.Int),
   });
   const ChatStats = IDL.Record({
     'totalMessages' : IDL.Nat,
@@ -1768,6 +2129,38 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const TxStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+    'pendingApproval' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+    'failed' : IDL.Null,
+  });
+  const TxType = IDL.Variant({
+    'buy' : IDL.Null,
+    'sell' : IDL.Null,
+    'deposit' : IDL.Null,
+    'withdrawal' : IDL.Null,
+    'dailyReward' : IDL.Null,
+  });
+  const CryptoTransaction = IDL.Record({
+    'id' : IDL.Text,
+    'status' : TxStatus,
+    'priceAtTime' : IDL.Opt(IDL.Float64),
+    'feeAmount' : IDL.Opt(IDL.Float64),
+    'netAmount' : IDL.Float64,
+    'userId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'coinSymbol' : IDL.Opt(IDL.Text),
+    'adminNote' : IDL.Opt(IDL.Text),
+    'updatedAt' : IDL.Int,
+    'totalAmount' : IDL.Float64,
+    'quantity' : IDL.Opt(IDL.Float64),
+    'feePercent' : IDL.Opt(IDL.Float64),
+    'txType' : TxType,
+    'coinId' : IDL.Opt(IDL.Text),
   });
   const MarketCategory = IDL.Variant({
     'vehicles' : IDL.Null,
@@ -2115,6 +2508,16 @@ export const idlFactory = ({ IDL }) => {
     'pendingPayouts' : IDL.Nat,
     'totalEarnings' : IDL.Nat,
   });
+  const CryptoInvestConfig = IDL.Record({
+    'buyFeePercent' : IDL.Float64,
+    'highRiskThreshold' : IDL.Float64,
+    'isEnabled' : IDL.Bool,
+    'maxWithdrawal' : IDL.Float64,
+    'minWithdrawal' : IDL.Float64,
+    'sellFeePercent' : IDL.Float64,
+    'dailyRewardAmount' : IDL.Float64,
+    'isDailyRewardEnabled' : IDL.Bool,
+  });
   const CustomCode = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
@@ -2295,6 +2698,25 @@ export const idlFactory = ({ IDL }) => {
     'twelveMonthPrice' : IDL.Nat,
     'oneMonthPrice' : IDL.Nat,
   });
+  const TicketReply = IDL.Record({
+    'id' : IDL.Text,
+    'authorId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'authorRole' : IDL.Variant({ 'admin' : IDL.Null, 'user' : IDL.Null }),
+    'ticketId' : IDL.Text,
+    'message' : IDL.Text,
+  });
+  const PortfolioHolding = IDL.Record({
+    'id' : IDL.Text,
+    'userId' : IDL.Text,
+    'coinSymbol' : IDL.Text,
+    'totalCost' : IDL.Float64,
+    'updatedAt' : IDL.Int,
+    'coinName' : IDL.Text,
+    'quantity' : IDL.Float64,
+    'coinId' : IDL.Text,
+    'avgBuyPrice' : IDL.Float64,
+  });
   const UserSubscription = IDL.Record({
     'status' : IDL.Text,
     'assignedByAdmin' : IDL.Bool,
@@ -2370,6 +2792,11 @@ export const idlFactory = ({ IDL }) => {
     'addChatVaultItem' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Int)],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'addCoin' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : CryptoCoin, 'err' : IDL.Text })],
         [],
       ),
     'addCustomCode' : IDL.Func(
@@ -2451,6 +2878,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Int, 'err' : IDL.Text })],
         [],
       ),
+    'adminApproveCryptoWithdrawal' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminApproveDeposit' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'adminApproveUpiPremium' : IDL.Func(
         [IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -2473,7 +2910,37 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'adminGetAllCryptoUsers' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(CryptoWallet), 'err' : IDL.Text })],
+        [],
+      ),
+    'adminGetAllTickets' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(SupportTicket), 'err' : IDL.Text })],
+        [],
+      ),
+    'adminGetAllWithdrawals' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(CryptoWithdrawal), 'err' : IDL.Text })],
+        [],
+      ),
     'adminGetChatStats' : IDL.Func([], [ChatStats], ['query']),
+    'adminGetCryptoStats' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'totalCommissions' : IDL.Float64,
+              'totalVolume' : IDL.Float64,
+              'totalUsers' : IDL.Nat,
+              'totalBalance' : IDL.Float64,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
     'adminGetUpiPremiumRequests' : IDL.Func(
         [],
         [IDL.Vec(UpiPaymentRequest)],
@@ -2494,6 +2961,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Vec(OfferWithdrawal), 'err' : IDL.Text })],
         [],
       ),
+    'adminRejectCryptoWithdrawal' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'adminRejectUpiPremium' : IDL.Func(
         [IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -2501,6 +2973,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'adminRejectUpiUnlock' : IDL.Func(
         [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminResetMpin' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
@@ -2537,9 +3014,29 @@ export const idlFactory = ({ IDL }) => {
     'approveTopupRequest' : IDL.Func([IDL.Nat, IDL.Bool], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'awardChatPoints' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+    'blockCryptoUser' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'buyCoin' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64, IDL.Text],
+        [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'cancelChatScheduledMessage' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'changeAdminPin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'changeMpin' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'claimDailyReward' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
+        [],
+      ),
     'cleanupExpiredChatStories' : IDL.Func([], [IDL.Nat], []),
     'cleanupExpiredChatVaultItems' : IDL.Func([], [IDL.Nat], []),
     'confirmUpiUnlock' : IDL.Func(
@@ -2565,6 +3062,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'createSupportTicket' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : SupportTicket, 'err' : IDL.Text })],
+        [],
+      ),
     'createUnlockPaymentIntent' : IDL.Func(
         [IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -2576,6 +3078,11 @@ export const idlFactory = ({ IDL }) => {
     'deleteChatNote' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteChatShortcut' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteChatVaultItem' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteCoin' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteCustomCode' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteCustomSection' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteJob' : IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -2614,6 +3121,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'freezeCryptoUser' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
     'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
     'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
@@ -2650,6 +3162,11 @@ export const idlFactory = ({ IDL }) => {
           }),
         ],
         ['query'],
+      ),
+    'getAllCoins' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(CryptoCoin), 'err' : IDL.Text })],
+        [],
       ),
     'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAllRechargeTransactions' : IDL.Func(
@@ -2720,10 +3237,17 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'getCreatorEarnings' : IDL.Func([], [CreatorEarningsSummary], ['query']),
+    'getCryptoConfig' : IDL.Func([IDL.Opt(IDL.Text)], [CryptoInvestConfig], []),
+    'getCryptoConfigPublic' : IDL.Func(
+        [],
+        [IDL.Record({ 'isEnabled' : IDL.Bool })],
+        ['query'],
+      ),
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
     'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
     'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
+    'getListedCoins' : IDL.Func([], [IDL.Vec(CryptoCoin)], ['query']),
     'getListings' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(MarketCategory)],
         [IDL.Vec(MarketListing)],
@@ -2836,6 +3360,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [
           IDL.Record({
+            'offerWallName' : IDL.Text,
             'isEnabled' : IDL.Bool,
             'cpagripOfferWallUrl' : IDL.Text,
           }),
@@ -2876,6 +3401,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ProviderProfile)],
         ['query'],
       ),
+    'getPublicOfferPortalConfig' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'offerWallName' : IDL.Text,
+            'isEnabled' : IDL.Bool,
+            'offerWallUrl' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'getRechargeApiConfig' : IDL.Func([], [RechargeApiConfig], ['query']),
     'getRechargeReceipt' : IDL.Func(
@@ -2895,6 +3431,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(SubscriptionPricing)],
         ['query'],
       ),
+    'getTicketReplies' : IDL.Func([IDL.Text], [IDL.Vec(TicketReply)], []),
     'getUdhaarBalance' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
@@ -2908,6 +3445,18 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
     'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
+    'getUserCryptoTransactions' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(CryptoTransaction)],
+        [],
+      ),
+    'getUserCryptoWallet' : IDL.Func([IDL.Text], [CryptoWallet], []),
+    'getUserCryptoWithdrawals' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(CryptoWithdrawal)],
+        [],
+      ),
+    'getUserPortfolio' : IDL.Func([IDL.Text], [IDL.Vec(PortfolioHolding)], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -2918,6 +3467,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserSubscription)],
         ['query'],
       ),
+    'getUserTickets' : IDL.Func([IDL.Text], [IDL.Vec(SupportTicket)], []),
     'getUsersByRole' : IDL.Func([UserRole], [IDL.Vec(User)], ['query']),
     'getVideos' : IDL.Func([], [IDL.Vec(VideoItem)], ['query']),
     'getWalletBalanceByUserId' : IDL.Func([IDL.Nat], [IDL.Float64], ['query']),
@@ -2999,7 +3549,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'replyToTicket' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : TicketReply, 'err' : IDL.Text })],
+        [],
+      ),
     'requestApproval' : IDL.Func([], [], []),
+    'requestCryptoWithdrawal' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : CryptoWithdrawal, 'err' : IDL.Text })],
+        [],
+      ),
+    'requestDeposit' : IDL.Func(
+        [IDL.Text, IDL.Float64],
+        [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'requestOfferPasswordReset' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -3038,6 +3603,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'searchUsers' : IDL.Func([IDL.Text], [IDL.Vec(User)], ['query']),
+    'sellCoin' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Float64, IDL.Float64, IDL.Text],
+        [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+        [],
+      ),
     'sendLockedMessage' : IDL.Func(
         [
           IDL.Nat,
@@ -3077,6 +3647,11 @@ export const idlFactory = ({ IDL }) => {
     'setLockedFeature' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'setMpin' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
@@ -3135,6 +3710,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'updateCoin' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Bool],
+        [IDL.Variant({ 'ok' : CryptoCoin, 'err' : IDL.Text })],
+        [],
+      ),
     'updateCommissionConfig' : IDL.Func(
         [IDL.Float64, IDL.Float64, IDL.Float64],
         [IDL.Bool],
@@ -3144,6 +3724,11 @@ export const idlFactory = ({ IDL }) => {
     'updateCpagripSettings' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Text, IDL.Text, IDL.Text],
         [IDL.Bool],
+        [],
+      ),
+    'updateCryptoConfig' : IDL.Func(
+        [IDL.Opt(IDL.Text), CryptoInvestConfig],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'updateCustomCode' : IDL.Func(
@@ -3276,6 +3861,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateSubscriptionPricing' : IDL.Func([SubscriptionPricing], [], []),
+    'updateTicketStatus' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'updateToggle' : IDL.Func([IDL.Opt(IDL.Text), IDL.Text, IDL.Bool], [], []),
     'updateUdhaarCustomer' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],

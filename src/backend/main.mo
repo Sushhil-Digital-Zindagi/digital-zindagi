@@ -33,6 +33,8 @@ import MktTypes   "types/marketplace";
 import MktApi     "mixins/marketplace-api";
 import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
+import CryptoTypes "types/crypto";
+import CryptoLib "lib/crypto";
 
 
 
@@ -114,7 +116,7 @@ persistent actor {
   var nextWithdrawalId  = 1;
   var nextReceiptId     = 1;
   var offerPortalConfig : OPTypes.OfferPortalConfig = {
-    isEnabled            = false;
+    isEnabled            = true;  // DEFAULT OPEN — admin must explicitly disable
     cpaLeadWebhookSecret = "DZ_OfferWall_2026@Secret#123";
     cpagripApiKey        = "914ebf2f2ed06fd6da511be81d502acd";
     adminProfitPct       = 60;
@@ -173,6 +175,27 @@ persistent actor {
   var cpagripWebhookSecret : Text = "DZ_OfferWall_2026@Secret#123";
   var cpagripOfferWallName : Text = "Digital Zindagi Offers";
   var cpagripOfferWallUrl  : Text = "https://www.cpagrip.com/view.php?id=1889594";
+  // ── Digital Invest (Crypto Trading) state ──────────────────────────────────
+  var cryptoConfig : CryptoTypes.CryptoInvestConfig = {
+    isEnabled = false;
+    buyFeePercent = 0.5;
+    sellFeePercent = 0.5;
+    minWithdrawal = 100.0;
+    maxWithdrawal = 50000.0;
+    dailyRewardAmount = 5.0;
+    isDailyRewardEnabled = true;
+    highRiskThreshold = 20.0;
+  };
+  var cryptoCoins         = Map.empty<Text, CryptoTypes.CryptoCoin>();
+  var cryptoWallets       = Map.empty<Text, CryptoTypes.CryptoWallet>();
+  var cryptoPortfolio     = Map.empty<Text, CryptoTypes.PortfolioHolding>();
+  var cryptoTransactions  = Map.empty<Text, CryptoTypes.CryptoTransaction>();
+  var cryptoWithdrawals   = Map.empty<Text, CryptoTypes.CryptoWithdrawal>();
+  var cryptoUserFreeze    = Map.empty<Text, CryptoTypes.CryptoUserFreeze>();
+  var supportTickets      = Map.empty<Text, CryptoTypes.SupportTicket>();
+  var ticketReplies       = Map.empty<Text, CryptoTypes.TicketReply>();
+  var cryptoAuditLogs     = Map.empty<Text, CryptoTypes.CryptoAdminAuditLog>();
+  var cryptoCounter       : Nat = 0;
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -2376,12 +2399,24 @@ persistent actor {
   };
 
   /// Get Offer Portal global config — public (no auth required).
-  /// Returns only non-sensitive fields: isEnabled and cpagripOfferWallUrl.
+  /// Returns only non-sensitive fields: isEnabled, cpagripOfferWallUrl, and offerWallName.
   /// Never traps for any caller — safe for anonymous/regular users.
-  public query func getOfferPortalConfigPublic() : async { isEnabled : Bool; cpagripOfferWallUrl : Text } {
+  public query func getOfferPortalConfigPublic() : async { isEnabled : Bool; cpagripOfferWallUrl : Text; offerWallName : Text } {
     {
-      isEnabled         = offerPortalConfig.isEnabled;
+      isEnabled           = offerPortalConfig.isEnabled;
       cpagripOfferWallUrl = cpagripOfferWallUrl;
+      offerWallName       = cpagripOfferWallName;
+    };
+  };
+
+  /// getPublicOfferPortalConfig — FIX 8: public query returning isEnabled + offerWallUrl + offerWallName.
+  /// This is the canonical method for portal open/closed check — no admin token required.
+  /// Never traps for any caller (anonymous, regular user, admin).
+  public query func getPublicOfferPortalConfig() : async { isEnabled : Bool; offerWallUrl : Text; offerWallName : Text } {
+    {
+      isEnabled     = offerPortalConfig.isEnabled;
+      offerWallUrl  = cpagripOfferWallUrl;
+      offerWallName = cpagripOfferWallName;
     };
   };
 
@@ -3670,4 +3705,624 @@ persistent actor {
     PremApi.adminSetPremiumPrices(premiumState, monthly, quarterly, annual);
   };
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── DIGITAL INVEST (Crypto Trading Module) ───────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+
+  func getOrCreateCryptoWallet(userId : Text) : CryptoTypes.CryptoWallet {
+    switch (cryptoWallets.get(userId)) {
+      case (?w) { w };
+      case null {
+        let w = CryptoLib.createWallet(userId);
+        cryptoWallets.add(userId, w);
+        w;
+      };
+    };
+  };
+
+  func nextCryptoId(prefix : Text) : Text {
+    cryptoCounter += 1;
+    CryptoLib.generateId(prefix, cryptoCounter);
+  };
+
+  func logCryptoAudit(action : Text, targetId : ?Text, before : ?Text, after : ?Text) {
+    let id = nextCryptoId("audit");
+    cryptoAuditLogs.add(id, {
+      id;
+      adminEmail = ADMIN_EMAIL;
+      action;
+      targetId;
+      beforeValue = before;
+      afterValue = after;
+      createdAt = Time.now();
+    });
+  };
+
+  public shared ({ caller }) func getCryptoConfig(adminToken : ?Text) : async CryptoTypes.CryptoInvestConfig {
+    if (isAdminCallerOrToken(caller, adminToken)) {
+      cryptoConfig
+    } else {
+      { cryptoConfig with buyFeePercent = 0.0; sellFeePercent = 0.0; dailyRewardAmount = 0.0 }
+    };
+  };
+
+  public query func getCryptoConfigPublic() : async { isEnabled : Bool } {
+    { isEnabled = cryptoConfig.isEnabled };
+  };
+
+  public shared ({ caller }) func updateCryptoConfig(
+    adminToken : ?Text,
+    config     : CryptoTypes.CryptoInvestConfig,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let before = debug_show(cryptoConfig.isEnabled);
+    cryptoConfig := config;
+    logCryptoAudit("update_crypto_config", null, ?before, ?debug_show(config.isEnabled));
+    #ok(());
+  };
+
+  public query func getListedCoins() : async [CryptoTypes.CryptoCoin] {
+    cryptoCoins.values().filter(func(c : CryptoTypes.CryptoCoin) : Bool { c.isListed }).toArray();
+  };
+
+  public shared ({ caller }) func getAllCoins(adminToken : ?Text) : async { #ok : [CryptoTypes.CryptoCoin]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoCoins.values().toArray());
+  };
+
+  public shared ({ caller }) func addCoin(
+    adminToken  : ?Text,
+    name        : Text,
+    symbol      : Text,
+    coinGeckoId : Text,
+    logoUrl     : Text,
+  ) : async { #ok : CryptoTypes.CryptoCoin; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let id = nextCryptoId("coin");
+    let coin : CryptoTypes.CryptoCoin = { id; name; symbol; coinGeckoId; logoUrl; isListed = true; createdAt = Time.now() };
+    cryptoCoins.add(id, coin);
+    logCryptoAudit("add_coin", ?id, null, ?name);
+    #ok(coin);
+  };
+
+  public shared ({ caller }) func updateCoin(
+    adminToken : ?Text,
+    id         : Text,
+    isListed   : Bool,
+  ) : async { #ok : CryptoTypes.CryptoCoin; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoCoins.get(id)) {
+      case null { #err("Coin not found") };
+      case (?coin) {
+        let updated = { coin with isListed };
+        cryptoCoins.add(id, updated);
+        logCryptoAudit("update_coin", ?id, ?debug_show(coin.isListed), ?debug_show(isListed));
+        #ok(updated);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteCoin(
+    adminToken : ?Text,
+    id         : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    if (not cryptoCoins.containsKey(id)) {
+      return #err("Coin not found");
+    };
+    cryptoCoins.remove(id);
+    logCryptoAudit("delete_coin", ?id, null, null);
+    #ok(());
+  };
+
+  public shared func getUserCryptoWallet(userId : Text) : async CryptoTypes.CryptoWallet {
+    getOrCreateCryptoWallet(userId);
+  };
+
+  public shared func setMpin(userId : Text, mpin : Text) : async { #ok : (); #err : Text } {
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (wallet.mpinHash != "") {
+      return #err("MPIN already set. Use changeMpin to update.");
+    };
+    cryptoWallets.add(userId, { wallet with
+      mpinHash = CryptoLib.hashMpin(mpin);
+      mpinSetAt = Time.now();
+      mpinFailedAttempts = 0;
+      mpinLockedUntil = 0;
+    });
+    #ok(());
+  };
+
+  public shared func changeMpin(userId : Text, currentMpin : Text, newMpin : Text) : async { #ok : (); #err : Text } {
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (CryptoLib.isWalletLocked(wallet)) {
+      return #err("Wallet locked due to failed attempts. Try again later.");
+    };
+    if (not CryptoLib.verifyMpin(currentMpin, wallet.mpinHash)) {
+      let attempts = wallet.mpinFailedAttempts + 1;
+      let lockedUntil = if (attempts >= 3) { Time.now() + 900_000_000_000 } else { wallet.mpinLockedUntil };
+      cryptoWallets.add(userId, { wallet with mpinFailedAttempts = attempts; mpinLockedUntil = lockedUntil });
+      return #err("Incorrect MPIN. " # (3 - attempts).toText() # " attempts remaining.");
+    };
+    cryptoWallets.add(userId, { wallet with
+      mpinHash = CryptoLib.hashMpin(newMpin);
+      mpinSetAt = Time.now();
+      mpinFailedAttempts = 0;
+      mpinLockedUntil = 0;
+    });
+    #ok(());
+  };
+
+  public shared ({ caller }) func adminResetMpin(
+    adminToken : ?Text,
+    userId     : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let wallet = getOrCreateCryptoWallet(userId);
+    cryptoWallets.add(userId, { wallet with mpinHash = ""; mpinFailedAttempts = 0; mpinLockedUntil = 0 });
+    logCryptoAudit("admin_reset_mpin", ?userId, null, null);
+    #ok(());
+  };
+
+  public shared func requestDeposit(userId : Text, amount : Float) : async { #ok : CryptoTypes.CryptoTransaction; #err : Text } {
+    if (amount <= 0.0) {
+      return #err("Amount must be greater than zero.");
+    };
+    ignore getOrCreateCryptoWallet(userId);
+    let id = nextCryptoId("dep");
+    let now = Time.now();
+    let txn : CryptoTypes.CryptoTransaction = {
+      id; userId;
+      txType = #deposit;
+      coinId = null; coinSymbol = null; quantity = null; priceAtTime = null;
+      totalAmount = amount;
+      feePercent = null; feeAmount = null;
+      netAmount = amount;
+      status = #pendingApproval;
+      adminNote = null;
+      createdAt = now; updatedAt = now;
+    };
+    cryptoTransactions.add(id, txn);
+    #ok(txn);
+  };
+
+  public shared ({ caller }) func adminApproveDeposit(
+    adminToken : ?Text,
+    txId       : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoTransactions.get(txId)) {
+      case null { #err("Transaction not found") };
+      case (?txn) {
+        if (txn.status != #pendingApproval) {
+          return #err("Transaction is not pending approval.");
+        };
+        let wallet = getOrCreateCryptoWallet(txn.userId);
+        cryptoWallets.add(txn.userId, { wallet with
+          balance = wallet.balance + txn.netAmount;
+          totalDeposited = wallet.totalDeposited + txn.netAmount;
+          updatedAt = Time.now();
+        });
+        cryptoTransactions.add(txId, { txn with status = #approved; updatedAt = Time.now() });
+        logCryptoAudit("approve_deposit", ?txId, ?txn.userId, ?txn.netAmount.toText());
+        #ok(());
+      };
+    };
+  };
+
+  public shared func buyCoin(
+    userId        : Text,
+    coinId        : Text,
+    amountInFunds : Float,
+    currentPrice  : Float,
+    mpin          : Text,
+  ) : async { #ok : CryptoTypes.CryptoTransaction; #err : Text } {
+    if (not cryptoConfig.isEnabled) { return #err("Digital Invest is currently disabled.") };
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (CryptoLib.isWalletLocked(wallet)) { return #err("Wallet locked. Try again later.") };
+    if (wallet.mpinHash == "") { return #err("Please set your MPIN before trading.") };
+    if (not CryptoLib.verifyMpin(mpin, wallet.mpinHash)) {
+      let attempts = wallet.mpinFailedAttempts + 1;
+      let lockedUntil = if (attempts >= 3) { Time.now() + 900_000_000_000 } else { wallet.mpinLockedUntil };
+      cryptoWallets.add(userId, { wallet with mpinFailedAttempts = attempts; mpinLockedUntil = lockedUntil });
+      return #err("Incorrect MPIN.");
+    };
+    switch (CryptoLib.canTrade(wallet, cryptoUserFreeze.get(userId))) {
+      case (#err(e)) { return #err(e) };
+      case (#ok) {};
+    };
+    switch (cryptoCoins.get(coinId)) {
+      case null { return #err("Coin not found.") };
+      case (?coin) {
+        if (not coin.isListed) { return #err("Coin is delisted.") };
+        let order = CryptoLib.calculateBuyOrder(amountInFunds, currentPrice, cryptoConfig.buyFeePercent);
+        if (wallet.balance < order.totalDeducted) { return #err("Insufficient wallet balance.") };
+        cryptoWallets.add(userId, { wallet with
+          balance = wallet.balance - order.totalDeducted;
+          mpinFailedAttempts = 0;
+          updatedAt = Time.now();
+        });
+        let holdingKey = userId # "_" # coinId;
+        let holding = CryptoLib.updatePortfolioOnBuy(
+          cryptoPortfolio.get(holdingKey),
+          coinId, coin.symbol, coin.name, userId,
+          order.coinQuantity, currentPrice,
+        );
+        let holdingFinal = if (cryptoPortfolio.containsKey(holdingKey)) {
+          holding
+        } else {
+          { holding with id = nextCryptoId("ph") }
+        };
+        cryptoPortfolio.add(holdingKey, holdingFinal);
+        let id = nextCryptoId("buy");
+        let now = Time.now();
+        let txn : CryptoTypes.CryptoTransaction = {
+          id; userId; txType = #buy;
+          coinId = ?coinId; coinSymbol = ?coin.symbol; quantity = ?order.coinQuantity;
+          priceAtTime = ?currentPrice; totalAmount = amountInFunds;
+          feePercent = ?cryptoConfig.buyFeePercent; feeAmount = ?order.feeAmount;
+          netAmount = amountInFunds; status = #completed; adminNote = null;
+          createdAt = now; updatedAt = now;
+        };
+        cryptoTransactions.add(id, txn);
+        #ok(txn);
+      };
+    };
+  };
+
+  public shared func sellCoin(
+    userId       : Text,
+    coinId       : Text,
+    quantity     : Float,
+    currentPrice : Float,
+    mpin         : Text,
+  ) : async { #ok : CryptoTypes.CryptoTransaction; #err : Text } {
+    if (not cryptoConfig.isEnabled) { return #err("Digital Invest is currently disabled.") };
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (CryptoLib.isWalletLocked(wallet)) { return #err("Wallet locked. Try again later.") };
+    if (wallet.mpinHash == "") { return #err("Please set your MPIN before trading.") };
+    if (not CryptoLib.verifyMpin(mpin, wallet.mpinHash)) {
+      let attempts = wallet.mpinFailedAttempts + 1;
+      let lockedUntil = if (attempts >= 3) { Time.now() + 900_000_000_000 } else { wallet.mpinLockedUntil };
+      cryptoWallets.add(userId, { wallet with mpinFailedAttempts = attempts; mpinLockedUntil = lockedUntil });
+      return #err("Incorrect MPIN.");
+    };
+    switch (CryptoLib.canTrade(wallet, cryptoUserFreeze.get(userId))) {
+      case (#err(e)) { return #err(e) };
+      case (#ok) {};
+    };
+    let holdingKey = userId # "_" # coinId;
+    switch (cryptoPortfolio.get(holdingKey)) {
+      case null { return #err("No holding found for this coin.") };
+      case (?holding) {
+        if (holding.quantity < quantity) { return #err("Insufficient coin quantity.") };
+        let order = CryptoLib.calculateSellOrder(quantity, currentPrice, cryptoConfig.sellFeePercent);
+        cryptoWallets.add(userId, { wallet with
+          balance = wallet.balance + order.netProceeds;
+          mpinFailedAttempts = 0;
+          updatedAt = Time.now();
+        });
+        switch (CryptoLib.updatePortfolioOnSell(holding, quantity)) {
+          case null { cryptoPortfolio.remove(holdingKey) };
+          case (?updated) { cryptoPortfolio.add(holdingKey, updated) };
+        };
+        let symbol = switch (cryptoCoins.get(coinId)) { case (?c) { c.symbol }; case null { "" } };
+        let id = nextCryptoId("sell");
+        let now = Time.now();
+        let txn : CryptoTypes.CryptoTransaction = {
+          id; userId; txType = #sell;
+          coinId = ?coinId; coinSymbol = ?symbol; quantity = ?quantity;
+          priceAtTime = ?currentPrice; totalAmount = order.grossValue;
+          feePercent = ?cryptoConfig.sellFeePercent; feeAmount = ?order.feeAmount;
+          netAmount = order.netProceeds; status = #completed; adminNote = null;
+          createdAt = now; updatedAt = now;
+        };
+        cryptoTransactions.add(id, txn);
+        #ok(txn);
+      };
+    };
+  };
+
+  public shared func getUserPortfolio(userId : Text) : async [CryptoTypes.PortfolioHolding] {
+    cryptoPortfolio.values()
+      .filter(func(h : CryptoTypes.PortfolioHolding) : Bool { h.userId == userId })
+      .toArray();
+  };
+
+  public shared func getUserCryptoTransactions(userId : Text) : async [CryptoTypes.CryptoTransaction] {
+    cryptoTransactions.values()
+      .filter(func(t : CryptoTypes.CryptoTransaction) : Bool { t.userId == userId })
+      .toArray();
+  };
+
+  public shared func requestCryptoWithdrawal(
+    userId    : Text,
+    userEmail : Text,
+    amount    : Float,
+    upiId     : Text,
+    mpin      : Text,
+  ) : async { #ok : CryptoTypes.CryptoWithdrawal; #err : Text } {
+    if (not cryptoConfig.isEnabled) { return #err("Digital Invest is currently disabled.") };
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (CryptoLib.isWalletLocked(wallet)) { return #err("Wallet locked. Try again later.") };
+    if (wallet.mpinHash == "") { return #err("Please set your MPIN first.") };
+    if (not CryptoLib.verifyMpin(mpin, wallet.mpinHash)) {
+      let attempts = wallet.mpinFailedAttempts + 1;
+      let lockedUntil = if (attempts >= 3) { Time.now() + 900_000_000_000 } else { wallet.mpinLockedUntil };
+      cryptoWallets.add(userId, { wallet with mpinFailedAttempts = attempts; mpinLockedUntil = lockedUntil });
+      return #err("Incorrect MPIN.");
+    };
+    if (amount < cryptoConfig.minWithdrawal) {
+      return #err("Amount below minimum withdrawal limit.");
+    };
+    if (amount > cryptoConfig.maxWithdrawal) {
+      return #err("Amount exceeds maximum withdrawal limit.");
+    };
+    if (wallet.balance < amount) { return #err("Insufficient balance.") };
+    cryptoWallets.add(userId, { wallet with
+      balance = wallet.balance - amount;
+      mpinFailedAttempts = 0;
+      updatedAt = Time.now();
+    });
+    let id = nextCryptoId("wd");
+    let wd : CryptoTypes.CryptoWithdrawal = {
+      id; userId; userEmail; amount; upiId;
+      status = #pending;
+      adminNote = null;
+      createdAt = Time.now();
+      resolvedAt = null;
+    };
+    cryptoWithdrawals.add(id, wd);
+    #ok(wd);
+  };
+
+  public shared ({ caller }) func adminApproveCryptoWithdrawal(
+    adminToken   : ?Text,
+    withdrawalId : Text,
+    adminNote    : ?Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoWithdrawals.get(withdrawalId)) {
+      case null { #err("Withdrawal not found") };
+      case (?wd) {
+        if (wd.status != #pending) { return #err("Withdrawal is not pending.") };
+        cryptoWithdrawals.add(withdrawalId, { wd with status = #approved; adminNote; resolvedAt = ?Time.now() });
+        let id = nextCryptoId("wd_ok");
+        let now = Time.now();
+        let txn : CryptoTypes.CryptoTransaction = {
+          id; userId = wd.userId; txType = #withdrawal;
+          coinId = null; coinSymbol = null; quantity = null; priceAtTime = null;
+          totalAmount = wd.amount; feePercent = null; feeAmount = null;
+          netAmount = wd.amount; status = #approved; adminNote;
+          createdAt = now; updatedAt = now;
+        };
+        cryptoTransactions.add(id, txn);
+        let wallet = getOrCreateCryptoWallet(wd.userId);
+        cryptoWallets.add(wd.userId, { wallet with totalWithdrawn = wallet.totalWithdrawn + wd.amount; updatedAt = now });
+        logCryptoAudit("approve_withdrawal", ?withdrawalId, ?wd.userId, ?wd.amount.toText());
+        #ok(());
+      };
+    };
+  };
+
+  public shared ({ caller }) func adminRejectCryptoWithdrawal(
+    adminToken   : ?Text,
+    withdrawalId : Text,
+    adminNote    : ?Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoWithdrawals.get(withdrawalId)) {
+      case null { #err("Withdrawal not found") };
+      case (?wd) {
+        if (wd.status != #pending) { return #err("Withdrawal is not pending.") };
+        let wallet = getOrCreateCryptoWallet(wd.userId);
+        cryptoWallets.add(wd.userId, { wallet with balance = wallet.balance + wd.amount; updatedAt = Time.now() });
+        cryptoWithdrawals.add(withdrawalId, { wd with status = #rejected; adminNote; resolvedAt = ?Time.now() });
+        logCryptoAudit("reject_withdrawal", ?withdrawalId, ?wd.userId, ?wd.amount.toText());
+        #ok(());
+      };
+    };
+  };
+
+  public shared func getUserCryptoWithdrawals(userId : Text) : async [CryptoTypes.CryptoWithdrawal] {
+    cryptoWithdrawals.values()
+      .filter(func(w : CryptoTypes.CryptoWithdrawal) : Bool { w.userId == userId })
+      .toArray();
+  };
+
+  public shared ({ caller }) func adminGetAllWithdrawals(adminToken : ?Text) : async { #ok : [CryptoTypes.CryptoWithdrawal]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoWithdrawals.values().toArray());
+  };
+
+  public shared func claimDailyReward(userId : Text) : async { #ok : Float; #err : Text } {
+    if (not cryptoConfig.isDailyRewardEnabled) { return #err("Daily reward is currently disabled.") };
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (not CryptoLib.canClaimDailyReward(wallet)) {
+      return #err("Daily reward already claimed. Come back tomorrow!");
+    };
+    let reward = cryptoConfig.dailyRewardAmount;
+    let newStreak = CryptoLib.calculateNewStreak(wallet);
+    cryptoWallets.add(userId, { wallet with
+      balance = wallet.balance + reward;
+      lastDailyRewardClaimed = Time.now();
+      dailyRewardStreak = newStreak;
+      updatedAt = Time.now();
+    });
+    let id = nextCryptoId("reward");
+    let now = Time.now();
+    let txn : CryptoTypes.CryptoTransaction = {
+      id; userId; txType = #dailyReward;
+      coinId = null; coinSymbol = null; quantity = null; priceAtTime = null;
+      totalAmount = reward; feePercent = null; feeAmount = null;
+      netAmount = reward; status = #completed; adminNote = null;
+      createdAt = now; updatedAt = now;
+    };
+    cryptoTransactions.add(id, txn);
+    #ok(reward);
+  };
+
+  public shared ({ caller }) func freezeCryptoUser(
+    adminToken : ?Text,
+    userId     : Text,
+    isFrozen   : Bool,
+    reason     : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let isBlocked = switch (cryptoUserFreeze.get(userId)) { case (?e) { e.isBlocked }; case null { false } };
+    cryptoUserFreeze.add(userId, { userId; isFrozen; isBlocked; reason; updatedAt = Time.now() });
+    logCryptoAudit("freeze_user", ?userId, null, ?debug_show(isFrozen));
+    #ok(());
+  };
+
+  public shared ({ caller }) func blockCryptoUser(
+    adminToken : ?Text,
+    userId     : Text,
+    isBlocked  : Bool,
+    reason     : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let isFrozen = switch (cryptoUserFreeze.get(userId)) { case (?e) { e.isFrozen }; case null { false } };
+    cryptoUserFreeze.add(userId, { userId; isFrozen; isBlocked; reason; updatedAt = Time.now() });
+    logCryptoAudit("block_user", ?userId, null, ?debug_show(isBlocked));
+    #ok(());
+  };
+
+  public shared ({ caller }) func adminGetAllCryptoUsers(adminToken : ?Text) : async { #ok : [CryptoTypes.CryptoWallet]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoWallets.values().toArray());
+  };
+
+  public shared ({ caller }) func adminGetCryptoStats(adminToken : ?Text) : async {
+    #ok : { totalUsers : Nat; totalBalance : Float; totalCommissions : Float; totalVolume : Float };
+    #err : Text;
+  } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let totalUsers = cryptoWallets.size();
+    var totalBalance = 0.0;
+    var totalVolume = 0.0;
+    var totalCommissions = 0.0;
+    for (w in cryptoWallets.values()) {
+      totalBalance += w.balance;
+    };
+    for (t in cryptoTransactions.values()) {
+      if (t.txType == #buy or t.txType == #sell) {
+        totalVolume += t.totalAmount;
+        totalCommissions += switch (t.feeAmount) { case (?f) { f }; case null { 0.0 } };
+      };
+    };
+    #ok({ totalUsers; totalBalance; totalCommissions; totalVolume });
+  };
+
+  public shared func createSupportTicket(
+    userId      : Text,
+    userEmail   : Text,
+    subject     : Text,
+    description : Text,
+    priority    : Text,
+    category    : Text,
+  ) : async { #ok : CryptoTypes.SupportTicket; #err : Text } {
+    let p : CryptoTypes.TicketPriority = if (priority == "high") { #high } else if (priority == "medium") { #medium } else { #low };
+    let cat : CryptoTypes.TicketCategory = if (category == "withdrawalQuery") { #withdrawalQuery } else if (category == "coinInquiry") { #coinInquiry } else if (category == "bugReport") { #bugReport } else { #general };
+    let id = nextCryptoId("ticket");
+    let now = Time.now();
+    let ticket : CryptoTypes.SupportTicket = {
+      id; userId; userEmail; subject; description;
+      priority = p; category = cat; status = #open;
+      createdAt = now; updatedAt = now;
+    };
+    supportTickets.add(id, ticket);
+    #ok(ticket);
+  };
+
+  public shared func getUserTickets(userId : Text) : async [CryptoTypes.SupportTicket] {
+    supportTickets.values()
+      .filter(func(t : CryptoTypes.SupportTicket) : Bool { t.userId == userId })
+      .toArray();
+  };
+
+  public shared func getTicketReplies(ticketId : Text) : async [CryptoTypes.TicketReply] {
+    ticketReplies.values()
+      .filter(func(r : CryptoTypes.TicketReply) : Bool { r.ticketId == ticketId })
+      .toArray();
+  };
+
+  public shared ({ caller }) func replyToTicket(
+    userId     : Text,
+    ticketId   : Text,
+    message    : Text,
+    isAdmin    : Bool,
+    adminToken : ?Text,
+  ) : async { #ok : CryptoTypes.TicketReply; #err : Text } {
+    if (isAdmin and not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin token required for admin reply.");
+    };
+    if (not supportTickets.containsKey(ticketId)) {
+      return #err("Ticket not found.");
+    };
+    let id = nextCryptoId("reply");
+    let role : { #user; #admin } = if (isAdmin) { #admin } else { #user };
+    let reply : CryptoTypes.TicketReply = {
+      id; ticketId;
+      authorId = userId;
+      authorRole = role;
+      message;
+      createdAt = Time.now();
+    };
+    ticketReplies.add(id, reply);
+    #ok(reply);
+  };
+
+  public shared ({ caller }) func updateTicketStatus(
+    adminToken : ?Text,
+    ticketId   : Text,
+    status     : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (supportTickets.get(ticketId)) {
+      case null { #err("Ticket not found.") };
+      case (?ticket) {
+        let s : CryptoTypes.TicketStatus = if (status == "resolved") { #resolved } else if (status == "inProgress") { #inProgress } else { #open };
+        supportTickets.add(ticketId, { ticket with status = s; updatedAt = Time.now() });
+        #ok(());
+      };
+    };
+  };
+
+  public shared ({ caller }) func adminGetAllTickets(adminToken : ?Text) : async { #ok : [CryptoTypes.SupportTicket]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(supportTickets.values().toArray());
+  };
 };

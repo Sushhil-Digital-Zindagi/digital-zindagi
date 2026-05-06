@@ -23,6 +23,7 @@ import ChoosePlanPage from "./pages/ChoosePlanPage";
 import DeliveryAppPage from "./pages/DeliveryAppPage";
 import DeliveryOrderPage from "./pages/DeliveryOrderPage";
 import DeliveryRegisterPage from "./pages/DeliveryRegisterPage";
+import DigitalInvestPage from "./pages/DigitalInvestPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import GameComingSoonPage from "./pages/GameComingSoonPage";
 import HomePage from "./pages/HomePage";
@@ -192,6 +193,8 @@ function AppRoutes() {
           path="/wallet-transactions"
           element={<WalletTransactionsPage />}
         />
+        {/* Digital Invest — crypto trading module */}
+        <Route path="/crypto" element={<DigitalInvestPage />} />
         {/* Offer Portal — publicly accessible, has its own isolated auth */}
         <Route path="/offer-portal" element={<OfferPortalPage />} />
         <Route path="/offer-portal/*" element={<OfferPortalPage />} />

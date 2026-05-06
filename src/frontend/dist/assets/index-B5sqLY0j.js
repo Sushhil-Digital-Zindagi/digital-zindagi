@@ -27873,18 +27873,18 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1J = [
+const __iconNode$1L = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$1J);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$1L);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1I = [
+const __iconNode$1K = [
   [
     "path",
     {
@@ -27894,14 +27894,14 @@ const __iconNode$1I = [
   ],
   ["circle", { cx: "12", cy: "8", r: "6", key: "1vp47v" }]
 ];
-const Award = createLucideIcon("award", __iconNode$1I);
+const Award = createLucideIcon("award", __iconNode$1K);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1H = [
+const __iconNode$1J = [
   [
     "path",
     {
@@ -27913,14 +27913,14 @@ const __iconNode$1H = [
   ["path", { d: "M8 12h8", key: "1wcyev" }],
   ["path", { d: "m13 17-5-1h1a4 4 0 0 0 0-8", key: "nu2bwa" }]
 ];
-const BadgeIndianRupee = createLucideIcon("badge-indian-rupee", __iconNode$1H);
+const BadgeIndianRupee = createLucideIcon("badge-indian-rupee", __iconNode$1J);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1G = [
+const __iconNode$1I = [
   ["path", { d: "M10.268 21a2 2 0 0 0 3.464 0", key: "vwvbt9" }],
   [
     "path",
@@ -27930,14 +27930,14 @@ const __iconNode$1G = [
     }
   ]
 ];
-const Bell = createLucideIcon("bell", __iconNode$1G);
+const Bell = createLucideIcon("bell", __iconNode$1I);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1F = [
+const __iconNode$1H = [
   ["path", { d: "m20 13.7-2.1-2.1a2 2 0 0 0-2.8 0L9.7 17", key: "q6ojf0" }],
   [
     "path",
@@ -27948,14 +27948,14 @@ const __iconNode$1F = [
   ],
   ["circle", { cx: "10", cy: "8", r: "2", key: "2qkj4p" }]
 ];
-const BookImage = createLucideIcon("book-image", __iconNode$1F);
+const BookImage = createLucideIcon("book-image", __iconNode$1H);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1E = [
+const __iconNode$1G = [
   ["path", { d: "M12 7v14", key: "1akyts" }],
   [
     "path",
@@ -27965,14 +27965,14 @@ const __iconNode$1E = [
     }
   ]
 ];
-const BookOpen = createLucideIcon("book-open", __iconNode$1E);
+const BookOpen = createLucideIcon("book-open", __iconNode$1G);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1D = [
+const __iconNode$1F = [
   ["path", { d: "M12 8V4H8", key: "hb8ula" }],
   ["rect", { width: "16", height: "12", x: "4", y: "8", rx: "2", key: "enze0r" }],
   ["path", { d: "M2 14h2", key: "vft8re" }],
@@ -27980,25 +27980,25 @@ const __iconNode$1D = [
   ["path", { d: "M15 13v2", key: "1xurst" }],
   ["path", { d: "M9 13v2", key: "rq6x2g" }]
 ];
-const Bot = createLucideIcon("bot", __iconNode$1D);
+const Bot = createLucideIcon("bot", __iconNode$1F);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1C = [
+const __iconNode$1E = [
   ["path", { d: "M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16", key: "jecpp" }],
   ["rect", { width: "20", height: "14", x: "2", y: "6", rx: "2", key: "i6l2r4" }]
 ];
-const Briefcase = createLucideIcon("briefcase", __iconNode$1C);
+const Briefcase = createLucideIcon("briefcase", __iconNode$1E);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1B = [
+const __iconNode$1D = [
   ["rect", { width: "16", height: "20", x: "4", y: "2", rx: "2", key: "1nb95v" }],
   ["line", { x1: "8", x2: "16", y1: "6", y2: "6", key: "x4nwl0" }],
   ["line", { x1: "16", x2: "16", y1: "14", y2: "18", key: "wjye3r" }],
@@ -28010,27 +28010,27 @@ const __iconNode$1B = [
   ["path", { d: "M12 18h.01", key: "mhygvu" }],
   ["path", { d: "M8 18h.01", key: "lrp35t" }]
 ];
-const Calculator = createLucideIcon("calculator", __iconNode$1B);
+const Calculator = createLucideIcon("calculator", __iconNode$1D);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1A = [
+const __iconNode$1C = [
   ["path", { d: "M8 2v4", key: "1cmpym" }],
   ["path", { d: "M16 2v4", key: "4m81vk" }],
   ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
   ["path", { d: "M3 10h18", key: "8toen8" }]
 ];
-const Calendar = createLucideIcon("calendar", __iconNode$1A);
+const Calendar = createLucideIcon("calendar", __iconNode$1C);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1z = [
+const __iconNode$1B = [
   [
     "path",
     {
@@ -28040,50 +28040,74 @@ const __iconNode$1z = [
   ],
   ["circle", { cx: "12", cy: "13", r: "3", key: "1vg3eu" }]
 ];
-const Camera = createLucideIcon("camera", __iconNode$1z);
+const Camera = createLucideIcon("camera", __iconNode$1B);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1y = [
+const __iconNode$1A = [
+  ["line", { x1: "18", x2: "18", y1: "20", y2: "10", key: "1xfpm4" }],
+  ["line", { x1: "12", x2: "12", y1: "20", y2: "4", key: "be30l9" }],
+  ["line", { x1: "6", x2: "6", y1: "20", y2: "14", key: "1r4le6" }]
+];
+const ChartNoAxesColumn = createLucideIcon("chart-no-axes-column", __iconNode$1A);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$1z = [
   ["path", { d: "M18 6 7 17l-5-5", key: "116fxf" }],
   ["path", { d: "m22 10-7.5 7.5L13 16", key: "ke71qq" }]
 ];
-const CheckCheck = createLucideIcon("check-check", __iconNode$1y);
+const CheckCheck = createLucideIcon("check-check", __iconNode$1z);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1x = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$1x);
+const __iconNode$1y = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$1y);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1w = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$1w);
+const __iconNode$1x = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$1x);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1v = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$1v);
+const __iconNode$1w = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$1w);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1u = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$1u);
+const __iconNode$1v = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$1v);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$1u = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
+  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+];
+const CircleAlert = createLucideIcon("circle-alert", __iconNode$1u);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28091,11 +28115,10 @@ const ChevronRight = createLucideIcon("chevron-right", __iconNode$1u);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1t = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
-  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+  ["path", { d: "M21.801 10A10 10 0 1 1 17 3.335", key: "yps3ct" }],
+  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-const CircleAlert = createLucideIcon("circle-alert", __iconNode$1t);
+const CircleCheckBig = createLucideIcon("circle-check-big", __iconNode$1t);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28103,10 +28126,10 @@ const CircleAlert = createLucideIcon("circle-alert", __iconNode$1t);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1s = [
-  ["path", { d: "M21.801 10A10 10 0 1 1 17 3.335", key: "yps3ct" }],
-  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const CircleCheckBig = createLucideIcon("circle-check-big", __iconNode$1s);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$1s);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28115,9 +28138,10 @@ const CircleCheckBig = createLucideIcon("circle-check-big", __iconNode$1s);
  */
 const __iconNode$1r = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8", key: "1h4pet" }],
+  ["path", { d: "M12 18V6", key: "zqpxq5" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$1r);
+const CircleDollarSign = createLucideIcon("circle-dollar-sign", __iconNode$1r);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28126,10 +28150,10 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$1r);
  */
 const __iconNode$1q = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8", key: "1h4pet" }],
-  ["path", { d: "M12 18V6", key: "zqpxq5" }]
+  ["path", { d: "M8 12h8", key: "1wcyev" }],
+  ["path", { d: "M12 8v8", key: "napkw2" }]
 ];
-const CircleDollarSign = createLucideIcon("circle-dollar-sign", __iconNode$1q);
+const CirclePlus = createLucideIcon("circle-plus", __iconNode$1q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28138,10 +28162,10 @@ const CircleDollarSign = createLucideIcon("circle-dollar-sign", __iconNode$1q);
  */
 const __iconNode$1p = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M8 12h8", key: "1wcyev" }],
-  ["path", { d: "M12 8v8", key: "napkw2" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CirclePlus = createLucideIcon("circle-plus", __iconNode$1p);
+const CircleX = createLucideIcon("circle-x", __iconNode$1p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28149,11 +28173,13 @@ const CirclePlus = createLucideIcon("circle-plus", __iconNode$1p);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1o = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
+  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2", key: "4jdomd" }],
+  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v4", key: "3hqy98" }],
+  ["path", { d: "M21 14H11", key: "1bme5i" }],
+  ["path", { d: "m15 10-4 4 4 4", key: "5dvupr" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$1o);
+const ClipboardCopy = createLucideIcon("clipboard-copy", __iconNode$1o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28161,20 +28187,6 @@ const CircleX = createLucideIcon("circle-x", __iconNode$1o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1n = [
-  ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
-  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2", key: "4jdomd" }],
-  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v4", key: "3hqy98" }],
-  ["path", { d: "M21 14H11", key: "1bme5i" }],
-  ["path", { d: "m15 10-4 4 4 4", key: "5dvupr" }]
-];
-const ClipboardCopy = createLucideIcon("clipboard-copy", __iconNode$1n);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$1m = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -28184,7 +28196,18 @@ const __iconNode$1m = [
     }
   ]
 ];
-const Clipboard = createLucideIcon("clipboard", __iconNode$1m);
+const Clipboard = createLucideIcon("clipboard", __iconNode$1n);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$1m = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["polyline", { points: "12 6 12 12 16 14", key: "68esgv" }]
+];
+const Clock = createLucideIcon("clock", __iconNode$1m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28192,10 +28215,12 @@ const Clipboard = createLucideIcon("clipboard", __iconNode$1m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1l = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["polyline", { points: "12 6 12 12 16 14", key: "68esgv" }]
+  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
+  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
+  ["path", { d: "M7 6h1v4", key: "1obek4" }],
+  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
 ];
-const Clock = createLucideIcon("clock", __iconNode$1l);
+const Coins = createLucideIcon("coins", __iconNode$1l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -38676,6 +38701,15 @@ const PremiumPlan = Variant({
   "quarterly": Null,
   "monthly": Null
 });
+const CryptoCoin = Record({
+  "id": Text,
+  "isListed": Bool,
+  "name": Text,
+  "createdAt": Int,
+  "coinGeckoId": Text,
+  "logoUrl": Text,
+  "symbol": Text
+});
 const ServiceRate = Record({
   "name": Text,
   "description": Text,
@@ -38699,6 +38733,63 @@ const UdhaarTransaction = Record({
   "createdAt": Int,
   "customerId": Text,
   "amount": Float64
+});
+const CryptoWallet = Record({
+  "dailyRewardStreak": Nat,
+  "mpinHash": Text,
+  "balance": Float64,
+  "mpinLockedUntil": Int,
+  "userId": Text,
+  "mpinFailedAttempts": Nat,
+  "createdAt": Int,
+  "lastDailyRewardClaimed": Int,
+  "updatedAt": Int,
+  "totalWithdrawn": Float64,
+  "totalDeposited": Float64,
+  "mpinSetAt": Int
+});
+const TicketStatus = Variant({
+  "resolved": Null,
+  "open": Null,
+  "inProgress": Null
+});
+const TicketCategory = Variant({
+  "coinInquiry": Null,
+  "general": Null,
+  "withdrawalQuery": Null,
+  "bugReport": Null
+});
+const TicketPriority = Variant({
+  "low": Null,
+  "high": Null,
+  "medium": Null
+});
+const SupportTicket = Record({
+  "id": Text,
+  "status": TicketStatus,
+  "userEmail": Text,
+  "subject": Text,
+  "userId": Text,
+  "createdAt": Int,
+  "description": Text,
+  "updatedAt": Int,
+  "category": TicketCategory,
+  "priority": TicketPriority
+});
+const CryptoWithdrawal = Record({
+  "id": Text,
+  "status": Variant({
+    "pending": Null,
+    "approved": Null,
+    "rejected": Null
+  }),
+  "userEmail": Text,
+  "userId": Text,
+  "createdAt": Int,
+  "adminNote": Opt(Text),
+  "upiId": Text,
+  "amount": Float64,
+  "resolvedAt": Opt(Int)
 });
 const ChatStats = Record({
   "totalMessages": Nat,
@@ -38778,6 +38869,38 @@ const UserRole__1 = Variant({
   "admin": Null,
   "user": Null,
   "guest": Null
+});
+const TxStatus = Variant({
+  "pending": Null,
+  "completed": Null,
+  "pendingApproval": Null,
+  "approved": Null,
+  "rejected": Null,
+  "failed": Null
+});
+const TxType = Variant({
+  "buy": Null,
+  "sell": Null,
+  "deposit": Null,
+  "withdrawal": Null,
+  "dailyReward": Null
+});
+const CryptoTransaction = Record({
+  "id": Text,
+  "status": TxStatus,
+  "priceAtTime": Opt(Float64),
+  "feeAmount": Opt(Float64),
+  "netAmount": Float64,
+  "userId": Text,
+  "createdAt": Int,
+  "coinSymbol": Opt(Text),
+  "adminNote": Opt(Text),
+  "updatedAt": Int,
+  "totalAmount": Float64,
+  "quantity": Opt(Float64),
+  "feePercent": Opt(Float64),
+  "txType": TxType,
+  "coinId": Opt(Text)
 });
 const MarketCategory$1 = Variant({
   "vehicles": Null,
@@ -39125,6 +39248,16 @@ const CreatorEarningsSummary = Record({
   "pendingPayouts": Nat,
   "totalEarnings": Nat
 });
+const CryptoInvestConfig = Record({
+  "buyFeePercent": Float64,
+  "highRiskThreshold": Float64,
+  "isEnabled": Bool,
+  "maxWithdrawal": Float64,
+  "minWithdrawal": Float64,
+  "sellFeePercent": Float64,
+  "dailyRewardAmount": Float64,
+  "isDailyRewardEnabled": Bool
+});
 const CustomCode = Record({
   "id": Nat,
   "title": Text,
@@ -39308,6 +39441,25 @@ const SubscriptionPricing = Record({
   "twelveMonthPrice": Nat,
   "oneMonthPrice": Nat
 });
+const TicketReply = Record({
+  "id": Text,
+  "authorId": Text,
+  "createdAt": Int,
+  "authorRole": Variant({ "admin": Null, "user": Null }),
+  "ticketId": Text,
+  "message": Text
+});
+const PortfolioHolding = Record({
+  "id": Text,
+  "userId": Text,
+  "coinSymbol": Text,
+  "totalCost": Float64,
+  "updatedAt": Int,
+  "coinName": Text,
+  "quantity": Float64,
+  "coinId": Text,
+  "avgBuyPrice": Float64
+});
 const UserSubscription = Record({
   "status": Text,
   "assignedByAdmin": Bool,
@@ -39385,6 +39537,11 @@ Service({
   "addChatVaultItem": Func(
     [Text, Text, Bool, Opt(Int)],
     [Variant({ "ok": Nat, "err": Text })],
+    []
+  ),
+  "addCoin": Func(
+    [Opt(Text), Text, Text, Text, Text],
+    [Variant({ "ok": CryptoCoin, "err": Text })],
     []
   ),
   "addCustomCode": Func(
@@ -39466,6 +39623,16 @@ Service({
     [Variant({ "ok": Int, "err": Text })],
     []
   ),
+  "adminApproveCryptoWithdrawal": Func(
+    [Opt(Text), Text, Opt(Text)],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "adminApproveDeposit": Func(
+    [Opt(Text), Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "adminApproveUpiPremium": Func(
     [Nat],
     [Variant({ "ok": Null, "err": Text })],
@@ -39488,7 +39655,37 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "adminGetAllCryptoUsers": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Vec(CryptoWallet), "err": Text })],
+    []
+  ),
+  "adminGetAllTickets": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Vec(SupportTicket), "err": Text })],
+    []
+  ),
+  "adminGetAllWithdrawals": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Vec(CryptoWithdrawal), "err": Text })],
+    []
+  ),
   "adminGetChatStats": Func([], [ChatStats], ["query"]),
+  "adminGetCryptoStats": Func(
+    [Opt(Text)],
+    [
+      Variant({
+        "ok": Record({
+          "totalCommissions": Float64,
+          "totalVolume": Float64,
+          "totalUsers": Nat,
+          "totalBalance": Float64
+        }),
+        "err": Text
+      })
+    ],
+    []
+  ),
   "adminGetUpiPremiumRequests": Func(
     [],
     [Vec(UpiPaymentRequest)],
@@ -39509,6 +39706,11 @@ Service({
     [Variant({ "ok": Vec(OfferWithdrawal), "err": Text })],
     []
   ),
+  "adminRejectCryptoWithdrawal": Func(
+    [Opt(Text), Text, Opt(Text)],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "adminRejectUpiPremium": Func(
     [Nat],
     [Variant({ "ok": Null, "err": Text })],
@@ -39516,6 +39718,11 @@ Service({
   ),
   "adminRejectUpiUnlock": Func(
     [Nat],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "adminResetMpin": Func(
+    [Opt(Text), Text],
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
@@ -39552,9 +39759,29 @@ Service({
   "approveTopupRequest": Func([Nat, Bool], [Bool], []),
   "assignCallerUserRole": Func([Principal2, UserRole__1], [], []),
   "awardChatPoints": Func([Text, Nat], [Bool], []),
+  "blockCryptoUser": Func(
+    [Opt(Text), Text, Bool, Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "buyCoin": Func(
+    [Text, Text, Float64, Float64, Text],
+    [Variant({ "ok": CryptoTransaction, "err": Text })],
+    []
+  ),
   "cancelChatScheduledMessage": Func([Nat], [Bool], []),
   "changeAdminPin": Func([Text, Text], [], []),
+  "changeMpin": Func(
+    [Text, Text, Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "checkAdminToken": Func([Text], [Bool], ["query"]),
+  "claimDailyReward": Func(
+    [Text],
+    [Variant({ "ok": Float64, "err": Text })],
+    []
+  ),
   "cleanupExpiredChatStories": Func([], [Nat], []),
   "cleanupExpiredChatVaultItems": Func([], [Nat], []),
   "confirmUpiUnlock": Func(
@@ -39580,6 +39807,11 @@ Service({
     [Variant({ "ok": Nat, "err": Text })],
     []
   ),
+  "createSupportTicket": Func(
+    [Text, Text, Text, Text, Text, Text],
+    [Variant({ "ok": SupportTicket, "err": Text })],
+    []
+  ),
   "createUnlockPaymentIntent": Func(
     [Nat],
     [Variant({ "ok": Text, "err": Text })],
@@ -39591,6 +39823,11 @@ Service({
   "deleteChatNote": Func([Nat], [Bool], []),
   "deleteChatShortcut": Func([Nat], [Bool], []),
   "deleteChatVaultItem": Func([Nat], [Bool], []),
+  "deleteCoin": Func(
+    [Opt(Text), Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "deleteCustomCode": Func([Nat], [Bool], []),
   "deleteCustomSection": Func([Nat], [Bool], []),
   "deleteJob": Func([Nat], [Bool], []),
@@ -39629,6 +39866,11 @@ Service({
     [Variant({ "ok": Nat, "err": Text })],
     []
   ),
+  "freezeCryptoUser": Func(
+    [Opt(Text), Text, Bool, Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "getActiveBanners": Func([], [Vec(Banner)], ["query"]),
   "getActiveChatStories": Func([], [Vec(Story)], ["query"]),
   "getActiveProviders": Func([], [Vec(ProviderProfile)], ["query"]),
@@ -39665,6 +39907,11 @@ Service({
       })
     ],
     ["query"]
+  ),
+  "getAllCoins": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Vec(CryptoCoin), "err": Text })],
+    []
   ),
   "getAllProviders": Func([], [Vec(ProviderProfile)], ["query"]),
   "getAllRechargeTransactions": Func(
@@ -39735,10 +39982,17 @@ Service({
     []
   ),
   "getCreatorEarnings": Func([], [CreatorEarningsSummary], ["query"]),
+  "getCryptoConfig": Func([Opt(Text)], [CryptoInvestConfig], []),
+  "getCryptoConfigPublic": Func(
+    [],
+    [Record({ "isEnabled": Bool })],
+    ["query"]
+  ),
   "getCustomCodes": Func([], [Vec(CustomCode)], ["query"]),
   "getCustomSections": Func([], [Vec(CustomSection)], ["query"]),
   "getCustomerOrders": Func([Nat], [Vec(Order)], ["query"]),
   "getJobs": Func([], [Vec(JobItem)], ["query"]),
+  "getListedCoins": Func([], [Vec(CryptoCoin)], ["query"]),
   "getListings": Func(
     [Opt(Text), Opt(MarketCategory$1)],
     [Vec(MarketListing)],
@@ -39839,6 +40093,7 @@ Service({
     [],
     [
       Record({
+        "offerWallName": Text,
         "isEnabled": Bool,
         "cpagripOfferWallUrl": Text
       })
@@ -39879,6 +40134,17 @@ Service({
     [Vec(ProviderProfile)],
     ["query"]
   ),
+  "getPublicOfferPortalConfig": Func(
+    [],
+    [
+      Record({
+        "offerWallName": Text,
+        "isEnabled": Bool,
+        "offerWallUrl": Text
+      })
+    ],
+    ["query"]
+  ),
   "getRecentUsers": Func([], [Vec(User)], ["query"]),
   "getRechargeApiConfig": Func([], [RechargeApiConfig], ["query"]),
   "getRechargeReceipt": Func(
@@ -39898,6 +40164,7 @@ Service({
     [Opt(SubscriptionPricing)],
     ["query"]
   ),
+  "getTicketReplies": Func([Text], [Vec(TicketReply)], []),
   "getUdhaarBalance": Func(
     [Text],
     [Variant({ "ok": Float64, "err": Text })],
@@ -39911,6 +40178,18 @@ Service({
   ),
   "getUserById": Func([Nat], [Opt(User)], ["query"]),
   "getUserByMobile": Func([MobileNumber], [Opt(User)], ["query"]),
+  "getUserCryptoTransactions": Func(
+    [Text],
+    [Vec(CryptoTransaction)],
+    []
+  ),
+  "getUserCryptoWallet": Func([Text], [CryptoWallet], []),
+  "getUserCryptoWithdrawals": Func(
+    [Text],
+    [Vec(CryptoWithdrawal)],
+    []
+  ),
+  "getUserPortfolio": Func([Text], [Vec(PortfolioHolding)], []),
   "getUserProfile": Func(
     [Principal2],
     [Opt(UserProfile)],
@@ -39921,6 +40200,7 @@ Service({
     [Opt(UserSubscription)],
     ["query"]
   ),
+  "getUserTickets": Func([Text], [Vec(SupportTicket)], []),
   "getUsersByRole": Func([UserRole$1], [Vec(User)], ["query"]),
   "getVideos": Func([], [Vec(VideoItem)], ["query"]),
   "getWalletBalanceByUserId": Func([Nat], [Float64], ["query"]),
@@ -39998,7 +40278,22 @@ Service({
     [Variant({ "ok": Nat, "err": Text })],
     []
   ),
+  "replyToTicket": Func(
+    [Text, Text, Text, Bool, Opt(Text)],
+    [Variant({ "ok": TicketReply, "err": Text })],
+    []
+  ),
   "requestApproval": Func([], [], []),
+  "requestCryptoWithdrawal": Func(
+    [Text, Text, Float64, Text, Text],
+    [Variant({ "ok": CryptoWithdrawal, "err": Text })],
+    []
+  ),
+  "requestDeposit": Func(
+    [Text, Float64],
+    [Variant({ "ok": CryptoTransaction, "err": Text })],
+    []
+  ),
   "requestOfferPasswordReset": Func(
     [Text],
     [Variant({ "ok": Text, "err": Text })],
@@ -40037,6 +40332,11 @@ Service({
     ["query"]
   ),
   "searchUsers": Func([Text], [Vec(User)], ["query"]),
+  "sellCoin": Func(
+    [Text, Text, Float64, Float64, Text],
+    [Variant({ "ok": CryptoTransaction, "err": Text })],
+    []
+  ),
   "sendLockedMessage": Func(
     [Nat, Text, LockType$1, Opt(Text), Opt(LockedFileTask)],
     [Variant({ "ok": Nat, "err": Text })],
@@ -40066,6 +40366,11 @@ Service({
   "setLockedFeature": Func(
     [Text, Text, Text],
     [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "setMpin": Func(
+    [Text, Text],
+    [Variant({ "ok": Null, "err": Text })],
     []
   ),
   "setPaymentConfig": Func([PaymentConfig], [Bool], []),
@@ -40124,6 +40429,11 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "updateCoin": Func(
+    [Opt(Text), Text, Bool],
+    [Variant({ "ok": CryptoCoin, "err": Text })],
+    []
+  ),
   "updateCommissionConfig": Func(
     [Float64, Float64, Float64],
     [Bool],
@@ -40133,6 +40443,11 @@ Service({
   "updateCpagripSettings": Func(
     [Opt(Text), Text, Text, Text],
     [Bool],
+    []
+  ),
+  "updateCryptoConfig": Func(
+    [Opt(Text), CryptoInvestConfig],
+    [Variant({ "ok": Null, "err": Text })],
     []
   ),
   "updateCustomCode": Func(
@@ -40265,6 +40580,11 @@ Service({
     []
   ),
   "updateSubscriptionPricing": Func([SubscriptionPricing], [], []),
+  "updateTicketStatus": Func(
+    [Opt(Text), Text, Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "updateToggle": Func([Opt(Text), Text, Bool], [], []),
   "updateUdhaarCustomer": Func(
     [Text, Text, Text, Text],
@@ -40314,6 +40634,15 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "quarterly": IDL2.Null,
     "monthly": IDL2.Null
   });
+  const CryptoCoin2 = IDL2.Record({
+    "id": IDL2.Text,
+    "isListed": IDL2.Bool,
+    "name": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "coinGeckoId": IDL2.Text,
+    "logoUrl": IDL2.Text,
+    "symbol": IDL2.Text
+  });
   const ServiceRate2 = IDL2.Record({
     "name": IDL2.Text,
     "description": IDL2.Text,
@@ -40337,6 +40666,63 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "createdAt": IDL2.Int,
     "customerId": IDL2.Text,
     "amount": IDL2.Float64
+  });
+  const CryptoWallet2 = IDL2.Record({
+    "dailyRewardStreak": IDL2.Nat,
+    "mpinHash": IDL2.Text,
+    "balance": IDL2.Float64,
+    "mpinLockedUntil": IDL2.Int,
+    "userId": IDL2.Text,
+    "mpinFailedAttempts": IDL2.Nat,
+    "createdAt": IDL2.Int,
+    "lastDailyRewardClaimed": IDL2.Int,
+    "updatedAt": IDL2.Int,
+    "totalWithdrawn": IDL2.Float64,
+    "totalDeposited": IDL2.Float64,
+    "mpinSetAt": IDL2.Int
+  });
+  const TicketStatus2 = IDL2.Variant({
+    "resolved": IDL2.Null,
+    "open": IDL2.Null,
+    "inProgress": IDL2.Null
+  });
+  const TicketCategory2 = IDL2.Variant({
+    "coinInquiry": IDL2.Null,
+    "general": IDL2.Null,
+    "withdrawalQuery": IDL2.Null,
+    "bugReport": IDL2.Null
+  });
+  const TicketPriority2 = IDL2.Variant({
+    "low": IDL2.Null,
+    "high": IDL2.Null,
+    "medium": IDL2.Null
+  });
+  const SupportTicket2 = IDL2.Record({
+    "id": IDL2.Text,
+    "status": TicketStatus2,
+    "userEmail": IDL2.Text,
+    "subject": IDL2.Text,
+    "userId": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "description": IDL2.Text,
+    "updatedAt": IDL2.Int,
+    "category": TicketCategory2,
+    "priority": TicketPriority2
+  });
+  const CryptoWithdrawal2 = IDL2.Record({
+    "id": IDL2.Text,
+    "status": IDL2.Variant({
+      "pending": IDL2.Null,
+      "approved": IDL2.Null,
+      "rejected": IDL2.Null
+    }),
+    "userEmail": IDL2.Text,
+    "userId": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "adminNote": IDL2.Opt(IDL2.Text),
+    "upiId": IDL2.Text,
+    "amount": IDL2.Float64,
+    "resolvedAt": IDL2.Opt(IDL2.Int)
   });
   const ChatStats2 = IDL2.Record({
     "totalMessages": IDL2.Nat,
@@ -40416,6 +40802,38 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "admin": IDL2.Null,
     "user": IDL2.Null,
     "guest": IDL2.Null
+  });
+  const TxStatus2 = IDL2.Variant({
+    "pending": IDL2.Null,
+    "completed": IDL2.Null,
+    "pendingApproval": IDL2.Null,
+    "approved": IDL2.Null,
+    "rejected": IDL2.Null,
+    "failed": IDL2.Null
+  });
+  const TxType2 = IDL2.Variant({
+    "buy": IDL2.Null,
+    "sell": IDL2.Null,
+    "deposit": IDL2.Null,
+    "withdrawal": IDL2.Null,
+    "dailyReward": IDL2.Null
+  });
+  const CryptoTransaction2 = IDL2.Record({
+    "id": IDL2.Text,
+    "status": TxStatus2,
+    "priceAtTime": IDL2.Opt(IDL2.Float64),
+    "feeAmount": IDL2.Opt(IDL2.Float64),
+    "netAmount": IDL2.Float64,
+    "userId": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "coinSymbol": IDL2.Opt(IDL2.Text),
+    "adminNote": IDL2.Opt(IDL2.Text),
+    "updatedAt": IDL2.Int,
+    "totalAmount": IDL2.Float64,
+    "quantity": IDL2.Opt(IDL2.Float64),
+    "feePercent": IDL2.Opt(IDL2.Float64),
+    "txType": TxType2,
+    "coinId": IDL2.Opt(IDL2.Text)
   });
   const MarketCategory2 = IDL2.Variant({
     "vehicles": IDL2.Null,
@@ -40763,6 +41181,16 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "pendingPayouts": IDL2.Nat,
     "totalEarnings": IDL2.Nat
   });
+  const CryptoInvestConfig2 = IDL2.Record({
+    "buyFeePercent": IDL2.Float64,
+    "highRiskThreshold": IDL2.Float64,
+    "isEnabled": IDL2.Bool,
+    "maxWithdrawal": IDL2.Float64,
+    "minWithdrawal": IDL2.Float64,
+    "sellFeePercent": IDL2.Float64,
+    "dailyRewardAmount": IDL2.Float64,
+    "isDailyRewardEnabled": IDL2.Bool
+  });
   const CustomCode2 = IDL2.Record({
     "id": IDL2.Nat,
     "title": IDL2.Text,
@@ -40943,6 +41371,25 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "twelveMonthPrice": IDL2.Nat,
     "oneMonthPrice": IDL2.Nat
   });
+  const TicketReply2 = IDL2.Record({
+    "id": IDL2.Text,
+    "authorId": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "authorRole": IDL2.Variant({ "admin": IDL2.Null, "user": IDL2.Null }),
+    "ticketId": IDL2.Text,
+    "message": IDL2.Text
+  });
+  const PortfolioHolding2 = IDL2.Record({
+    "id": IDL2.Text,
+    "userId": IDL2.Text,
+    "coinSymbol": IDL2.Text,
+    "totalCost": IDL2.Float64,
+    "updatedAt": IDL2.Int,
+    "coinName": IDL2.Text,
+    "quantity": IDL2.Float64,
+    "coinId": IDL2.Text,
+    "avgBuyPrice": IDL2.Float64
+  });
   const UserSubscription2 = IDL2.Record({
     "status": IDL2.Text,
     "assignedByAdmin": IDL2.Bool,
@@ -41017,6 +41464,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "addChatVaultItem": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Bool, IDL2.Opt(IDL2.Int)],
       [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
+      []
+    ),
+    "addCoin": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": CryptoCoin2, "err": IDL2.Text })],
       []
     ),
     "addCustomCode": IDL2.Func(
@@ -41098,6 +41550,16 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Int, "err": IDL2.Text })],
       []
     ),
+    "adminApproveCryptoWithdrawal": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "adminApproveDeposit": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "adminApproveUpiPremium": IDL2.Func(
       [IDL2.Nat],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
@@ -41120,7 +41582,37 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "adminGetAllCryptoUsers": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(CryptoWallet2), "err": IDL2.Text })],
+      []
+    ),
+    "adminGetAllTickets": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(SupportTicket2), "err": IDL2.Text })],
+      []
+    ),
+    "adminGetAllWithdrawals": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(CryptoWithdrawal2), "err": IDL2.Text })],
+      []
+    ),
     "adminGetChatStats": IDL2.Func([], [ChatStats2], ["query"]),
+    "adminGetCryptoStats": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [
+        IDL2.Variant({
+          "ok": IDL2.Record({
+            "totalCommissions": IDL2.Float64,
+            "totalVolume": IDL2.Float64,
+            "totalUsers": IDL2.Nat,
+            "totalBalance": IDL2.Float64
+          }),
+          "err": IDL2.Text
+        })
+      ],
+      []
+    ),
     "adminGetUpiPremiumRequests": IDL2.Func(
       [],
       [IDL2.Vec(UpiPaymentRequest2)],
@@ -41141,6 +41633,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Vec(OfferWithdrawal2), "err": IDL2.Text })],
       []
     ),
+    "adminRejectCryptoWithdrawal": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "adminRejectUpiPremium": IDL2.Func(
       [IDL2.Nat],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
@@ -41148,6 +41645,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "adminRejectUpiUnlock": IDL2.Func(
       [IDL2.Nat],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "adminResetMpin": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
@@ -41184,9 +41686,29 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "approveTopupRequest": IDL2.Func([IDL2.Nat, IDL2.Bool], [IDL2.Bool], []),
     "assignCallerUserRole": IDL2.Func([IDL2.Principal, UserRole__12], [], []),
     "awardChatPoints": IDL2.Func([IDL2.Text, IDL2.Nat], [IDL2.Bool], []),
+    "blockCryptoUser": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Bool, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "buyCoin": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Float64, IDL2.Float64, IDL2.Text],
+      [IDL2.Variant({ "ok": CryptoTransaction2, "err": IDL2.Text })],
+      []
+    ),
     "cancelChatScheduledMessage": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "changeAdminPin": IDL2.Func([IDL2.Text, IDL2.Text], [], []),
+    "changeMpin": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "checkAdminToken": IDL2.Func([IDL2.Text], [IDL2.Bool], ["query"]),
+    "claimDailyReward": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Float64, "err": IDL2.Text })],
+      []
+    ),
     "cleanupExpiredChatStories": IDL2.Func([], [IDL2.Nat], []),
     "cleanupExpiredChatVaultItems": IDL2.Func([], [IDL2.Nat], []),
     "confirmUpiUnlock": IDL2.Func(
@@ -41212,6 +41734,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
       []
     ),
+    "createSupportTicket": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": SupportTicket2, "err": IDL2.Text })],
+      []
+    ),
     "createUnlockPaymentIntent": IDL2.Func(
       [IDL2.Nat],
       [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
@@ -41223,6 +41750,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "deleteChatNote": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "deleteChatShortcut": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "deleteChatVaultItem": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
+    "deleteCoin": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "deleteCustomCode": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "deleteCustomSection": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
     "deleteJob": IDL2.Func([IDL2.Nat], [IDL2.Bool], []),
@@ -41261,6 +41793,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
       []
     ),
+    "freezeCryptoUser": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Bool, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "getActiveBanners": IDL2.Func([], [IDL2.Vec(Banner2)], ["query"]),
     "getActiveChatStories": IDL2.Func([], [IDL2.Vec(Story2)], ["query"]),
     "getActiveProviders": IDL2.Func([], [IDL2.Vec(ProviderProfile2)], ["query"]),
@@ -41297,6 +41834,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
         })
       ],
       ["query"]
+    ),
+    "getAllCoins": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(CryptoCoin2), "err": IDL2.Text })],
+      []
     ),
     "getAllProviders": IDL2.Func([], [IDL2.Vec(ProviderProfile2)], ["query"]),
     "getAllRechargeTransactions": IDL2.Func(
@@ -41367,10 +41909,17 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "getCreatorEarnings": IDL2.Func([], [CreatorEarningsSummary2], ["query"]),
+    "getCryptoConfig": IDL2.Func([IDL2.Opt(IDL2.Text)], [CryptoInvestConfig2], []),
+    "getCryptoConfigPublic": IDL2.Func(
+      [],
+      [IDL2.Record({ "isEnabled": IDL2.Bool })],
+      ["query"]
+    ),
     "getCustomCodes": IDL2.Func([], [IDL2.Vec(CustomCode2)], ["query"]),
     "getCustomSections": IDL2.Func([], [IDL2.Vec(CustomSection2)], ["query"]),
     "getCustomerOrders": IDL2.Func([IDL2.Nat], [IDL2.Vec(Order2)], ["query"]),
     "getJobs": IDL2.Func([], [IDL2.Vec(JobItem2)], ["query"]),
+    "getListedCoins": IDL2.Func([], [IDL2.Vec(CryptoCoin2)], ["query"]),
     "getListings": IDL2.Func(
       [IDL2.Opt(IDL2.Text), IDL2.Opt(MarketCategory2)],
       [IDL2.Vec(MarketListing2)],
@@ -41483,6 +42032,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [],
       [
         IDL2.Record({
+          "offerWallName": IDL2.Text,
           "isEnabled": IDL2.Bool,
           "cpagripOfferWallUrl": IDL2.Text
         })
@@ -41523,6 +42073,17 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Vec(ProviderProfile2)],
       ["query"]
     ),
+    "getPublicOfferPortalConfig": IDL2.Func(
+      [],
+      [
+        IDL2.Record({
+          "offerWallName": IDL2.Text,
+          "isEnabled": IDL2.Bool,
+          "offerWallUrl": IDL2.Text
+        })
+      ],
+      ["query"]
+    ),
     "getRecentUsers": IDL2.Func([], [IDL2.Vec(User2)], ["query"]),
     "getRechargeApiConfig": IDL2.Func([], [RechargeApiConfig2], ["query"]),
     "getRechargeReceipt": IDL2.Func(
@@ -41542,6 +42103,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Opt(SubscriptionPricing2)],
       ["query"]
     ),
+    "getTicketReplies": IDL2.Func([IDL2.Text], [IDL2.Vec(TicketReply2)], []),
     "getUdhaarBalance": IDL2.Func(
       [IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Float64, "err": IDL2.Text })],
@@ -41555,6 +42117,18 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "getUserById": IDL2.Func([IDL2.Nat], [IDL2.Opt(User2)], ["query"]),
     "getUserByMobile": IDL2.Func([MobileNumber2], [IDL2.Opt(User2)], ["query"]),
+    "getUserCryptoTransactions": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Vec(CryptoTransaction2)],
+      []
+    ),
+    "getUserCryptoWallet": IDL2.Func([IDL2.Text], [CryptoWallet2], []),
+    "getUserCryptoWithdrawals": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Vec(CryptoWithdrawal2)],
+      []
+    ),
+    "getUserPortfolio": IDL2.Func([IDL2.Text], [IDL2.Vec(PortfolioHolding2)], []),
     "getUserProfile": IDL2.Func(
       [IDL2.Principal],
       [IDL2.Opt(UserProfile2)],
@@ -41565,6 +42139,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Opt(UserSubscription2)],
       ["query"]
     ),
+    "getUserTickets": IDL2.Func([IDL2.Text], [IDL2.Vec(SupportTicket2)], []),
     "getUsersByRole": IDL2.Func([UserRole2], [IDL2.Vec(User2)], ["query"]),
     "getVideos": IDL2.Func([], [IDL2.Vec(VideoItem2)], ["query"]),
     "getWalletBalanceByUserId": IDL2.Func([IDL2.Nat], [IDL2.Float64], ["query"]),
@@ -41646,7 +42221,22 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
       []
     ),
+    "replyToTicket": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Bool, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": TicketReply2, "err": IDL2.Text })],
+      []
+    ),
     "requestApproval": IDL2.Func([], [], []),
+    "requestCryptoWithdrawal": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Float64, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": CryptoWithdrawal2, "err": IDL2.Text })],
+      []
+    ),
+    "requestDeposit": IDL2.Func(
+      [IDL2.Text, IDL2.Float64],
+      [IDL2.Variant({ "ok": CryptoTransaction2, "err": IDL2.Text })],
+      []
+    ),
     "requestOfferPasswordReset": IDL2.Func(
       [IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
@@ -41685,6 +42275,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       ["query"]
     ),
     "searchUsers": IDL2.Func([IDL2.Text], [IDL2.Vec(User2)], ["query"]),
+    "sellCoin": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Float64, IDL2.Float64, IDL2.Text],
+      [IDL2.Variant({ "ok": CryptoTransaction2, "err": IDL2.Text })],
+      []
+    ),
     "sendLockedMessage": IDL2.Func(
       [
         IDL2.Nat,
@@ -41724,6 +42319,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "setLockedFeature": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "setMpin": IDL2.Func(
+      [IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
     "setPaymentConfig": IDL2.Func([PaymentConfig2], [IDL2.Bool], []),
@@ -41782,6 +42382,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "updateCoin": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Bool],
+      [IDL2.Variant({ "ok": CryptoCoin2, "err": IDL2.Text })],
+      []
+    ),
     "updateCommissionConfig": IDL2.Func(
       [IDL2.Float64, IDL2.Float64, IDL2.Float64],
       [IDL2.Bool],
@@ -41791,6 +42396,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "updateCpagripSettings": IDL2.Func(
       [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Bool],
+      []
+    ),
+    "updateCryptoConfig": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), CryptoInvestConfig2],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
     "updateCustomCode": IDL2.Func(
@@ -41923,6 +42533,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "updateSubscriptionPricing": IDL2.Func([SubscriptionPricing2], [], []),
+    "updateTicketStatus": IDL2.Func(
+      [IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "updateToggle": IDL2.Func([IDL2.Opt(IDL2.Text), IDL2.Text, IDL2.Bool], [], []),
     "updateUdhaarCustomer": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Text],
@@ -42200,6 +42815,20 @@ class Backend {
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
+  async addCoin(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.addCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
+        return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.addCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
+      return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async addCustomCode(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
     if (this.processError) {
       try {
@@ -42316,28 +42945,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.addUdhaarCustomer(arg0, arg1, arg2);
-        return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.addUdhaarCustomer(arg0, arg1, arg2);
-      return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
     }
   }
   async addUdhaarTransaction(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
         const result = await this.actor.addUdhaarTransaction(arg0, arg1, arg2, arg3, arg4);
-        return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.addUdhaarTransaction(arg0, arg1, arg2, arg3, arg4);
-      return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async addVideo(arg0, arg1, arg2, arg3, arg4) {
@@ -42385,14 +43014,14 @@ class Backend {
   async adminAddNewsItem(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminAddNewsItem(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.adminAddNewsItem(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminAddNewsItem(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.adminAddNewsItem(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42413,15 +43042,43 @@ class Backend {
   async adminAdjustWalletBalance(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
-        return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
+        return from_candid_variant_n17(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
-      return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminAdjustWalletBalance(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4);
+      return from_candid_variant_n17(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async adminApproveCryptoWithdrawal(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminApproveCryptoWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminApproveCryptoWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async adminApproveDeposit(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminApproveDeposit(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminApproveDeposit(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminApproveUpiPremium(arg0) {
@@ -42455,14 +43112,14 @@ class Backend {
   async adminAssignSubscription(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        const result = await this.actor.adminAssignSubscription(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminAssignSubscription(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      const result = await this.actor.adminAssignSubscription(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42508,6 +43165,48 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
+  async adminGetAllCryptoUsers(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminGetAllCryptoUsers(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminGetAllCryptoUsers(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async adminGetAllTickets(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminGetAllTickets(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n19(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminGetAllTickets(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n19(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async adminGetAllWithdrawals(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminGetAllWithdrawals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n29(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminGetAllWithdrawals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n29(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async adminGetChatStats() {
     if (this.processError) {
       try {
@@ -42522,60 +43221,88 @@ class Backend {
       return result;
     }
   }
+  async adminGetCryptoStats(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminGetCryptoStats(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n36(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminGetCryptoStats(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n36(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async adminGetUpiPremiumRequests() {
     if (this.processError) {
       try {
         const result = await this.actor.adminGetUpiPremiumRequests();
-        return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n37(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.adminGetUpiPremiumRequests();
-      return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n37(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminGetUpiUnlockRequests() {
     if (this.processError) {
       try {
         const result = await this.actor.adminGetUpiUnlockRequests();
-        return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.adminGetUpiUnlockRequests();
-      return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminListOfferUsers(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminListOfferUsers(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_variant_n30(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminListOfferUsers(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n47(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminListOfferUsers(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_variant_n30(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminListOfferUsers(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n47(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminListPendingWithdrawals(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n51(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminListPendingWithdrawals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n51(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async adminRejectCryptoWithdrawal(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminRejectCryptoWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminRejectCryptoWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminRejectUpiPremium(arg0) {
@@ -42606,32 +43333,46 @@ class Backend {
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
+  async adminResetMpin(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.adminResetMpin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.adminResetMpin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async adminResetOfferPassword(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
         const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.adminResetOfferPassword(arg0, arg1, arg2, arg3);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminResolveWithdrawal(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n40(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
-        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n57(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
+        return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n40(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
-      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.adminResolveWithdrawal(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_variant_n57(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
+      return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
     }
   }
   async adminSeedChatDemoData() {
@@ -42665,14 +43406,14 @@ class Backend {
   async approveProvider(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n42(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.approveProvider(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n59(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.approveProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n42(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.approveProvider(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_SubscriptionPlan_n59(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
@@ -42693,14 +43434,14 @@ class Backend {
   async assignCallerUserRole(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n44(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n61(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n44(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole__1_n61(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -42716,6 +43457,34 @@ class Backend {
     } else {
       const result = await this.actor.awardChatPoints(arg0, arg1);
       return result;
+    }
+  }
+  async blockCryptoUser(arg0, arg1, arg2, arg3) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.blockCryptoUser(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.blockCryptoUser(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async buyCoin(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.buyCoin(arg0, arg1, arg2, arg3, arg4);
+        return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.buyCoin(arg0, arg1, arg2, arg3, arg4);
+      return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
     }
   }
   async cancelChatScheduledMessage(arg0) {
@@ -42746,6 +43515,20 @@ class Backend {
       return result;
     }
   }
+  async changeMpin(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.changeMpin(arg0, arg1, arg2);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.changeMpin(arg0, arg1, arg2);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async checkAdminToken(arg0) {
     if (this.processError) {
       try {
@@ -42758,6 +43541,20 @@ class Backend {
     } else {
       const result = await this.actor.checkAdminToken(arg0);
       return result;
+    }
+  }
+  async claimDailyReward(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.claimDailyReward(arg0);
+        return from_candid_variant_n71(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.claimDailyReward(arg0);
+      return from_candid_variant_n71(this._uploadFile, this._downloadFile, result);
     }
   }
   async cleanupExpiredChatStories() {
@@ -42805,43 +43602,57 @@ class Backend {
   async createChatGroup(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.createChatGroup(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.createChatGroup(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.createChatGroup(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.createChatGroup(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async createListing(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n46(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+        const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n72(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n46(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
+      const result = await this.actor.createListing(arg0, arg1, arg2, to_candid_MarketCategory_n72(this._uploadFile, this._downloadFile, arg3), arg4, arg5, arg6);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async createSupportTicket(arg0, arg1, arg2, arg3, arg4, arg5) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.createSupportTicket(arg0, arg1, arg2, arg3, arg4, arg5);
+        return from_candid_variant_n74(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.createSupportTicket(arg0, arg1, arg2, arg3, arg4, arg5);
+      return from_candid_variant_n74(this._uploadFile, this._downloadFile, result);
     }
   }
   async createUnlockPaymentIntent(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.createUnlockPaymentIntent(arg0);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.createUnlockPaymentIntent(arg0);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async deleteBanner(arg0) {
@@ -42926,6 +43737,20 @@ class Backend {
     } else {
       const result = await this.actor.deleteChatVaultItem(arg0);
       return result;
+    }
+  }
+  async deleteCoin(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.deleteCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.deleteCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async deleteCustomCode(arg0) {
@@ -43124,6 +43949,20 @@ class Backend {
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
+  async freezeCryptoUser(arg0, arg1, arg2, arg3) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.freezeCryptoUser(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.freezeCryptoUser(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async getActiveBanners() {
     if (this.processError) {
       try {
@@ -43142,56 +43981,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getActiveChatStories();
-        return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n75(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getActiveChatStories();
-      return from_candid_vec_n48(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n75(this._uploadFile, this._downloadFile, result);
     }
   }
   async getActiveProviders() {
     if (this.processError) {
       try {
         const result = await this.actor.getActiveProviders();
-        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getActiveProviders();
-      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminAuditLog(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
-        return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getAdminAuditLog(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+        return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getAdminAuditLog(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
-      return from_candid_vec_n61(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getAdminAuditLog(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+      return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminConfig() {
     if (this.processError) {
       try {
         const result = await this.actor.getAdminConfig();
-        return from_candid_opt_n66(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n93(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAdminConfig();
-      return from_candid_opt_n66(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n93(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAdminSettings() {
@@ -43236,18 +44075,32 @@ class Backend {
       return result;
     }
   }
+  async getAllCoins(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getAllCoins(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n97(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getAllCoins(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n97(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async getAllProviders() {
     if (this.processError) {
       try {
         const result = await this.actor.getAllProviders();
-        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAllProviders();
-      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAllRechargeTransactions() {
@@ -43282,28 +44135,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getAllTopupRequests();
-        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAllTopupRequests();
-      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAllUsers() {
     if (this.processError) {
       try {
         const result = await this.actor.getAllUsers();
-        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getAllUsers();
-      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAllWalletBalances() {
@@ -43338,28 +44191,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserProfile();
-        return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n106(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserProfile();
-      return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n106(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole__1_n81(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole__1_n109(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole__1_n81(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole__1_n109(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCategories() {
@@ -43422,56 +44275,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getChatScheduledMessages();
-        return from_candid_vec_n83(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n111(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatScheduledMessages();
-      return from_candid_vec_n83(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n111(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatShortcuts() {
     if (this.processError) {
       try {
         const result = await this.actor.getChatShortcuts();
-        return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n116(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatShortcuts();
-      return from_candid_vec_n88(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n116(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getChatUserProfile(arg0);
-        return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n123(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatUserProfile(arg0);
-      return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n123(this._uploadFile, this._downloadFile, result);
     }
   }
   async getChatVaultItems() {
     if (this.processError) {
       try {
         const result = await this.actor.getChatVaultItems();
-        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getChatVaultItems();
-      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCloudinaryConfig() {
@@ -43519,28 +44372,28 @@ class Backend {
   async getConversationMessages(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n104(this._uploadFile, this._downloadFile, arg2));
-        return from_candid_vec_n105(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n132(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_vec_n133(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n104(this._uploadFile, this._downloadFile, arg2));
-      return from_candid_vec_n105(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getConversationMessages(arg0, arg1, to_candid_opt_n132(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_vec_n133(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCpagripSettings(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.getCpagripSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.getCpagripSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -43548,14 +44401,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCreatorEarnings();
-        return from_candid_CreatorEarningsSummary_n118(this._uploadFile, this._downloadFile, result);
+        return from_candid_CreatorEarningsSummary_n146(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCreatorEarnings();
-      return from_candid_CreatorEarningsSummary_n118(this._uploadFile, this._downloadFile, result);
+      return from_candid_CreatorEarningsSummary_n146(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getCryptoConfig(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getCryptoConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getCryptoConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return result;
+    }
+  }
+  async getCryptoConfigPublic() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getCryptoConfigPublic();
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getCryptoConfigPublic();
+      return result;
     }
   }
   async getCustomCodes() {
@@ -43590,14 +44471,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getCustomerOrders(arg0);
-        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCustomerOrders(arg0);
-      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
     }
   }
   async getJobs() {
@@ -43614,32 +44495,46 @@ class Backend {
       return result;
     }
   }
-  async getListings(arg0, arg1) {
+  async getListedCoins() {
     if (this.processError) {
       try {
-        const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n123(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getListedCoins();
+        return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getListings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n123(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getListedCoins();
+      return result;
+    }
+  }
+  async getListings(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getListings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n151(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_vec_n152(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getListings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n151(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_vec_n152(this._uploadFile, this._downloadFile, result);
     }
   }
   async getLockedFileUrl(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getLockedFileUrl(arg0);
-        return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getLockedFileUrl(arg0);
-      return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
     }
   }
   async getManagers() {
@@ -43660,14 +44555,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyChatConversations();
-        return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n157(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyChatConversations();
-      return from_candid_vec_n129(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n157(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyChatPoints() {
@@ -43688,14 +44583,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyChatProfile();
-        return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n123(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyChatProfile();
-      return from_candid_opt_n95(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n123(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyChatReferralCode() {
@@ -43730,42 +44625,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyListings();
-        return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n152(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyListings();
-      return from_candid_vec_n124(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n152(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyOfferTransactions(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getMyOfferTransactions(arg0);
-        return from_candid_vec_n132(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n160(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyOfferTransactions(arg0);
-      return from_candid_vec_n132(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n160(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyOfferWithdrawals(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getMyOfferWithdrawals(arg0);
-        return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n52(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyOfferWithdrawals(arg0);
-      return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n52(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyRechargeHistory() {
@@ -43800,28 +44695,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMySubscription();
-        return from_candid_opt_n137(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n165(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMySubscription();
-      return from_candid_opt_n137(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n165(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyTopupRequests() {
     if (this.processError) {
       try {
         const result = await this.actor.getMyTopupRequests();
-        return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyTopupRequests();
-      return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n98(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyWalletBalance() {
@@ -43856,14 +44751,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getNewsItems();
-        return from_candid_vec_n142(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n170(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getNewsItems();
-      return from_candid_vec_n142(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n170(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOfferEarningsSummary(arg0) {
@@ -43883,14 +44778,14 @@ class Backend {
   async getOfferPortalConfig(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.getOfferPortalConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.getOfferPortalConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -43911,15 +44806,15 @@ class Backend {
   async getOfferPortalConfigFull(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_variant_n145(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n173(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_variant_n145(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getOfferPortalConfigFull(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n173(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOfferPortalConfigPublic() {
@@ -43954,28 +44849,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getOrderById(arg0);
-        return from_candid_opt_n146(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n174(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getOrderById(arg0);
-      return from_candid_opt_n146(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n174(this._uploadFile, this._downloadFile, result);
     }
   }
   async getOrdersByStatus(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.getOrdersByStatus(arg0, arg1);
-        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getOrdersByStatus(arg0, arg1);
-      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPaymentConfig() {
@@ -43995,15 +44890,15 @@ class Backend {
   async getPendingApprovals(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getPendingApprovals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getPendingApprovals(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getPendingApprovals(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getPremiumPlans() {
@@ -44024,70 +44919,84 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getProviderOrders(arg0);
-        return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProviderOrders(arg0);
-      return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n148(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProviderProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getProviderProfile(arg0);
-        return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n175(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProviderProfile(arg0);
-      return from_candid_opt_n147(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n175(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProvidersByCategory(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getProvidersByCategory(arg0);
-        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProvidersByCategory(arg0);
-      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
     }
   }
   async getProvidersPendingApproval() {
     if (this.processError) {
       try {
         const result = await this.actor.getProvidersPendingApproval();
-        return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getProvidersPendingApproval();
-      return from_candid_vec_n51(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n78(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getPublicOfferPortalConfig() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getPublicOfferPortalConfig();
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getPublicOfferPortalConfig();
+      return result;
     }
   }
   async getRecentUsers() {
     if (this.processError) {
       try {
         const result = await this.actor.getRecentUsers();
-        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRecentUsers();
-      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
     }
   }
   async getRechargeApiConfig() {
@@ -44108,14 +45017,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getRechargeReceipt(arg0);
-        return from_candid_opt_n148(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n176(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRechargeReceipt(arg0);
-      return from_candid_opt_n148(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n176(this._uploadFile, this._downloadFile, result);
     }
   }
   async getRechargeServiceEnabled() {
@@ -44150,42 +45059,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getSmsConfig();
-        return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSmsConfig();
-      return from_candid_variant_n149(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n177(this._uploadFile, this._downloadFile, result);
     }
   }
   async getSubscriptionPricing() {
     if (this.processError) {
       try {
         const result = await this.actor.getSubscriptionPricing();
-        return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n178(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSubscriptionPricing();
-      return from_candid_opt_n150(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n178(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getTicketReplies(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getTicketReplies(arg0);
+        return from_candid_vec_n179(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getTicketReplies(arg0);
+      return from_candid_vec_n179(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUdhaarBalance(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUdhaarBalance(arg0);
-        return from_candid_variant_n151(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n71(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUdhaarBalance(arg0);
-      return from_candid_variant_n151(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n71(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUdhaarCustomers() {
@@ -44206,84 +45129,154 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getUdhaarTransactions(arg0);
-        return from_candid_variant_n152(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n183(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUdhaarTransactions(arg0);
-      return from_candid_variant_n152(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n183(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserById(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserById(arg0);
-        return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n184(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserById(arg0);
-      return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n184(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserByMobile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserByMobile(arg0);
-        return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n184(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserByMobile(arg0);
-      return from_candid_opt_n153(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n184(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getUserCryptoTransactions(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUserCryptoTransactions(arg0);
+        return from_candid_vec_n185(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUserCryptoTransactions(arg0);
+      return from_candid_vec_n185(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getUserCryptoWallet(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUserCryptoWallet(arg0);
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUserCryptoWallet(arg0);
+      return result;
+    }
+  }
+  async getUserCryptoWithdrawals(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUserCryptoWithdrawals(arg0);
+        return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUserCryptoWithdrawals(arg0);
+      return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getUserPortfolio(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUserPortfolio(arg0);
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUserPortfolio(arg0);
+      return result;
     }
   }
   async getUserProfile(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserProfile(arg0);
-        return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n106(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserProfile(arg0);
-      return from_candid_opt_n78(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n106(this._uploadFile, this._downloadFile, result);
     }
   }
   async getUserSubscriptionStatus(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getUserSubscriptionStatus(arg0);
-        return from_candid_opt_n154(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n186(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getUserSubscriptionStatus(arg0);
-      return from_candid_opt_n154(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n186(this._uploadFile, this._downloadFile, result);
     }
   }
-  async getUsersByRole(arg0) {
+  async getUserTickets(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getUsersByRole(to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg0));
-        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.getUserTickets(arg0);
+        return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getUsersByRole(to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg0));
-      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.getUserTickets(arg0);
+      return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getUsersByRole(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUsersByRole(to_candid_UserRole_n187(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUsersByRole(to_candid_UserRole_n187(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
     }
   }
   async getVideos() {
@@ -44373,14 +45366,14 @@ class Backend {
   async isPremiumUser(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.isPremiumUser(to_candid_opt_n157(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.isPremiumUser(to_candid_opt_n189(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.isPremiumUser(to_candid_opt_n157(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.isPremiumUser(to_candid_opt_n189(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -44402,56 +45395,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.listApprovals();
-        return from_candid_vec_n158(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n190(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.listApprovals();
-      return from_candid_vec_n158(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n190(this._uploadFile, this._downloadFile, result);
     }
   }
   async login(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.login(arg0, arg1);
-        return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n193(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.login(arg0, arg1);
-      return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n193(this._uploadFile, this._downloadFile, result);
     }
   }
   async loginOfferUser(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.loginOfferUser(arg0, arg1);
-        return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n194(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.loginOfferUser(arg0, arg1);
-      return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n194(this._uploadFile, this._downloadFile, result);
     }
   }
   async loginUser(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.loginUser(arg0, arg1, arg2);
-        return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n193(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.loginUser(arg0, arg1, arg2);
-      return from_candid_variant_n161(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n193(this._uploadFile, this._downloadFile, result);
     }
   }
   async markMessagesRead(arg0) {
@@ -44472,41 +45465,41 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.markUdhaarTransactionPaid(arg0);
-        return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.markUdhaarTransactionPaid(arg0);
-      return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async placeOrder(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
-        const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4));
+        const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4));
+      const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4));
       return result;
     }
   }
   async postChatStory(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.postChatStory(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.postChatStory(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1));
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.postChatStory(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.postChatStory(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1));
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44569,42 +45562,42 @@ class Backend {
   async registerOfferUser(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-        return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_variant_n194(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
-      return from_candid_variant_n162(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.registerOfferUser(arg0, arg1, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_variant_n194(this._uploadFile, this._downloadFile, result);
     }
   }
   async registerUser(arg0, arg1, arg2, arg3, arg4, arg5) {
     if (this.processError) {
       try {
-        const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
+        const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n187(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n155(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
+      const result = await this.actor.registerUser(arg0, arg1, arg2, to_candid_UserRole_n187(this._uploadFile, this._downloadFile, arg3), arg4, arg5);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async rejectProvider(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+        const result = await this.actor.rejectProvider(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.rejectProvider(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+      const result = await this.actor.rejectProvider(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
       return result;
     }
   }
@@ -44678,6 +45671,20 @@ class Backend {
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
+  async replyToTicket(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.replyToTicket(arg0, arg1, arg2, arg3, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4));
+        return from_candid_variant_n195(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.replyToTicket(arg0, arg1, arg2, arg3, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4));
+      return from_candid_variant_n195(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async requestApproval() {
     if (this.processError) {
       try {
@@ -44692,18 +45699,46 @@ class Backend {
       return result;
     }
   }
+  async requestCryptoWithdrawal(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.requestCryptoWithdrawal(arg0, arg1, arg2, arg3, arg4);
+        return from_candid_variant_n196(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.requestCryptoWithdrawal(arg0, arg1, arg2, arg3, arg4);
+      return from_candid_variant_n196(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async requestDeposit(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.requestDeposit(arg0, arg1);
+        return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.requestDeposit(arg0, arg1);
+      return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async requestOfferPasswordReset(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.requestOfferPasswordReset(arg0);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.requestOfferPasswordReset(arg0);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async requestOfferWithdrawal(arg0, arg1, arg2) {
@@ -44738,41 +45773,41 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.resetOfferPassword(arg0, arg1, arg2);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async saveCPAGripKeys(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        const result = await this.actor.saveCPAGripKeys(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.saveCPAGripKeys(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      const result = await this.actor.saveCPAGripKeys(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async saveCallerUserProfile(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n163(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n197(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n163(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n197(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
@@ -44808,55 +45843,69 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.searchChatUsers(arg0);
-        return from_candid_vec_n165(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n199(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchChatUsers(arg0);
-      return from_candid_vec_n165(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n199(this._uploadFile, this._downloadFile, result);
     }
   }
   async searchUsers(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.searchUsers(arg0);
-        return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.searchUsers(arg0);
-      return from_candid_vec_n73(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async sellCoin(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.sellCoin(arg0, arg1, arg2, arg3, arg4);
+        return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.sellCoin(arg0, arg1, arg2, arg3, arg4);
+      return from_candid_variant_n63(this._uploadFile, this._downloadFile, result);
     }
   }
   async sendLockedMessage(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
-        const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n168(this._uploadFile, this._downloadFile, arg4));
+        const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n200(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n202(this._uploadFile, this._downloadFile, arg4));
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n166(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n168(this._uploadFile, this._downloadFile, arg4));
+      const result = await this.actor.sendLockedMessage(arg0, arg1, to_candid_LockType_n200(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n202(this._uploadFile, this._downloadFile, arg4));
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
   async sendMessage(arg0, arg1, arg2, arg3, arg4, arg5) {
     if (this.processError) {
       try {
-        const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n169(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg4), arg5);
+        const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n203(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n132(this._uploadFile, this._downloadFile, arg4), arg5);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n169(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg4), arg5);
+      const result = await this.actor.sendMessage(arg0, arg1, to_candid_MessageType_n203(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n132(this._uploadFile, this._downloadFile, arg4), arg5);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -44877,14 +45926,14 @@ class Backend {
   async setApproval(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n171(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n205(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n171(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.setApproval(arg0, to_candid_ApprovalStatus_n205(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -44934,14 +45983,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.setLockedFeature(arg0, arg1, arg2);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async setMpin(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.setMpin(arg0, arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.setMpin(arg0, arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async setPaymentConfig(arg0) {
@@ -44961,14 +46024,14 @@ class Backend {
   async setPlanType(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n173(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n207(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n173(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.setPlanType(arg0, to_candid_PlanType_n207(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -45003,15 +46066,15 @@ class Backend {
   async summarizeChatMessages(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n175(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n209(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n175(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.summarizeChatMessages(arg0, to_candid_variant_n209(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async toggleCustomSection(arg0, arg1) {
@@ -45045,28 +46108,28 @@ class Backend {
   async updateAdminConfig(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n176(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n210(this._uploadFile, this._downloadFile, arg0));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n176(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.updateAdminConfig(await to_candid_AdminConfig_n210(this._uploadFile, this._downloadFile, arg0));
       return result;
     }
   }
   async updateAdminSettings(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+        const result = await this.actor.updateAdminSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAdminSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+      const result = await this.actor.updateAdminSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
       return result;
     }
   }
@@ -45087,14 +46150,14 @@ class Backend {
   async updateAppSettings(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+        const result = await this.actor.updateAppSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateAppSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1);
+      const result = await this.actor.updateAppSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -45129,28 +46192,28 @@ class Backend {
   async updateChatGroupInfo(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateChatGroupInfo(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+        const result = await this.actor.updateChatGroupInfo(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateChatGroupInfo(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2));
+      const result = await this.actor.updateChatGroupInfo(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2));
       return result;
     }
   }
   async updateChatNote(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateChatNote(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+        const result = await this.actor.updateChatNote(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateChatNote(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+      const result = await this.actor.updateChatNote(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
       return result;
     }
   }
@@ -45166,6 +46229,20 @@ class Backend {
     } else {
       const result = await this.actor.updateCloudinaryConfig(arg0, arg1, arg2);
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async updateCoin(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+        return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateCoin(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+      return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateCommissionConfig(arg0, arg1, arg2) {
@@ -45199,15 +46276,29 @@ class Backend {
   async updateCpagripSettings(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        const result = await this.actor.updateCpagripSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateCpagripSettings(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      const result = await this.actor.updateCpagripSettings(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
       return result;
+    }
+  }
+  async updateCryptoConfig(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateCryptoConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateCryptoConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateCustomCode(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) {
@@ -45255,14 +46346,14 @@ class Backend {
   async updateListing(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n179(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+        const result = await this.actor.updateListing(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n132(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n213(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg6));
         return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateListing(arg0, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n104(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n179(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+      const result = await this.actor.updateListing(arg0, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n132(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n213(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg6));
       return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -45283,14 +46374,14 @@ class Backend {
   async updateMyChatProfile(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateMyChatProfile(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+        const result = await this.actor.updateMyChatProfile(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateMyChatProfile(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n15(this._uploadFile, this._downloadFile, arg3));
+      const result = await this.actor.updateMyChatProfile(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n13(this._uploadFile, this._downloadFile, arg3));
       return result;
     }
   }
@@ -45311,15 +46402,15 @@ class Backend {
   async updateOfferPortalConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+        return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.updateOfferPortalConfig(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+      return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateOrderStatus(arg0, arg1) {
@@ -45353,14 +46444,14 @@ class Backend {
   async updateProviderProfileFull(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateProviderProfileFull(arg0, arg1, arg2, arg3, arg4, arg5, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+        const result = await this.actor.updateProviderProfileFull(arg0, arg1, arg2, arg3, arg4, arg5, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg6));
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateProviderProfileFull(arg0, arg1, arg2, arg3, arg4, arg5, to_candid_opt_n15(this._uploadFile, this._downloadFile, arg6));
+      const result = await this.actor.updateProviderProfileFull(arg0, arg1, arg2, arg3, arg4, arg5, to_candid_opt_n13(this._uploadFile, this._downloadFile, arg6));
       return result;
     }
   }
@@ -45424,28 +46515,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.updateSmsConfig(arg0, arg1, arg2);
-        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.updateSmsConfig(arg0, arg1, arg2);
-      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateSmsConfigWithToken(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
-        return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+        return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
-      return from_candid_variant_n41(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.updateSmsConfigWithToken(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2, arg3);
+      return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateSubscriptionPricing(arg0) {
@@ -45462,17 +46553,31 @@ class Backend {
       return result;
     }
   }
+  async updateTicketStatus(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateTicketStatus(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateTicketStatus(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async updateToggle(arg0, arg1, arg2) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+        const result = await this.actor.updateToggle(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
         return result;
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateToggle(to_candid_opt_n15(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
+      const result = await this.actor.updateToggle(to_candid_opt_n13(this._uploadFile, this._downloadFile, arg0), arg1, arg2);
       return result;
     }
   }
@@ -45480,28 +46585,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.updateUdhaarCustomer(arg0, arg1, arg2, arg3);
-        return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.updateUdhaarCustomer(arg0, arg1, arg2, arg3);
-      return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateUdhaarTransaction(arg0, arg1, arg2, arg3, arg4) {
     if (this.processError) {
       try {
         const result = await this.actor.updateUdhaarTransaction(arg0, arg1, arg2, arg3, arg4);
-        return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.updateUdhaarTransaction(arg0, arg1, arg2, arg3, arg4);
-      return from_candid_variant_n14(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n16(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateVideo(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
@@ -45536,14 +46641,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-        return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.verifyAdminCredentials(arg0, arg1);
-      return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n56(this._uploadFile, this._downloadFile, result);
     }
   }
   async verifyAdminPin(arg0) {
@@ -45578,14 +46683,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.verifyUnlockKey(arg0, arg1);
-        return from_candid_VerifyKeyResult_n180(this._uploadFile, this._downloadFile, result);
+        return from_candid_VerifyKeyResult_n214(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.verifyUnlockKey(arg0, arg1);
-      return from_candid_VerifyKeyResult_n180(this._uploadFile, this._downloadFile, result);
+      return from_candid_VerifyKeyResult_n214(this._uploadFile, this._downloadFile, result);
     }
   }
   async viewChatStory(arg0) {
@@ -45606,261 +46711,361 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.viewChatVaultItem(arg0);
-        return from_candid_opt_n181(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n215(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.viewChatVaultItem(arg0);
-      return from_candid_opt_n181(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n215(this._uploadFile, this._downloadFile, result);
     }
   }
 }
-async function from_candid_AdminConfig_n67(_uploadFile, _downloadFile, value) {
-  return await from_candid_record_n68(_uploadFile, _downloadFile, value);
+async function from_candid_AdminConfig_n94(_uploadFile, _downloadFile, value) {
+  return await from_candid_record_n95(_uploadFile, _downloadFile, value);
 }
-function from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n20(_uploadFile, _downloadFile, value);
+function from_candid_ApprovalStatus_n83(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n33(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuditAction_n64(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n65(_uploadFile, _downloadFile, value);
-}
-function from_candid_AuditLogEntry_n62(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n63(_uploadFile, _downloadFile, value);
-}
-function from_candid_Badge_n98(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n99(_uploadFile, _downloadFile, value);
-}
-function from_candid_ChatMessage_n106(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n107(_uploadFile, _downloadFile, value);
-}
-function from_candid_ChatShortcut_n89(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n90(_uploadFile, _downloadFile, value);
-}
-function from_candid_Conversation_n130(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n131(_uploadFile, _downloadFile, value);
-}
-function from_candid_CreatorEarningsSummary_n118(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n119(_uploadFile, _downloadFile, value);
-}
-async function from_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value) {
-  return await _downloadFile(value);
-}
-function from_candid_LocalNewsItem_n143(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n144(_uploadFile, _downloadFile, value);
-}
-function from_candid_LockType_n114(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n115(_uploadFile, _downloadFile, value);
-}
-function from_candid_LockedFile_n111(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n112(_uploadFile, _downloadFile, value);
-}
-function from_candid_LockedMessagePayment_n24(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n25(_uploadFile, _downloadFile, value);
-}
-function from_candid_LockedMessageStatus_n26(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n27(_uploadFile, _downloadFile, value);
-}
-function from_candid_MarketCategory_n127(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n128(_uploadFile, _downloadFile, value);
-}
-function from_candid_MarketListing_n125(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n126(_uploadFile, _downloadFile, value);
-}
-function from_candid_MessageStatus_n108(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n109(_uploadFile, _downloadFile, value);
-}
-function from_candid_MessageType_n116(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n117(_uploadFile, _downloadFile, value);
-}
-function from_candid_OfferTransaction_n133(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n134(_uploadFile, _downloadFile, value);
-}
-function from_candid_OfferUser_n32(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n33(_uploadFile, _downloadFile, value);
-}
-function from_candid_OfferWithdrawal_n36(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n37(_uploadFile, _downloadFile, value);
-}
-function from_candid_Order_n121(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n122(_uploadFile, _downloadFile, value);
-}
-function from_candid_PaymentMethod_n140(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n141(_uploadFile, _downloadFile, value);
-}
-function from_candid_PlanType_n59(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n60(_uploadFile, _downloadFile, value);
-}
-function from_candid_PremiumPlan_n21(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n22(_uploadFile, _downloadFile, value);
-}
-function from_candid_PremiumSubscription_n138(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n139(_uploadFile, _downloadFile, value);
-}
-function from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n53(_uploadFile, _downloadFile, value);
-}
-function from_candid_ScheduledMessageStatus_n86(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n87(_uploadFile, _downloadFile, value);
-}
-function from_candid_ScheduledMessage_n84(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n85(_uploadFile, _downloadFile, value);
-}
-function from_candid_ShortcutCategory_n93(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n94(_uploadFile, _downloadFile, value);
-}
-function from_candid_ShortcutCreator_n91(_uploadFile, _downloadFile, value) {
+function from_candid_AuditAction_n91(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n92(_uploadFile, _downloadFile, value);
 }
-function from_candid_Story_n49(_uploadFile, _downloadFile, value) {
+function from_candid_AuditLogEntry_n89(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n90(_uploadFile, _downloadFile, value);
+}
+function from_candid_Badge_n126(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n127(_uploadFile, _downloadFile, value);
+}
+function from_candid_ChatMessage_n134(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n135(_uploadFile, _downloadFile, value);
+}
+function from_candid_ChatShortcut_n117(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n118(_uploadFile, _downloadFile, value);
+}
+function from_candid_Conversation_n158(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n159(_uploadFile, _downloadFile, value);
+}
+function from_candid_CreatorEarningsSummary_n146(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n147(_uploadFile, _downloadFile, value);
+}
+function from_candid_CryptoTransaction_n64(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n65(_uploadFile, _downloadFile, value);
+}
+function from_candid_CryptoWithdrawal_n31(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n32(_uploadFile, _downloadFile, value);
+}
+async function from_candid_ExternalBlob_n96(_uploadFile, _downloadFile, value) {
+  return await _downloadFile(value);
+}
+function from_candid_LocalNewsItem_n171(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n172(_uploadFile, _downloadFile, value);
+}
+function from_candid_LockType_n142(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n143(_uploadFile, _downloadFile, value);
+}
+function from_candid_LockedFile_n139(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n140(_uploadFile, _downloadFile, value);
+}
+function from_candid_LockedMessagePayment_n43(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n44(_uploadFile, _downloadFile, value);
+}
+function from_candid_LockedMessageStatus_n45(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n46(_uploadFile, _downloadFile, value);
+}
+function from_candid_MarketCategory_n155(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n156(_uploadFile, _downloadFile, value);
+}
+function from_candid_MarketListing_n153(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n154(_uploadFile, _downloadFile, value);
+}
+function from_candid_MessageStatus_n136(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n137(_uploadFile, _downloadFile, value);
+}
+function from_candid_MessageType_n144(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n145(_uploadFile, _downloadFile, value);
+}
+function from_candid_OfferTransaction_n161(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n162(_uploadFile, _downloadFile, value);
+}
+function from_candid_OfferUser_n49(_uploadFile, _downloadFile, value) {
   return from_candid_record_n50(_uploadFile, _downloadFile, value);
 }
-function from_candid_SubscriptionPlan_n54(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n55(_uploadFile, _downloadFile, value);
+function from_candid_OfferWithdrawal_n53(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n54(_uploadFile, _downloadFile, value);
 }
-function from_candid_SubscriptionStatus_n57(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n58(_uploadFile, _downloadFile, value);
+function from_candid_Order_n149(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n150(_uploadFile, _downloadFile, value);
 }
-function from_candid_UpiPaymentRequest_n18(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n19(_uploadFile, _downloadFile, value);
+function from_candid_PaymentMethod_n168(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n169(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserApprovalInfo_n159(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n160(_uploadFile, _downloadFile, value);
+function from_candid_PlanType_n86(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n87(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n97(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserProfile_n79(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n80(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole__1_n81(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n82(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole_n76(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n77(_uploadFile, _downloadFile, value);
-}
-function from_candid_User_n74(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n75(_uploadFile, _downloadFile, value);
-}
-function from_candid_VaultItem_n102(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n103(_uploadFile, _downloadFile, value);
-}
-function from_candid_VerifyKeyResult_n180(_uploadFile, _downloadFile, value) {
+function from_candid_PremiumPlan_n40(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n41(_uploadFile, _downloadFile, value);
 }
-function from_candid_WalletTopupRequest_n71(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n72(_uploadFile, _downloadFile, value);
+function from_candid_PremiumSubscription_n166(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n167(_uploadFile, _downloadFile, value);
+}
+function from_candid_ProviderProfile_n79(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n80(_uploadFile, _downloadFile, value);
+}
+function from_candid_ScheduledMessageStatus_n114(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n115(_uploadFile, _downloadFile, value);
+}
+function from_candid_ScheduledMessage_n112(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n113(_uploadFile, _downloadFile, value);
+}
+function from_candid_ShortcutCategory_n121(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n122(_uploadFile, _downloadFile, value);
+}
+function from_candid_ShortcutCreator_n119(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n120(_uploadFile, _downloadFile, value);
+}
+function from_candid_Story_n76(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n77(_uploadFile, _downloadFile, value);
+}
+function from_candid_SubscriptionPlan_n81(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n82(_uploadFile, _downloadFile, value);
+}
+function from_candid_SubscriptionStatus_n84(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n85(_uploadFile, _downloadFile, value);
+}
+function from_candid_SupportTicket_n21(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n22(_uploadFile, _downloadFile, value);
+}
+function from_candid_TicketCategory_n25(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n26(_uploadFile, _downloadFile, value);
+}
+function from_candid_TicketPriority_n27(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n28(_uploadFile, _downloadFile, value);
+}
+function from_candid_TicketReply_n180(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n181(_uploadFile, _downloadFile, value);
+}
+function from_candid_TicketStatus_n23(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n24(_uploadFile, _downloadFile, value);
+}
+function from_candid_TxStatus_n66(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n67(_uploadFile, _downloadFile, value);
+}
+function from_candid_TxType_n69(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n70(_uploadFile, _downloadFile, value);
+}
+function from_candid_UpiPaymentRequest_n38(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n39(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserApprovalInfo_n191(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n192(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserChatProfile_n124(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n125(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserProfile_n107(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n108(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole__1_n109(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n110(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n104(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n105(_uploadFile, _downloadFile, value);
+}
+function from_candid_User_n102(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n103(_uploadFile, _downloadFile, value);
+}
+function from_candid_VaultItem_n130(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n131(_uploadFile, _downloadFile, value);
+}
+function from_candid_VerifyKeyResult_n214(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n58(_uploadFile, _downloadFile, value);
+}
+function from_candid_WalletTopupRequest_n99(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n100(_uploadFile, _downloadFile, value);
 }
 function from_candid__ImmutableObjectStorageRefillResult_n4(_uploadFile, _downloadFile, value) {
   return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n100(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n106(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_UserProfile_n107(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n123(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_UserChatProfile_n124(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n128(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n110(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_LockedFile_n111(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n138(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_LockedFile_n139(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n113(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n141(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n137(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_PremiumSubscription_n138(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n165(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_PremiumSubscription_n166(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n146(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_Order_n121(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n174(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_Order_n149(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n147(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n175(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_ProviderProfile_n79(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n148(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n176(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n150(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n178(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n153(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_User_n74(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n184(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_User_n102(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n154(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n186(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n181(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_VaultItem_n102(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n215(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : from_candid_VaultItem_n130(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n28(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n34(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n29(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n35(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-async function from_candid_opt_n66(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : await from_candid_AdminConfig_n67(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n68(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n7(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n78(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_UserProfile_n79(_uploadFile, _downloadFile, value[0]);
+async function from_candid_opt_n93(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : await from_candid_AdminConfig_n94(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n95(_uploadFile, _downloadFile, value) {
-  return value.length === 0 ? null : from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, value[0]);
+function from_candid_record_n100(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: value.status,
+    userId: value.userId,
+    note: value.note,
+    amount: value.amount,
+    requestedAt: value.requestedAt,
+    resolvedAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.resolvedAt))
+  };
 }
 function from_candid_record_n103(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
+    name: value.name,
+    createdAt: value.createdAt,
+    role: from_candid_UserRole_n104(_uploadFile, _downloadFile, value.role),
+    securityQuestion: value.securityQuestion,
+    securityAnswer: value.securityAnswer,
+    passwordHash: value.passwordHash,
+    mobile: value.mobile
+  };
+}
+function from_candid_record_n108(_uploadFile, _downloadFile, value) {
+  return {
+    userId: value.userId,
+    name: value.name,
+    role: from_candid_UserRole_n104(_uploadFile, _downloadFile, value.role),
+    mobile: value.mobile
+  };
+}
+function from_candid_record_n113(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_ScheduledMessageStatus_n114(_uploadFile, _downloadFile, value.status),
+    content: value.content,
+    conversationId: value.conversationId,
+    senderId: value.senderId,
+    scheduledAt: value.scheduledAt
+  };
+}
+function from_candid_record_n118(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    isGlobal: value.isGlobal,
+    content: value.content,
+    trigger: value.trigger,
+    createdBy: from_candid_ShortcutCreator_n119(_uploadFile, _downloadFile, value.createdBy),
+    category: from_candid_ShortcutCategory_n121(_uploadFile, _downloadFile, value.category)
+  };
+}
+function from_candid_record_n125(_uploadFile, _downloadFile, value) {
+  return {
+    bio: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.bio)),
+    referralCode: value.referralCode,
+    username: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.username)),
+    displayName: value.displayName,
+    city: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.city)),
+    userId: value.userId,
+    createdAt: value.createdAt,
+    referralCount: value.referralCount,
+    ghostModeEnabled: value.ghostModeEnabled,
+    badge: from_candid_Badge_n126(_uploadFile, _downloadFile, value.badge),
+    studyModeEnabled: value.studyModeEnabled,
+    pointsBalance: value.pointsBalance,
+    profilePhotoUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.profilePhotoUrl)),
+    autoReply: record_opt_to_undefined(from_candid_opt_n128(_uploadFile, _downloadFile, value.autoReply)),
+    studyModeSelectedChats: value.studyModeSelectedChats
+  };
+}
+function from_candid_record_n131(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
     isViewOnce: value.isViewOnce,
     title: value.title,
-    expiresAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.expiresAt)),
+    expiresAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.expiresAt)),
     ownerId: value.ownerId,
     createdAt: value.createdAt,
     mediaUrl: value.mediaUrl,
-    viewedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.viewedAt))
+    viewedAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.viewedAt))
   };
 }
-function from_candid_record_n107(_uploadFile, _downloadFile, value) {
+function from_candid_record_n135(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     lockPrice: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.lockPrice)),
-    status: from_candid_MessageStatus_n108(_uploadFile, _downloadFile, value.status),
+    status: from_candid_MessageStatus_n136(_uploadFile, _downloadFile, value.status),
     content: value.content,
     unlockedBy: value.unlockedBy,
-    deletedForEveryoneAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.deletedForEveryoneAt)),
-    lockedFile: record_opt_to_undefined(from_candid_opt_n110(_uploadFile, _downloadFile, value.lockedFile)),
+    deletedForEveryoneAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.deletedForEveryoneAt)),
+    lockedFile: record_opt_to_undefined(from_candid_opt_n138(_uploadFile, _downloadFile, value.lockedFile)),
     createdAt: value.createdAt,
-    deletedForSenderAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.deletedForSenderAt)),
-    mediaUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mediaUrl)),
-    messageType: from_candid_MessageType_n116(_uploadFile, _downloadFile, value.messageType),
+    deletedForSenderAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.deletedForSenderAt)),
+    mediaUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.mediaUrl)),
+    messageType: from_candid_MessageType_n144(_uploadFile, _downloadFile, value.messageType),
     conversationId: value.conversationId,
-    lockCurrency: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.lockCurrency)),
+    lockCurrency: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.lockCurrency)),
     isVanish: value.isVanish,
     isLocked: value.isLocked,
     replyToId: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.replyToId)),
     reactions: value.reactions,
     senderId: value.senderId,
-    scheduledAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.scheduledAt))
+    scheduledAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.scheduledAt))
   };
 }
-function from_candid_record_n112(_uploadFile, _downloadFile, value) {
+function from_candid_record_n140(_uploadFile, _downloadFile, value) {
   return {
     unlockedBy: value.unlockedBy,
-    task: record_opt_to_undefined(from_candid_opt_n113(_uploadFile, _downloadFile, value.task)),
-    lockType: from_candid_LockType_n114(_uploadFile, _downloadFile, value.lockType),
-    passwordHash: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.passwordHash)),
+    task: record_opt_to_undefined(from_candid_opt_n141(_uploadFile, _downloadFile, value.task)),
+    lockType: from_candid_LockType_n142(_uploadFile, _downloadFile, value.lockType),
+    passwordHash: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.passwordHash)),
     fileUrl: value.fileUrl
   };
 }
-function from_candid_record_n119(_uploadFile, _downloadFile, value) {
+function from_candid_record_n147(_uploadFile, _downloadFile, value) {
   return {
-    payments: from_candid_vec_n23(_uploadFile, _downloadFile, value.payments),
+    payments: from_candid_vec_n42(_uploadFile, _downloadFile, value.payments),
     pendingPayouts: value.pendingPayouts,
     totalEarnings: value.totalEarnings
   };
 }
-function from_candid_record_n122(_uploadFile, _downloadFile, value) {
+function from_candid_record_n150(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     customerName: value.customerName,
@@ -45868,29 +47073,29 @@ function from_candid_record_n122(_uploadFile, _downloadFile, value) {
     createdAt: value.createdAt,
     description: value.description,
     orderType: value.orderType,
-    imageUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.imageUrl)),
+    imageUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.imageUrl)),
     customerId: value.customerId,
     providerId: value.providerId
   };
 }
-function from_candid_record_n126(_uploadFile, _downloadFile, value) {
+function from_candid_record_n154(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     title: value.title,
     photoUrls: value.photoUrls,
-    expiresAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.expiresAt)),
+    expiresAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.expiresAt)),
     city: value.city,
     createdAt: value.createdAt,
     description: value.description,
     isActive: value.isActive,
     whatsappContact: value.whatsappContact,
     isFeatured: value.isFeatured,
-    category: from_candid_MarketCategory_n127(_uploadFile, _downloadFile, value.category),
+    category: from_candid_MarketCategory_n155(_uploadFile, _downloadFile, value.category),
     sellerId: value.sellerId,
     price: value.price
   };
 }
-function from_candid_record_n131(_uploadFile, _downloadFile, value) {
+function from_candid_record_n159(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     lastMessageAt: value.lastMessageAt,
@@ -45898,104 +47103,110 @@ function from_candid_record_n131(_uploadFile, _downloadFile, value) {
     isGroup: value.isGroup,
     adminIds: value.adminIds,
     createdAt: value.createdAt,
-    groupPhotoUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.groupPhotoUrl)),
+    groupPhotoUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.groupPhotoUrl)),
     participantIds: value.participantIds,
-    groupName: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.groupName))
+    groupName: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.groupName))
   };
 }
-function from_candid_record_n134(_uploadFile, _downloadFile, value) {
+function from_candid_record_n162(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_variant_n135(_uploadFile, _downloadFile, value.status),
+    status: from_candid_variant_n163(_uploadFile, _downloadFile, value.status),
     offerUserId: value.offerUserId,
     createdAt: value.createdAt,
     description: value.description,
-    txType: from_candid_variant_n136(_uploadFile, _downloadFile, value.txType),
+    txType: from_candid_variant_n164(_uploadFile, _downloadFile, value.txType),
     amount: value.amount
   };
 }
-function from_candid_record_n139(_uploadFile, _downloadFile, value) {
+function from_candid_record_n167(_uploadFile, _downloadFile, value) {
   return {
     startedAt: value.startedAt,
-    paymentMethod: from_candid_PaymentMethod_n140(_uploadFile, _downloadFile, value.paymentMethod),
+    paymentMethod: from_candid_PaymentMethod_n168(_uploadFile, _downloadFile, value.paymentMethod),
     expiresAt: value.expiresAt,
-    stripeSubscriptionId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.stripeSubscriptionId)),
+    stripeSubscriptionId: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.stripeSubscriptionId)),
     userId: value.userId,
-    plan: from_candid_PremiumPlan_n21(_uploadFile, _downloadFile, value.plan),
+    plan: from_candid_PremiumPlan_n40(_uploadFile, _downloadFile, value.plan),
     isActive: value.isActive
   };
 }
-function from_candid_record_n144(_uploadFile, _downloadFile, value) {
+function from_candid_record_n172(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
     title: value.title,
     postedBy: value.postedBy,
     content: value.content,
     createdAt: value.createdAt,
-    imageUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.imageUrl))
+    imageUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.imageUrl))
   };
 }
-function from_candid_record_n160(_uploadFile, _downloadFile, value) {
+function from_candid_record_n181(_uploadFile, _downloadFile, value) {
   return {
-    status: from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value.status),
+    id: value.id,
+    authorId: value.authorId,
+    createdAt: value.createdAt,
+    authorRole: from_candid_variant_n182(_uploadFile, _downloadFile, value.authorRole),
+    ticketId: value.ticketId,
+    message: value.message
+  };
+}
+function from_candid_record_n192(_uploadFile, _downloadFile, value) {
+  return {
+    status: from_candid_ApprovalStatus_n83(_uploadFile, _downloadFile, value.status),
     principal: value.principal
   };
 }
-function from_candid_record_n19(_uploadFile, _downloadFile, value) {
+function from_candid_record_n22(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_variant_n20(_uploadFile, _downloadFile, value.status),
+    status: from_candid_TicketStatus_n23(_uploadFile, _downloadFile, value.status),
+    userEmail: value.userEmail,
+    subject: value.subject,
     userId: value.userId,
     createdAt: value.createdAt,
-    plan: from_candid_PremiumPlan_n21(_uploadFile, _downloadFile, value.plan),
+    description: value.description,
+    updatedAt: value.updatedAt,
+    category: from_candid_TicketCategory_n25(_uploadFile, _downloadFile, value.category),
+    priority: from_candid_TicketPriority_n27(_uploadFile, _downloadFile, value.priority)
+  };
+}
+function from_candid_record_n32(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_variant_n33(_uploadFile, _downloadFile, value.status),
+    userEmail: value.userEmail,
+    userId: value.userId,
+    createdAt: value.createdAt,
+    adminNote: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.adminNote)),
+    upiId: value.upiId,
+    amount: value.amount,
+    resolvedAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.resolvedAt))
+  };
+}
+function from_candid_record_n39(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_variant_n33(_uploadFile, _downloadFile, value.status),
+    userId: value.userId,
+    createdAt: value.createdAt,
+    plan: from_candid_PremiumPlan_n40(_uploadFile, _downloadFile, value.plan),
     upiTxnRef: value.upiTxnRef,
     amount: value.amount
   };
 }
-function from_candid_record_n25(_uploadFile, _downloadFile, value) {
+function from_candid_record_n44(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_LockedMessageStatus_n26(_uploadFile, _downloadFile, value.status),
-    unlockedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.unlockedAt)),
+    status: from_candid_LockedMessageStatus_n45(_uploadFile, _downloadFile, value.status),
+    unlockedAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.unlockedAt)),
     messageId: value.messageId,
     createdAt: value.createdAt,
     creatorId: value.creatorId,
-    upiTxnRef: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.upiTxnRef)),
+    upiTxnRef: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.upiTxnRef)),
     currency: value.currency,
     buyerId: value.buyerId,
-    stripePaymentIntentId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.stripePaymentIntentId)),
+    stripePaymentIntentId: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.stripePaymentIntentId)),
     amount: value.amount
-  };
-}
-function from_candid_record_n33(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    tier5Earnings: value.tier5Earnings,
-    referralCode: value.referralCode,
-    tier4Earnings: value.tier4Earnings,
-    userId: value.userId,
-    createdAt: value.createdAt,
-    pendingEarnings: value.pendingEarnings,
-    tier3Earnings: value.tier3Earnings,
-    email: value.email,
-    referredBy: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.referredBy)),
-    tier2Earnings: value.tier2Earnings,
-    passwordHash: value.passwordHash,
-    totalEarnings: value.totalEarnings,
-    mobile: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mobile)),
-    tier1Earnings: value.tier1Earnings
-  };
-}
-function from_candid_record_n37(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    status: from_candid_variant_n38(_uploadFile, _downloadFile, value.status),
-    offerUserId: value.offerUserId,
-    processedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.processedAt)),
-    adminNote: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.adminNote)),
-    upiId: value.upiId,
-    amount: value.amount,
-    requestedAt: value.requestedAt
   };
 }
 function from_candid_record_n5(_uploadFile, _downloadFile, value) {
@@ -46007,121 +47218,101 @@ function from_candid_record_n5(_uploadFile, _downloadFile, value) {
 function from_candid_record_n50(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
+    tier5Earnings: value.tier5Earnings,
+    referralCode: value.referralCode,
+    tier4Earnings: value.tier4Earnings,
+    userId: value.userId,
+    createdAt: value.createdAt,
+    pendingEarnings: value.pendingEarnings,
+    tier3Earnings: value.tier3Earnings,
+    email: value.email,
+    referredBy: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.referredBy)),
+    tier2Earnings: value.tier2Earnings,
+    passwordHash: value.passwordHash,
+    totalEarnings: value.totalEarnings,
+    mobile: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.mobile)),
+    tier1Earnings: value.tier1Earnings
+  };
+}
+function from_candid_record_n54(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_variant_n55(_uploadFile, _downloadFile, value.status),
+    offerUserId: value.offerUserId,
+    processedAt: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.processedAt)),
+    adminNote: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.adminNote)),
+    upiId: value.upiId,
+    amount: value.amount,
+    requestedAt: value.requestedAt
+  };
+}
+function from_candid_record_n65(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_TxStatus_n66(_uploadFile, _downloadFile, value.status),
+    priceAtTime: record_opt_to_undefined(from_candid_opt_n68(_uploadFile, _downloadFile, value.priceAtTime)),
+    feeAmount: record_opt_to_undefined(from_candid_opt_n68(_uploadFile, _downloadFile, value.feeAmount)),
+    netAmount: value.netAmount,
+    userId: value.userId,
+    createdAt: value.createdAt,
+    coinSymbol: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.coinSymbol)),
+    adminNote: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.adminNote)),
+    updatedAt: value.updatedAt,
+    totalAmount: value.totalAmount,
+    quantity: record_opt_to_undefined(from_candid_opt_n68(_uploadFile, _downloadFile, value.quantity)),
+    feePercent: record_opt_to_undefined(from_candid_opt_n68(_uploadFile, _downloadFile, value.feePercent)),
+    txType: from_candid_TxType_n69(_uploadFile, _downloadFile, value.txType),
+    coinId: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.coinId))
+  };
+}
+function from_candid_record_n77(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
     expiresAt: value.expiresAt,
     viewerIds: value.viewerIds,
     authorId: value.authorId,
     createdAt: value.createdAt,
-    mediaUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.mediaUrl)),
-    textContent: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.textContent))
-  };
-}
-function from_candid_record_n53(_uploadFile, _downloadFile, value) {
-  return {
-    userId: value.userId,
-    subscriptionExpiry: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.subscriptionExpiry)),
-    subscriptionPlan: from_candid_SubscriptionPlan_n54(_uploadFile, _downloadFile, value.subscriptionPlan),
-    description: value.description,
-    approvalStatus: from_candid_ApprovalStatus_n56(_uploadFile, _downloadFile, value.approvalStatus),
-    subscriptionStatus: from_candid_SubscriptionStatus_n57(_uploadFile, _downloadFile, value.subscriptionStatus),
-    paymentScreenshotBlobId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.paymentScreenshotBlobId)),
-    address: value.address,
-    serviceRates: value.serviceRates,
-    upiId: value.upiId,
-    shopName: value.shopName,
-    category: value.category,
-    qrCodeBlobId: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.qrCodeBlobId)),
-    planType: from_candid_PlanType_n59(_uploadFile, _downloadFile, value.planType),
-    photos: value.photos
-  };
-}
-function from_candid_record_n63(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    action: from_candid_AuditAction_n64(_uploadFile, _downloadFile, value.action),
-    note: value.note,
-    timestamp: value.timestamp,
-    adminEmail: value.adminEmail,
-    amount: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.amount)),
-    targetUserId: value.targetUserId
-  };
-}
-async function from_candid_record_n68(_uploadFile, _downloadFile, value) {
-  return {
-    email: value.email,
-    adminName: value.adminName,
-    upiId: value.upiId,
-    mobile: value.mobile,
-    qrCodeBlobId: await from_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value.qrCodeBlobId)
-  };
-}
-function from_candid_record_n72(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    status: value.status,
-    userId: value.userId,
-    note: value.note,
-    amount: value.amount,
-    requestedAt: value.requestedAt,
-    resolvedAt: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.resolvedAt))
-  };
-}
-function from_candid_record_n75(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    name: value.name,
-    createdAt: value.createdAt,
-    role: from_candid_UserRole_n76(_uploadFile, _downloadFile, value.role),
-    securityQuestion: value.securityQuestion,
-    securityAnswer: value.securityAnswer,
-    passwordHash: value.passwordHash,
-    mobile: value.mobile
+    mediaUrl: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.mediaUrl)),
+    textContent: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.textContent))
   };
 }
 function from_candid_record_n80(_uploadFile, _downloadFile, value) {
   return {
     userId: value.userId,
-    name: value.name,
-    role: from_candid_UserRole_n76(_uploadFile, _downloadFile, value.role),
-    mobile: value.mobile
-  };
-}
-function from_candid_record_n85(_uploadFile, _downloadFile, value) {
-  return {
-    id: value.id,
-    status: from_candid_ScheduledMessageStatus_n86(_uploadFile, _downloadFile, value.status),
-    content: value.content,
-    conversationId: value.conversationId,
-    senderId: value.senderId,
-    scheduledAt: value.scheduledAt
+    subscriptionExpiry: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.subscriptionExpiry)),
+    subscriptionPlan: from_candid_SubscriptionPlan_n81(_uploadFile, _downloadFile, value.subscriptionPlan),
+    description: value.description,
+    approvalStatus: from_candid_ApprovalStatus_n83(_uploadFile, _downloadFile, value.approvalStatus),
+    subscriptionStatus: from_candid_SubscriptionStatus_n84(_uploadFile, _downloadFile, value.subscriptionStatus),
+    paymentScreenshotBlobId: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.paymentScreenshotBlobId)),
+    address: value.address,
+    serviceRates: value.serviceRates,
+    upiId: value.upiId,
+    shopName: value.shopName,
+    category: value.category,
+    qrCodeBlobId: record_opt_to_undefined(from_candid_opt_n34(_uploadFile, _downloadFile, value.qrCodeBlobId)),
+    planType: from_candid_PlanType_n86(_uploadFile, _downloadFile, value.planType),
+    photos: value.photos
   };
 }
 function from_candid_record_n90(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    isGlobal: value.isGlobal,
-    content: value.content,
-    trigger: value.trigger,
-    createdBy: from_candid_ShortcutCreator_n91(_uploadFile, _downloadFile, value.createdBy),
-    category: from_candid_ShortcutCategory_n93(_uploadFile, _downloadFile, value.category)
+    action: from_candid_AuditAction_n91(_uploadFile, _downloadFile, value.action),
+    note: value.note,
+    timestamp: value.timestamp,
+    adminEmail: value.adminEmail,
+    amount: record_opt_to_undefined(from_candid_opt_n35(_uploadFile, _downloadFile, value.amount)),
+    targetUserId: value.targetUserId
   };
 }
-function from_candid_record_n97(_uploadFile, _downloadFile, value) {
+async function from_candid_record_n95(_uploadFile, _downloadFile, value) {
   return {
-    bio: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.bio)),
-    referralCode: value.referralCode,
-    username: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.username)),
-    displayName: value.displayName,
-    city: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.city)),
-    userId: value.userId,
-    createdAt: value.createdAt,
-    referralCount: value.referralCount,
-    ghostModeEnabled: value.ghostModeEnabled,
-    badge: from_candid_Badge_n98(_uploadFile, _downloadFile, value.badge),
-    studyModeEnabled: value.studyModeEnabled,
-    pointsBalance: value.pointsBalance,
-    profilePhotoUrl: record_opt_to_undefined(from_candid_opt_n29(_uploadFile, _downloadFile, value.profilePhotoUrl)),
-    autoReply: record_opt_to_undefined(from_candid_opt_n100(_uploadFile, _downloadFile, value.autoReply)),
-    studyModeSelectedChats: value.studyModeSelectedChats
+    email: value.email,
+    adminName: value.adminName,
+    upiId: value.upiId,
+    mobile: value.mobile,
+    qrCodeBlobId: await from_candid_ExternalBlob_n96(_uploadFile, _downloadFile, value.qrCodeBlobId)
   };
 }
 function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
@@ -46133,8 +47324,8 @@ function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n109(_uploadFile, _downloadFile, value) {
-  return "read" in value ? "read" : "sent" in value ? "sent" : "delivered" in value ? "delivered" : value;
+function from_candid_variant_n105(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "provider" in value ? "provider" : "customer" in value ? "customer" : value;
 }
 function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -46145,29 +47336,29 @@ function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
+function from_candid_variant_n110(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+}
 function from_candid_variant_n115(_uploadFile, _downloadFile, value) {
-  return "password" in value ? "password" : "none" in value ? "none" : "task" in value ? "task" : value;
+  return "cancelled" in value ? "cancelled" : "pending" in value ? "pending" : "sent" in value ? "sent" : value;
 }
-function from_candid_variant_n117(_uploadFile, _downloadFile, value) {
-  return "voiceText" in value ? "voiceText" : "youtubeLink" in value ? "youtubeLink" : "file" in value ? "file" : "text" in value ? "text" : "locked" in value ? "locked" : "scheduledMessage" in value ? "scheduledMessage" : "image" in value ? "image" : "reply" in value ? "reply" : "reaction" in value ? "reaction" : value;
-}
-function from_candid_variant_n128(_uploadFile, _downloadFile, value) {
-  return "vehicles" in value ? "vehicles" : "other" in value ? "other" : "jobs" in value ? "jobs" : "property" in value ? "property" : "mobile" in value ? "mobile" : "services" in value ? "services" : "electronics" in value ? "electronics" : value;
-}
-function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
+function from_candid_variant_n120(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? {
+    __kind__: "admin",
+    admin: value.admin
+  } : "user" in value ? {
+    __kind__: "user",
+    user: value.user
   } : value;
 }
-function from_candid_variant_n135(_uploadFile, _downloadFile, value) {
-  return "pending" in value ? "pending" : "reversed" in value ? "reversed" : "credited" in value ? "credited" : value;
+function from_candid_variant_n122(_uploadFile, _downloadFile, value) {
+  return "custom" in value ? "custom" : "greet" in value ? "greet" : "business" in value ? "business" : "formula" in value ? "formula" : value;
 }
-function from_candid_variant_n136(_uploadFile, _downloadFile, value) {
-  return "manualCredit" in value ? "manualCredit" : "referralBonus" in value ? "referralBonus" : "cpalead" in value ? "cpalead" : value;
+function from_candid_variant_n127(_uploadFile, _downloadFile, value) {
+  return "bronze" in value ? "bronze" : "gold" in value ? "gold" : "none" in value ? "none" : "diamond" in value ? "diamond" : "silver" in value ? "silver" : value;
+}
+function from_candid_variant_n137(_uploadFile, _downloadFile, value) {
+  return "read" in value ? "read" : "sent" in value ? "sent" : "delivered" in value ? "delivered" : value;
 }
 function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -46178,10 +47369,13 @@ function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n141(_uploadFile, _downloadFile, value) {
-  return "upi" in value ? "upi" : "stripe" in value ? "stripe" : value;
+function from_candid_variant_n143(_uploadFile, _downloadFile, value) {
+  return "password" in value ? "password" : "none" in value ? "none" : "task" in value ? "task" : value;
 }
 function from_candid_variant_n145(_uploadFile, _downloadFile, value) {
+  return "voiceText" in value ? "voiceText" : "youtubeLink" in value ? "youtubeLink" : "file" in value ? "file" : "text" in value ? "text" : "locked" in value ? "locked" : "scheduledMessage" in value ? "scheduledMessage" : "image" in value ? "image" : "reply" in value ? "reply" : "reaction" in value ? "reaction" : value;
+}
+function from_candid_variant_n15(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46190,32 +47384,8 @@ function from_candid_variant_n145(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n149(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n151(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n152(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
+function from_candid_variant_n156(_uploadFile, _downloadFile, value) {
+  return "vehicles" in value ? "vehicles" : "other" in value ? "other" : "jobs" in value ? "jobs" : "property" in value ? "property" : "mobile" in value ? "mobile" : "services" in value ? "services" : "electronics" in value ? "electronics" : value;
 }
 function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -46226,55 +47396,130 @@ function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n161(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n163(_uploadFile, _downloadFile, value) {
+  return "pending" in value ? "pending" : "reversed" in value ? "reversed" : "credited" in value ? "credited" : value;
+}
+function from_candid_variant_n164(_uploadFile, _downloadFile, value) {
+  return "manualCredit" in value ? "manualCredit" : "referralBonus" in value ? "referralBonus" : "cpalead" in value ? "cpalead" : value;
+}
+function from_candid_variant_n169(_uploadFile, _downloadFile, value) {
+  return "upi" in value ? "upi" : "stripe" in value ? "stripe" : value;
+}
+function from_candid_variant_n17(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: from_candid_User_n74(_uploadFile, _downloadFile, value.ok)
+    ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
   } : value;
 }
-function from_candid_variant_n162(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n173(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: from_candid_OfferUser_n32(_uploadFile, _downloadFile, value.ok)
+    ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
   } : value;
 }
-function from_candid_variant_n20(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n177(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n18(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n182(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "user" in value ? "user" : value;
+}
+function from_candid_variant_n183(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n19(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n20(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n193(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_User_n102(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n194(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_OfferUser_n49(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n195(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_TicketReply_n180(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n196(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_CryptoWithdrawal_n31(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
+  return "resolved" in value ? "resolved" : "open" in value ? "open" : "inProgress" in value ? "inProgress" : value;
+}
+function from_candid_variant_n26(_uploadFile, _downloadFile, value) {
+  return "coinInquiry" in value ? "coinInquiry" : "general" in value ? "general" : "withdrawalQuery" in value ? "withdrawalQuery" : "bugReport" in value ? "bugReport" : value;
+}
+function from_candid_variant_n28(_uploadFile, _downloadFile, value) {
+  return "low" in value ? "low" : "high" in value ? "high" : "medium" in value ? "medium" : value;
+}
+function from_candid_variant_n29(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n30(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n33(_uploadFile, _downloadFile, value) {
   return "pending" in value ? "pending" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : value;
 }
-function from_candid_variant_n22(_uploadFile, _downloadFile, value) {
-  return "annual" in value ? "annual" : "quarterly" in value ? "quarterly" : "monthly" in value ? "monthly" : value;
-}
-function from_candid_variant_n27(_uploadFile, _downloadFile, value) {
-  return "pending" in value ? "pending" : "completed" in value ? "completed" : "failed" in value ? "failed" : value;
-}
-function from_candid_variant_n30(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: from_candid_vec_n31(_uploadFile, _downloadFile, value.ok)
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n34(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: from_candid_vec_n35(_uploadFile, _downloadFile, value.ok)
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n38(_uploadFile, _downloadFile, value) {
-  return "pending" in value ? "pending" : "paid" in value ? "paid" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : value;
-}
-function from_candid_variant_n39(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n36(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46284,6 +47529,33 @@ function from_candid_variant_n39(_uploadFile, _downloadFile, value) {
   } : value;
 }
 function from_candid_variant_n41(_uploadFile, _downloadFile, value) {
+  return "annual" in value ? "annual" : "quarterly" in value ? "quarterly" : "monthly" in value ? "monthly" : value;
+}
+function from_candid_variant_n46(_uploadFile, _downloadFile, value) {
+  return "pending" in value ? "pending" : "completed" in value ? "completed" : "failed" in value ? "failed" : value;
+}
+function from_candid_variant_n47(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n48(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n51(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n52(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n55(_uploadFile, _downloadFile, value) {
+  return "pending" in value ? "pending" : "paid" in value ? "paid" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : value;
+}
+function from_candid_variant_n56(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -46292,137 +47564,176 @@ function from_candid_variant_n41(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n55(_uploadFile, _downloadFile, value) {
-  return "twelveMonths" in value ? "twelveMonths" : "threeMonths" in value ? "threeMonths" : "oneMonth" in value ? "oneMonth" : value;
-}
 function from_candid_variant_n58(_uploadFile, _downloadFile, value) {
-  return "active" in value ? "active" : "expired" in value ? "expired" : "pending" in value ? "pending" : "rejected" in value ? "rejected" : value;
-}
-function from_candid_variant_n60(_uploadFile, _downloadFile, value) {
-  return "pending" in value ? "pending" : "premium" in value ? "premium" : "free" in value ? "free" : value;
-}
-function from_candid_variant_n65(_uploadFile, _downloadFile, value) {
-  return "SubscriptionRevoke" in value ? "SubscriptionRevoke" : "WalletDeduct" in value ? "WalletDeduct" : "ProviderReject" in value ? "ProviderReject" : "SubscriptionAssign" in value ? "SubscriptionAssign" : "WalletAdd" in value ? "WalletAdd" : "ProviderApprove" in value ? "ProviderApprove" : "FeatureUnlock" in value ? "FeatureUnlock" : "FeatureLock" in value ? "FeatureLock" : value;
-}
-function from_candid_variant_n77(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? "admin" : "provider" in value ? "provider" : "customer" in value ? "customer" : value;
-}
-function from_candid_variant_n82(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
-}
-function from_candid_variant_n87(_uploadFile, _downloadFile, value) {
-  return "cancelled" in value ? "cancelled" : "pending" in value ? "pending" : "sent" in value ? "sent" : value;
-}
-function from_candid_variant_n92(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? {
-    __kind__: "admin",
-    admin: value.admin
-  } : "user" in value ? {
-    __kind__: "user",
-    user: value.user
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
   } : value;
 }
-function from_candid_variant_n94(_uploadFile, _downloadFile, value) {
-  return "custom" in value ? "custom" : "greet" in value ? "greet" : "business" in value ? "business" : "formula" in value ? "formula" : value;
+function from_candid_variant_n63(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_CryptoTransaction_n64(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
 }
-function from_candid_variant_n99(_uploadFile, _downloadFile, value) {
-  return "bronze" in value ? "bronze" : "gold" in value ? "gold" : "none" in value ? "none" : "diamond" in value ? "diamond" : "silver" in value ? "silver" : value;
+function from_candid_variant_n67(_uploadFile, _downloadFile, value) {
+  return "pending" in value ? "pending" : "completed" in value ? "completed" : "pendingApproval" in value ? "pendingApproval" : "approved" in value ? "approved" : "rejected" in value ? "rejected" : "failed" in value ? "failed" : value;
+}
+function from_candid_variant_n70(_uploadFile, _downloadFile, value) {
+  return "buy" in value ? "buy" : "sell" in value ? "sell" : "deposit" in value ? "deposit" : "withdrawal" in value ? "withdrawal" : "dailyReward" in value ? "dailyReward" : value;
+}
+function from_candid_variant_n71(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n74(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_SupportTicket_n21(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n82(_uploadFile, _downloadFile, value) {
+  return "twelveMonths" in value ? "twelveMonths" : "threeMonths" in value ? "threeMonths" : "oneMonth" in value ? "oneMonth" : value;
+}
+function from_candid_variant_n85(_uploadFile, _downloadFile, value) {
+  return "active" in value ? "active" : "expired" in value ? "expired" : "pending" in value ? "pending" : "rejected" in value ? "rejected" : value;
+}
+function from_candid_variant_n87(_uploadFile, _downloadFile, value) {
+  return "pending" in value ? "pending" : "premium" in value ? "premium" : "free" in value ? "free" : value;
+}
+function from_candid_variant_n92(_uploadFile, _downloadFile, value) {
+  return "SubscriptionRevoke" in value ? "SubscriptionRevoke" : "WalletDeduct" in value ? "WalletDeduct" : "ProviderReject" in value ? "ProviderReject" : "SubscriptionAssign" in value ? "SubscriptionAssign" : "WalletAdd" in value ? "WalletAdd" : "ProviderApprove" in value ? "ProviderApprove" : "FeatureUnlock" in value ? "FeatureUnlock" : "FeatureLock" in value ? "FeatureLock" : value;
+}
+function from_candid_variant_n97(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
 }
 function from_candid_vec_n101(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_VaultItem_n102(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_User_n102(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n105(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ChatMessage_n106(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n111(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ScheduledMessage_n112(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n120(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Order_n121(_uploadFile, _downloadFile, x4));
-}
-function from_candid_vec_n124(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_MarketListing_n125(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n116(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ChatShortcut_n117(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n129(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Conversation_n130(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_VaultItem_n130(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n132(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferTransaction_n133(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n133(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ChatMessage_n134(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n142(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_LocalNewsItem_n143(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n148(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_Order_n149(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n158(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_UserApprovalInfo_n159(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n152(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_MarketListing_n153(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n165(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_UserChatProfile_n96(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n157(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_Conversation_n158(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n17(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_UpiPaymentRequest_n18(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n160(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_OfferTransaction_n161(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n23(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_LockedMessagePayment_n24(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n170(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_LocalNewsItem_n171(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n31(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferUser_n32(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n179(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_TicketReply_n180(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n35(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_OfferWithdrawal_n36(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n185(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_CryptoTransaction_n64(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n190(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_UserApprovalInfo_n191(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n199(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_UserChatProfile_n124(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n20(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_SupportTicket_n21(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n30(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_CryptoWithdrawal_n31(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n37(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_UpiPaymentRequest_n38(_uploadFile, _downloadFile, x4));
+}
+function from_candid_vec_n42(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_LockedMessagePayment_n43(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n48(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_Story_n49(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_OfferUser_n49(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n51(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ProviderProfile_n52(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n52(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_OfferWithdrawal_n53(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n61(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_AuditLogEntry_n62(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n75(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_Story_n76(_uploadFile, _downloadFile, x4));
 }
-function from_candid_vec_n70(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_WalletTopupRequest_n71(_uploadFile, _downloadFile, x4));
-}
-function from_candid_vec_n73(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_User_n74(_uploadFile, _downloadFile, x4));
-}
-function from_candid_vec_n83(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ScheduledMessage_n84(_uploadFile, _downloadFile, x4));
+function from_candid_vec_n78(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_ProviderProfile_n79(_uploadFile, _downloadFile, x4));
 }
 function from_candid_vec_n88(_uploadFile, _downloadFile, value) {
-  return value.map((x4) => from_candid_ChatShortcut_n89(_uploadFile, _downloadFile, x4));
+  return value.map((x4) => from_candid_AuditLogEntry_n89(_uploadFile, _downloadFile, x4));
 }
-async function to_candid_AdminConfig_n176(_uploadFile, _downloadFile, value) {
-  return await to_candid_record_n177(_uploadFile, _downloadFile, value);
+function from_candid_vec_n98(_uploadFile, _downloadFile, value) {
+  return value.map((x4) => from_candid_WalletTopupRequest_n99(_uploadFile, _downloadFile, x4));
 }
-function to_candid_ApprovalStatus_n171(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n172(_uploadFile, _downloadFile, value);
+async function to_candid_AdminConfig_n210(_uploadFile, _downloadFile, value) {
+  return await to_candid_record_n211(_uploadFile, _downloadFile, value);
 }
-async function to_candid_ExternalBlob_n178(_uploadFile, _downloadFile, value) {
+function to_candid_ApprovalStatus_n205(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n206(_uploadFile, _downloadFile, value);
+}
+async function to_candid_ExternalBlob_n212(_uploadFile, _downloadFile, value) {
   return await _uploadFile(value);
 }
-function to_candid_LockType_n166(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n167(_uploadFile, _downloadFile, value);
+function to_candid_LockType_n200(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n201(_uploadFile, _downloadFile, value);
 }
-function to_candid_MarketCategory_n46(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n47(_uploadFile, _downloadFile, value);
+function to_candid_MarketCategory_n72(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n73(_uploadFile, _downloadFile, value);
 }
-function to_candid_MessageType_n169(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n170(_uploadFile, _downloadFile, value);
+function to_candid_MessageType_n203(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n204(_uploadFile, _downloadFile, value);
 }
-function to_candid_PlanType_n173(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n174(_uploadFile, _downloadFile, value);
+function to_candid_PlanType_n207(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n208(_uploadFile, _downloadFile, value);
 }
 function to_candid_PremiumPlan_n8(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function to_candid_SubscriptionPlan_n42(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n43(_uploadFile, _downloadFile, value);
+function to_candid_SubscriptionPlan_n59(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n60(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n163(_uploadFile, _downloadFile, value) {
-  return to_candid_record_n164(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n197(_uploadFile, _downloadFile, value) {
+  return to_candid_record_n198(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole__1_n44(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n45(_uploadFile, _downloadFile, value);
+function to_candid_UserRole__1_n61(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n62(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole_n155(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n156(_uploadFile, _downloadFile, value);
+function to_candid_UserRole_n187(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n188(_uploadFile, _downloadFile, value);
 }
 function to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _downloadFile, value) {
   return to_candid_record_n3(_uploadFile, _downloadFile, value);
@@ -46430,42 +47741,42 @@ function to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _dow
 function to_candid_opt_n1(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(to_candid__ImmutableObjectStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
 }
-function to_candid_opt_n104(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(value);
-}
 function to_candid_opt_n12(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n123(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n46(_uploadFile, _downloadFile, value));
-}
-function to_candid_opt_n15(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n13(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n157(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n132(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n168(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n151(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(to_candid_MarketCategory_n72(_uploadFile, _downloadFile, value));
+}
+function to_candid_opt_n189(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n179(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n202(_uploadFile, _downloadFile, value) {
   return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n164(_uploadFile, _downloadFile, value) {
+function to_candid_opt_n213(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_record_n198(_uploadFile, _downloadFile, value) {
   return {
     userId: value.userId,
     name: value.name,
-    role: to_candid_UserRole_n155(_uploadFile, _downloadFile, value.role),
+    role: to_candid_UserRole_n187(_uploadFile, _downloadFile, value.role),
     mobile: value.mobile
   };
 }
-async function to_candid_record_n177(_uploadFile, _downloadFile, value) {
+async function to_candid_record_n211(_uploadFile, _downloadFile, value) {
   return {
     email: value.email,
     adminName: value.adminName,
     upiId: value.upiId,
     mobile: value.mobile,
-    qrCodeBlobId: await to_candid_ExternalBlob_n178(_uploadFile, _downloadFile, value.qrCodeBlobId)
+    qrCodeBlobId: await to_candid_ExternalBlob_n212(_uploadFile, _downloadFile, value.qrCodeBlobId)
   };
 }
 function to_candid_record_n3(_uploadFile, _downloadFile, value) {
@@ -46473,7 +47784,7 @@ function to_candid_record_n3(_uploadFile, _downloadFile, value) {
     proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
   };
 }
-function to_candid_variant_n156(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n188(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "provider" ? {
@@ -46482,7 +47793,7 @@ function to_candid_variant_n156(_uploadFile, _downloadFile, value) {
     customer: null
   } : value;
 }
-function to_candid_variant_n167(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n201(_uploadFile, _downloadFile, value) {
   return value == "password" ? {
     password: null
   } : value == "none" ? {
@@ -46491,7 +47802,7 @@ function to_candid_variant_n167(_uploadFile, _downloadFile, value) {
     task: null
   } : value;
 }
-function to_candid_variant_n170(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n204(_uploadFile, _downloadFile, value) {
   return value == "voiceText" ? {
     voiceText: null
   } : value == "youtubeLink" ? {
@@ -46512,7 +47823,7 @@ function to_candid_variant_n170(_uploadFile, _downloadFile, value) {
     reaction: null
   } : value;
 }
-function to_candid_variant_n172(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n206(_uploadFile, _downloadFile, value) {
   return value == "pending" ? {
     pending: null
   } : value == "approved" ? {
@@ -46521,7 +47832,7 @@ function to_candid_variant_n172(_uploadFile, _downloadFile, value) {
     rejected: null
   } : value;
 }
-function to_candid_variant_n174(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n208(_uploadFile, _downloadFile, value) {
   return value == "pending" ? {
     pending: null
   } : value == "premium" ? {
@@ -46530,14 +47841,14 @@ function to_candid_variant_n174(_uploadFile, _downloadFile, value) {
     free: null
   } : value;
 }
-function to_candid_variant_n175(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n209(_uploadFile, _downloadFile, value) {
   return value == "last50" ? {
     last50: null
   } : value == "last24h" ? {
     last24h: null
   } : value;
 }
-function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n57(_uploadFile, _downloadFile, value) {
   return value == "paid" ? {
     paid: null
   } : value == "approved" ? {
@@ -46546,7 +47857,7 @@ function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
     rejected: null
   } : value;
 }
-function to_candid_variant_n43(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n60(_uploadFile, _downloadFile, value) {
   return value == "twelveMonths" ? {
     twelveMonths: null
   } : value == "threeMonths" ? {
@@ -46555,7 +47866,7 @@ function to_candid_variant_n43(_uploadFile, _downloadFile, value) {
     oneMonth: null
   } : value;
 }
-function to_candid_variant_n45(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n62(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -46564,7 +47875,7 @@ function to_candid_variant_n45(_uploadFile, _downloadFile, value) {
     guest: null
   } : value;
 }
-function to_candid_variant_n47(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n73(_uploadFile, _downloadFile, value) {
   return value == "vehicles" ? {
     vehicles: null
   } : value == "other" ? {
@@ -47394,9 +48705,9 @@ function useUpdateAppSettings() {
       }
       const merged = { ...current, ...settings };
       const json = JSON.stringify(merged);
-      const adminToken = getAdminToken();
+      const adminToken2 = getAdminToken();
       try {
-        const result = await actor.updateAppSettings(adminToken, json);
+        const result = await actor.updateAppSettings(adminToken2, json);
         if (result && typeof result === "object" && "__kind__" in result && result.__kind__ === "err") {
           const errMsg = result.err ?? "Settings save failed";
           const lower = errMsg.toLowerCase();
@@ -49943,6 +51254,1859 @@ function AboutPage() {
       ] })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Footer, {})
+  ] });
+}
+function asActor$2(actor) {
+  return actor;
+}
+function adminToken() {
+  const t = getAdminToken();
+  return t ? [t] : [];
+}
+function optText(v2) {
+  return v2 ? [v2] : [];
+}
+async function unwrapResult(promise) {
+  const res = await promise;
+  if (res && typeof res === "object" && "ok" in res)
+    return res.ok;
+  if (res && typeof res === "object" && "err" in res)
+    throw new Error(String(res.err));
+  return res;
+}
+function useCryptoConfig() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["cryptoConfig"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await unwrapResult(
+          asActor$2(actor).getCryptoConfigPublic()
+        );
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 3e4
+  });
+}
+function useListedCoins() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["listedCoins"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await asActor$2(actor).getListedCoins();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1e4
+  });
+}
+function useAllCoins() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["allCoins"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await asActor$2(actor).getAllCoins(adminToken());
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1e4
+  });
+}
+function useAddCoin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      symbol,
+      coinGeckoId,
+      logoUrl
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).addCoin(
+          adminToken(),
+          name,
+          symbol,
+          coinGeckoId,
+          logoUrl
+        )
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allCoins"] });
+      qc.invalidateQueries({ queryKey: ["listedCoins"] });
+    },
+    onError: (e) => ue.error(`Coin add nahi hua: ${e.message}`)
+  });
+}
+function useUpdateCoin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id: id2, isListed }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).updateCoin(adminToken(), id2, isListed)
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allCoins"] });
+      qc.invalidateQueries({ queryKey: ["listedCoins"] });
+    },
+    onError: (e) => ue.error(`Coin update nahi hua: ${e.message}`)
+  });
+}
+function useDeleteCoin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id2) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor$2(actor).deleteCoin(adminToken(), id2));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allCoins"] });
+      qc.invalidateQueries({ queryKey: ["listedCoins"] });
+    },
+    onError: (e) => ue.error(`Coin delete nahi hua: ${e.message}`)
+  });
+}
+function useUserCryptoWallet(userId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["cryptoWallet", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return null;
+      try {
+        return await unwrapResult(
+          asActor$2(actor).getUserCryptoWallet(userId)
+        );
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 5e3,
+    refetchInterval: 15e3
+  });
+}
+function useSetMpin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, mpin }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor$2(actor).setMpin(userId, mpin));
+    },
+    onSuccess: (_d2, v2) => qc.invalidateQueries({ queryKey: ["cryptoWallet", v2.userId] }),
+    onError: (e) => ue.error(`MPIN set nahi hua: ${e.message}`)
+  });
+}
+function useAdminResetMpin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor$2(actor).adminResetMpin(adminToken(), userId));
+    },
+    onSuccess: (_d2, userId) => qc.invalidateQueries({ queryKey: ["cryptoWallet", userId] }),
+    onError: (e) => ue.error(`MPIN reset nahi hua: ${e.message}`)
+  });
+}
+function useRequestDeposit() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      amount
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor$2(actor).requestDeposit(userId, amount));
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["cryptoWallet", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["depositRequests", v2.userId] });
+    },
+    onError: (e) => ue.error(`Deposit request fail: ${e.message}`)
+  });
+}
+function useBuyCoin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      coinId,
+      amountInFunds,
+      currentPrice,
+      mpin
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).buyCoin(
+          userId,
+          coinId,
+          amountInFunds,
+          currentPrice,
+          mpin
+        )
+      );
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["cryptoWallet", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["portfolio", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["cryptoTxns", v2.userId] });
+    },
+    onError: (e) => ue.error(`Buy fail: ${e.message}`)
+  });
+}
+function useSellCoin() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      coinId,
+      quantity,
+      currentPrice,
+      mpin
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).sellCoin(userId, coinId, quantity, currentPrice, mpin)
+      );
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["cryptoWallet", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["portfolio", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["cryptoTxns", v2.userId] });
+    },
+    onError: (e) => ue.error(`Sell fail: ${e.message}`)
+  });
+}
+function useUserPortfolio(userId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["portfolio", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return await asActor$2(actor).getUserPortfolio(
+          userId
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 5e3,
+    refetchInterval: 3e4
+  });
+}
+function useUserCryptoTransactions(userId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["cryptoTxns", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return await asActor$2(actor).getUserCryptoTransactions(
+          userId
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 1e4
+  });
+}
+function useRequestCryptoWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      userEmail,
+      amount,
+      upiId,
+      mpin
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).requestCryptoWithdrawal(
+          userId,
+          userEmail,
+          amount,
+          upiId,
+          mpin
+        )
+      );
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["cryptoWallet", v2.userId] });
+      qc.invalidateQueries({ queryKey: ["userWithdrawals", v2.userId] });
+    },
+    onError: (e) => ue.error(`Withdrawal request fail: ${e.message}`)
+  });
+}
+function useAdminApproveCryptoWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      withdrawalId,
+      adminNote
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).adminApproveCryptoWithdrawal(
+          adminToken(),
+          withdrawalId,
+          optText(adminNote)
+        )
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["adminWithdrawals"] }),
+    onError: (e) => ue.error(`Withdrawal approve nahi hua: ${e.message}`)
+  });
+}
+function useAdminRejectCryptoWithdrawal() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      withdrawalId,
+      adminNote
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).adminRejectCryptoWithdrawal(
+          adminToken(),
+          withdrawalId,
+          optText(adminNote)
+        )
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["adminWithdrawals"] }),
+    onError: (e) => ue.error(`Withdrawal reject nahi hua: ${e.message}`)
+  });
+}
+function useUserCryptoWithdrawals(userId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["userWithdrawals", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return await asActor$2(actor).getUserCryptoWithdrawals(
+          userId
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 1e4
+  });
+}
+function useAdminGetAllWithdrawals() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["adminWithdrawals"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult(
+          asActor$2(actor).adminGetAllWithdrawals(adminToken())
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1e4
+  });
+}
+function useClaimDailyReward() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor$2(actor).claimDailyReward(userId));
+    },
+    onSuccess: (_d2, userId) => {
+      qc.invalidateQueries({ queryKey: ["cryptoWallet", userId] });
+      ue.success("Daily reward claim ho gaya!");
+    },
+    onError: (e) => ue.error(`Reward claim nahi hua: ${e.message}`)
+  });
+}
+function useFreezeCryptoUser() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      isFrozen,
+      reason
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).freezeCryptoUser(adminToken(), userId, isFrozen, reason)
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allCryptoUsers"] }),
+    onError: (e) => ue.error(`User freeze nahi hua: ${e.message}`)
+  });
+}
+function useBlockCryptoUser() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      isBlocked,
+      reason
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).blockCryptoUser(adminToken(), userId, isBlocked, reason)
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allCryptoUsers"] }),
+    onError: (e) => ue.error(`User block nahi hua: ${e.message}`)
+  });
+}
+function useAdminGetAllCryptoUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["allCryptoUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult(
+          asActor$2(actor).adminGetAllCryptoUsers(adminToken())
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 15e3
+  });
+}
+function useAdminGetCryptoStats() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["cryptoStats"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await unwrapResult(
+          asActor$2(actor).adminGetCryptoStats(adminToken())
+        );
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 15e3
+  });
+}
+function useCreateSupportTicket() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      userEmail,
+      subject,
+      description,
+      priority,
+      category
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).createSupportTicket(
+          userId,
+          userEmail,
+          subject,
+          description,
+          priority,
+          category
+        )
+      );
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["userTickets", v2.userId] });
+      ue.success("Ticket submit ho gaya!");
+    },
+    onError: (e) => ue.error(`Ticket create nahi hua: ${e.message}`)
+  });
+}
+function useUserTickets(userId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["userTickets", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return await asActor$2(actor).getUserTickets(userId);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 1e4
+  });
+}
+function useTicketReplies(ticketId) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["ticketReplies", ticketId],
+    queryFn: async () => {
+      if (!actor || !ticketId) return [];
+      try {
+        return await asActor$2(actor).getTicketReplies(
+          ticketId
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!ticketId,
+    staleTime: 5e3,
+    refetchInterval: 1e4
+  });
+}
+function useReplyToTicket() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      ticketId,
+      message,
+      isAdmin
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      const token = isAdmin ? adminToken() : [];
+      return unwrapResult(
+        asActor$2(actor).replyToTicket(userId, ticketId, message, isAdmin, token)
+      );
+    },
+    onSuccess: (_d2, v2) => {
+      qc.invalidateQueries({ queryKey: ["ticketReplies", v2.ticketId] });
+      qc.invalidateQueries({ queryKey: ["userTickets", v2.userId] });
+    },
+    onError: (e) => ue.error(`Reply nahi gayi: ${e.message}`)
+  });
+}
+function useUpdateTicketStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      ticketId,
+      status
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).updateTicketStatus(adminToken(), ticketId, status)
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["adminTickets"] }),
+    onError: (e) => ue.error(`Status update nahi hua: ${e.message}`)
+  });
+}
+function useAdminGetAllTickets() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["adminTickets"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult(
+          asActor$2(actor).adminGetAllTickets(adminToken())
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1e4
+  });
+}
+function useUpdateCryptoConfig() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (config) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor$2(actor).updateCryptoConfig(adminToken(), JSON.stringify(config))
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cryptoConfig"] }),
+    onError: (e) => ue.error(`Config update nahi hua: ${e.message}`)
+  });
+}
+async function fetchCoinGeckoPrices(coinGeckoIds) {
+  if (!coinGeckoIds.length) return {};
+  try {
+    const ids = coinGeckoIds.join(",");
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+    const res = await fetch(url);
+    if (!res.ok) return {};
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+function useLiveCoinPrices(coinGeckoIds) {
+  return useQuery({
+    queryKey: ["coin-prices", coinGeckoIds],
+    queryFn: () => fetchCoinGeckoPrices(coinGeckoIds),
+    enabled: coinGeckoIds.length > 0,
+    refetchInterval: 6e4,
+    staleTime: 55e3
+  });
+}
+function Toast({ msg, ok }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: `mt-3 rounded-lg px-4 py-2.5 text-sm font-medium ${ok ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"}`,
+      children: [
+        ok ? "✓ " : "✗ ",
+        msg
+      ]
+    }
+  );
+}
+function SectionHeader({
+  icon,
+  title,
+  open,
+  toggle
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "button",
+    {
+      type: "button",
+      onClick: toggle,
+      className: "w-full flex items-center justify-between px-4 py-3 bg-emerald-50 hover:bg-emerald-100 transition-colors rounded-lg border border-emerald-200 text-left",
+      "data-ocid": "crypto_admin.section_toggle",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2.5 font-semibold text-emerald-800", children: [
+          icon,
+          " ",
+          title
+        ] }),
+        open ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-4 h-4 text-emerald-600" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-4 h-4 text-emerald-600" })
+      ]
+    }
+  );
+}
+function StatusBadge$3({ status }) {
+  const map = {
+    active: "bg-emerald-100 text-emerald-800",
+    frozen: "bg-yellow-100 text-yellow-800",
+    blocked: "bg-red-100 text-red-800",
+    pending: "bg-blue-100 text-blue-800",
+    approved: "bg-emerald-100 text-emerald-800",
+    rejected: "bg-red-100 text-red-800",
+    open: "bg-blue-100 text-blue-800",
+    in_progress: "bg-yellow-100 text-yellow-800",
+    resolved: "bg-emerald-100 text-emerald-800",
+    low: "bg-muted text-muted-foreground",
+    medium: "bg-yellow-100 text-yellow-800",
+    high: "bg-red-100 text-red-800"
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "span",
+    {
+      className: `inline-block px-2 py-0.5 rounded text-xs font-semibold ${map[status] ?? "bg-muted text-foreground"}`,
+      children: status.replace("_", " ")
+    }
+  );
+}
+function fmt$1(n) {
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n);
+}
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1e3);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(ts).toLocaleDateString("en-IN");
+}
+function ModuleSettings() {
+  const { data: cfg, isLoading } = useCryptoConfig();
+  const updateMut = useUpdateCryptoConfig();
+  const [form, setForm] = reactExports.useState(null);
+  const [toast, setToast] = reactExports.useState(null);
+  const current = form ?? cfg ?? null;
+  function set(k2, v2) {
+    setForm((prev) => ({ ...prev ?? cfg, [k2]: v2 }));
+  }
+  async function save() {
+    if (!current) return;
+    try {
+      await updateMut.mutateAsync(current);
+      setToast({ msg: "Digital Invest settings updated!", ok: true });
+      setForm(null);
+    } catch (e) {
+      setToast({ msg: e.message ?? "Save fail hua", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  if (isLoading)
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "py-6 text-center text-muted-foreground text-sm", children: "Loading settings..." });
+  if (!current) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium text-foreground", children: "Digital Invest Module" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Users ke liye module ON/OFF" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => set("isEnabled", !current.isEnabled),
+          className: `relative inline-flex h-6 w-11 rounded-full transition-colors ${current.isEnabled ? "bg-emerald-600" : "bg-muted"}`,
+          "data-ocid": "crypto_admin.module_toggle",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: `absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${current.isEnabled ? "translate-x-5" : ""}`
+            }
+          )
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("hr", { className: "border-border" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "buy-fee",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "Buy Fee (%)"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "buy-fee",
+            type: "number",
+            step: "0.1",
+            min: "0",
+            max: "10",
+            value: current.buyFeePercent,
+            onChange: (e) => set("buyFeePercent", Number.parseFloat(e.target.value) || 0),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.buy_fee_input"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "sell-fee",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "Sell Fee (%)"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "sell-fee",
+            type: "number",
+            step: "0.1",
+            min: "0",
+            max: "10",
+            value: current.sellFeePercent,
+            onChange: (e) => set("sellFeePercent", Number.parseFloat(e.target.value) || 0),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.sell_fee_input"
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "min-withdrawal",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "Min Withdrawal ₹"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "min-withdrawal",
+            type: "number",
+            min: "1",
+            value: current.minWithdrawal,
+            onChange: (e) => set("minWithdrawal", Number.parseInt(e.target.value) || 0),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.min_withdrawal_input"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "max-withdrawal",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "Max Withdrawal ₹"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "max-withdrawal",
+            type: "number",
+            min: "1",
+            value: current.maxWithdrawal,
+            onChange: (e) => set("maxWithdrawal", Number.parseInt(e.target.value) || 0),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.max_withdrawal_input"
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium text-foreground text-sm", children: "Daily Reward" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Daily check-in reward ON/OFF" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => set("isDailyRewardEnabled", !current.isDailyRewardEnabled),
+          className: `relative inline-flex h-6 w-11 rounded-full transition-colors ${current.isDailyRewardEnabled ? "bg-emerald-600" : "bg-muted"}`,
+          "data-ocid": "crypto_admin.daily_reward_toggle",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: `absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${current.isDailyRewardEnabled ? "translate-x-5" : ""}`
+            }
+          )
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "daily-reward-amt",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "Daily Reward Amount ₹"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "daily-reward-amt",
+            type: "number",
+            min: "0",
+            value: current.dailyRewardAmount,
+            onChange: (e) => set("dailyRewardAmount", Number.parseInt(e.target.value) || 0),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.daily_reward_input"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "label",
+          {
+            htmlFor: "risk-threshold",
+            className: "block text-xs font-medium text-muted-foreground mb-1",
+            children: "High Risk Threshold (%)"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: "risk-threshold",
+            type: "number",
+            min: "1",
+            max: "100",
+            value: current.highRiskThreshold,
+            onChange: (e) => set("highRiskThreshold", Number.parseInt(e.target.value) || 20),
+            className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+            "data-ocid": "crypto_admin.risk_threshold_input"
+          }
+        )
+      ] })
+    ] }),
+    toast && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { msg: toast.msg, ok: toast.ok }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        type: "button",
+        onClick: save,
+        disabled: updateMut.isPending,
+        className: "w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors",
+        "data-ocid": "crypto_admin.save_settings_button",
+        children: updateMut.isPending ? "Saving..." : "Save Settings"
+      }
+    )
+  ] });
+}
+function CoinManagement() {
+  const { data: coins = [], isLoading } = useAllCoins();
+  const addCoin = useAddCoin();
+  const toggleCoin = useUpdateCoin();
+  const deleteCoin = useDeleteCoin();
+  const [form, setForm] = reactExports.useState({
+    name: "",
+    symbol: "",
+    coinGeckoId: "",
+    coingeckoId: "",
+    logoUrl: ""
+  });
+  const [toast, setToast] = reactExports.useState(null);
+  async function handleAdd(e) {
+    e.preventDefault();
+    if (!form.name || !form.symbol || !form.coinGeckoId) {
+      setToast({
+        msg: "Name, Symbol aur CoinGecko ID required hain",
+        ok: false
+      });
+      setTimeout(() => setToast(null), 3e3);
+      return;
+    }
+    try {
+      await addCoin.mutateAsync({
+        ...form,
+        coinGeckoId: form.coinGeckoId || form.coingeckoId
+      });
+      setForm({
+        name: "",
+        symbol: "",
+        coinGeckoId: "",
+        coingeckoId: "",
+        logoUrl: ""
+      });
+      setToast({ msg: "Coin added!", ok: true });
+    } catch (e2) {
+      setToast({ msg: e2.message ?? "Add fail hua", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "form",
+      {
+        onSubmit: handleAdd,
+        className: "space-y-3 bg-muted/30 rounded-xl p-4 border border-border",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-semibold text-foreground", children: "Add New Coin" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "label",
+                {
+                  htmlFor: "coin-name",
+                  className: "block text-xs font-medium text-muted-foreground mb-1",
+                  children: "Name *"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  id: "coin-name",
+                  type: "text",
+                  placeholder: "Bitcoin",
+                  value: form.name,
+                  onChange: (e) => setForm((f) => ({ ...f, name: e.target.value })),
+                  className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                  "data-ocid": "crypto_admin.coin_name_input",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "label",
+                {
+                  htmlFor: "coin-symbol",
+                  className: "block text-xs font-medium text-muted-foreground mb-1",
+                  children: "Symbol *"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  id: "coin-symbol",
+                  type: "text",
+                  placeholder: "BTC",
+                  value: form.symbol,
+                  onChange: (e) => setForm((f) => ({ ...f, symbol: e.target.value.toUpperCase() })),
+                  className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                  "data-ocid": "crypto_admin.coin_symbol_input",
+                  required: true
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "label",
+              {
+                htmlFor: "coin-coingecko",
+                className: "block text-xs font-medium text-muted-foreground mb-1",
+                children: [
+                  "CoinGecko ID *",
+                  " ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-700", children: "(coingecko.com/en/coins पर find करें)" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "coin-coingecko",
+                type: "text",
+                placeholder: "bitcoin",
+                value: form.coingeckoId,
+                onChange: (e) => setForm((f) => ({
+                  ...f,
+                  coingeckoId: e.target.value.toLowerCase()
+                })),
+                className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                "data-ocid": "crypto_admin.coin_coingecko_input",
+                required: true
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "coin-logo",
+                className: "block text-xs font-medium text-muted-foreground mb-1",
+                children: "Logo URL (Cloudinary)"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "coin-logo",
+                type: "url",
+                placeholder: "https://res.cloudinary.com/...",
+                value: form.logoUrl,
+                onChange: (e) => setForm((f) => ({ ...f, logoUrl: e.target.value })),
+                className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                "data-ocid": "crypto_admin.coin_logo_input"
+              }
+            )
+          ] }),
+          toast && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { msg: toast.msg, ok: toast.ok }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "submit",
+              disabled: addCoin.isPending,
+              className: "w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-2 rounded-lg text-sm transition-colors",
+              "data-ocid": "crypto_admin.add_coin_button",
+              children: addCoin.isPending ? "Adding..." : "+ Add Coin"
+            }
+          )
+        ]
+      }
+    ),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground text-sm", children: "Loading coins..." }) : coins.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "text-center py-6 text-muted-foreground text-sm",
+        "data-ocid": "crypto_admin.coins_empty_state",
+        children: "Koi coin listed nahi hai."
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border bg-muted/40", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-3 py-2 font-medium text-muted-foreground", children: "Coin" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-3 py-2 font-medium text-muted-foreground", children: "CoinGecko ID" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-center px-3 py-2 font-medium text-muted-foreground", children: "Listed" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-3 py-2 font-medium text-muted-foreground", children: "Actions" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: coins.map((coin, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "tr",
+        {
+          className: "border-b border-border hover:bg-muted/20",
+          "data-ocid": `crypto_admin.coin_row.${i + 1}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+              coin.logoUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "img",
+                {
+                  src: coin.logoUrl,
+                  alt: coin.symbol,
+                  className: "w-6 h-6 rounded-full object-cover"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium text-foreground", children: coin.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: coin.symbol })
+              ] })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-muted-foreground", children: coin.coingeckoId }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => toggleCoin.mutate({
+                  id: coin.id,
+                  isListed: !coin.isListed
+                }),
+                className: `relative inline-flex h-5 w-9 rounded-full transition-colors ${coin.isListed ? "bg-emerald-600" : "bg-muted"}`,
+                "data-ocid": `crypto_admin.coin_listed_toggle.${i + 1}`,
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "span",
+                  {
+                    className: `absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${coin.isListed ? "translate-x-4" : ""}`
+                  }
+                )
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  if (confirm(`"${coin.name}" delete karein?`))
+                    deleteCoin.mutate(coin.id);
+                },
+                className: "text-red-600 hover:text-red-700 p-1 rounded",
+                "data-ocid": `crypto_admin.coin_delete_button.${i + 1}`,
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "w-4 h-4" })
+              }
+            ) })
+          ]
+        },
+        coin.id
+      )) })
+    ] }) })
+  ] });
+}
+function WithdrawalApprovals() {
+  const {
+    data: withdrawals = [],
+    isLoading,
+    refetch
+  } = useAdminGetAllWithdrawals();
+  const approveMut = useAdminApproveCryptoWithdrawal();
+  const rejectMut = useAdminRejectCryptoWithdrawal();
+  const [activeTab, setActiveTab] = reactExports.useState("pending");
+  const [rejectModal, setRejectModal] = reactExports.useState(null);
+  const [rejectNote, setRejectNote] = reactExports.useState("");
+  const [approveNote, setApproveNote] = reactExports.useState({});
+  const [toast, setToast] = reactExports.useState(null);
+  const shown = activeTab === "pending" ? withdrawals.filter((w2) => w2.status === "pending") : withdrawals;
+  async function handleApprove(w2) {
+    try {
+      await approveMut.mutateAsync({
+        withdrawalId: w2.id,
+        adminNote: approveNote[w2.id] ?? ""
+      });
+      setToast({ msg: "Withdrawal approved!", ok: true });
+    } catch (e) {
+      setToast({ msg: e.message ?? "Approve fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  async function handleReject() {
+    if (!rejectModal) return;
+    try {
+      await rejectMut.mutateAsync({
+        withdrawalId: rejectModal.id,
+        adminNote: rejectNote
+      });
+      setRejectModal(null);
+      setRejectNote("");
+      setToast({ msg: "Withdrawal rejected.", ok: true });
+    } catch (e) {
+      setToast({ msg: e.message ?? "Reject fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+      ["pending", "all"].map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setActiveTab(t),
+          className: `px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${activeTab === t ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`,
+          "data-ocid": `crypto_admin.withdrawals_${t}_tab`,
+          children: t === "pending" ? "Pending" : "All Withdrawals"
+        },
+        t
+      )),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => refetch(),
+          className: "ml-auto p-1.5 rounded-lg hover:bg-muted",
+          "data-ocid": "crypto_admin.withdrawals_refresh",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-4 h-4 text-muted-foreground" })
+        }
+      )
+    ] }),
+    toast && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { msg: toast.msg, ok: toast.ok }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground text-sm", children: "Loading..." }) : shown.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "text-center py-6 text-muted-foreground text-sm",
+        "data-ocid": "crypto_admin.withdrawals_empty_state",
+        children: activeTab === "pending" ? "Koi pending withdrawal nahi hai." : "Koi withdrawal nahi mili."
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: shown.map((w2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "border border-border rounded-xl p-4 space-y-3",
+        "data-ocid": `crypto_admin.withdrawal_item.${i + 1}`,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm font-medium text-foreground", children: [
+                w2.userId.slice(0, 16),
+                "..."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                "UPI: ",
+                w2.upiId
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: timeAgo(Number(w2.createdAt) / 1e6) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-semibold text-emerald-700", children: [
+                "₹",
+                fmt$1(w2.amount)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$3, { status: w2.status })
+            ] })
+          ] }),
+          w2.status === "pending" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "text",
+                placeholder: "Admin note (optional)",
+                value: approveNote[w2.id] ?? "",
+                onChange: (e) => setApproveNote((p2) => ({ ...p2, [w2.id]: e.target.value })),
+                className: "w-full border border-input rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                "data-ocid": `crypto_admin.withdrawal_note_input.${i + 1}`
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => handleApprove(w2),
+                  disabled: approveMut.isPending,
+                  className: "flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                  "data-ocid": `crypto_admin.withdrawal_approve_button.${i + 1}`,
+                  children: approveMut.isPending ? "..." : "Approve"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setRejectModal({ id: w2.id }),
+                  className: "flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-1.5 rounded-lg text-xs font-semibold border border-red-200 transition-colors",
+                  "data-ocid": `crypto_admin.withdrawal_reject_button.${i + 1}`,
+                  children: "Reject"
+                }
+              )
+            ] })
+          ] }),
+          w2.adminNote && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground italic", children: [
+            "Note: ",
+            w2.adminNote
+          ] })
+        ]
+      },
+      w2.id
+    )) }),
+    rejectModal && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4",
+        "data-ocid": "crypto_admin.reject_dialog",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-foreground", children: "Withdrawal Reject Karein" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => setRejectModal(null),
+                className: "p-1 rounded hover:bg-muted",
+                "data-ocid": "crypto_admin.reject_close_button",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "w-4 h-4" })
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                htmlFor: "reject-reason",
+                className: "block text-xs font-medium text-muted-foreground mb-1",
+                children: "Rejection Reason *"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "textarea",
+              {
+                id: "reject-reason",
+                rows: 3,
+                placeholder: "Reason for rejection...",
+                value: rejectNote,
+                onChange: (e) => setRejectNote(e.target.value),
+                className: "w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none",
+                "data-ocid": "crypto_admin.reject_reason_textarea"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => setRejectModal(null),
+                className: "flex-1 border border-border py-2 rounded-lg text-sm font-medium hover:bg-muted",
+                "data-ocid": "crypto_admin.reject_cancel_button",
+                children: "Cancel"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: handleReject,
+                disabled: !rejectNote.trim() || rejectMut.isPending,
+                className: "flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white py-2 rounded-lg text-sm font-semibold transition-colors",
+                "data-ocid": "crypto_admin.reject_confirm_button",
+                children: rejectMut.isPending ? "Rejecting..." : "Confirm Reject"
+              }
+            )
+          ] })
+        ] })
+      }
+    )
+  ] });
+}
+function UserManagement$1() {
+  const { data: users = [], isLoading, refetch } = useAdminGetAllCryptoUsers();
+  const freezeMut = useFreezeCryptoUser();
+  const blockMut = useBlockCryptoUser();
+  const resetMpinMut = useAdminResetMpin();
+  const [search, setSearch] = reactExports.useState("");
+  const [toast, setToast] = reactExports.useState(null);
+  const filtered = users.filter(
+    (u2) => !search || u2.userId.toLowerCase().includes(search.toLowerCase())
+  );
+  async function act(fn, msg) {
+    try {
+      await fn();
+      setToast({ msg, ok: true });
+    } catch (e) {
+      setToast({ msg: e.message ?? "Error", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "search",
+          placeholder: "User ID se search karein...",
+          value: search,
+          onChange: (e) => setSearch(e.target.value),
+          className: "flex-1 border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+          "data-ocid": "crypto_admin.user_search_input"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => refetch(),
+          className: "p-2 rounded-lg hover:bg-muted border border-border",
+          "data-ocid": "crypto_admin.users_refresh",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-4 h-4 text-muted-foreground" })
+        }
+      )
+    ] }),
+    toast && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { msg: toast.msg, ok: toast.ok }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground text-sm", children: "Loading users..." }) : filtered.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "text-center py-6 text-muted-foreground text-sm",
+        "data-ocid": "crypto_admin.users_empty_state",
+        children: "Koi user nahi mila."
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border bg-muted/40", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-3 py-2 font-medium text-muted-foreground", children: "User ID" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-3 py-2 font-medium text-muted-foreground", children: "Balance" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-center px-3 py-2 font-medium text-muted-foreground", children: "Status" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-3 py-2 font-medium text-muted-foreground", children: "Actions" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: filtered.map((u2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "tr",
+        {
+          className: "border-b border-border hover:bg-muted/20",
+          "data-ocid": `crypto_admin.user_row.${i + 1}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-3 py-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-medium text-foreground text-xs", children: [
+                u2.userId.slice(0, 20),
+                "..."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                "Dep: ₹",
+                fmt$1(u2.totalDeposited)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-3 py-2 text-right font-semibold text-emerald-700", children: [
+              "₹",
+              fmt$1(u2.balance)
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$3, { status: u2.status }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-1 justify-end flex-wrap", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => act(
+                    () => freezeMut.mutateAsync({
+                      userId: u2.userId,
+                      isFrozen: true,
+                      reason: "Admin action"
+                    }),
+                    "User frozen!"
+                  ),
+                  disabled: u2.status === "frozen" || freezeMut.isPending,
+                  className: "px-2 py-1 text-xs rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 disabled:opacity-40 transition-colors",
+                  "data-ocid": `crypto_admin.user_freeze_button.${i + 1}`,
+                  children: "Freeze"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => act(
+                    () => blockMut.mutateAsync({
+                      userId: u2.userId,
+                      isBlocked: true,
+                      reason: "Admin action"
+                    }),
+                    "User blocked!"
+                  ),
+                  disabled: u2.status === "blocked" || blockMut.isPending,
+                  className: "px-2 py-1 text-xs rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 disabled:opacity-40 transition-colors",
+                  "data-ocid": `crypto_admin.user_block_button.${i + 1}`,
+                  children: "Block"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => act(
+                    () => resetMpinMut.mutateAsync(u2.userId),
+                    "MPIN reset!"
+                  ),
+                  disabled: resetMpinMut.isPending,
+                  className: "px-2 py-1 text-xs rounded-lg bg-muted text-muted-foreground border border-border hover:bg-muted/80 disabled:opacity-40 transition-colors",
+                  "data-ocid": `crypto_admin.user_reset_mpin_button.${i + 1}`,
+                  children: "MPIN Reset"
+                }
+              )
+            ] }) })
+          ]
+        },
+        u2.userId
+      )) })
+    ] }) })
+  ] });
+}
+function StatsDashboard() {
+  const { data: stats, isLoading, refetch } = useAdminGetCryptoStats();
+  const cards = [
+    {
+      label: "Total Active Users",
+      value: stats ? String(stats.totalUsers) : "-",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Users, { className: "w-5 h-5" }),
+      color: "text-blue-600 bg-blue-50"
+    },
+    {
+      label: "Total App Balance",
+      value: stats ? `₹${fmt$1(stats.totalAppBalance)}` : "-",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Wallet, { className: "w-5 h-5" }),
+      color: "text-emerald-700 bg-emerald-50"
+    },
+    {
+      label: "Total Trading Volume",
+      value: stats ? `₹${fmt$1(stats.totalTradingVolume)}` : "-",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(ChartNoAxesColumn, { className: "w-5 h-5" }),
+      color: "text-purple-600 bg-purple-50"
+    },
+    {
+      label: "Total Commissions",
+      value: stats ? `₹${fmt$1(stats.totalCommissions)}` : "-",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Coins, { className: "w-5 h-5" }),
+      color: "text-amber-600 bg-amber-50"
+    }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        type: "button",
+        onClick: () => refetch(),
+        className: "flex items-center gap-1.5 text-sm text-emerald-700 hover:text-emerald-800 font-medium",
+        "data-ocid": "crypto_admin.stats_refresh",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-4 h-4" }),
+          " Refresh"
+        ]
+      }
+    ) }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground text-sm", children: "Loading stats..." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 gap-3", children: cards.map((c2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "border border-border rounded-xl p-4 space-y-2",
+        "data-ocid": `crypto_admin.stat_card.${i + 1}`,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `inline-flex p-2 rounded-lg ${c2.color}`, children: c2.icon }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-2xl font-bold text-foreground leading-tight", children: c2.value }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: c2.label })
+        ]
+      },
+      c2.label
+    )) })
+  ] });
+}
+function SupportTickets() {
+  var _a3;
+  const { data: tickets = [], isLoading } = useAdminGetAllTickets();
+  const replyMut = useReplyToTicket();
+  const statusMut = useUpdateTicketStatus();
+  const [filter2, setFilter] = reactExports.useState("all");
+  const [selected, setSelected] = reactExports.useState(null);
+  const [reply, setReply] = reactExports.useState("");
+  const [toast, setToast] = reactExports.useState(null);
+  const shown = filter2 === "all" ? tickets : tickets.filter((t) => t.status === filter2);
+  async function sendReply() {
+    if (!selected || !reply.trim()) return;
+    try {
+      await replyMut.mutateAsync({
+        userId: "admin",
+        ticketId: selected.id,
+        message: reply,
+        isAdmin: true
+      });
+      setReply("");
+      setToast({ msg: "Reply sent!", ok: true });
+    } catch (e) {
+      setToast({ msg: e.message ?? "Error", ok: false });
+    }
+    setTimeout(() => setToast(null), 4e3);
+  }
+  async function changeStatus(status) {
+    if (!selected) return;
+    try {
+      await statusMut.mutateAsync({ ticketId: selected.id, status });
+      setSelected((t) => t ? { ...t, status } : null);
+    } catch {
+    }
+  }
+  const filterTabs = [
+    { key: "all", label: "All" },
+    { key: "open", label: "Open" },
+    { key: "in_progress", label: "In Progress" },
+    { key: "resolved", label: "Resolved" }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-1.5 flex-wrap", children: filterTabs.map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        type: "button",
+        onClick: () => setFilter(tab.key),
+        className: `px-3 py-1 rounded-full text-xs font-medium transition-colors ${filter2 === tab.key ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`,
+        "data-ocid": `crypto_admin.ticket_filter.${tab.key}`,
+        children: [
+          tab.label,
+          tab.key !== "all" && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "ml-1 opacity-70", children: [
+            "(",
+            tickets.filter((t) => t.status === tab.key).length,
+            ")"
+          ] })
+        ]
+      },
+      tab.key
+    )) }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-center py-4 text-muted-foreground text-sm", children: "Loading tickets..." }) : shown.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "text-center py-6 text-muted-foreground text-sm",
+        "data-ocid": "crypto_admin.tickets_empty_state",
+        children: "Koi ticket nahi mili."
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", children: shown.map((t, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        type: "button",
+        onClick: () => setSelected(t),
+        className: "w-full text-left border border-border rounded-xl p-3 hover:bg-muted/30 transition-colors",
+        "data-ocid": `crypto_admin.ticket_item.${i + 1}`,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium text-foreground text-sm truncate", children: t.subject }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                t.userId.slice(0, 16),
+                "... · ",
+                t.category
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-end gap-1 flex-shrink-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$3, { status: t.status }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$3, { status: t.priority })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: timeAgo(Number(t.createdAt) / 1e6) })
+        ]
+      },
+      t.id
+    )) }),
+    selected && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "fixed inset-0 z-50 flex justify-end",
+        "data-ocid": "crypto_admin.ticket_sheet",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "absolute inset-0 bg-black/40",
+              onClick: () => setSelected(null),
+              onKeyDown: (e) => e.key === "Escape" && setSelected(null),
+              role: "button",
+              tabIndex: -1,
+              "aria-label": "Close ticket panel"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative bg-card w-full max-w-md h-full flex flex-col shadow-2xl overflow-hidden", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between px-4 py-3 border-b border-border bg-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-foreground truncate", children: selected.subject }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                  selected.userId.slice(0, 24),
+                  "..."
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "select",
+                  {
+                    value: selected.status,
+                    onChange: (e) => changeStatus(e.target.value),
+                    className: "text-xs border border-input rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                    "data-ocid": "crypto_admin.ticket_status_select",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "open", children: "Open" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "in_progress", children: "In Progress" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "resolved", children: "Resolved" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => setSelected(null),
+                    className: "p-1.5 rounded-lg hover:bg-muted",
+                    "data-ocid": "crypto_admin.ticket_close_button",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { className: "w-4 h-4" })
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: !selected || !("replies" in selected) || ((_a3 = selected.replies) == null ? void 0 : _a3.length) === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-center text-muted-foreground text-sm py-4", children: "Koi reply nahi hai abhi." }) : (selected.replies ?? []).map((r2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: `flex ${r2.isAdmin ? "justify-end" : "justify-start"}`,
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    className: `max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${r2.isAdmin ? "bg-emerald-600 text-white rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: r2.message }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "p",
+                        {
+                          className: `text-xs mt-1 ${r2.isAdmin ? "text-emerald-100" : "text-muted-foreground"}`,
+                          children: timeAgo(
+                            r2.createdAt ? Number(r2.createdAt) / 1e6 : 0
+                          )
+                        }
+                      )
+                    ]
+                  }
+                )
+              },
+              r2.id
+            )) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-t border-border p-3 bg-card", children: [
+              toast && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { msg: toast.msg, ok: toast.ok }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2 mt-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "Admin reply likhein...",
+                    value: reply,
+                    onChange: (e) => setReply(e.target.value),
+                    onKeyDown: (e) => e.key === "Enter" && !e.shiftKey && sendReply(),
+                    className: "flex-1 border border-input rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500",
+                    "data-ocid": "crypto_admin.ticket_reply_input"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: sendReply,
+                    disabled: !reply.trim() || replyMut.isPending,
+                    className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white p-2 rounded-xl transition-colors",
+                    "data-ocid": "crypto_admin.ticket_reply_send_button",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { className: "w-4 h-4" })
+                  }
+                )
+              ] })
+            ] })
+          ] })
+        ]
+      }
+    )
+  ] });
+}
+function CryptoAdminPanel() {
+  const [open, setOpen] = reactExports.useState({
+    settings: true,
+    coins: false,
+    withdrawals: false,
+    users: false,
+    stats: false,
+    tickets: false
+  });
+  function toggle(s2) {
+    setOpen((p2) => ({ ...p2, [s2]: !p2[s2] }));
+  }
+  const sections = [
+    {
+      key: "settings",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { className: "w-4 h-4" }),
+      title: "Module Settings",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(ModuleSettings, {})
+    },
+    {
+      key: "coins",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Coins, { className: "w-4 h-4" }),
+      title: "Coin Management",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(CoinManagement, {})
+    },
+    {
+      key: "withdrawals",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Wallet, { className: "w-4 h-4" }),
+      title: "Withdrawal Approvals",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(WithdrawalApprovals, {})
+    },
+    {
+      key: "users",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Users, { className: "w-4 h-4" }),
+      title: "User Management",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(UserManagement$1, {})
+    },
+    {
+      key: "stats",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(ChartNoAxesColumn, { className: "w-4 h-4" }),
+      title: "Stats Dashboard",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(StatsDashboard, {})
+    },
+    {
+      key: "tickets",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageSquare, { className: "w-4 h-4" }),
+      title: "Support Tickets",
+      content: /* @__PURE__ */ jsxRuntimeExports.jsx(SupportTickets, {})
+    }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", "data-ocid": "crypto_admin.panel", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-1 pb-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mb-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-2 bg-emerald-600 rounded-xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-5 h-5 text-white" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-bold text-foreground text-base leading-tight", children: "Digital Invest" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Admin Control Center" })
+      ] })
+    ] }) }),
+    sections.map((s2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "rounded-xl border border-border overflow-hidden",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            SectionHeader,
+            {
+              icon: s2.icon,
+              title: s2.title,
+              open: open[s2.key],
+              toggle: () => toggle(s2.key)
+            }
+          ),
+          open[s2.key] && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-card", children: s2.content })
+        ]
+      },
+      s2.key
+    ))
   ] });
 }
 const STORAGE_KEYS = {
@@ -53277,7 +56441,7 @@ function useOfferPortalConfig() {
   return useQuery({
     queryKey: ["offerPortalConfig"],
     queryFn: async () => {
-      var _a3;
+      var _a3, _b3;
       const defaultConfig = {
         isEnabled: true,
         cpaLeadWebhookSecret: "",
@@ -53293,29 +56457,31 @@ function useOfferPortalConfig() {
           isEnabled: pub.isEnabled ?? true,
           cpaLeadWebhookSecret: "",
           cpagripApiKey: "",
-          cpagripOfferWallUrl: DEFAULT_CPAGRIP_OFFER_WALL_URL,
-          adminProfitPct: pub.adminProfitPct,
-          userProfitPct: pub.userProfitPct
+          // getOfferPortalConfigPublic returns cpagripOfferWallUrl
+          cpagripOfferWallUrl: ((_a3 = pub.cpagripOfferWallUrl) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_OFFER_WALL_URL,
+          adminProfitPct: pub.adminProfitPct ?? 60n,
+          userProfitPct: pub.userProfitPct ?? 40n
         };
         try {
           const adminTok = getAdminToken();
-          const adminTokArg = adminTok ? [adminTok] : [];
           const fullResult = await actor.getOfferPortalConfigFull(
-            adminTokArg
+            adminTok
           );
-          if (fullResult && typeof fullResult === "object" && "ok" in fullResult && fullResult.ok) {
-            const full = fullResult.ok;
-            const offerWallUrl = ((_a3 = full.cpagripOfferWallUrl) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_OFFER_WALL_URL;
-            return {
-              isEnabled: full.isEnabled,
-              cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
-              cpagripApiKey: full.cpagripApiKey ?? "",
-              cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
-              cpagripOfferWallName: full.cpagripOfferWallName ?? "",
-              cpagripOfferWallUrl: offerWallUrl,
-              adminProfitPct: full.adminProfitPct,
-              userProfitPct: full.userProfitPct
-            };
+          if (fullResult && typeof fullResult === "object" && ("ok" in fullResult || "__kind__" in fullResult && fullResult.__kind__ === "ok")) {
+            const full = "ok" in fullResult ? fullResult.ok : fullResult.ok;
+            if (full) {
+              const offerWallUrl = ((_b3 = full.cpagripOfferWallUrl) == null ? void 0 : _b3.trim()) || DEFAULT_CPAGRIP_OFFER_WALL_URL;
+              return {
+                isEnabled: full.isEnabled ?? true,
+                cpaLeadWebhookSecret: full.cpaLeadWebhookSecret ?? "",
+                cpagripApiKey: full.cpagripApiKey ?? "",
+                cpagripWebhookSecret: full.cpagripWebhookSecret ?? "",
+                cpagripOfferWallName: full.cpagripOfferWallName ?? "",
+                cpagripOfferWallUrl: offerWallUrl,
+                adminProfitPct: full.adminProfitPct ?? 60n,
+                userProfitPct: full.userProfitPct ?? 40n
+              };
+            }
           }
         } catch {
         }
@@ -53445,7 +56611,7 @@ function useRegisterOfferUser() {
         setStatus(getWarmupStatusMessage(elapsedMs));
       });
       const hash = await sha256hex$1(password);
-      const refCodeArg = referralCode && referralCode.trim().length > 0 ? [referralCode.trim()] : [];
+      const refCodeArg = referralCode && referralCode.trim().length > 0 ? referralCode.trim() : null;
       setStatus("Account bana rahe hain...");
       let regResult;
       try {
@@ -53626,7 +56792,9 @@ function useAdminListOfferUsers() {
     queryFn: async () => {
       if (!actor) return [];
       try {
-        const raw = await requireActor(actor).adminListOfferUsers();
+        const raw = await requireActor(actor).adminListOfferUsers(
+          getAdminToken()
+        );
         return raw.map(mapBackendOfferUser);
       } catch {
         return [];
@@ -53643,7 +56811,9 @@ function useAdminListPendingWithdrawals() {
     queryFn: async () => {
       if (!actor) return [];
       try {
-        const raw = await requireActor(actor).adminListPendingWithdrawals();
+        const raw = await requireActor(actor).adminListPendingWithdrawals(
+          getAdminToken()
+        );
         return raw.map((w2) => ({
           id: w2.id,
           offerUserId: w2.offerUserId,
@@ -53839,6 +57009,7 @@ function useAdminResolveWithdrawal() {
       adminNote
     }) => {
       return requireActor(actor).adminResolveWithdrawal(
+        getAdminToken(),
         id2,
         newStatus,
         adminNote ?? null
@@ -63588,8 +66759,7 @@ function OfferSystemToggleTab() {
         let currentUserPct = BigInt(40);
         let currentCpagripWebhookSecret = "DZ_OfferWall_2026@Secret#123";
         let currentCpagripOfferWallName = "Digital Zindagi Offers";
-        const rawAdminToken = sessionStorage.getItem("dz_admin_token");
-        const adminTokenArg = rawAdminToken ? [rawAdminToken] : [];
+        const adminTokenArg = sessionStorage.getItem("dz_admin_token");
         try {
           const fullResult = await actor.getOfferPortalConfigFull(adminTokenArg);
           if (fullResult && "ok" in fullResult && fullResult.ok) {
@@ -63631,13 +66801,15 @@ function OfferSystemToggleTab() {
           currentCpagripWebhookSecret,
           currentCpagripOfferWallName
         );
-        if (updateResult && typeof updateResult === "object" && "err" in updateResult) {
-          const errMsg = updateResult.err ?? "";
-          console.error("[OfferToggle] updateOfferPortalConfig err:", errMsg);
-          ue.error(
-            `Setting save nahi ho saki — ${errMsg || "Please try again"}`
-          );
-          return;
+        if (updateResult && typeof updateResult === "object") {
+          if ("__kind__" in updateResult && updateResult.__kind__ === "err" || "err" in updateResult && !("ok" in updateResult)) {
+            const errMsg = updateResult.err ?? "";
+            console.error("[OfferToggle] updateOfferPortalConfig err:", errMsg);
+            ue.error(
+              `Toggle save nahi ho saka — ${errMsg || "Please try again"}`
+            );
+            return;
+          }
         }
         setIsEnabled(next);
         ue.success(
@@ -63755,8 +66927,7 @@ function OfferApiKeysTab() {
         if (actor) {
           try {
             const adminTokenRaw = sessionStorage.getItem("dz_admin_token");
-            const adminTokenOpt = adminTokenRaw ? [adminTokenRaw] : [];
-            const cpagripData = await actor.getCpagripSettings(adminTokenOpt);
+            const cpagripData = await actor.getCpagripSettings(adminTokenRaw);
             setCpagripApiKey(
               ((_a3 = cpagripData.apiKey) == null ? void 0 : _a3.trim()) || DEFAULT_CPAGRIP_API_KEY
             );
@@ -63774,8 +66945,7 @@ function OfferApiKeysTab() {
         }
         if (actor) {
           try {
-            const adminTokenRaw2 = sessionStorage.getItem("dz_admin_token");
-            const adminTokenOpt2 = adminTokenRaw2 ? [adminTokenRaw2] : [];
+            const adminTokenOpt2 = sessionStorage.getItem("dz_admin_token");
             const fullResult = await actor.getOfferPortalConfigFull(adminTokenOpt2);
             if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
               setWebhookSecret(fullResult.ok.cpaLeadWebhookSecret ?? "");
@@ -63819,10 +66989,9 @@ function OfferApiKeysTab() {
         } catch {
         }
         const adminTokenForSave = sessionStorage.getItem("dz_admin_token");
-        const adminTokenSaveArg = adminTokenForSave ? [adminTokenForSave] : [];
         try {
           await actor.updateOfferPortalConfig(
-            adminTokenSaveArg,
+            adminTokenForSave,
             currentIsEnabled,
             savedWebhookSecret,
             currentCpaKey,
@@ -63860,8 +67029,7 @@ function OfferApiKeysTab() {
       if (actor && cpagripSaved) {
         try {
           const adminTokenVerify = sessionStorage.getItem("dz_admin_token");
-          const adminTokenVerifyArg = adminTokenVerify ? [adminTokenVerify] : [];
-          const verifiedData = await actor.getCpagripSettings(adminTokenVerifyArg);
+          const verifiedData = await actor.getCpagripSettings(adminTokenVerify);
           setCpagripApiKey(((_a3 = verifiedData.apiKey) == null ? void 0 : _a3.trim()) || savedCpagripApiKey);
           setCpagripWebhookSecret(
             ((_b3 = verifiedData.webhookSecret) == null ? void 0 : _b3.trim()) || savedCpagripWebhookSecret
@@ -64196,8 +67364,7 @@ function OfferProfitMarginTab() {
           const pub = await actor.getOfferPortalConfigPublic();
           currentIsEnabled = pub.isEnabled;
           try {
-            const adminTokenRaw3 = sessionStorage.getItem("dz_admin_token");
-            const adminTokenOpt3 = adminTokenRaw3 ? [adminTokenRaw3] : [];
+            const adminTokenOpt3 = sessionStorage.getItem("dz_admin_token");
             const fullResult = await actor.getOfferPortalConfigFull(adminTokenOpt3);
             if (fullResult && "__kind__" in fullResult && fullResult.__kind__ === "ok" && "ok" in fullResult) {
               currentSecret = fullResult.ok.cpaLeadWebhookSecret ?? "";
@@ -64208,9 +67375,8 @@ function OfferProfitMarginTab() {
         } catch {
         }
         const adminTokenProfitSave = sessionStorage.getItem("dz_admin_token");
-        const adminTokenProfitArg = adminTokenProfitSave ? [adminTokenProfitSave] : [];
         await actor.updateOfferPortalConfig(
-          adminTokenProfitArg,
+          adminTokenProfitSave,
           currentIsEnabled,
           currentSecret,
           currentCpaKey,
@@ -66115,6 +69281,13 @@ function AdminDashboardPage() {
       label: "📈 Recharge Analytics",
       icon: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "📈" })
     },
+    // ---- DIGITAL INVEST ----
+    {
+      key: "digitalInvest",
+      label: "📈 Digital Invest",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "📈" }),
+      groupHeader: "💹 Digital Invest"
+    },
     // ---- OFFER PORTAL ----
     {
       key: "offerControlCenter",
@@ -66239,6 +69412,8 @@ function AdminDashboardPage() {
         return /* @__PURE__ */ jsxRuntimeExports.jsx(RechargeLogsSection, {});
       case "rechargeAnalytics":
         return /* @__PURE__ */ jsxRuntimeExports.jsx(RechargeAnalyticsSection, {});
+      case "digitalInvest":
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(CryptoAdminPanel, {});
       case "offerControlCenter":
         return /* @__PURE__ */ jsxRuntimeExports.jsx(OfferControlCenterSection, {});
       case "providerApprovalsMgr":
@@ -72929,14 +76104,14 @@ function ChatPageInner() {
 function ChatPage() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChatPageInner, {}) });
 }
-function formatDate(ts) {
+function formatDate$1(ts) {
   return new Date(ts).toLocaleDateString("hi-IN", {
     day: "numeric",
     month: "short",
     year: "numeric"
   });
 }
-function StatusBadge$1({ status }) {
+function StatusBadge$2({ status }) {
   const map = {
     pending: {
       icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { size: 11 }),
@@ -73125,8 +76300,8 @@ function CreatorEarningsDashboard() {
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[11px] text-muted-foreground truncate mb-1", children: p2.messagePreview }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$1, { status: p2.status }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-muted-foreground", children: formatDate(p2.createdAt) })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$2, { status: p2.status }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-muted-foreground", children: formatDate$1(p2.createdAt) })
                 ] })
               ] })
             ]
@@ -74968,6 +78143,1204 @@ function DeliveryRegisterPage() {
       }
     ) })
   ] }) });
+}
+function inr(n) {
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function fmt(n, dec = 6) {
+  return n.toLocaleString("en-IN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: dec
+  });
+}
+function formatDate(ts) {
+  return new Date(
+    typeof ts === "bigint" ? Number(ts) / 1e6 : ts
+  ).toLocaleDateString("en-IN");
+}
+function gainColor(pct) {
+  return pct >= 0 ? "text-emerald-600" : "text-red-500";
+}
+function Spinner() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-center py-12", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" }) });
+}
+function BalancePill({ balance }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full", children: inr(balance) });
+}
+function StatusBadge$1({ status }) {
+  const map = {
+    open: "bg-blue-100 text-blue-700",
+    "in-progress": "bg-yellow-100 text-yellow-700",
+    resolved: "bg-emerald-100 text-emerald-700",
+    pending: "bg-yellow-100 text-yellow-700",
+    approved: "bg-emerald-100 text-emerald-700",
+    rejected: "bg-red-100 text-red-600",
+    completed: "bg-emerald-100 text-emerald-700"
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "span",
+    {
+      className: `text-xs font-medium px-2 py-0.5 rounded-full ${map[status] ?? "bg-muted text-muted-foreground"}`,
+      children: status
+    }
+  );
+}
+function MpinSetupModal({
+  userId,
+  onClose
+}) {
+  const [pin, setPin] = reactExports.useState("");
+  const [confirm2, setConfirm] = reactExports.useState("");
+  const setMpin = useSetMpin();
+  const submit = async () => {
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      ue.error("6 digit numeric MPIN enter karein");
+      return;
+    }
+    if (pin !== confirm2) {
+      ue.error("MPIN match nahi kiya");
+      return;
+    }
+    try {
+      await setMpin.mutateAsync({ userId, mpin: pin });
+      ue.success("MPIN set ho gaya!");
+      onClose();
+    } catch (e) {
+      ue.error(e.message);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex items-end justify-center bg-black/50",
+      onClick: onClose,
+      role: "presentation",
+      onKeyDown: (e) => e.key === "Escape" && onClose(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-white w-full max-w-md rounded-t-2xl p-6 pb-8",
+          onClick: (e) => e.stopPropagation(),
+          role: "presentation",
+          onKeyDown: (e) => e.stopPropagation(),
+          "data-ocid": "mpin.dialog",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-lg font-bold text-emerald-700 mb-4", children: "MPIN Set Karein" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mb-4", children: "Transaction security ke liye 6-digit MPIN zaroor set karein." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "block text-sm font-medium mb-1", htmlFor: "mpin-new", children: "Naya MPIN" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "mpin-new",
+                type: "password",
+                inputMode: "numeric",
+                maxLength: 6,
+                value: pin,
+                onChange: (e) => setPin(e.target.value.replace(/\D/g, "")),
+                className: "w-full border rounded-lg px-3 py-2 mb-3 text-center text-xl tracking-widest",
+                placeholder: "\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022",
+                "data-ocid": "mpin.input"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "label",
+              {
+                className: "block text-sm font-medium mb-1",
+                htmlFor: "mpin-confirm",
+                children: "MPIN Confirm Karein"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "mpin-confirm",
+                type: "password",
+                inputMode: "numeric",
+                maxLength: 6,
+                value: confirm2,
+                onChange: (e) => setConfirm(e.target.value.replace(/\D/g, "")),
+                className: "w-full border rounded-lg px-3 py-2 mb-4 text-center text-xl tracking-widest",
+                placeholder: "\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022",
+                "data-ocid": "mpin.confirm_input"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: submit,
+                disabled: setMpin.isPending,
+                className: "w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-60",
+                "data-ocid": "mpin.submit_button",
+                children: setMpin.isPending ? "Saving..." : "MPIN Save Karein"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: onClose,
+                className: "w-full mt-2 py-2 text-sm text-muted-foreground",
+                "data-ocid": "mpin.cancel_button",
+                children: "Cancel"
+              }
+            )
+          ]
+        }
+      )
+    }
+  );
+}
+function TradingModal({
+  coin,
+  price,
+  change24h,
+  userId,
+  walletBalance,
+  feePercent,
+  hasMpin,
+  onClose
+}) {
+  const [tab, setTab] = reactExports.useState("buy");
+  const [amount, setAmount] = reactExports.useState("");
+  const [qty, setQty] = reactExports.useState("");
+  const [mpin, setMpin] = reactExports.useState("");
+  const [showMpinSetup, setShowMpinSetup] = reactExports.useState(false);
+  const [cooldown, setCooldown] = reactExports.useState(false);
+  const buyCoin = useBuyCoin();
+  const sellCoin = useSellCoin();
+  const fee = feePercent / 100;
+  const buyQty = price > 0 ? Number(amount) / price * (1 - fee) : 0;
+  const sellProceeds = Number(qty) * price * (1 - fee);
+  const sellFeeAmt = Number(qty) * price * fee;
+  const handleSubmit = async () => {
+    if (cooldown) return;
+    if (!mpin || mpin.length !== 6) {
+      ue.error("6-digit MPIN enter karein");
+      return;
+    }
+    setCooldown(true);
+    setTimeout(() => setCooldown(false), 5e3);
+    try {
+      if (tab === "buy") {
+        await buyCoin.mutateAsync({
+          userId,
+          coinId: coin.id,
+          amountInFunds: Number(amount),
+          currentPrice: price,
+          mpin
+        });
+        ue.success(`${coin.symbol} buy ho gaya!`);
+      } else {
+        await sellCoin.mutateAsync({
+          userId,
+          coinId: coin.id,
+          quantity: Number(qty),
+          currentPrice: price,
+          mpin
+        });
+        ue.success(`${coin.symbol} sell ho gaya!`);
+      }
+      onClose();
+    } catch (e) {
+      ue.error(e.message);
+    }
+  };
+  if (showMpinSetup)
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(MpinSetupModal, { userId, onClose: () => setShowMpinSetup(false) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      className: "fixed inset-0 z-50 flex items-end justify-center bg-black/50",
+      onClick: onClose,
+      role: "presentation",
+      onKeyDown: (e) => e.key === "Escape" && onClose(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-white w-full max-w-md rounded-t-2xl p-5 pb-8",
+          onClick: (e) => e.stopPropagation(),
+          role: "presentation",
+          onKeyDown: (e) => e.stopPropagation(),
+          "data-ocid": "trade.dialog",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                coin.logoUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "img",
+                  {
+                    src: coin.logoUrl,
+                    alt: coin.name,
+                    className: "w-8 h-8 rounded-full"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-bold text-base", children: coin.name }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                    inr(price),
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: gainColor(change24h), children: [
+                      change24h >= 0 ? "+" : "",
+                      change24h.toFixed(2),
+                      "%"
+                    ] })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: onClose,
+                  className: "text-2xl text-muted-foreground",
+                  "data-ocid": "trade.close_button",
+                  children: "×"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex rounded-lg overflow-hidden border border-emerald-200 mb-4", children: ["buy", "sell"].map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => setTab(t),
+                className: `flex-1 py-2 text-sm font-semibold transition ${tab === t ? "bg-emerald-600 text-white" : "text-muted-foreground"}`,
+                "data-ocid": `trade.${t}_tab`,
+                children: t === "buy" ? "Buy" : "Sell"
+              },
+              t
+            )) }),
+            !hasMpin && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-700", children: [
+              "Pehle MPIN set karein —",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  className: "underline font-medium",
+                  onClick: () => setShowMpinSetup(true),
+                  "data-ocid": "trade.set_mpin_button",
+                  children: "Set MPIN"
+                }
+              )
+            ] }),
+            tab === "buy" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-medium", htmlFor: "trade-amount", children: "Amount (\\u20b9)" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  id: "trade-amount",
+                  type: "number",
+                  value: amount,
+                  onChange: (e) => setAmount(e.target.value),
+                  className: "w-full border rounded-lg px-3 py-2 my-2",
+                  placeholder: "Kitna invest karein",
+                  "data-ocid": "trade.buy_amount_input"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                "\\u2248 ",
+                fmt(buyQty),
+                " ",
+                coin.symbol,
+                " · Fee:",
+                " ",
+                inr(Number(amount) * fee)
+              ] })
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "text-sm font-medium", htmlFor: "trade-qty", children: [
+                "Quantity (",
+                coin.symbol,
+                ")"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  id: "trade-qty",
+                  type: "number",
+                  value: qty,
+                  onChange: (e) => setQty(e.target.value),
+                  className: "w-full border rounded-lg px-3 py-2 my-2",
+                  placeholder: `Kitna ${coin.symbol} bechein`,
+                  "data-ocid": "trade.sell_qty_input"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                "Milega: ",
+                inr(sellProceeds),
+                " · Fee: ",
+                inr(sellFeeAmt)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-medium mt-3 block", htmlFor: "trade-mpin", children: "6-Digit MPIN" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                id: "trade-mpin",
+                type: "password",
+                inputMode: "numeric",
+                maxLength: 6,
+                value: mpin,
+                onChange: (e) => setMpin(e.target.value.replace(/\D/g, "")),
+                className: "w-full border rounded-lg px-3 py-2 my-2 text-center text-xl tracking-widest",
+                placeholder: "\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022",
+                "data-ocid": "trade.mpin_input"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: handleSubmit,
+                disabled: cooldown || buyCoin.isPending || sellCoin.isPending || !hasMpin,
+                className: "w-full mt-3 py-3 rounded-xl bg-emerald-600 text-white font-bold disabled:opacity-50 hover:bg-emerald-700 transition",
+                "data-ocid": "trade.submit_button",
+                children: cooldown ? "Please wait..." : tab === "buy" ? `Buy ${coin.symbol}` : `Sell ${coin.symbol}`
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-center text-muted-foreground mt-2", children: [
+              "Wallet: ",
+              inr(walletBalance)
+            ] })
+          ]
+        }
+      )
+    }
+  );
+}
+function MarketTab({
+  userId,
+  walletBalance,
+  feePercent,
+  hasMpin
+}) {
+  const { data: coins = [], isLoading } = useListedCoins();
+  const coinGeckoIds = coins.map((c2) => c2.coinGeckoId).filter(Boolean);
+  const { data: prices = {} } = useLiveCoinPrices(coinGeckoIds);
+  const [search, setSearch] = reactExports.useState("");
+  const [selected, setSelected] = reactExports.useState(null);
+  const filtered = coins.filter(
+    (c2) => c2.name.toLowerCase().includes(search.toLowerCase()) || c2.symbol.toLowerCase().includes(search.toLowerCase())
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-full", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-4 pt-3 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "input",
+      {
+        type: "search",
+        placeholder: "Coin dhundein...",
+        value: search,
+        onChange: (e) => setSearch(e.target.value),
+        className: "w-full border border-emerald-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400",
+        "data-ocid": "market.search_input"
+      }
+    ) }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Spinner, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-y-auto", "data-ocid": "market.list", children: filtered.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "flex flex-col items-center justify-center py-16 text-muted-foreground",
+        "data-ocid": "market.empty_state",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-4xl mb-2", children: "\\ud83d\\udd0d" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Koi coin nahi mila" })
+        ]
+      }
+    ) : filtered.map((coin, idx) => {
+      const pd = prices[coin.coinGeckoId];
+      const usdPrice = (pd == null ? void 0 : pd.usd) ?? 0;
+      const change = (pd == null ? void 0 : pd.usd_24h_change) ?? 0;
+      const inrPrice = usdPrice * 83.5;
+      const isHighRisk = change <= -20;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: () => setSelected(coin),
+          className: "w-full flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-muted/40 transition text-left",
+          "data-ocid": `market.item.${idx + 1}`,
+          children: [
+            coin.logoUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "img",
+              {
+                src: coin.logoUrl,
+                alt: coin.symbol,
+                className: "w-10 h-10 rounded-full object-cover flex-shrink-0"
+              }
+            ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold flex-shrink-0", children: coin.symbol.slice(0, 2) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-sm", children: coin.name }),
+                isHighRisk && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium", children: "\\u26a0 High Risk" })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground", children: coin.symbol })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium", children: inrPrice > 0 ? inr(inrPrice) : "—" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: `text-xs font-medium ${gainColor(change)}`, children: [
+                change >= 0 ? "+" : "",
+                change.toFixed(2),
+                "%"
+              ] })
+            ] })
+          ]
+        },
+        coin.id
+      );
+    }) }),
+    selected && (() => {
+      const pd = prices[selected.coinGeckoId];
+      const inrPrice = ((pd == null ? void 0 : pd.usd) ?? 0) * 83.5;
+      const change = (pd == null ? void 0 : pd.usd_24h_change) ?? 0;
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        TradingModal,
+        {
+          coin: selected,
+          price: inrPrice,
+          change24h: change,
+          userId,
+          walletBalance,
+          feePercent,
+          hasMpin,
+          onClose: () => setSelected(null)
+        }
+      );
+    })()
+  ] });
+}
+function PortfolioTab({
+  userId,
+  config
+}) {
+  const { data: holdings = [], isLoading } = useUserPortfolio(userId);
+  const { data: prices = {} } = useLiveCoinPrices([
+    "bitcoin",
+    "ethereum",
+    "binancecoin",
+    "solana"
+  ]);
+  const { data: wallet } = useUserCryptoWallet(userId);
+  const claimReward = useClaimDailyReward();
+  const totalCost = holdings.reduce((s2, h2) => s2 + h2.totalCost, 0);
+  const totalValue = holdings.reduce((s2, h2) => {
+    var _a3;
+    const p2 = (((_a3 = prices[h2.coinId]) == null ? void 0 : _a3.usd) ?? h2.averageBuyPrice / 83.5) * 83.5;
+    return s2 + h2.quantity * p2;
+  }, 0);
+  const gainLoss = totalValue - totalCost;
+  const gainLossPct = totalCost > 0 ? gainLoss / totalCost * 100 : 0;
+  const lastClaim = wallet ? Number(wallet.lastRewardClaim) / 1e6 : 0;
+  const claimedToday = lastClaim >= (/* @__PURE__ */ new Date()).setHours(0, 0, 0, 0);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 px-4 py-4 overflow-y-auto", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-3 gap-3", children: [
+      {
+        label: "Total Value",
+        val: inr(totalValue),
+        color: "text-emerald-700"
+      },
+      {
+        label: "Total Cost",
+        val: inr(totalCost),
+        color: "text-foreground"
+      },
+      {
+        label: "Gain/Loss",
+        val: `${gainLoss >= 0 ? "+" : ""}${inr(Math.abs(gainLoss))}`,
+        color: gainColor(gainLoss)
+      }
+    ].map((c2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "bg-card border border-border rounded-xl p-3 text-center",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: `font-bold text-sm ${c2.color}`, children: c2.val }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-0.5", children: c2.label })
+        ]
+      },
+      c2.label
+    )) }),
+    gainLoss !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "p",
+      {
+        className: `text-sm font-medium ${gainColor(gainLossPct)} text-center`,
+        children: [
+          gainLossPct >= 0 ? "+" : "",
+          gainLossPct.toFixed(2),
+          "% overall"
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-emerald-50 border border-emerald-200 rounded-xl p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-emerald-700", children: "\\ud83c\\udf81 Daily Reward" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground mt-0.5", children: [
+          inr((config == null ? void 0 : config.dailyRewardAmount) ?? 10),
+          " \\u00b7 Streak:",
+          " ",
+          (wallet == null ? void 0 : wallet.rewardStreak) ?? 0,
+          " days"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => claimReward.mutateAsync(userId),
+          disabled: claimedToday || claimReward.isPending,
+          className: "bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-emerald-700 transition",
+          "data-ocid": "portfolio.claim_reward_button",
+          children: claimedToday ? "Claimed ✓" : `Claim ${inr((config == null ? void 0 : config.dailyRewardAmount) ?? 10)}`
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-sm text-muted-foreground uppercase tracking-wide", children: "Holdings" }),
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Spinner, {}) : holdings.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "text-center py-10 text-muted-foreground",
+        "data-ocid": "portfolio.empty_state",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl mb-2", children: "\\ud83d\\udcc8" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm", children: "Koi holdings nahi \\u2014 Market tab se coin kharidein" })
+        ]
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", "data-ocid": "portfolio.list", children: holdings.map((h2, idx) => {
+      var _a3;
+      const curPrice = (((_a3 = prices[h2.coinId]) == null ? void 0 : _a3.usd) ?? h2.averageBuyPrice / 83.5) * 83.5;
+      const curValue = h2.quantity * curPrice;
+      const gl = curValue - h2.totalCost;
+      const glPct = h2.totalCost > 0 ? gl / h2.totalCost * 100 : 0;
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: `rounded-xl border p-3 ${gl >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`,
+          "data-ocid": `portfolio.item.${idx + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-semibold text-sm", children: [
+                h2.coinName,
+                " ",
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-muted-foreground", children: [
+                  "(",
+                  h2.symbol,
+                  ")"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                "Qty: ",
+                fmt(h2.quantity),
+                " \\u00b7 Avg:",
+                " ",
+                inr(h2.averageBuyPrice)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-sm", children: inr(curValue) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: `text-xs font-medium ${gainColor(glPct)}`, children: [
+                gl >= 0 ? "+" : "",
+                inr(Math.abs(gl)),
+                " (",
+                glPct.toFixed(2),
+                "%)"
+              ] })
+            ] })
+          ] })
+        },
+        h2.coinId
+      );
+    }) })
+  ] });
+}
+function WalletTab({
+  userId,
+  email,
+  config
+}) {
+  const { data: wallet } = useUserCryptoWallet(userId);
+  const { data: txns = [] } = useUserCryptoTransactions(userId);
+  const { data: withdrawals = [] } = useUserCryptoWithdrawals(userId);
+  const requestDeposit = useRequestDeposit();
+  const requestWithdrawal = useRequestCryptoWithdrawal();
+  const [depAmt, setDepAmt] = reactExports.useState("");
+  const [withAmt, setWithAmt] = reactExports.useState("");
+  const [withUpi, setWithUpi] = reactExports.useState("");
+  const [withMpin, setWithMpin] = reactExports.useState("");
+  const [showWithdrawForm, setShowWithdrawForm] = reactExports.useState(false);
+  const [showDepositForm, setShowDepositForm] = reactExports.useState(false);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col overflow-y-auto", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-4 mt-4 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-5 text-white", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm opacity-80 mb-1", children: "Available Balance" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl font-bold", children: inr((wallet == null ? void 0 : wallet.balance) ?? 0) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-4 mt-3 text-xs opacity-80", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+          "Deposited: ",
+          inr((wallet == null ? void 0 : wallet.totalDeposited) ?? 0)
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+          "Withdrawn: ",
+          inr((wallet == null ? void 0 : wallet.totalWithdrawn) ?? 0)
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-3 px-4 mt-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setShowDepositForm(!showDepositForm),
+          className: "flex-1 py-2 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold text-sm hover:bg-emerald-50 transition",
+          "data-ocid": "wallet.deposit_button",
+          children: "+ Deposit"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setShowWithdrawForm(!showWithdrawForm),
+          className: "flex-1 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition",
+          "data-ocid": "wallet.withdraw_button",
+          children: "Withdraw"
+        }
+      )
+    ] }),
+    showDepositForm && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "mx-4 mt-3 p-4 bg-card border border-border rounded-xl",
+        "data-ocid": "wallet.deposit_form",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-sm mb-2", children: "Deposit Request" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mb-2", children: "Admin review ke baad amount add hoga" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "number",
+              value: depAmt,
+              onChange: (e) => setDepAmt(e.target.value),
+              className: "w-full border rounded-lg px-3 py-2 mb-2 text-sm",
+              placeholder: "Amount (\\u20b9)",
+              "data-ocid": "wallet.deposit_amount_input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              disabled: requestDeposit.isPending || !depAmt,
+              onClick: async () => {
+                await requestDeposit.mutateAsync({
+                  userId,
+                  amount: Number(depAmt)
+                });
+                ue.success("Deposit request bheja gaya!");
+                setDepAmt("");
+                setShowDepositForm(false);
+              },
+              className: "w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50",
+              "data-ocid": "wallet.deposit_submit_button",
+              children: "Request Submit Karein"
+            }
+          )
+        ]
+      }
+    ),
+    showWithdrawForm && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "mx-4 mt-3 p-4 bg-card border border-border rounded-xl",
+        "data-ocid": "wallet.withdraw_form",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-sm mb-1", children: "Withdrawal Request" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground mb-2", children: [
+            "Min: ",
+            inr((config == null ? void 0 : config.minWithdrawal) ?? 100),
+            " \\u00b7 Max:",
+            " ",
+            inr((config == null ? void 0 : config.maxWithdrawal) ?? 1e4)
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "number",
+              value: withAmt,
+              onChange: (e) => setWithAmt(e.target.value),
+              className: "w-full border rounded-lg px-3 py-2 mb-2 text-sm",
+              placeholder: "Amount (\\u20b9)",
+              "data-ocid": "wallet.withdraw_amount_input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "text",
+              value: withUpi,
+              onChange: (e) => setWithUpi(e.target.value),
+              className: "w-full border rounded-lg px-3 py-2 mb-2 text-sm",
+              placeholder: "UPI ID",
+              "data-ocid": "wallet.withdraw_upi_input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "password",
+              inputMode: "numeric",
+              maxLength: 6,
+              value: withMpin,
+              onChange: (e) => setWithMpin(e.target.value.replace(/\D/g, "")),
+              className: "w-full border rounded-lg px-3 py-2 mb-3 text-center text-lg tracking-widest",
+              placeholder: "MPIN",
+              "data-ocid": "wallet.withdraw_mpin_input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              disabled: requestWithdrawal.isPending || !withAmt || !withUpi || withMpin.length !== 6,
+              onClick: async () => {
+                await requestWithdrawal.mutateAsync({
+                  userId,
+                  userEmail: email,
+                  amount: Number(withAmt),
+                  upiId: withUpi,
+                  mpin: withMpin
+                });
+                setWithAmt("");
+                setWithUpi("");
+                setWithMpin("");
+                setShowWithdrawForm(false);
+              },
+              className: "w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50",
+              "data-ocid": "wallet.withdraw_submit_button",
+              children: "Withdrawal Request"
+            }
+          )
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-4 mt-5", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2", children: "Transactions" }),
+      txns.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-sm text-muted-foreground py-4 text-center",
+          "data-ocid": "wallet.txns_empty_state",
+          children: "Koi transaction nahi"
+        }
+      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", "data-ocid": "wallet.txns_list", children: txns.slice(0, 20).map((t, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "flex items-center justify-between p-3 bg-card border border-border rounded-xl",
+          "data-ocid": `wallet.txn.${idx + 1}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm font-medium capitalize", children: [
+                t.type,
+                " ",
+                t.coinName
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                formatDate(t.createdAt),
+                " \\u00b7 #",
+                t.id.slice(-6)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-right", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "p",
+                {
+                  className: `text-sm font-semibold ${t.type === "buy" ? "text-red-500" : "text-emerald-600"}`,
+                  children: [
+                    t.type === "buy" ? "-" : "+",
+                    inr(Math.abs(t.netAmount))
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$1, { status: t.status })
+            ] })
+          ]
+        },
+        t.id
+      )) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-4 mt-4 mb-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2", children: "Withdrawal Requests" }),
+      withdrawals.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "text-sm text-muted-foreground py-4 text-center",
+          "data-ocid": "wallet.withdrawals_empty_state",
+          children: "Koi withdrawal request nahi"
+        }
+      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", "data-ocid": "wallet.withdrawals_list", children: withdrawals.map((w2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "flex items-center justify-between p-3 bg-card border border-border rounded-xl",
+          "data-ocid": `wallet.withdrawal.${idx + 1}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium", children: inr(w2.amount) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground", children: [
+                w2.upiId,
+                " \\u00b7 ",
+                formatDate(w2.createdAt)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$1, { status: w2.status })
+          ]
+        },
+        w2.id
+      )) })
+    ] })
+  ] });
+}
+function TicketThread({
+  ticket,
+  userId
+}) {
+  const { data: replies = [] } = useTicketReplies(ticket.id);
+  const replyMutation = useReplyToTicket();
+  const [msg, setMsg] = reactExports.useState("");
+  const bottomRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    var _a3;
+    (_a3 = bottomRef.current) == null ? void 0 : _a3.scrollIntoView({ behavior: "smooth" });
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-full", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-emerald-50 border border-emerald-200 rounded-xl p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-sm", children: ticket.subject }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: ticket.description }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mt-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$1, { status: ticket.status }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground", children: formatDate(ticket.createdAt) })
+        ] })
+      ] }),
+      replies.map((r2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: `flex ${r2.isAdmin ? "justify-start" : "justify-end"}`,
+          "data-ocid": `ticket.reply.${idx + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: `max-w-xs rounded-xl px-3 py-2 text-sm ${r2.isAdmin ? "bg-muted text-foreground" : "bg-emerald-600 text-white"}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: r2.message }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs opacity-60 mt-1", children: formatDate(r2.createdAt) })
+              ]
+            }
+          )
+        },
+        r2.id
+      )),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2 p-3 border-t border-border", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          value: msg,
+          onChange: (e) => setMsg(e.target.value),
+          className: "flex-1 border rounded-lg px-3 py-2 text-sm",
+          placeholder: "Reply karein...",
+          "data-ocid": "ticket.reply_input"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          disabled: replyMutation.isPending || !msg.trim(),
+          onClick: async () => {
+            if (!msg.trim()) return;
+            await replyMutation.mutateAsync({
+              userId,
+              ticketId: ticket.id,
+              message: msg,
+              isAdmin: false
+            });
+            setMsg("");
+          },
+          className: "px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50",
+          "data-ocid": "ticket.reply_submit_button",
+          children: "Send"
+        }
+      )
+    ] })
+  ] });
+}
+function SupportTab({ userId, email }) {
+  const { data: tickets = [] } = useUserTickets(userId);
+  const createTicket = useCreateSupportTicket();
+  const [openTicket, setOpenTicket] = reactExports.useState(null);
+  const [showForm, setShowForm] = reactExports.useState(false);
+  const [form, setForm] = reactExports.useState({
+    subject: "",
+    description: "",
+    priority: "medium",
+    category: "General"
+  });
+  const submitTicket = async () => {
+    if (!form.subject || !form.description) {
+      ue.error("Subject aur description zaroor bharein");
+      return;
+    }
+    await createTicket.mutateAsync({ userId, userEmail: email, ...form });
+    setForm({
+      subject: "",
+      description: "",
+      priority: "medium",
+      category: "General"
+    });
+    setShowForm(false);
+  };
+  if (openTicket) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-full", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 px-4 py-3 border-b border-border", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            onClick: () => setOpenTicket(null),
+            className: "text-emerald-600 font-medium text-sm",
+            "data-ocid": "ticket.back_button",
+            children: "\\u2190 Back"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-sm truncate", children: openTicket.subject })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(TicketThread, { ticket: openTicket, userId })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col px-4 py-4 overflow-y-auto", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold", children: "Support Tickets" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setShowForm(!showForm),
+          className: "bg-emerald-600 text-white text-sm px-4 py-2 rounded-xl font-semibold",
+          "data-ocid": "support.new_ticket_button",
+          children: "+ New Ticket"
+        }
+      )
+    ] }),
+    showForm && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "bg-card border border-border rounded-xl p-4 mb-4",
+        "data-ocid": "support.new_ticket_form",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              className: "w-full border rounded-lg px-3 py-2 text-sm mb-2",
+              placeholder: "Subject",
+              value: form.subject,
+              onChange: (e) => setForm({ ...form, subject: e.target.value }),
+              "data-ocid": "support.subject_input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "textarea",
+            {
+              className: "w-full border rounded-lg px-3 py-2 text-sm mb-2 resize-none",
+              rows: 3,
+              placeholder: "Apni problem describe karein",
+              value: form.description,
+              onChange: (e) => setForm({ ...form, description: e.target.value }),
+              "data-ocid": "support.description_textarea"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-2 mb-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "select",
+              {
+                value: form.priority,
+                onChange: (e) => setForm({ ...form, priority: e.target.value }),
+                className: "border rounded-lg px-3 py-2 text-sm",
+                "data-ocid": "support.priority_select",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "low", children: "Low" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "medium", children: "Medium" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "high", children: "High" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "select",
+              {
+                value: form.category,
+                onChange: (e) => setForm({ ...form, category: e.target.value }),
+                className: "border rounded-lg px-3 py-2 text-sm",
+                "data-ocid": "support.category_select",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { children: "Bug Report" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { children: "Withdrawal Query" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { children: "Coin Inquiry" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("option", { children: "General" })
+                ]
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              onClick: submitTicket,
+              disabled: createTicket.isPending,
+              className: "w-full py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm disabled:opacity-50",
+              "data-ocid": "support.submit_ticket_button",
+              children: createTicket.isPending ? "Submitting..." : "Ticket Submit Karein"
+            }
+          )
+        ]
+      }
+    ),
+    tickets.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "text-center py-12 text-muted-foreground",
+        "data-ocid": "support.empty_state",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-4xl mb-2", children: "\\ud83c\\udfab" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm", children: "Abhi koi ticket nahi" })
+        ]
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", "data-ocid": "support.tickets_list", children: tickets.map((t, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        type: "button",
+        onClick: () => setOpenTicket(t),
+        className: "w-full text-left p-4 bg-card border border-border rounded-xl hover:bg-muted/40 transition",
+        "data-ocid": `support.ticket.${idx + 1}`,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-sm truncate", children: t.subject }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBadge$1, { status: t.status })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground mt-1", children: [
+            t.category,
+            " \\u00b7 ",
+            formatDate(t.createdAt)
+          ] })
+        ]
+      },
+      t.id
+    )) })
+  ] });
+}
+function DigitalInvestPage() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = reactExports.useState("market");
+  const userId = (user == null ? void 0 : user.userId) ? String(user.userId) : "";
+  const email = (user == null ? void 0 : user.email) ?? "";
+  const { data: config, isLoading: configLoading } = useCryptoConfig();
+  const { data: wallet } = useUserCryptoWallet(userId);
+  const isAdmin = (user == null ? void 0 : user.isSuperAdmin) || (user == null ? void 0 : user.role) === "admin";
+  if (!configLoading && config && !config.isEnabled && !isAdmin) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "min-h-screen flex flex-col items-center justify-center bg-background px-6",
+        "data-ocid": "digitalinvest.page",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-sm bg-card border border-emerald-200 rounded-2xl overflow-hidden", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gradient-to-br from-emerald-600 to-emerald-800 p-8 text-white text-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-4xl mb-2", children: "\\ud83d\\udcc8" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-bold", children: "Digital Invest" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm opacity-80 mt-1", children: "Crypto Trading Platform" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 text-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-foreground", children: "Jaldi Aa Raha Hai!" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-2", children: "Yeh feature abhi admin ne band kiya hua hai. Thodi der baad dobara check karein." })
+          ] })
+        ] })
+      }
+    );
+  }
+  if (!user) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen flex items-center justify-center bg-background px-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl mb-3", children: "\\ud83d\\udd12" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold", children: "Pehle login karein" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-1", children: "Digital Invest use karne ke liye login zaroor hai" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "a",
+        {
+          href: "/login",
+          className: "mt-4 inline-block bg-emerald-600 text-white px-6 py-2 rounded-xl font-semibold",
+          children: "Login Karein"
+        }
+      )
+    ] }) });
+  }
+  const TABS2 = [
+    { id: "market", label: "Market", icon: "📊" },
+    { id: "portfolio", label: "Portfolio", icon: "💼" },
+    { id: "wallet", label: "Wallet", icon: "💳" },
+    { id: "support", label: "Support", icon: "🎫" }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "flex flex-col h-screen bg-background overflow-hidden",
+      "data-ocid": "digitalinvest.page",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gradient-to-r from-emerald-700 to-emerald-600 text-white px-4 py-3 flex items-center justify-between flex-shrink-0", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/", className: "text-white/80 text-sm", children: "\\u2190" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-bold text-base leading-tight", children: "Digital Invest" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs opacity-70", children: "Crypto Trading" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(BalancePill, { balance: (wallet == null ? void 0 : wallet.balance) ?? 0 })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-hidden", children: configLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Spinner, {}) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-full overflow-y-auto", children: [
+          activeTab === "market" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            MarketTab,
+            {
+              userId,
+              walletBalance: (wallet == null ? void 0 : wallet.balance) ?? 0,
+              feePercent: (config == null ? void 0 : config.tradingFeePercent) ?? 0.5,
+              hasMpin: (wallet == null ? void 0 : wallet.hasMpin) ?? false
+            }
+          ),
+          activeTab === "portfolio" && /* @__PURE__ */ jsxRuntimeExports.jsx(PortfolioTab, { userId, config: config ?? null }),
+          activeTab === "wallet" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WalletTab,
+            {
+              userId,
+              email,
+              config: config ?? null
+            }
+          ),
+          activeTab === "support" && /* @__PURE__ */ jsxRuntimeExports.jsx(SupportTab, { userId, email })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            className: "flex border-t border-border bg-card flex-shrink-0",
+            "data-ocid": "digitalinvest.tab_bar",
+            children: TABS2.map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                onClick: () => setActiveTab(tab.id),
+                className: `flex-1 flex flex-col items-center py-2 text-xs font-medium transition ${activeTab === tab.id ? "text-emerald-700 border-t-2 border-emerald-600" : "text-muted-foreground"}`,
+                "data-ocid": `digitalinvest.${tab.id}_tab`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg", children: tab.icon }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: tab.label })
+                ]
+              },
+              tab.id
+            ))
+          }
+        )
+      ]
+    }
+  );
 }
 function ForgotPasswordPage() {
   const [step, setStep] = reactExports.useState("mobile");
@@ -79258,6 +83631,58 @@ function HomePage() {
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(AdBanners, { position: "footer" }),
+    (() => {
+      const cryptoEnabled = localStorage.getItem("dz_crypto_enabled") !== "false";
+      if (!cryptoEnabled) return null;
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "section",
+        {
+          className: "px-4 pb-4 max-w-7xl mx-auto",
+          "data-ocid": "digital_invest.section",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            motion.div,
+            {
+              initial: { opacity: 0, y: 16 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.4 },
+              children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  "data-ocid": "digital_invest.primary_button",
+                  onClick: () => navigate("/crypto"),
+                  className: "w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl hover:shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all active:scale-[0.99]",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "div",
+                      {
+                        className: "absolute inset-0 pointer-events-none",
+                        style: {
+                          background: "radial-gradient(ellipse at top right, rgba(255,255,255,0.12) 0%, transparent 60%)"
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative px-6 py-5 flex items-center justify-between gap-4", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-3xl", "aria-hidden": true, children: "💎" }) }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-left", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mb-0.5", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-extrabold text-white text-lg tracking-tight", children: "Digital Invest" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center bg-white/20 border border-white/30 text-white text-xs font-bold px-2 py-0.5 rounded-full", children: "NEW" })
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white/80 text-sm", children: "Live Trading • Earn & Grow" })
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-shrink-0 bg-white/20 border border-white/30 text-white font-bold px-5 py-2.5 rounded-xl text-sm whitespace-nowrap hover:bg-white/30 transition-colors", children: "Trade Now →" })
+                    ] })
+                  ]
+                }
+              )
+            }
+          )
+        }
+      );
+    })(),
     (() => {
       const offerEnabled = localStorage.getItem("dz_section_offer_portal") !== "false" && localStorage.getItem("dz_offer_enabled") !== "false";
       if (!offerEnabled) return null;
@@ -83884,6 +88309,12 @@ function DashboardView({
 }) {
   const { currentOfferUser } = useOfferAuth();
   const offerUserId = (currentOfferUser == null ? void 0 : currentOfferUser.id) ?? void 0;
+  const offerWallUrlWithSubid = (() => {
+    const email = (currentOfferUser == null ? void 0 : currentOfferUser.email) ?? "";
+    if (!email) return offerWallUrl;
+    const separator = offerWallUrl.includes("?") ? "&" : "?";
+    return `${offerWallUrl}${separator}sub=${encodeURIComponent(email)}`;
+  })();
   const { data: summary, isLoading: summaryLoading } = useOfferEarningsSummary(offerUserId);
   const { data: transactions = [] } = useMyOfferTransactions(offerUserId);
   const { data: withdrawals = [] } = useMyOfferWithdrawals(offerUserId);
@@ -83942,12 +88373,12 @@ function DashboardView({
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", "data-ocid": "offer_portal.offers_top_section", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(CircleDollarSign, { size: 16, className: "text-emerald-600" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-bold text-foreground text-base", children: "Offers Dekhein - Paisa Kamaein 💰" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-heading font-bold text-foreground text-base", children: "Available Offers — Complete offers to earn money! 💰" })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-md bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
             "iframe",
             {
-              src: offerWallUrl,
+              src: offerWallUrlWithSubid,
               width: "100%",
               height: "600px",
               frameBorder: "0",
@@ -83955,7 +88386,7 @@ function DashboardView({
               title: "CPAGrip Offer Wall",
               style: {
                 borderRadius: "8px",
-                minHeight: "500px",
+                minHeight: "600px",
                 display: "block"
               },
               sandbox: "allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
@@ -91283,6 +95714,7 @@ function AppRoutes() {
           element: /* @__PURE__ */ jsxRuntimeExports.jsx(WalletTransactionsPage, {})
         }
       ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/crypto", element: /* @__PURE__ */ jsxRuntimeExports.jsx(DigitalInvestPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/offer-portal", element: /* @__PURE__ */ jsxRuntimeExports.jsx(OfferPortalPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/offer-portal/*", element: /* @__PURE__ */ jsxRuntimeExports.jsx(OfferPortalPage, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Route, { path: "/manager-login", element: /* @__PURE__ */ jsxRuntimeExports.jsx(ManagerLoginPage, {}) }),

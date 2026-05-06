@@ -195,9 +195,9 @@ module {
 
   public func defaultOfferPortalConfig() : OfferPortalConfig {
     {
-      isEnabled            = false;
-      cpaLeadWebhookSecret = "";
-      cpagripApiKey        = "";
+      isEnabled            = true;  // DEFAULT OPEN
+      cpaLeadWebhookSecret = "DZ_OfferWall_2026@Secret#123";
+      cpagripApiKey        = "914ebf2f2ed06fd6da511be81d502acd";
       adminProfitPct       = 60;
       userProfitPct        = 40;
     };

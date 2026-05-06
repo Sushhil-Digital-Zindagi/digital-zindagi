@@ -113,6 +113,79 @@ type Conversation__686238356 =
   };
 type Conversations__499211868 = Conversations__598400517;
 type Conversations__598400517 = Map__605269027<Nat, Conversation__686238356>;
+type CryptoAdminAuditLog__21466932 =
+  {
+    action : Text;
+    adminEmail : Text;
+    afterValue : ?Text;
+    beforeValue : ?Text;
+    createdAt : Int;
+    id : Text;
+    targetId : ?Text
+  };
+type CryptoCoin__669128384 =
+  {
+    coinGeckoId : Text;
+    createdAt : Int;
+    id : Text;
+    isListed : Bool;
+    logoUrl : Text;
+    name : Text;
+    symbol : Text
+  };
+type CryptoTransaction__678490649 =
+  {
+    adminNote : ?Text;
+    coinId : ?Text;
+    coinSymbol : ?Text;
+    createdAt : Int;
+    feeAmount : ?Float;
+    feePercent : ?Float;
+    id : Text;
+    netAmount : Float;
+    priceAtTime : ?Float;
+    quantity : ?Float;
+    status : TxStatus__1048773938;
+    totalAmount : Float;
+    txType : TxType__973875002;
+    updatedAt : Int;
+    userId : Text
+  };
+type CryptoUserFreeze__840577905 =
+  {
+    isBlocked : Bool;
+    isFrozen : Bool;
+    reason : Text;
+    updatedAt : Int;
+    userId : Text
+  };
+type CryptoWallet__134333736 =
+  {
+    balance : Float;
+    createdAt : Int;
+    dailyRewardStreak : Nat;
+    lastDailyRewardClaimed : Int;
+    mpinFailedAttempts : Nat;
+    mpinHash : Text;
+    mpinLockedUntil : Int;
+    mpinSetAt : Int;
+    totalDeposited : Float;
+    totalWithdrawn : Float;
+    updatedAt : Int;
+    userId : Text
+  };
+type CryptoWithdrawal__786134157 =
+  {
+    adminNote : ?Text;
+    amount : Float;
+    createdAt : Int;
+    id : Text;
+    resolvedAt : ?Int;
+    status : {#approved; #pending; #rejected};
+    upiId : Text;
+    userEmail : Text;
+    userId : Text
+  };
 type CustomCode__248340264 =
   {
     alignment : Text;
@@ -337,6 +410,18 @@ type PlanType__945487099 = {#free; #pending; #premium};
 type PointsHistoryEntry__726440672 = {action : Text; at : Int; points : Nat};
 type Points__89154653 = Map__605269027<Principal, RewardPoints__539750564>;
 type Points__969365017 = Points__89154653;
+type PortfolioHolding__850129112 =
+  {
+    avgBuyPrice : Float;
+    coinId : Text;
+    coinName : Text;
+    coinSymbol : Text;
+    id : Text;
+    quantity : Float;
+    totalCost : Float;
+    updatedAt : Int;
+    userId : Text
+  };
 type PremiumPlan__1013645707 = {#annual; #monthly; #quarterly};
 type PremiumPrices__882492905 =
   {annual : Nat; monthly : Nat; quarterly : Nat};
@@ -450,6 +535,35 @@ type SubscriptionStatus__278950313 = {#active; #expired; #pending; #rejected};
 type Subscriptions__540932252 =
   Map__605269027<Principal, PremiumSubscription__770954208>;
 type Subscriptions__6394543 = Subscriptions__540932252;
+type SupportTicket__594619385 =
+  {
+    category : TicketCategory__725433312;
+    createdAt : Int;
+    description : Text;
+    id : Text;
+    priority : TicketPriority__403521575;
+    status : TicketStatus__495172862;
+    subject : Text;
+    updatedAt : Int;
+    userEmail : Text;
+    userId : Text
+  };
+type TicketCategory__725433312 =
+  {#bugReport; #coinInquiry; #general; #withdrawalQuery};
+type TicketPriority__403521575 = {#high; #low; #medium};
+type TicketReply__439416895 =
+  {
+    authorId : Text;
+    authorRole : {#admin; #user};
+    createdAt : Int;
+    id : Text;
+    message : Text;
+    ticketId : Text
+  };
+type TicketStatus__495172862 = {#inProgress; #open; #resolved};
+type TxStatus__1048773938 =
+  {#approved; #completed; #failed; #pending; #pendingApproval; #rejected};
+type TxType__973875002 = {#buy; #dailyReward; #deposit; #sell; #withdrawal};
 type UdhaarCustomer__381297801 =
   {
     address : Text;
@@ -709,6 +823,53 @@ actor {
   stable var cpagripOfferWallName : Text;
   stable var cpagripOfferWallUrl : Text;
   stable var cpagripWebhookSecret : Text;
+  stable var cryptoAuditLogs :
+    {
+      var root : Node__46230540<Text, CryptoAdminAuditLog__21466932>;
+      var size : Nat__490723111
+    };
+  stable var cryptoCoins :
+    {
+      var root : Node__46230540<Text, CryptoCoin__669128384>;
+      var size : Nat__490723111
+    };
+  stable var cryptoConfig :
+    {
+      buyFeePercent : Float;
+      dailyRewardAmount : Float;
+      highRiskThreshold : Float;
+      isDailyRewardEnabled : Bool;
+      isEnabled : Bool;
+      maxWithdrawal : Float;
+      minWithdrawal : Float;
+      sellFeePercent : Float
+    };
+  stable var cryptoCounter : Nat;
+  stable var cryptoPortfolio :
+    {
+      var root : Node__46230540<Text, PortfolioHolding__850129112>;
+      var size : Nat__490723111
+    };
+  stable var cryptoTransactions :
+    {
+      var root : Node__46230540<Text, CryptoTransaction__678490649>;
+      var size : Nat__490723111
+    };
+  stable var cryptoUserFreeze :
+    {
+      var root : Node__46230540<Text, CryptoUserFreeze__840577905>;
+      var size : Nat__490723111
+    };
+  stable var cryptoWallets :
+    {
+      var root : Node__46230540<Text, CryptoWallet__134333736>;
+      var size : Nat__490723111
+    };
+  stable var cryptoWithdrawals :
+    {
+      var root : Node__46230540<Text, CryptoWithdrawal__786134157>;
+      var size : Nat__490723111
+    };
   stable var customCodes :
     {
       var root : Node__46230540<Nat, CustomCode__248340264>;
@@ -877,6 +1038,16 @@ actor {
   stable var smsConfig :
     {fast2smsApiKey : Text; isEnabled : Bool; senderId : Text};
   stable var subscriptionPricing : ?SubscriptionPricing__787813395;
+  stable var supportTickets :
+    {
+      var root : Node__46230540<Text, SupportTicket__594619385>;
+      var size : Nat__490723111
+    };
+  stable var ticketReplies :
+    {
+      var root : Node__46230540<Text, TicketReply__439416895>;
+      var size : Nat__490723111
+    };
   stable var toggles :
     {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
   stable var topupRequests :

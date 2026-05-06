@@ -144,6 +144,67 @@ type UdhaarCustomer =
    name: text;
    shopId: text;
  };
+type TxType = 
+ variant {
+   buy;
+   dailyReward;
+   deposit;
+   sell;
+   withdrawal;
+ };
+type TxStatus = 
+ variant {
+   approved;
+   completed;
+   failed;
+   pending;
+   pendingApproval;
+   rejected;
+ };
+type TicketStatus = 
+ variant {
+   inProgress;
+   open;
+   resolved;
+ };
+type TicketReply = 
+ record {
+   authorId: text;
+   authorRole: variant {
+                 admin;
+                 user;
+               };
+   createdAt: int;
+   id: text;
+   message: text;
+   ticketId: text;
+ };
+type TicketPriority = 
+ variant {
+   high;
+   low;
+   medium;
+ };
+type TicketCategory = 
+ variant {
+   bugReport;
+   coinInquiry;
+   general;
+   withdrawalQuery;
+ };
+type SupportTicket = 
+ record {
+   category: TicketCategory;
+   createdAt: int;
+   description: text;
+   id: text;
+   priority: TicketPriority;
+   status: TicketStatus;
+   subject: text;
+   updatedAt: int;
+   userEmail: text;
+   userId: text;
+ };
 type SubscriptionStatus = 
  variant {
    active;
@@ -307,6 +368,18 @@ type PremiumPlan =
    annual;
    monthly;
    quarterly;
+ };
+type PortfolioHolding = 
+ record {
+   avgBuyPrice: float64;
+   coinId: text;
+   coinName: text;
+   coinSymbol: text;
+   id: text;
+   quantity: float64;
+   totalCost: float64;
+   updatedAt: int;
+   userId: text;
  };
 type PointsHistoryEntry = 
  record {
@@ -569,6 +642,76 @@ type CustomCode =
    subtitle2: text;
    title: text;
  };
+type CryptoWithdrawal = 
+ record {
+   adminNote: opt text;
+   amount: float64;
+   createdAt: int;
+   id: text;
+   resolvedAt: opt int;
+   status: variant {
+             approved;
+             pending;
+             rejected;
+           };
+   upiId: text;
+   userEmail: text;
+   userId: text;
+ };
+type CryptoWallet = 
+ record {
+   balance: float64;
+   createdAt: int;
+   dailyRewardStreak: nat;
+   lastDailyRewardClaimed: int;
+   mpinFailedAttempts: nat;
+   mpinHash: text;
+   mpinLockedUntil: int;
+   mpinSetAt: int;
+   totalDeposited: float64;
+   totalWithdrawn: float64;
+   updatedAt: int;
+   userId: text;
+ };
+type CryptoTransaction = 
+ record {
+   adminNote: opt text;
+   coinId: opt text;
+   coinSymbol: opt text;
+   createdAt: int;
+   feeAmount: opt float64;
+   feePercent: opt float64;
+   id: text;
+   netAmount: float64;
+   priceAtTime: opt float64;
+   quantity: opt float64;
+   status: TxStatus;
+   totalAmount: float64;
+   txType: TxType;
+   updatedAt: int;
+   userId: text;
+ };
+type CryptoInvestConfig = 
+ record {
+   buyFeePercent: float64;
+   dailyRewardAmount: float64;
+   highRiskThreshold: float64;
+   isDailyRewardEnabled: bool;
+   isEnabled: bool;
+   maxWithdrawal: float64;
+   minWithdrawal: float64;
+   sellFeePercent: float64;
+ };
+type CryptoCoin = 
+ record {
+   coinGeckoId: text;
+   createdAt: int;
+   id: text;
+   isListed: bool;
+   logoUrl: text;
+   name: text;
+   symbol: text;
+ };
 type CreatorEarningsSummary = 
  record {
    payments: vec LockedMessagePayment;
@@ -778,6 +921,11 @@ service : {
                              err: text;
                              ok: nat;
                            });
+  addCoin: (adminToken: opt text, name: text, symbol: text, coinGeckoId:
+   text, logoUrl: text) -> (variant {
+                              err: text;
+                              ok: CryptoCoin;
+                            });
   addCustomCode: (name: text, code: text, btnLabel: text, icon: text,
    placement: text, title: text, subtitle1: text, subtitle2: text, alignment:
    text, layoutStyle: text) -> (nat);
@@ -837,6 +985,16 @@ service : {
                                         err: text;
                                         ok: int;
                                       });
+  adminApproveCryptoWithdrawal: (adminToken: opt text, withdrawalId: 
+   text, adminNote: opt text) -> (variant {
+                                    err: text;
+                                    ok;
+                                  });
+  adminApproveDeposit: (adminToken: opt text, txId: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   adminApproveUpiPremium: (requestId: nat) -> (variant {
                                                  err: text;
                                                  ok;
@@ -858,7 +1016,33 @@ service : {
                                        err: text;
                                        ok;
                                      });
+  adminGetAllCryptoUsers: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec CryptoWallet;
+    });
+  adminGetAllTickets: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec SupportTicket;
+    });
+  adminGetAllWithdrawals: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec CryptoWithdrawal;
+    });
   adminGetChatStats: () -> (ChatStats) query;
+  adminGetCryptoStats: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok:
+       record {
+         totalBalance: float64;
+         totalCommissions: float64;
+         totalUsers: nat;
+         totalVolume: float64;
+       };
+    });
   adminGetUpiPremiumRequests: () -> (vec UpiPaymentRequest) query;
   /// Return all pending UPI unlock requests — admin only.
   /// Returns empty array for non-admin callers (never traps).
@@ -879,6 +1063,11 @@ service : {
       err: text;
       ok: vec OfferWithdrawal;
     });
+  adminRejectCryptoWithdrawal: (adminToken: opt text, withdrawalId: text,
+   adminNote: opt text) -> (variant {
+                              err: text;
+                              ok;
+                            });
   adminRejectUpiPremium: (requestId: nat) -> (variant {
                                                 err: text;
                                                 ok;
@@ -888,6 +1077,11 @@ service : {
                                                err: text;
                                                ok;
                                              });
+  adminResetMpin: (adminToken: opt text, userId: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   /// Admin-authenticated direct password reset for an Offer Portal user (no OTP).
   /// callerEmail and callerPasswordHash must match the admin credentials.
   adminResetOfferPassword: (callerEmail: text, callerPasswordHash: text,
@@ -920,11 +1114,30 @@ service : {
   approveTopupRequest: (requestId: nat, approve: bool) -> (bool);
   assignCallerUserRole: (user: principal, role: UserRole__1) -> ();
   awardChatPoints: (action: text, points: nat) -> (bool);
+  blockCryptoUser: (adminToken: opt text, userId: text, isBlocked: bool,
+   reason: text) -> (variant {
+                       err: text;
+                       ok;
+                     });
+  buyCoin: (userId: text, coinId: text, amountInFunds: float64, currentPrice:
+   float64, mpin: text) -> (variant {
+                              err: text;
+                              ok: CryptoTransaction;
+                            });
   cancelChatScheduledMessage: (id: nat) -> (bool);
   changeAdminPin: (currentPinHash: text, newPinHash: text) -> ();
+  changeMpin: (userId: text, currentMpin: text, newMpin: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   /// Validate an admin session token — public query.
   /// Returns true if the token is valid and not expired.
   checkAdminToken: (token: text) -> (bool) query;
+  claimDailyReward: (userId: text) -> (variant {
+                                         err: text;
+                                         ok: float64;
+                                       });
   cleanupExpiredChatStories: () -> (nat);
   cleanupExpiredChatVaultItems: () -> (nat);
   /// Submit a UPI transaction reference for admin approval to unlock a message.
@@ -944,6 +1157,12 @@ service : {
                err: text;
                ok: nat;
              });
+  createSupportTicket: (userId: text, userEmail: text, subject: text,
+   description: text, priority: text, category: text) ->
+   (variant {
+      err: text;
+      ok: SupportTicket;
+    });
   /// Create a Stripe PaymentIntent for a locked message and return clientSecret.
   createUnlockPaymentIntent: (messageId: nat) ->
    (variant {
@@ -956,6 +1175,10 @@ service : {
   deleteChatNote: (id: nat) -> (bool);
   deleteChatShortcut: (id: nat) -> (bool);
   deleteChatVaultItem: (id: nat) -> (bool);
+  deleteCoin: (adminToken: opt text, id: text) -> (variant {
+                                                     err: text;
+                                                     ok;
+                                                   });
   deleteCustomCode: (id: nat) -> (bool);
   deleteCustomSection: (id: nat) -> (bool);
   deleteJob: (id: nat) -> (bool);
@@ -990,6 +1213,11 @@ service : {
       err: text;
       ok: nat;
     });
+  freezeCryptoUser: (adminToken: opt text, userId: text, isFrozen: bool,
+   reason: text) -> (variant {
+                       err: text;
+                       ok;
+                     });
   getActiveBanners: () -> (vec Banner) query;
   getActiveChatStories: () -> (vec Story) query;
   getActiveProviders: () -> (vec ProviderProfile) query;
@@ -1021,6 +1249,11 @@ service : {
       ludoInterstitialId: text;
       rewardedUnitId: text;
     }) query;
+  getAllCoins: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec CryptoCoin;
+    });
   getAllProviders: () -> (vec ProviderProfile) query;
   /// Return all recharge transactions (master log) — admin only.
   /// Returns empty array for non-admin callers (never traps).
@@ -1072,10 +1305,13 @@ service : {
     });
   /// Return the caller's pay-to-unlock creator earnings.
   getCreatorEarnings: () -> (CreatorEarningsSummary) query;
+  getCryptoConfig: (adminToken: opt text) -> (CryptoInvestConfig);
+  getCryptoConfigPublic: () -> (record {isEnabled: bool;}) query;
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
   getJobs: () -> (vec JobItem) query;
+  getListedCoins: () -> (vec CryptoCoin) query;
   getListings: (city: opt text, category: opt MarketCategory) ->
    (vec MarketListing) query;
   getLockedFileUrl: (messageId: nat) -> (opt text) query;
@@ -1158,12 +1394,13 @@ service : {
        };
     });
   /// Get Offer Portal global config — public (no auth required).
-  /// Returns only non-sensitive fields: isEnabled and cpagripOfferWallUrl.
+  /// Returns only non-sensitive fields: isEnabled, cpagripOfferWallUrl, and offerWallName.
   /// Never traps for any caller — safe for anonymous/regular users.
   getOfferPortalConfigPublic: () ->
    (record {
       cpagripOfferWallUrl: text;
       isEnabled: bool;
+      offerWallName: text;
     }) query;
   getOrCreateChatConversation: (otherUserId: principal) ->
    (variant {
@@ -1183,6 +1420,15 @@ service : {
   getProviderProfile: (userId: nat) -> (opt ProviderProfile) query;
   getProvidersByCategory: (category: text) -> (vec ProviderProfile) query;
   getProvidersPendingApproval: () -> (vec ProviderProfile) query;
+  /// getPublicOfferPortalConfig — FIX 8: public query returning isEnabled + offerWallUrl + offerWallName.
+  /// This is the canonical method for portal open/closed check — no admin token required.
+  /// Never traps for any caller (anonymous, regular user, admin).
+  getPublicOfferPortalConfig: () ->
+   (record {
+      isEnabled: bool;
+      offerWallName: text;
+      offerWallUrl: text;
+    }) query;
   getRecentUsers: () -> (vec User) query;
   /// Return the current recharge API config — admin only.
   /// Returns default config for non-admin callers (never traps).
@@ -1199,6 +1445,7 @@ service : {
                          ok: SmsConfig;
                        }) query;
   getSubscriptionPricing: () -> (opt SubscriptionPricing) query;
+  getTicketReplies: (ticketId: text) -> (vec TicketReply);
   /// Return balance for a customer. Caller must own the customer.
   getUdhaarBalance: (customerId: text) ->
    (variant {
@@ -1216,9 +1463,14 @@ service : {
     }) query;
   getUserById: (userId: nat) -> (opt User) query;
   getUserByMobile: (mobile: MobileNumber) -> (opt User) query;
+  getUserCryptoTransactions: (userId: text) -> (vec CryptoTransaction);
+  getUserCryptoWallet: (userId: text) -> (CryptoWallet);
+  getUserCryptoWithdrawals: (userId: text) -> (vec CryptoWithdrawal);
+  getUserPortfolio: (userId: text) -> (vec PortfolioHolding);
   getUserProfile: (user: principal) -> (opt UserProfile) query;
   /// Get the current subscription status for a given user.
   getUserSubscriptionStatus: (userId: text) -> (opt UserSubscription) query;
+  getUserTickets: (userId: text) -> (vec SupportTicket);
   getUsersByRole: (role: UserRole) -> (vec User) query;
   getVideos: () -> (vec VideoItem) query;
   /// Return wallet balance for any userId — admin only.
@@ -1306,7 +1558,22 @@ service : {
       err: text;
       ok: nat;
     });
+  replyToTicket: (userId: text, ticketId: text, message: text, isAdmin: 
+   bool, adminToken: opt text) -> (variant {
+                                     err: text;
+                                     ok: TicketReply;
+                                   });
   requestApproval: () -> ();
+  requestCryptoWithdrawal: (userId: text, userEmail: text, amount: float64,
+   upiId: text, mpin: text) -> (variant {
+                                  err: text;
+                                  ok: CryptoWithdrawal;
+                                });
+  requestDeposit: (userId: text, amount: float64) ->
+   (variant {
+      err: text;
+      ok: CryptoTransaction;
+    });
   /// Request an OTP for Offer Portal password reset.
   /// Stores the OTP in stable memory with a 10-minute TTL.
   /// If the user has a mobile number and Fast2SMS is configured, the SMS is sent.
@@ -1352,6 +1619,11 @@ service : {
             });
   searchChatUsers: (searchQuery: text) -> (vec UserChatProfile) query;
   searchUsers: (searchText: text) -> (vec User) query;
+  sellCoin: (userId: text, coinId: text, quantity: float64, currentPrice:
+   float64, mpin: text) -> (variant {
+                              err: text;
+                              ok: CryptoTransaction;
+                            });
   sendLockedMessage: (conversationId: nat, fileUrl: text, lockType: LockType,
    passwordHash: opt text, task: opt LockedFileTask) ->
    (variant {
@@ -1380,6 +1652,10 @@ service : {
                err: text;
                ok: text;
              });
+  setMpin: (userId: text, mpin: text) -> (variant {
+                                            err: text;
+                                            ok;
+                                          });
   /// Updates the payment configuration (admin only).
   setPaymentConfig: (config: PaymentConfig) -> (bool);
   setPlanType: (userId: nat, planType: PlanType) -> ();
@@ -1434,6 +1710,11 @@ service : {
                err: text;
                ok;
              });
+  updateCoin: (adminToken: opt text, id: text, isListed: bool) ->
+   (variant {
+      err: text;
+      ok: CryptoCoin;
+    });
   /// Update commission config — admin only.
   /// Validates: retailerPct + adminPct must equal globalPct.
   updateCommissionConfig: (globalPct: float64, retailerPct: float64,
@@ -1446,6 +1727,11 @@ service : {
   /// Empty strings are ignored — existing values are preserved.
   updateCpagripSettings: (adminToken: opt text, apiKey: text, webhookSecret:
    text, offerWallName: text) -> (bool);
+  updateCryptoConfig: (adminToken: opt text, config: CryptoInvestConfig) ->
+   (variant {
+      err: text;
+      ok;
+    });
   updateCustomCode: (id: nat, name: text, code: text, btnLabel: text, icon:
    text, placement: text, enabled: bool, title: text, subtitle1: text,
    subtitle2: text, alignment: text, layoutStyle: text) -> (bool);
@@ -1512,6 +1798,11 @@ service : {
                                           ok: bool;
                                         });
   updateSubscriptionPricing: (newPricing: SubscriptionPricing) -> ();
+  updateTicketStatus: (adminToken: opt text, ticketId: text, status: 
+   text) -> (variant {
+               err: text;
+               ok;
+             });
   updateToggle: (adminToken: opt text, toggleName: text, value: bool) -> ();
   /// Update a customer. Caller must own the customer (shopId check).
   updateUdhaarCustomer: (customerId: text, name: text, mobile: text, address:
