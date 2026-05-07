@@ -179,8 +179,12 @@ export interface CryptoInvestConfig {
   'buyFeePercent' : number,
   'highRiskThreshold' : number,
   'isEnabled' : boolean,
+  'referralBonusAmount' : number,
   'maxWithdrawal' : number,
   'minWithdrawal' : number,
+  'upiId' : string,
+  'referralBonusEnabled' : boolean,
+  'qrCodeUrl' : string,
   'sellFeePercent' : number,
   'dailyRewardAmount' : number,
   'isDailyRewardEnabled' : boolean,
@@ -205,6 +209,7 @@ export interface CryptoTransaction {
 export interface CryptoWallet {
   'dailyRewardStreak' : bigint,
   'mpinHash' : string,
+  'referralCode' : string,
   'balance' : number,
   'mpinLockedUntil' : bigint,
   'userId' : string,
@@ -212,6 +217,7 @@ export interface CryptoWallet {
   'createdAt' : bigint,
   'lastDailyRewardClaimed' : bigint,
   'updatedAt' : bigint,
+  'hasCompletedFirstTrade' : boolean,
   'totalWithdrawn' : number,
   'totalDeposited' : number,
   'mpinSetAt' : bigint,
@@ -251,6 +257,20 @@ export interface CustomSection {
   'heading' : string,
   'enabled' : boolean,
   'buttons' : string,
+}
+export interface DepositRequest {
+  'id' : string,
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : null },
+  'userId' : string,
+  'screenshotUrl' : [] | [string],
+  'createdAt' : bigint,
+  'rejectionReason' : [] | [string],
+  'adminNote' : [] | [string],
+  'utrNumber' : string,
+  'amount' : number,
+  'resolvedAt' : [] | [bigint],
 }
 export type ExternalBlob = Uint8Array;
 export interface JobItem {
@@ -486,6 +506,12 @@ export interface ProviderProfile {
   'planType' : PlanType,
   'photos' : Array<string>,
 }
+export interface QrEntry {
+  'id' : string,
+  'qrUrl' : string,
+  'isActive' : boolean,
+  'qrLabel' : string,
+}
 export interface RechargeApiConfig {
   'autoRefundEnabled' : boolean,
   'isActive' : boolean,
@@ -562,6 +588,17 @@ export interface SmsConfig {
   'fast2smsApiKey' : string,
   'isEnabled' : boolean,
   'senderId' : string,
+}
+export interface StopLossRule {
+  'id' : string,
+  'quantityToSell' : number,
+  'userId' : string,
+  'createdAt' : bigint,
+  'coinSymbol' : string,
+  'limitPriceInr' : number,
+  'isActive' : boolean,
+  'triggeredAt' : [] | [bigint],
+  'coinId' : string,
 }
 export interface Story {
   'id' : bigint,
@@ -644,6 +681,12 @@ export interface UdhaarTransaction {
   'createdAt' : bigint,
   'customerId' : string,
   'amount' : number,
+}
+export interface UpiEntry {
+  'id' : string,
+  'isActive' : boolean,
+  'upiName' : string,
+  'upiId' : string,
 }
 export interface UpiPaymentRequest {
   'id' : bigint,
@@ -817,6 +860,11 @@ export interface _SERVICE {
    */
   'addManager' : ActorMethod<[string], boolean>,
   'addNews' : ActorMethod<[string, string, string, string, string], bigint>,
+  'addQrEntry' : ActorMethod<
+    [[] | [string], string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'addScrapRate' : ActorMethod<[string, number, number], bigint>,
   'addServiceRate' : ActorMethod<[bigint, ServiceRate], undefined>,
   'addShopPhoto' : ActorMethod<[bigint, string], undefined>,
@@ -835,6 +883,11 @@ export interface _SERVICE {
   'addUdhaarTransaction' : ActorMethod<
     [string, number, string, string, string],
     { 'ok' : UdhaarTransaction } |
+      { 'err' : string }
+  >,
+  'addUpiEntry' : ActorMethod<
+    [[] | [string], string, string],
+    { 'ok' : string } |
       { 'err' : string }
   >,
   'addVideo' : ActorMethod<[string, string, string, string, string], bigint>,
@@ -913,6 +966,11 @@ export interface _SERVICE {
     { 'ok' : Array<CryptoWallet> } |
       { 'err' : string }
   >,
+  'adminGetAllStopLossRules' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<StopLossRule> } |
+      { 'err' : string }
+  >,
   'adminGetAllTickets' : ActorMethod<
     [[] | [string]],
     { 'ok' : Array<SupportTicket> } |
@@ -963,6 +1021,11 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'adminRejectCryptoWithdrawal' : ActorMethod<
+    [[] | [string], string, [] | [string]],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'adminRejectDeposit' : ActorMethod<
     [[] | [string], string, [] | [string]],
     { 'ok' : null } |
       { 'err' : string }
@@ -1049,6 +1112,15 @@ export interface _SERVICE {
    * / Returns true if the token is valid and not expired.
    */
   'checkAdminToken' : ActorMethod<[string], boolean>,
+  /**
+   * / Called from frontend when a coin price update arrives.
+   * / Finds all active stop-loss rules for the coin where limitPrice >= currentPrice,
+   * / executes a sell for each (without MPIN — system-triggered), and marks rules as triggered.
+   */
+  'checkAndExecuteStopLoss' : ActorMethod<
+    [string, number],
+    { 'triggered' : bigint }
+  >,
   'claimDailyReward' : ActorMethod<
     [string],
     { 'ok' : number } |
@@ -1105,6 +1177,11 @@ export interface _SERVICE {
   'deleteNews' : ActorMethod<[bigint], boolean>,
   'deleteScrapRate' : ActorMethod<[bigint], boolean>,
   'deleteServiceRate' : ActorMethod<[bigint, string], undefined>,
+  'deleteStopLossRule' : ActorMethod<
+    [string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   /**
    * / Delete a customer and all its transactions. Caller must own the customer.
    */
@@ -1144,6 +1221,13 @@ export interface _SERVICE {
   >,
   'getActiveBanners' : ActorMethod<[], Array<Banner>>,
   'getActiveChatStories' : ActorMethod<[], Array<Story>>,
+  /**
+   * / Public query — no auth required. Returns the currently active UPI ID, name, and QR URL.
+   */
+  'getActivePaymentInfo' : ActorMethod<
+    [],
+    { 'qrUrl' : string, 'upiName' : string, 'upiId' : string }
+  >,
   'getActiveProviders' : ActorMethod<[], Array<ProviderProfile>>,
   /**
    * / Return the most recent `limit` audit log entries — admin only.
@@ -1259,6 +1343,11 @@ export interface _SERVICE {
   'getCustomCodes' : ActorMethod<[], Array<CustomCode>>,
   'getCustomSections' : ActorMethod<[], Array<CustomSection>>,
   'getCustomerOrders' : ActorMethod<[bigint], Array<Order>>,
+  'getDepositRequests' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<DepositRequest> } |
+      { 'err' : string }
+  >,
   'getJobs' : ActorMethod<[], Array<JobItem>>,
   'getListedCoins' : ActorMethod<[], Array<CryptoCoin>>,
   'getListings' : ActorMethod<
@@ -1417,6 +1506,11 @@ export interface _SERVICE {
     [],
     { 'offerWallName' : string, 'isEnabled' : boolean, 'offerWallUrl' : string }
   >,
+  'getQrList' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<QrEntry> } |
+      { 'err' : string }
+  >,
   'getRecentUsers' : ActorMethod<[], Array<User>>,
   /**
    * / Return the current recharge API config — admin only.
@@ -1460,13 +1554,20 @@ export interface _SERVICE {
     { 'ok' : Array<UdhaarTransaction> } |
       { 'err' : string }
   >,
+  'getUpiList' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : Array<UpiEntry> } |
+      { 'err' : string }
+  >,
   'getUserById' : ActorMethod<[bigint], [] | [User]>,
   'getUserByMobile' : ActorMethod<[MobileNumber], [] | [User]>,
   'getUserCryptoTransactions' : ActorMethod<[string], Array<CryptoTransaction>>,
   'getUserCryptoWallet' : ActorMethod<[string], CryptoWallet>,
   'getUserCryptoWithdrawals' : ActorMethod<[string], Array<CryptoWithdrawal>>,
+  'getUserDepositRequests' : ActorMethod<[string], Array<DepositRequest>>,
   'getUserPortfolio' : ActorMethod<[string], Array<PortfolioHolding>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserStopLossRules' : ActorMethod<[string], Array<StopLossRule>>,
   /**
    * / Get the current subscription status for a given user.
    */
@@ -1492,6 +1593,15 @@ export interface _SERVICE {
   'isManager' : ActorMethod<[string], boolean>,
   'isPremiumUser' : ActorMethod<[[] | [Principal]], boolean>,
   'leaveChatGroup' : ActorMethod<[bigint], boolean>,
+  /**
+   * / Link an Offer Portal referral code to a crypto wallet so that
+   * / when the user completes their first trade the referrer gets a bonus.
+   */
+  'linkCryptoReferral' : ActorMethod<
+    [string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'login' : ActorMethod<
     [MobileNumber, string],
@@ -1575,7 +1685,17 @@ export interface _SERVICE {
    * / Remove a manager by mobile number — admin only.
    */
   'removeManager' : ActorMethod<[string], boolean>,
+  'removeQrEntry' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'removeShopPhoto' : ActorMethod<[bigint, string], undefined>,
+  'removeUpiEntry' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'replyToChatStory' : ActorMethod<
     [bigint, string],
     { 'ok' : bigint } |
@@ -1593,8 +1713,8 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'requestDeposit' : ActorMethod<
-    [string, number],
-    { 'ok' : CryptoTransaction } |
+    [string, number, string, [] | [string]],
+    { 'ok' : DepositRequest } |
       { 'err' : string }
   >,
   /**
@@ -1676,6 +1796,16 @@ export interface _SERVICE {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'setActiveQr' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'setActiveUpi' : ActorMethod<
+    [[] | [string], string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setChatAutoReply' : ActorMethod<[boolean, Array<string>], boolean>,
   'setChatGhostMode' : ActorMethod<[boolean], boolean>,
@@ -1702,6 +1832,11 @@ export interface _SERVICE {
    * / Enable or disable the recharge service — admin only.
    */
   'setRechargeServiceEnabled' : ActorMethod<[boolean], boolean>,
+  'setStopLossRule' : ActorMethod<
+    [string, string, string, number, number],
+    { 'ok' : StopLossRule } |
+      { 'err' : string }
+  >,
   'submitUpiPremiumRequest' : ActorMethod<
     [PremiumPlan, string, bigint],
     { 'ok' : bigint } |

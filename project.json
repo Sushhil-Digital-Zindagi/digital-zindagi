@@ -1,30 +1,28 @@
 {
-  "overview": "Digital Zindagi is a premium multi-vendor super-app for India with a complete WhatsApp-like chat system, white-label branding, recharge business, offer portal, Ludo game, Udhaar Book, video gallery, and admin control panel — all powered by ICP canister storage.",
+  "overview": "Digital Zindagi is a premium super-app for India with crypto trading, offer earning, recharge, Ludo game, chat, and more — all managed from a powerful Admin Panel with instant universal sync.",
   "features": [
-    "WhatsApp-like Chat (1-to-1 & group)",
-    "Ghost Mode & Vanish Mode messages",
-    "Stories with 24-hour auto-delete",
-    "Message scheduling & auto-reply",
-    "Voice-to-text in Hindi/Hinglish",
-    "Reward points & referral badges",
-    "Mobile Recharge Business System",
-    "Offer Portal with commission split",
-    "Udhaar Book provider ledger",
-    "Ludo Game with rewards",
-    "Video Gallery",
-    "Admin Control Panel",
-    "White-label Digital Zindagi branding only"
+    "Crypto Trading with live prices, charts, and MPIN security",
+    "Payment & Deposit system with UPI/QR code",
+    "Stop-Loss auto-sell feature",
+    "Price charts (1D/1W/1M)",
+    "Coin logo upload to Cloudinary",
+    "Referral bonus after first trade",
+    "Offer Portal with CPAGrip offers",
+    "Multi-role Admin Panel",
+    "Ludo Game with 3D dice",
+    "WhatsApp-style Chat module",
+    "Recharge system with wallet"
   ],
-  "category": "social",
+  "category": "finance",
   "tags": [
-    "chat",
+    "crypto",
+    "trading",
     "super-app",
     "india",
-    "whatsapp-like",
-    "recharge",
-    "ludo",
-    "pwa",
-    "white-label"
+    "fintech",
+    "offer-wall",
+    "admin-panel",
+    "pwa"
   ],
-  "last_updated": "2026-04-21T03:25:11.771Z"
+  "last_updated": "2026-05-07T06:44:06.622Z"
 }

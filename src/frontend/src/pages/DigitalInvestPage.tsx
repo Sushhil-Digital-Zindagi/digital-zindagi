@@ -1,14 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  type CoinPriceMap,
-  type CryptoCoin,
-  type SupportTicket,
   useBuyCoin,
+  useCheckAndExecuteStopLoss,
   useClaimDailyReward,
+  useCoinPriceHistory,
   useCreateSupportTicket,
   useCryptoConfig,
+  useDeleteStopLossRule,
+  useGetActivePaymentInfo,
+  useGetUserReferrals,
+  useGetUserStopLossRules,
   useListedCoins,
   useLiveCoinPrices,
   useReplyToTicket,
@@ -16,12 +28,20 @@ import {
   useRequestDeposit,
   useSellCoin,
   useSetMpin,
+  useSetStopLossRule,
   useTicketReplies,
   useUserCryptoTransactions,
   useUserCryptoWallet,
   useUserCryptoWithdrawals,
+  useUserDepositRequests,
   useUserPortfolio,
   useUserTickets,
+} from "../hooks/useCryptoQueries";
+import type {
+  CoinPriceMap,
+  CryptoCoin,
+  CryptoConfig,
+  SupportTicket,
 } from "../hooks/useCryptoQueries";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -83,6 +103,111 @@ function StatusBadge({ status }: { status: string }) {
     >
       {status}
     </span>
+  );
+}
+
+// ─── Price Chart Component ────────────────────────────────────────────────────
+
+function PriceChart({ coinGeckoId }: { coinGeckoId: string }) {
+  const [period, setPeriod] = useState<1 | 7 | 30>(1);
+  const { data: history = [], isLoading } = useCoinPriceHistory(
+    coinGeckoId,
+    period,
+  );
+
+  const chartData = React.useMemo(() => {
+    // Downsample to max 50 points for performance
+    const step = Math.max(1, Math.floor(history.length / 50));
+    return history
+      .filter((_, i) => i % step === 0)
+      .map(([ts, price]) => ({
+        time: new Date(ts).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          ...(period > 1 ? { month: "short", day: "numeric" } : {}),
+        }),
+        price,
+      }));
+  }, [history, period]);
+
+  const minPrice = chartData.length
+    ? Math.min(...chartData.map((d) => d.price)) * 0.998
+    : 0;
+  const maxPrice = chartData.length
+    ? Math.max(...chartData.map((d) => d.price)) * 1.002
+    : 0;
+  const priceChange =
+    chartData.length >= 2
+      ? ((chartData[chartData.length - 1].price - chartData[0].price) /
+          chartData[0].price) *
+        100
+      : 0;
+  const chartColor = priceChange >= 0 ? "#059669" : "#ef4444";
+
+  return (
+    <div className="mt-3 bg-muted/30 rounded-xl p-3">
+      <div className="flex items-center justify-between mb-3">
+        <p className={`text-sm font-semibold ${gainColor(priceChange)}`}>
+          {priceChange >= 0 ? "+" : ""}
+          {priceChange.toFixed(2)}% (
+          {period === 1 ? "1D" : period === 7 ? "1W" : "1M"})
+        </p>
+        <div className="flex gap-1">
+          {([1, 7, 30] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setPeriod(d)}
+              className={`px-2 py-0.5 rounded text-xs font-medium transition ${
+                period === d
+                  ? "bg-emerald-600 text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+              data-ocid={`chart.period_${d === 1 ? "1d" : d === 7 ? "1w" : "1m"}`}
+            >
+              {d === 1 ? "1D" : d === 7 ? "1W" : "1M"}
+            </button>
+          ))}
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="h-32 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : chartData.length === 0 ? (
+        <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">
+          Chart data unavailable
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={120}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="time" hide />
+            <YAxis domain={[minPrice, maxPrice]} hide />
+            <Tooltip
+              contentStyle={{
+                fontSize: 11,
+                padding: "4px 8px",
+                borderRadius: 8,
+              }}
+              formatter={(v: number) => [inr(v), "Price"]}
+              labelStyle={{ display: "none" }}
+            />
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke={chartColor}
+              strokeWidth={2}
+              dot={false}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 }
 
@@ -214,13 +339,21 @@ function TradingModal({
   const [mpin, setMpin] = useState("");
   const [showMpinSetup, setShowMpinSetup] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [stopLossEnabled, setStopLossEnabled] = useState(false);
+  const [stopLossPrice, setStopLossPrice] = useState("");
   const buyCoin = useBuyCoin();
   const sellCoin = useSellCoin();
+  const setStopLoss = useSetStopLossRule();
 
-  const fee = feePercent / 100;
-  const buyQty = price > 0 ? (Number(amount) / price) * (1 - fee) : 0;
-  const sellProceeds = Number(qty) * price * (1 - fee);
-  const sellFeeAmt = Number(qty) * price * fee;
+  const buyFee = feePercent / 100;
+  const sellFee = feePercent / 100;
+  const buyAmtNum = Number(amount) || 0;
+  const sellQtyNum = Number(qty) || 0;
+  const buyFeeAmt = buyAmtNum * buyFee;
+  const buyQty = price > 0 ? (buyAmtNum - buyFeeAmt) / price : 0;
+  const sellGross = sellQtyNum * price;
+  const sellFeeAmt = sellGross * sellFee;
+  const sellProceeds = sellGross - sellFeeAmt;
 
   const handleSubmit = async () => {
     if (cooldown) return;
@@ -235,16 +368,29 @@ function TradingModal({
         await buyCoin.mutateAsync({
           userId,
           coinId: coin.id,
-          amountInFunds: Number(amount),
+          amountInFunds: buyAmtNum,
           currentPrice: price,
           mpin,
         });
+        // Set stop-loss if enabled
+        if (stopLossEnabled && stopLossPrice && Number(stopLossPrice) > 0) {
+          try {
+            await setStopLoss.mutateAsync({
+              userId,
+              coinId: coin.id,
+              limitPrice: Number(stopLossPrice),
+            });
+            toast.success(`Stop-loss ₹${stopLossPrice} set ho gaya!`);
+          } catch {
+            toast.error("Stop-loss set nahi hua, manually add karein");
+          }
+        }
         toast.success(`${coin.symbol} buy ho gaya!`);
       } else {
         await sellCoin.mutateAsync({
           userId,
           coinId: coin.id,
-          quantity: Number(qty),
+          quantity: sellQtyNum,
           currentPrice: price,
           mpin,
         });
@@ -269,13 +415,13 @@ function TradingModal({
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <div
-        className="bg-white w-full max-w-md rounded-t-2xl p-5 pb-8"
+        className="bg-white w-full max-w-md rounded-t-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         role="presentation"
         onKeyDown={(e) => e.stopPropagation()}
         data-ocid="trade.dialog"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {coin.logoUrl && (
               <img
@@ -305,7 +451,10 @@ function TradingModal({
           </button>
         </div>
 
-        <div className="flex rounded-lg overflow-hidden border border-emerald-200 mb-4">
+        {/* Price chart */}
+        {coin.coinGeckoId && <PriceChart coinGeckoId={coin.coinGeckoId} />}
+
+        <div className="flex rounded-lg overflow-hidden border border-emerald-200 my-4">
           {(["buy", "sell"] as const).map((t) => (
             <button
               key={t}
@@ -334,7 +483,7 @@ function TradingModal({
         )}
 
         {tab === "buy" ? (
-          <>
+          <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="trade-amount">
               Amount (\u20b9)
             </label>
@@ -343,17 +492,67 @@ function TradingModal({
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 my-2"
+              className="w-full border rounded-lg px-3 py-2"
               placeholder="Kitna invest karein"
               data-ocid="trade.buy_amount_input"
             />
-            <p className="text-xs text-muted-foreground">
-              \u2248 {fmt(buyQty)} {coin.symbol} &middot; Fee:{" "}
-              {inr(Number(amount) * fee)}
-            </p>
-          </>
+            {buyAmtNum > 0 && (
+              <div className="bg-emerald-50 rounded-lg p-3 text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount:</span>
+                  <span>{inr(buyAmtNum)}</span>
+                </div>
+                <div className="flex justify-between text-red-500">
+                  <span>Fee ({feePercent}%):</span>
+                  <span>- {inr(buyFeeAmt)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-emerald-700 border-t border-emerald-200 pt-1">
+                  <span>You get ≈</span>
+                  <span>
+                    {fmt(buyQty)} {coin.symbol}
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* Stop-loss option */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="stop-loss-toggle"
+                checked={stopLossEnabled}
+                onChange={(e) => setStopLossEnabled(e.target.checked)}
+                className="accent-emerald-600"
+                data-ocid="trade.stop_loss_checkbox"
+              />
+              <label
+                htmlFor="stop-loss-toggle"
+                className="text-sm text-foreground"
+              >
+                Stop-Loss Set Karein
+              </label>
+            </div>
+            {stopLossEnabled && (
+              <div>
+                <label
+                  className="text-xs text-muted-foreground"
+                  htmlFor="stop-loss-price"
+                >
+                  Sell if price drops below (\u20b9)
+                </label>
+                <input
+                  id="stop-loss-price"
+                  type="number"
+                  value={stopLossPrice}
+                  onChange={(e) => setStopLossPrice(e.target.value)}
+                  className="w-full border border-amber-300 rounded-lg px-3 py-2 mt-1 text-sm"
+                  placeholder={`e.g. ${price > 0 ? inr(price * 0.95) : ""}`}
+                  data-ocid="trade.stop_loss_price_input"
+                />
+              </div>
+            )}
+          </div>
         ) : (
-          <>
+          <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="trade-qty">
               Quantity ({coin.symbol})
             </label>
@@ -362,14 +561,27 @@ function TradingModal({
               type="number"
               value={qty}
               onChange={(e) => setQty(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 my-2"
+              className="w-full border rounded-lg px-3 py-2"
               placeholder={`Kitna ${coin.symbol} bechein`}
               data-ocid="trade.sell_qty_input"
             />
-            <p className="text-xs text-muted-foreground">
-              Milega: {inr(sellProceeds)} &middot; Fee: {inr(sellFeeAmt)}
-            </p>
-          </>
+            {sellQtyNum > 0 && (
+              <div className="bg-emerald-50 rounded-lg p-3 text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Value:</span>
+                  <span>{inr(sellGross)}</span>
+                </div>
+                <div className="flex justify-between text-red-500">
+                  <span>Fee ({feePercent}%):</span>
+                  <span>- {inr(sellFeeAmt)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-emerald-700 border-t border-emerald-200 pt-1">
+                  <span>You receive:</span>
+                  <span>{inr(sellProceeds)}</span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         <label className="text-sm font-medium mt-3 block" htmlFor="trade-mpin">
@@ -426,8 +638,21 @@ function MarketTab({
   const { data: coins = [], isLoading } = useListedCoins();
   const coinGeckoIds = coins.map((c) => c.coinGeckoId).filter(Boolean);
   const { data: prices = {} as CoinPriceMap } = useLiveCoinPrices(coinGeckoIds);
+  const checkStopLoss = useCheckAndExecuteStopLoss();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<CryptoCoin | null>(null);
+
+  // Periodic stop-loss check after prices update
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional – only re-run when prices change
+  useEffect(() => {
+    if (!userId || !prices || Object.keys(prices).length === 0) return;
+    for (const coin of coins) {
+      const pd = prices[coin.coinGeckoId];
+      if (!pd) continue;
+      const inrPrice = pd.usd * 83.5;
+      checkStopLoss.mutate({ userId, coinId: coin.id, currentPrice: inrPrice });
+    }
+  }, [prices]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = coins.filter(
     (c) =>
@@ -688,6 +913,564 @@ function PortfolioTab({
   );
 }
 
+// ─── ADD MONEY TAB ────────────────────────────────────────────────────────────
+
+function AddMoneyTab({
+  userId,
+}: {
+  userId: string;
+}) {
+  const requestDeposit = useRequestDeposit();
+  const { data: deposits = [] } = useUserDepositRequests(userId);
+  const { data: paymentInfo } = useGetActivePaymentInfo();
+  const [showWarning, setShowWarning] = useState(true);
+  const [amount, setAmount] = useState("");
+  const [utr, setUtr] = useState("");
+  const [utrError, setUtrError] = useState("");
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [successId, setSuccessId] = useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const CLOUDINARY_CONFIG = {
+    cloudName: "dquyiiu7o",
+    apiKey: "199372638334688",
+  };
+
+  const handleUtrChange = (val: string) => {
+    const numeric = val.replace(/\D/g, "");
+    setUtr(numeric);
+    if (numeric.length > 0 && numeric.length !== 12) {
+      setUtrError("UTR number exactly 12 digits ka hona chahiye");
+    } else {
+      setUtrError("");
+    }
+  };
+
+  const handleScreenshotUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { uploadToCloudinary: upload } = await import("../lib/cloudinary");
+      const url = await upload(file, CLOUDINARY_CONFIG, {
+        folder: "deposit-screenshots",
+      });
+      setScreenshotUrl(url);
+      toast.success("Screenshot upload ho gaya!");
+    } catch (err) {
+      toast.error(`Screenshot upload fail: ${(err as Error).message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!amount || Number(amount) < 100) {
+      toast.error("Amount kam se kam ₹100 hona chahiye");
+      return;
+    }
+    if (!utr || utr.length !== 12) {
+      setUtrError("UTR number exactly 12 digits ka hona chahiye");
+      return;
+    }
+    try {
+      const result = await requestDeposit.mutateAsync({
+        userId,
+        amount: Number(amount),
+        utrNumber: utr,
+        screenshotUrl,
+      });
+      const dep = result as { id?: string };
+      setSuccessId(dep?.id ?? "");
+      setAmount("");
+      setUtr("");
+      setScreenshotUrl(null);
+      setSubmitted(true);
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (
+        msg.toLowerCase().includes("already") ||
+        msg.toLowerCase().includes("pehle se")
+      ) {
+        toast.error("Yeh Transaction ID pehle se submit ho chuka hai");
+      } else {
+        toast.error(msg);
+      }
+    }
+  };
+
+  const upiId = paymentInfo?.upiId ?? "";
+  const upiName = paymentInfo?.upiName ?? "";
+  const qrUrl = paymentInfo?.qrUrl ?? "";
+
+  // Anti-block warning modal — shown every time user opens this tab
+  if (showWarning) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        data-ocid="addmoney.warning_modal"
+      >
+        <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
+          <div className="bg-red-600 px-5 py-4 text-white">
+            <p className="text-lg font-bold">⚠️ ZAROORI CHETAVNI</p>
+            <p className="text-sm opacity-90">IMPORTANT WARNING</p>
+          </div>
+          <div className="px-5 py-5 space-y-4">
+            <p className="text-sm font-semibold text-foreground">
+              Payment remark mein{" "}
+              <span className="text-red-600">KABHI MAT</span> likho:
+            </p>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-1">
+              <p className="text-sm font-medium text-red-700">
+                ❌ &quot;Crypto&quot;
+              </p>
+              <p className="text-sm font-medium text-red-700">
+                ❌ &quot;Invest&quot;
+              </p>
+              <p className="text-sm font-medium text-red-700">
+                ❌ &quot;Trade&quot;
+              </p>
+              <p className="text-sm font-medium text-red-700">
+                ❌ &quot;Digital Invest&quot;
+              </p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+              <p className="text-sm font-semibold text-emerald-700">
+                ✅ Sirf likho:
+              </p>
+              <p className="text-sm text-emerald-700 font-medium mt-1">
+                &quot;Personal&quot; ya blank chhod do
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Agar galat remark likhoge to aapka payment <strong>BLOCK</strong>{" "}
+              ho sakta hai aur wallet credit <strong>nahi hoga</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowWarning(false)}
+              className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition"
+              data-ocid="addmoney.warning_agree_button"
+            >
+              Samajh Gaya, Aage Badho →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center px-4 py-12 gap-4"
+        data-ocid="addmoney.success_state"
+      >
+        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+          <span className="text-3xl">✅</span>
+        </div>
+        <h3 className="font-bold text-lg text-emerald-700">
+          Deposit Request Bheja Gaya!
+        </h3>
+        {successId && (
+          <p className="text-xs text-muted-foreground">
+            Request ID: #{successId.slice(-8).toUpperCase()}
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground text-center">
+          Admin review karenge — usually <strong>30 min</strong> mein approve
+          hota hai
+        </p>
+        <button
+          type="button"
+          onClick={() => setSubmitted(false)}
+          className="mt-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition"
+          data-ocid="addmoney.new_deposit_button"
+        >
+          Nayi Request Bhejein
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col px-4 py-4 gap-4 overflow-y-auto">
+      {/* Payment info */}
+      {upiId ? (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-3">
+            💳 Payment Details
+          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">UPI ID</p>
+              <p className="font-bold text-emerald-800 truncate">{upiId}</p>
+              {upiName && (
+                <p className="text-xs text-muted-foreground">{upiName}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(upiId)
+                  .then(() => toast.success("UPI ID copy ho gaya!"));
+              }}
+              className="flex-shrink-0 bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-700 transition"
+              data-ocid="addmoney.copy_upi_button"
+            >
+              Copy
+            </button>
+          </div>
+          {qrUrl && (
+            <div className="mt-3 text-center">
+              <img
+                src={qrUrl}
+                alt="Payment QR Code"
+                className="w-44 h-44 mx-auto rounded-xl border border-emerald-200 object-contain bg-white"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                QR code scan karo ya UPI ID copy karke payment karo
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
+          ⚠ Admin ne abhi payment details set nahi ki hain. Thodi der baad try
+          karein.
+        </div>
+      )}
+
+      {/* Request form */}
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <p className="font-semibold text-sm">Deposit Request Bhejein</p>
+        <div>
+          <label
+            htmlFor="dep-amount"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Amount (₹) — minimum ₹100
+          </label>
+          <input
+            id="dep-amount"
+            type="number"
+            min="100"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            placeholder="Amount jo bheja hai"
+            data-ocid="addmoney.amount_input"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="dep-utr"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            UTR / Transaction ID *
+          </label>
+          <p className="text-xs text-muted-foreground mb-1">
+            12 digit ka Transaction ID (UTR) daalein
+          </p>
+          <input
+            id="dep-utr"
+            type="text"
+            inputMode="numeric"
+            maxLength={12}
+            value={utr}
+            onChange={(e) => handleUtrChange(e.target.value)}
+            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${utrError ? "border-red-400 focus:ring-red-300" : "focus:ring-emerald-400"}`}
+            placeholder="12 digit UTR number"
+            data-ocid="addmoney.utr_input"
+          />
+          {utrError && <p className="text-xs text-red-600 mt-1">{utrError}</p>}
+        </div>
+
+        {/* Screenshot Upload */}
+        <div>
+          <label
+            htmlFor="dep-screenshot"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Screenshot Upload Karein (Optional but recommended)
+          </label>
+          <div className="mt-1">
+            {screenshotUrl ? (
+              <div className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <span className="text-emerald-600 text-lg">✅</span>
+                <span className="text-xs text-emerald-700 font-medium">
+                  Screenshot uploaded ✓
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setScreenshotUrl(null)}
+                  className="ml-auto text-xs text-red-500 underline"
+                  data-ocid="addmoney.remove_screenshot_button"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full border border-dashed border-emerald-400 rounded-lg py-2.5 text-xs text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-60 flex items-center justify-center gap-2"
+                data-ocid="addmoney.upload_screenshot_button"
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />{" "}
+                    Uploading...
+                  </>
+                ) : (
+                  <>📷 Screenshot Upload Karein</>
+                )}
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              id="dep-screenshot"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleScreenshotUpload}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={
+            requestDeposit.isPending || !amount || !utr || utr.length !== 12
+          }
+          className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50 hover:bg-emerald-700 transition"
+          data-ocid="addmoney.submit_button"
+        >
+          {requestDeposit.isPending
+            ? "Submitting..."
+            : "Deposit Request Bhejein"}
+        </button>
+        <p className="text-xs text-muted-foreground text-center">
+          Admin verify karke balance add karega (usually 30 min)
+        </p>
+      </div>
+
+      {/* Deposit history */}
+      <div>
+        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">
+          Deposit History
+        </h3>
+        {deposits.length === 0 ? (
+          <p
+            className="text-sm text-muted-foreground text-center py-4"
+            data-ocid="addmoney.empty_state"
+          >
+            Koi deposit request nahi
+          </p>
+        ) : (
+          <div className="space-y-2" data-ocid="addmoney.history_list">
+            {deposits.map((d, idx) => (
+              <div
+                key={d.id}
+                className="p-3 bg-card border border-border rounded-xl"
+                data-ocid={`addmoney.deposit.${idx + 1}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      ₹{d.amount.toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      UTR:{" "}
+                      {d.utrNumber ? `****${d.utrNumber.slice(-4)}` : "N/A"} ·{" "}
+                      {formatDate(d.createdAt)}
+                    </p>
+                  </div>
+                  <StatusBadge status={d.status} />
+                </div>
+                {d.status === "rejected" &&
+                  (d.rejectionReason ?? d.adminNote) && (
+                    <p className="text-xs text-red-600 mt-1">
+                      ❌ Reject reason: {d.rejectionReason ?? d.adminNote}
+                    </p>
+                  )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── STOP LOSS TAB ────────────────────────────────────────────────────────────
+
+function StopLossTab({
+  userId,
+  prices,
+}: { userId: string; prices: CoinPriceMap }) {
+  const { data: rules = [], isLoading } = useGetUserStopLossRules(userId);
+  const deleteRule = useDeleteStopLossRule();
+
+  return (
+    <div className="flex flex-col px-4 py-4 gap-3 overflow-y-auto">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+        <p className="text-xs font-semibold text-amber-700">
+          \u26a0 Stop-Loss Kaise Kaam Karta Hai?
+        </p>
+        <p className="text-xs text-amber-600 mt-1">
+          Jab coin ka price aapke set kiye limit se neeche jayega, automatically
+          sell ho jayega. Buy karte waqt "Stop-Loss Set Karein" checkbox use
+          karein.
+        </p>
+      </div>
+
+      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+        Active Stop-Loss Rules
+      </h3>
+      {isLoading ? (
+        <Spinner />
+      ) : rules.length === 0 ? (
+        <div
+          className="text-center py-10 text-muted-foreground"
+          data-ocid="stoploss.empty_state"
+        >
+          <p className="text-3xl mb-2">\ud83d\udd12</p>
+          <p className="text-sm">Koi stop-loss rule nahi</p>
+          <p className="text-xs mt-1">
+            Market tab se coin kharidein aur stop-loss set karein
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2" data-ocid="stoploss.list">
+          {rules.map((rule, idx) => {
+            const pd = prices[rule.coinId];
+            const currentPrice = pd ? pd.usd * 83.5 : 0;
+            const diff =
+              currentPrice > 0
+                ? ((currentPrice - rule.limitPrice) / rule.limitPrice) * 100
+                : null;
+            return (
+              <div
+                key={rule.id}
+                className="flex items-center justify-between p-3 bg-card border border-border rounded-xl"
+                data-ocid={`stoploss.rule.${idx + 1}`}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">
+                    {rule.coinName} ({rule.symbol})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Limit: {inr(rule.limitPrice)}
+                    {currentPrice > 0 && (
+                      <> \u00b7 Current: {inr(currentPrice)}</>
+                    )}
+                  </p>
+                  {diff !== null && (
+                    <p
+                      className={`text-xs font-medium ${diff >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                    >
+                      {diff >= 0 ? "+" : ""}
+                      {diff.toFixed(2)}% from limit
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteRule.mutate({ userId, ruleId: rule.id })}
+                  disabled={deleteRule.isPending}
+                  className="ml-3 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition text-xs font-medium"
+                  data-ocid={`stoploss.delete_button.${idx + 1}`}
+                >
+                  Delete
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── REFERRAL TAB ─────────────────────────────────────────────────────────────
+
+function ReferralTab({ userId }: { userId: string }) {
+  const { data: referrals = [], isLoading } = useGetUserReferrals(userId);
+  const totalBonus = referrals.reduce((s, r) => s + r.bonusCredited, 0);
+
+  return (
+    <div className="flex flex-col px-4 py-4 gap-4 overflow-y-auto">
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-xl p-5 text-white">
+        <p className="text-sm opacity-80">Total Referral Bonus Earned</p>
+        <p className="text-3xl font-bold mt-1">{inr(totalBonus)}</p>
+        <p className="text-xs opacity-70 mt-2">
+          Refer & earn: jab aapka referral pehli trade kare, bonus milega!
+        </p>
+      </div>
+
+      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+        Referral List ({referrals.length})
+      </h3>
+
+      {isLoading ? (
+        <Spinner />
+      ) : referrals.length === 0 ? (
+        <div
+          className="text-center py-10 text-muted-foreground"
+          data-ocid="referral.empty_state"
+        >
+          <p className="text-3xl mb-2">\ud83d\udc65</p>
+          <p className="text-sm">Abhi tak koi referral nahi</p>
+          <p className="text-xs mt-1">
+            Apna referral link share karein aur earn karein!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2" data-ocid="referral.list">
+          {referrals.map((r, idx) => (
+            <div
+              key={r.referredUserId}
+              className="flex items-center justify-between p-3 bg-card border border-border rounded-xl"
+              data-ocid={`referral.item.${idx + 1}`}
+            >
+              <div>
+                <p className="text-sm font-medium">
+                  {r.referredEmail || r.referredUserId.slice(0, 16)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Joined: {formatDate(r.joinedAt)}
+                  {r.firstTradeAt != null && (
+                    <> \u00b7 First trade: {formatDate(r.firstTradeAt)}</>
+                  )}
+                </p>
+              </div>
+              <div className="text-right">
+                {r.bonusPaid ? (
+                  <span className="text-xs font-semibold text-emerald-600">
+                    +{inr(r.bonusCredited)}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    Pending first trade
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── WALLET TAB ───────────────────────────────────────────────────────────────
 
 function WalletTab({
@@ -702,14 +1485,11 @@ function WalletTab({
   const { data: wallet } = useUserCryptoWallet(userId);
   const { data: txns = [] } = useUserCryptoTransactions(userId);
   const { data: withdrawals = [] } = useUserCryptoWithdrawals(userId);
-  const requestDeposit = useRequestDeposit();
   const requestWithdrawal = useRequestCryptoWithdrawal();
-  const [depAmt, setDepAmt] = useState("");
   const [withAmt, setWithAmt] = useState("");
   const [withUpi, setWithUpi] = useState("");
   const [withMpin, setWithMpin] = useState("");
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
-  const [showDepositForm, setShowDepositForm] = useState(false);
 
   return (
     <div className="flex flex-col overflow-y-auto">
@@ -725,14 +1505,6 @@ function WalletTab({
       <div className="flex gap-3 px-4 mt-4">
         <button
           type="button"
-          onClick={() => setShowDepositForm(!showDepositForm)}
-          className="flex-1 py-2 rounded-xl border-2 border-emerald-600 text-emerald-700 font-semibold text-sm hover:bg-emerald-50 transition"
-          data-ocid="wallet.deposit_button"
-        >
-          + Deposit
-        </button>
-        <button
-          type="button"
           onClick={() => setShowWithdrawForm(!showWithdrawForm)}
           className="flex-1 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition"
           data-ocid="wallet.withdraw_button"
@@ -740,43 +1512,6 @@ function WalletTab({
           Withdraw
         </button>
       </div>
-
-      {showDepositForm && (
-        <div
-          className="mx-4 mt-3 p-4 bg-card border border-border rounded-xl"
-          data-ocid="wallet.deposit_form"
-        >
-          <p className="font-semibold text-sm mb-2">Deposit Request</p>
-          <p className="text-xs text-muted-foreground mb-2">
-            Admin review ke baad amount add hoga
-          </p>
-          <input
-            type="number"
-            value={depAmt}
-            onChange={(e) => setDepAmt(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mb-2 text-sm"
-            placeholder="Amount (\u20b9)"
-            data-ocid="wallet.deposit_amount_input"
-          />
-          <button
-            type="button"
-            disabled={requestDeposit.isPending || !depAmt}
-            onClick={async () => {
-              await requestDeposit.mutateAsync({
-                userId,
-                amount: Number(depAmt),
-              });
-              toast.success("Deposit request bheja gaya!");
-              setDepAmt("");
-              setShowDepositForm(false);
-            }}
-            className="w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50"
-            data-ocid="wallet.deposit_submit_button"
-          >
-            Request Submit Karein
-          </button>
-        </div>
-      )}
 
       {showWithdrawForm && (
         <div
@@ -872,7 +1607,9 @@ function WalletTab({
                 </div>
                 <div className="text-right">
                   <p
-                    className={`text-sm font-semibold ${t.type === "buy" ? "text-red-500" : "text-emerald-600"}`}
+                    className={`text-sm font-semibold ${
+                      t.type === "buy" ? "text-red-500" : "text-emerald-600"
+                    }`}
                   >
                     {t.type === "buy" ? "-" : "+"}
                     {inr(Math.abs(t.netAmount))}
@@ -958,7 +1695,11 @@ function TicketThread({
             data-ocid={`ticket.reply.${idx + 1}`}
           >
             <div
-              className={`max-w-xs rounded-xl px-3 py-2 text-sm ${r.isAdmin ? "bg-muted text-foreground" : "bg-emerald-600 text-white"}`}
+              className={`max-w-xs rounded-xl px-3 py-2 text-sm ${
+                r.isAdmin
+                  ? "bg-muted text-foreground"
+                  : "bg-emerald-600 text-white"
+              }`}
             >
               <p>{r.message}</p>
               <p className="text-xs opacity-60 mt-1">
@@ -1152,17 +1893,31 @@ function SupportTab({ userId, email }: { userId: string; email: string }) {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
-type Tab = "market" | "portfolio" | "wallet" | "support";
+type Tab =
+  | "market"
+  | "portfolio"
+  | "addmoney"
+  | "stoploss"
+  | "referral"
+  | "wallet"
+  | "support";
 
 export default function DigitalInvestPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("market");
+  const [addMoneyKey, setAddMoneyKey] = React.useState(0);
 
   const userId = user?.userId ? String(user.userId) : "";
   const email = user?.email ?? "";
   const { data: config, isLoading: configLoading } = useCryptoConfig();
   const { data: wallet } = useUserCryptoWallet(userId);
   const isAdmin = user?.isSuperAdmin || user?.role === "admin";
+
+  // For stop-loss tab — need live prices
+  const { data: listedCoins = [] } = useListedCoins();
+  const coinGeckoIds = listedCoins.map((c) => c.coinGeckoId).filter(Boolean);
+  const { data: livePrices = {} as CoinPriceMap } =
+    useLiveCoinPrices(coinGeckoIds);
 
   if (!configLoading && config && !config.isEnabled && !isAdmin) {
     return (
@@ -1211,6 +1966,9 @@ export default function DigitalInvestPage() {
   const TABS: { id: Tab; label: string; icon: string }[] = [
     { id: "market", label: "Market", icon: "\ud83d\udcca" },
     { id: "portfolio", label: "Portfolio", icon: "\ud83d\udcbc" },
+    { id: "addmoney", label: "Add Money", icon: "\ud83d\udcb0" },
+    { id: "stoploss", label: "Stop-Loss", icon: "\ud83d\udd12" },
+    { id: "referral", label: "Referral", icon: "\ud83d\udc65" },
     { id: "wallet", label: "Wallet", icon: "\ud83d\udcb3" },
     { id: "support", label: "Support", icon: "\ud83c\udfab" },
   ];
@@ -1251,6 +2009,13 @@ export default function DigitalInvestPage() {
             {activeTab === "portfolio" && (
               <PortfolioTab userId={userId} config={config ?? null} />
             )}
+            {activeTab === "addmoney" && (
+              <AddMoneyTab key={addMoneyKey} userId={userId} />
+            )}
+            {activeTab === "stoploss" && (
+              <StopLossTab userId={userId} prices={livePrices} />
+            )}
+            {activeTab === "referral" && <ReferralTab userId={userId} />}
             {activeTab === "wallet" && (
               <WalletTab
                 userId={userId}
@@ -1265,26 +2030,34 @@ export default function DigitalInvestPage() {
         )}
       </div>
 
+      {/* Scrollable bottom tab bar */}
       <div
-        className="flex border-t border-border bg-card flex-shrink-0"
+        className="border-t border-border bg-card flex-shrink-0 overflow-x-auto"
         data-ocid="digitalinvest.tab_bar"
       >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex flex-col items-center py-2 text-xs font-medium transition ${
-              activeTab === tab.id
-                ? "text-emerald-700 border-t-2 border-emerald-600"
-                : "text-muted-foreground"
-            }`}
-            data-ocid={`digitalinvest.${tab.id}_tab`}
-          >
-            <span className="text-lg">{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
+        <div className="flex min-w-max">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                if (tab.id === "addmoney") {
+                  setAddMoneyKey((k) => k + 1);
+                }
+                setActiveTab(tab.id);
+              }}
+              className={`flex flex-col items-center py-2 px-3 text-xs font-medium transition min-w-[60px] ${
+                activeTab === tab.id
+                  ? "text-emerald-700 border-t-2 border-emerald-600"
+                  : "text-muted-foreground"
+              }`}
+              data-ocid={`digitalinvest.${tab.id}_tab`}
+            >
+              <span className="text-lg">{tab.icon}</span>
+              <span className="whitespace-nowrap">{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

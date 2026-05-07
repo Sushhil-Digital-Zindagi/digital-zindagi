@@ -46,6 +46,8 @@ module {
       mpinLockedUntil = 0;
       lastDailyRewardClaimed = 0;
       dailyRewardStreak = 0;
+      hasCompletedFirstTrade = false;
+      referralCode = "";
       createdAt = now;
       updatedAt = now;
     }
@@ -200,6 +202,22 @@ module {
     } else {
       1
     }
+  };
+
+  // ─────────────────────────────────────────
+  // Stop-Loss Helpers
+  // ─────────────────────────────────────────
+
+  /// Return all active stop-loss rules for a given coin that should trigger
+  /// at the supplied current price (limitPrice >= currentPrice).
+  public func findTriggeredStopLossRules(
+    rules        : [CryptoTypes.StopLossRule],
+    coinId       : Text,
+    currentPrice : Float,
+  ) : [CryptoTypes.StopLossRule] {
+    rules.filter(func(r : CryptoTypes.StopLossRule) : Bool {
+      r.coinId == coinId and r.isActive and r.limitPriceInr >= currentPrice
+    })
   };
 
   // ─────────────────────────────────────────

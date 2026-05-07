@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle,
   BarChart2,
   ChevronDown,
   ChevronRight,
@@ -14,23 +13,34 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { getAdminToken } from "../hooks/useAdminSession";
 import {
   useAddCoin,
+  useAddQrEntry,
+  useAddUpiEntry,
   useAdminApproveCryptoWithdrawal,
+  useAdminApproveDeposit,
   useAdminGetAllCryptoUsers,
   useAdminGetCryptoStats,
   useAdminGetAllWithdrawals as useAdminGetCryptoWithdrawals,
+  useAdminGetDepositRequests,
   useAdminGetAllTickets as useAdminGetTickets,
   useAdminRejectCryptoWithdrawal,
+  useAdminRejectDeposit,
   useAdminResetMpin,
   useAllCoins,
   useBlockCryptoUser,
   useCryptoConfig,
   useDeleteCoin,
   useFreezeCryptoUser,
+  useGetQrList,
+  useGetUpiList,
+  useRemoveQrEntry,
+  useRemoveUpiEntry,
   useReplyToTicket,
+  useSetActiveQr,
+  useSetActiveUpi,
   useUpdateCoin as useToggleCoinListing,
   useUpdateCryptoConfig,
   useUpdateTicketStatus,
@@ -38,8 +48,12 @@ import {
 import type {
   CryptoConfig,
   CryptoWithdrawal,
+  DepositRequest,
+  QrEntry,
   SupportTicket,
+  UpiEntry,
 } from "../hooks/useCryptoQueries";
+import { uploadToCloudinary } from "../lib/cloudinary";
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
 
@@ -296,6 +310,70 @@ function ModuleSettings() {
         </button>
       </div>
 
+      <hr className="border-border" />
+
+      {/* Referral Settings */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium text-foreground text-sm">Referral Bonus</p>
+          <p className="text-xs text-muted-foreground">
+            First trade ke baad referrer ko bonus
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            set(
+              "isReferralEnabled" as keyof CryptoConfig,
+              !(current as CryptoConfig & { isReferralEnabled?: boolean })
+                .isReferralEnabled,
+            )
+          }
+          className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${
+            (current as CryptoConfig & { isReferralEnabled?: boolean })
+              .isReferralEnabled
+              ? "bg-emerald-600"
+              : "bg-muted"
+          }`}
+          data-ocid="crypto_admin.referral_toggle"
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              (current as CryptoConfig & { isReferralEnabled?: boolean })
+                .isReferralEnabled
+                ? "translate-x-5"
+                : ""
+            }`}
+          />
+        </button>
+      </div>
+      <div>
+        <label
+          htmlFor="referral-bonus-amt"
+          className="block text-xs font-medium text-muted-foreground mb-1"
+        >
+          Referral Bonus Amount
+        </label>
+        <input
+          id="referral-bonus-amt"
+          type="number"
+          min="0"
+          value={
+            (current as CryptoConfig & { referralBonusAmount?: number })
+              .referralBonusAmount ?? 50
+          }
+          onChange={(e) =>
+            set(
+              "referralBonusAmount" as keyof CryptoConfig,
+              (Number.parseInt(e.target.value) ||
+                0) as unknown as CryptoConfig[keyof CryptoConfig],
+            )
+          }
+          className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          data-ocid="crypto_admin.referral_bonus_input"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label
@@ -349,6 +427,69 @@ function ModuleSettings() {
       >
         {updateMut.isPending ? "Saving..." : "Save Settings"}
       </button>
+    </div>
+  );
+}
+
+// ─── Cloudinary Config + Coin Logo Upload Helper ───────────────────────────────
+
+const CLOUDINARY_CONFIG = { cloudName: "dquyiiu7o", apiKey: "199372638334688" };
+
+function CoinLogoUpload({
+  value,
+  onChange,
+}: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(value);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadToCloudinary(file, CLOUDINARY_CONFIG, {
+        folder: "coin-logos",
+      });
+      setPreview(url);
+      onChange(url);
+    } catch (err) {
+      alert(`Logo upload fail hua: ${(err as Error).message}`);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {preview && (
+        <img
+          src={preview}
+          alt="logo"
+          className="w-10 h-10 rounded-full object-cover border border-border"
+        />
+      )}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex-1 border border-dashed border-emerald-400 rounded-lg px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-60"
+        data-ocid="crypto_admin.coin_logo_upload_button"
+      >
+        {uploading
+          ? "Uploading..."
+          : preview
+            ? "Logo Change Karein"
+            : "Upload Logo"}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+        data-ocid="crypto_admin.coin_logo_file_input"
+      />
     </div>
   );
 }
@@ -473,22 +614,12 @@ function CoinManagement() {
           />
         </div>
         <div>
-          <label
-            htmlFor="coin-logo"
-            className="block text-xs font-medium text-muted-foreground mb-1"
-          >
-            Logo URL (Cloudinary)
-          </label>
-          <input
-            id="coin-logo"
-            type="url"
-            placeholder="https://res.cloudinary.com/..."
+          <p className="block text-xs font-medium text-muted-foreground mb-1">
+            Coin Logo
+          </p>
+          <CoinLogoUpload
             value={form.logoUrl}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, logoUrl: e.target.value }))
-            }
-            className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            data-ocid="crypto_admin.coin_logo_input"
+            onChange={(url) => setForm((f) => ({ ...f, logoUrl: url }))}
           />
         </div>
         {toast && <Toast msg={toast.msg} ok={toast.ok} />}
@@ -1315,24 +1446,565 @@ function SupportTickets() {
   );
 }
 
-// ─── Root Component ───────────────────────────────────────────────────────────
+// ─── Payment Settings ─────────────────────────────────────────────────────────────────
+
+function PaymentSettings() {
+  const { data: upiList = [], isLoading: upiLoading } = useGetUpiList();
+  const { data: qrList = [], isLoading: qrLoading } = useGetQrList();
+  const addUpi = useAddUpiEntry();
+  const removeUpi = useRemoveUpiEntry();
+  const setActiveUpi = useSetActiveUpi();
+  const addQr = useAddQrEntry();
+  const removeQr = useRemoveQrEntry();
+  const setActiveQr = useSetActiveQr();
+  const [newUpiId, setNewUpiId] = useState("");
+  const [newUpiName, setNewUpiName] = useState("");
+  const [newQrLabel, setNewQrLabel] = useState("");
+  const [newQrUrl, setNewQrUrl] = useState("");
+  const [qrUploading, setQrUploading] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const qrInputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleQrUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setQrUploading(true);
+    try {
+      const url = await uploadToCloudinary(file, CLOUDINARY_CONFIG, {
+        folder: "qr-codes",
+      });
+      setNewQrUrl(url);
+      setToast({ msg: "QR image upload ho gaya!", ok: true });
+    } catch (err) {
+      setToast({ msg: `QR upload fail: ${(err as Error).message}`, ok: false });
+    } finally {
+      setQrUploading(false);
+    }
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleAddUpi() {
+    if (!newUpiId.trim()) {
+      setToast({ msg: "UPI ID required hai", ok: false });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    try {
+      await addUpi.mutateAsync({
+        upiId: newUpiId.trim(),
+        upiName: newUpiName.trim(),
+      });
+      setNewUpiId("");
+      setNewUpiName("");
+      setToast({ msg: "UPI ID add ho gaya!", ok: true });
+    } catch (e) {
+      setToast({ msg: (e as Error).message ?? "Add fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleAddQr() {
+    if (!newQrUrl.trim()) {
+      setToast({ msg: "Pehle QR image upload karein", ok: false });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    try {
+      await addQr.mutateAsync({
+        qrUrl: newQrUrl.trim(),
+        qrLabel: newQrLabel.trim() || "QR Code",
+      });
+      setNewQrUrl("");
+      setNewQrLabel("");
+      setToast({ msg: "QR Code add ho gaya!", ok: true });
+    } catch (e) {
+      setToast({ msg: (e as Error).message ?? "Add fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  return (
+    <div className="space-y-6 p-4">
+      {toast && <Toast msg={toast.msg} ok={toast.ok} />}
+
+      {/* UPI Management */}
+      <div>
+        <p className="font-semibold text-sm text-foreground mb-3">
+          UPI ID Management
+        </p>
+
+        {/* Existing UPI list */}
+        {upiLoading ? (
+          <div className="text-center py-3 text-muted-foreground text-xs">
+            Loading...
+          </div>
+        ) : upiList.length === 0 ? (
+          <div
+            className="text-center py-3 text-muted-foreground text-xs"
+            data-ocid="crypto_admin.upi_empty_state"
+          >
+            Koi UPI ID nahi hai abhi
+          </div>
+        ) : (
+          <div className="space-y-2 mb-3">
+            {upiList.map((entry: UpiEntry, i: number) => (
+              <div
+                key={entry.id}
+                className={`flex items-center gap-2 p-3 rounded-lg border ${
+                  entry.isActive
+                    ? "bg-emerald-50 border-emerald-300"
+                    : "bg-card border-border"
+                }`}
+                data-ocid={`crypto_admin.upi_entry.${i + 1}`}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{entry.upiId}</p>
+                  {entry.upiName && (
+                    <p className="text-xs text-muted-foreground">
+                      {entry.upiName}
+                    </p>
+                  )}
+                </div>
+                {entry.isActive && (
+                  <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
+                    Active
+                  </span>
+                )}
+                {!entry.isActive && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveUpi.mutate(entry.id)}
+                    disabled={setActiveUpi.isPending}
+                    className="text-xs bg-emerald-50 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded-lg hover:bg-emerald-100 transition disabled:opacity-50 flex-shrink-0"
+                    data-ocid={`crypto_admin.upi_set_active.${i + 1}`}
+                  >
+                    Set Active
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`"${entry.upiId}" delete karein?`))
+                      removeUpi.mutate(entry.id);
+                  }}
+                  className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                  data-ocid={`crypto_admin.upi_delete.${i + 1}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add new UPI */}
+        <div className="bg-muted/30 rounded-xl p-3 space-y-2 border border-border">
+          <p className="text-xs font-semibold text-muted-foreground">
+            Naya UPI Add Karein
+          </p>
+          <input
+            type="text"
+            value={newUpiId}
+            onChange={(e) => setNewUpiId(e.target.value)}
+            className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="merchant@upi"
+            data-ocid="crypto_admin.new_upi_id_input"
+          />
+          <input
+            type="text"
+            value={newUpiName}
+            onChange={(e) => setNewUpiName(e.target.value)}
+            className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="UPI Name (e.g. Digital Zindagi)"
+            data-ocid="crypto_admin.new_upi_name_input"
+          />
+          <button
+            type="button"
+            onClick={handleAddUpi}
+            disabled={addUpi.isPending || !newUpiId.trim()}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+            data-ocid="crypto_admin.add_upi_button"
+          >
+            {addUpi.isPending ? "Adding..." : "+ Add UPI"}
+          </button>
+        </div>
+      </div>
+
+      <hr className="border-border" />
+
+      {/* QR Management */}
+      <div>
+        <p className="font-semibold text-sm text-foreground mb-3">
+          QR Code Management
+        </p>
+
+        {/* Existing QR list */}
+        {qrLoading ? (
+          <div className="text-center py-3 text-muted-foreground text-xs">
+            Loading...
+          </div>
+        ) : qrList.length === 0 ? (
+          <div
+            className="text-center py-3 text-muted-foreground text-xs"
+            data-ocid="crypto_admin.qr_empty_state"
+          >
+            Koi QR Code nahi hai abhi
+          </div>
+        ) : (
+          <div className="space-y-2 mb-3">
+            {qrList.map((entry: QrEntry, i: number) => (
+              <div
+                key={entry.id}
+                className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  entry.isActive
+                    ? "bg-emerald-50 border-emerald-300"
+                    : "bg-card border-border"
+                }`}
+                data-ocid={`crypto_admin.qr_entry.${i + 1}`}
+              >
+                <img
+                  src={entry.qrUrl}
+                  alt={entry.qrLabel}
+                  className="w-10 h-10 rounded object-contain border border-border bg-white flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {entry.qrLabel}
+                  </p>
+                </div>
+                {entry.isActive && (
+                  <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
+                    Active
+                  </span>
+                )}
+                {!entry.isActive && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveQr.mutate(entry.id)}
+                    disabled={setActiveQr.isPending}
+                    className="text-xs bg-emerald-50 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded-lg hover:bg-emerald-100 transition disabled:opacity-50 flex-shrink-0"
+                    data-ocid={`crypto_admin.qr_set_active.${i + 1}`}
+                  >
+                    Set Active
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`"${entry.qrLabel}" delete karein?`))
+                      removeQr.mutate(entry.id);
+                  }}
+                  className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                  data-ocid={`crypto_admin.qr_delete.${i + 1}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add new QR */}
+        <div className="bg-muted/30 rounded-xl p-3 space-y-2 border border-border">
+          <p className="text-xs font-semibold text-muted-foreground">
+            Naya QR Code Add Karein
+          </p>
+          {newQrUrl ? (
+            <div className="flex items-center gap-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <img
+                src={newQrUrl}
+                alt="preview"
+                className="w-12 h-12 object-contain rounded bg-white border border-border"
+              />
+              <div className="flex-1">
+                <p className="text-xs text-emerald-700 font-medium">
+                  ✅ QR image ready
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNewQrUrl("")}
+                className="text-xs text-red-500 underline"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => qrInputRef.current?.click()}
+              disabled={qrUploading}
+              className="w-full border border-dashed border-emerald-400 rounded-lg py-2.5 text-xs text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-60"
+              data-ocid="crypto_admin.qr_upload_button"
+            >
+              {qrUploading ? "Uploading..." : "📷 QR Image Upload Karein"}
+            </button>
+          )}
+          <input
+            ref={qrInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleQrUpload}
+          />
+          <input
+            type="text"
+            value={newQrLabel}
+            onChange={(e) => setNewQrLabel(e.target.value)}
+            className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="QR Label (e.g. Digital Zindagi Main QR)"
+            data-ocid="crypto_admin.new_qr_label_input"
+          />
+          <button
+            type="button"
+            onClick={handleAddQr}
+            disabled={addQr.isPending || !newQrUrl.trim()}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+            data-ocid="crypto_admin.add_qr_button"
+          >
+            {addQr.isPending ? "Adding..." : "+ Add QR Code"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Deposit Requests (Admin) ───────────────────────────────────────────────────────────────
+
+function DepositRequests() {
+  const {
+    data: allDeposits = [],
+    isLoading,
+    refetch,
+  } = useAdminGetDepositRequests();
+  const approveMut = useAdminApproveDeposit();
+  const rejectMut = useAdminRejectDeposit();
+  const [activeTab, setActiveTab] = useState<"pending" | "all">("pending");
+  const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+  // Sort: pending first, then by date desc
+  const sortedDeposits = [...allDeposits].sort((a, b) => {
+    if (a.status === "pending" && b.status !== "pending") return -1;
+    if (a.status !== "pending" && b.status === "pending") return 1;
+    return Number(b.createdAt) - Number(a.createdAt);
+  });
+
+  const shown =
+    activeTab === "pending"
+      ? sortedDeposits.filter((d) => d.status === "pending")
+      : sortedDeposits;
+
+  async function handleApprove(d: DepositRequest) {
+    try {
+      await approveMut.mutateAsync(d.id);
+      setToast({
+        msg: `Deposit approved! ₹${fmt(d.amount)} credited.`,
+        ok: true,
+      });
+    } catch (e) {
+      setToast({ msg: (e as Error).message ?? "Approve fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleReject() {
+    if (!rejectModal) return;
+    try {
+      await rejectMut.mutateAsync({
+        depositId: rejectModal.id,
+        adminNote: rejectNote,
+      });
+      setRejectModal(null);
+      setRejectNote("");
+      setToast({ msg: "Deposit rejected.", ok: true });
+    } catch (e) {
+      setToast({ msg: (e as Error).message ?? "Reject fail", ok: false });
+    }
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  return (
+    <div className="space-y-4 p-4">
+      <div className="flex gap-2">
+        {(["pending", "all"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setActiveTab(t)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeTab === t
+                ? "bg-emerald-600 text-white"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+            data-ocid={`crypto_admin.deposits_${t}_tab`}
+          >
+            {t === "pending"
+              ? `Pending (${allDeposits.filter((d) => d.status === "pending").length})`
+              : "All"}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="ml-auto p-1.5 rounded-lg hover:bg-muted"
+          data-ocid="crypto_admin.deposits_refresh"
+        >
+          <RefreshCw className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </div>
+      {toast && <Toast msg={toast.msg} ok={toast.ok} />}
+      {isLoading ? (
+        <div className="text-center py-4 text-muted-foreground text-sm">
+          Loading...
+        </div>
+      ) : shown.length === 0 ? (
+        <div
+          className="text-center py-6 text-muted-foreground text-sm"
+          data-ocid="crypto_admin.deposits_empty_state"
+        >
+          Koi deposit request nahi.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {shown.map((d, i) => (
+            <div
+              key={d.id}
+              className="border border-border rounded-xl p-4 space-y-3"
+              data-ocid={`crypto_admin.deposit_item.${i + 1}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {d.userId.slice(0, 20)}...
+                  </p>
+                  {d.userEmail && (
+                    <p className="text-xs text-muted-foreground">
+                      {d.userEmail}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    UTR:{" "}
+                    <span className="font-mono font-medium text-foreground">
+                      {d.utrNumber || "N/A"}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {timeAgo(Number(d.createdAt) / 1_000_000)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0 ml-2">
+                  <p className="font-bold text-emerald-700">₹{fmt(d.amount)}</p>
+                  <StatusBadge status={d.status} />
+                </div>
+              </div>
+
+              {/* Screenshot link */}
+              {d.screenshotUrl && (
+                <a
+                  href={d.screenshotUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-emerald-700 underline font-medium"
+                  data-ocid={`crypto_admin.deposit_screenshot.${i + 1}`}
+                >
+                  📸 View Screenshot
+                </a>
+              )}
+
+              {d.status === "pending" && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleApprove(d)}
+                    disabled={approveMut.isPending}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                    data-ocid={`crypto_admin.deposit_approve_button.${i + 1}`}
+                  >
+                    {approveMut.isPending ? "..." : "Approve & Credit"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRejectModal({ id: d.id })}
+                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-1.5 rounded-lg text-xs font-semibold border border-red-200 transition-colors"
+                    data-ocid={`crypto_admin.deposit_reject_button.${i + 1}`}
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+
+              {d.status === "rejected" && d.adminNote && (
+                <p className="text-xs text-red-600 italic">
+                  Reject reason: {d.adminNote}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {rejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+            <h3 className="font-semibold">Deposit Reject Karein</h3>
+            <textarea
+              rows={3}
+              placeholder="Rejection reason (user ko dikhayi jayegi)..."
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              className="w-full border border-input rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-400"
+              data-ocid="crypto_admin.deposit_reject_reason_textarea"
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRejectModal(null)}
+                className="flex-1 border border-border py-2 rounded-lg text-sm font-medium hover:bg-muted"
+                data-ocid="crypto_admin.deposit_reject_cancel_button"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleReject}
+                disabled={rejectMut.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white py-2 rounded-lg text-sm font-semibold"
+                data-ocid="crypto_admin.deposit_reject_confirm_button"
+              >
+                {rejectMut.isPending ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Root Component
 
 type Section =
   | "settings"
   | "coins"
   | "withdrawals"
+  | "deposits"
   | "users"
   | "stats"
-  | "tickets";
+  | "tickets"
+  | "payment";
 
 export default function CryptoAdminPanel() {
   const [open, setOpen] = useState<Record<Section, boolean>>({
     settings: true,
     coins: false,
     withdrawals: false,
+    deposits: false,
     users: false,
     stats: false,
     tickets: false,
+    payment: false,
   });
 
   function toggle(s: Section) {
@@ -1362,6 +2034,18 @@ export default function CryptoAdminPanel() {
       icon: <Wallet className="w-4 h-4" />,
       title: "Withdrawal Approvals",
       content: <WithdrawalApprovals />,
+    },
+    {
+      key: "deposits",
+      icon: <Wallet className="w-4 h-4" />,
+      title: "Deposit Requests",
+      content: <DepositRequests />,
+    },
+    {
+      key: "payment",
+      icon: <Settings className="w-4 h-4" />,
+      title: "Payment Settings (UPI / QR)",
+      content: <PaymentSettings />,
     },
     {
       key: "users",

@@ -944,6 +944,10 @@ video {
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
 }
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
 .-ml-4 {
   margin-left: -1rem;
 }
@@ -1000,6 +1004,9 @@ video {
 }
 .ml-2 {
   margin-left: 0.5rem;
+}
+.ml-3 {
+  margin-left: 0.75rem;
 }
 .ml-4 {
   margin-left: 1rem;
@@ -1502,6 +1509,9 @@ video {
 .min-w-\[180px\] {
   min-width: 180px;
 }
+.min-w-\[60px\] {
+  min-width: 60px;
+}
 .min-w-\[64px\] {
   min-width: 64px;
 }
@@ -1510,6 +1520,10 @@ video {
 }
 .min-w-\[var\(--radix-select-trigger-width\)\] {
   min-width: var(--radix-select-trigger-width);
+}
+.min-w-max {
+  min-width: -moz-max-content;
+  min-width: max-content;
 }
 .max-w-2xl {
   max-width: 42rem;
@@ -4162,6 +4176,9 @@ video {
 .accent-blue-600 {
   accent-color: #2563eb;
 }
+.accent-emerald-600 {
+  accent-color: #059669;
+}
 .accent-primary {
   accent-color: oklch(var(--primary) / 1);
 }
@@ -5707,6 +5724,11 @@ video {
 
 .focus\:ring-primary\/30:focus {
   --tw-ring-color: oklch(var(--primary) / 0.3);
+}
+
+.focus\:ring-red-300:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(252 165 165 / var(--tw-ring-opacity, 1));
 }
 
 .focus\:ring-red-400:focus {

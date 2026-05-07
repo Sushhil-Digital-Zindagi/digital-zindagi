@@ -35,6 +35,8 @@ import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
 import CryptoTypes "types/crypto";
 import CryptoLib "lib/crypto";
+import Migration "migration";
+
 
 
 
@@ -42,6 +44,8 @@ import CryptoLib "lib/crypto";
 // The persistent actor sculpture, defined with `persistent` fields:
 
 
+
+(with migration = Migration.run)
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {
@@ -185,6 +189,10 @@ persistent actor {
     dailyRewardAmount = 5.0;
     isDailyRewardEnabled = true;
     highRiskThreshold = 20.0;
+    upiId = "";
+    qrCodeUrl = "";
+    referralBonusAmount = 50.0;
+    referralBonusEnabled = true;
   };
   var cryptoCoins         = Map.empty<Text, CryptoTypes.CryptoCoin>();
   var cryptoWallets       = Map.empty<Text, CryptoTypes.CryptoWallet>();
@@ -195,7 +203,14 @@ persistent actor {
   var supportTickets      = Map.empty<Text, CryptoTypes.SupportTicket>();
   var ticketReplies       = Map.empty<Text, CryptoTypes.TicketReply>();
   var cryptoAuditLogs     = Map.empty<Text, CryptoTypes.CryptoAdminAuditLog>();
+  var cryptoDepositRequests = Map.empty<Text, CryptoTypes.DepositRequest>();
+  var cryptoStopLossRules   = Map.empty<Text, CryptoTypes.StopLossRule>();
   var cryptoCounter       : Nat = 0;
+  // Multi-UPI and multi-QR lists for P2P deposit payment info
+  var cryptoUpiList : List.List<CryptoTypes.UpiEntry> = List.empty<CryptoTypes.UpiEntry>();
+  var cryptoQrList  : List.List<CryptoTypes.QrEntry>  = List.empty<CryptoTypes.QrEntry>();
+  var cryptoUpiCounter : Nat = 0;
+  var cryptoQrCounter  : Nat = 0;
 
   // App Settings (JSON blob for all misc settings — notification bar, app tagline, etc.)
   var appSettingsJson : Text = "{}";
@@ -3876,13 +3891,43 @@ persistent actor {
     #ok(());
   };
 
-  public shared func requestDeposit(userId : Text, amount : Float) : async { #ok : CryptoTypes.CryptoTransaction; #err : Text } {
+  public shared func requestDeposit(userId : Text, amount : Float, utrNumber : Text, screenshotUrl : ?Text) : async { #ok : CryptoTypes.DepositRequest; #err : Text } {
     if (amount <= 0.0) {
       return #err("Amount must be greater than zero.");
+    };
+    if (utrNumber == "") {
+      return #err("UTR / Transaction Reference Number is required.");
+    };
+    // Validate UTR is exactly 12 digits numeric
+    if (utrNumber.size() != 12) {
+      return #err("UTR number must be exactly 12 digits.");
+    };
+    let allCharsDigit = utrNumber.toIter().all(func(c : Char) : Bool {
+      c >= '0' and c <= '9'
+    });
+    if (not allCharsDigit) {
+      return #err("UTR number must contain only digits.");
+    };
+    // Duplicate UTR check — scan all existing requests regardless of status
+    let isDuplicate = cryptoDepositRequests.values().any(
+      func(r : CryptoTypes.DepositRequest) : Bool { r.utrNumber == utrNumber }
+    );
+    if (isDuplicate) {
+      return #err("This Transaction ID has already been submitted.");
     };
     ignore getOrCreateCryptoWallet(userId);
     let id = nextCryptoId("dep");
     let now = Time.now();
+    let req : CryptoTypes.DepositRequest = {
+      id; userId; amount; utrNumber; screenshotUrl;
+      status = #pending;
+      adminNote = null;
+      rejectionReason = null;
+      createdAt = now;
+      resolvedAt = null;
+    };
+    cryptoDepositRequests.add(id, req);
+    // Also log a pending transaction for user history
     let txn : CryptoTypes.CryptoTransaction = {
       id; userId;
       txType = #deposit;
@@ -3895,30 +3940,35 @@ persistent actor {
       createdAt = now; updatedAt = now;
     };
     cryptoTransactions.add(id, txn);
-    #ok(txn);
+    #ok(req);
   };
 
   public shared ({ caller }) func adminApproveDeposit(
     adminToken : ?Text,
-    txId       : Text,
+    depositId  : Text,
   ) : async { #ok : (); #err : Text } {
     if (not isAdminCallerOrToken(caller, adminToken)) {
       return #err("Unauthorized: Admin only");
     };
-    switch (cryptoTransactions.get(txId)) {
-      case null { #err("Transaction not found") };
-      case (?txn) {
-        if (txn.status != #pendingApproval) {
-          return #err("Transaction is not pending approval.");
+    switch (cryptoDepositRequests.get(depositId)) {
+      case null { #err("Deposit request not found") };
+      case (?req) {
+        if (req.status != #pending) {
+          return #err("Deposit request is not pending.");
         };
-        let wallet = getOrCreateCryptoWallet(txn.userId);
-        cryptoWallets.add(txn.userId, { wallet with
-          balance = wallet.balance + txn.netAmount;
-          totalDeposited = wallet.totalDeposited + txn.netAmount;
+        let wallet = getOrCreateCryptoWallet(req.userId);
+        cryptoWallets.add(req.userId, { wallet with
+          balance = wallet.balance + req.amount;
+          totalDeposited = wallet.totalDeposited + req.amount;
           updatedAt = Time.now();
         });
-        cryptoTransactions.add(txId, { txn with status = #approved; updatedAt = Time.now() });
-        logCryptoAudit("approve_deposit", ?txId, ?txn.userId, ?txn.netAmount.toText());
+        cryptoDepositRequests.add(depositId, { req with status = #approved; resolvedAt = ?Time.now() });
+        // Update the matching pending transaction to approved
+        switch (cryptoTransactions.get(depositId)) {
+          case (?txn) { cryptoTransactions.add(depositId, { txn with status = #approved; updatedAt = Time.now() }) };
+          case null {};
+        };
+        logCryptoAudit("approve_deposit", ?depositId, ?req.userId, ?req.amount.toText());
         #ok(());
       };
     };
@@ -3951,11 +4001,40 @@ persistent actor {
         if (not coin.isListed) { return #err("Coin is delisted.") };
         let order = CryptoLib.calculateBuyOrder(amountInFunds, currentPrice, cryptoConfig.buyFeePercent);
         if (wallet.balance < order.totalDeducted) { return #err("Insufficient wallet balance.") };
+        let isFirstTrade = not wallet.hasCompletedFirstTrade;
         cryptoWallets.add(userId, { wallet with
           balance = wallet.balance - order.totalDeducted;
           mpinFailedAttempts = 0;
+          hasCompletedFirstTrade = true;
           updatedAt = Time.now();
         });
+        // Referral first-trade bonus: credit referrer if this is the user's first trade
+        if (isFirstTrade and cryptoConfig.referralBonusEnabled and wallet.referralCode != "") {
+          let refCode = wallet.referralCode;
+          switch (offerUsers.values().find(func(u : OPTypes.OfferUser) : Bool { u.referralCode == refCode })) {
+            case (?referrer) {
+              let refWallet = getOrCreateCryptoWallet(referrer.email);
+              cryptoWallets.add(referrer.email, { refWallet with
+                balance = refWallet.balance + cryptoConfig.referralBonusAmount;
+                updatedAt = Time.now();
+              });
+              let refTxId = nextCryptoId("refbonus");
+              let now2 = Time.now();
+              let refTxn : CryptoTypes.CryptoTransaction = {
+                id = refTxId; userId = referrer.email; txType = #dailyReward;
+                coinId = null; coinSymbol = null; quantity = null; priceAtTime = null;
+                totalAmount = cryptoConfig.referralBonusAmount;
+                feePercent = null; feeAmount = null;
+                netAmount = cryptoConfig.referralBonusAmount;
+                status = #completed;
+                adminNote = ?("Referral bonus for " # userId # " first trade");
+                createdAt = now2; updatedAt = now2;
+              };
+              cryptoTransactions.add(refTxId, refTxn);
+            };
+            case null {};
+          };
+        };
         let holdingKey = userId # "_" # coinId;
         let holding = CryptoLib.updatePortfolioOnBuy(
           cryptoPortfolio.get(holdingKey),
@@ -4011,11 +4090,40 @@ persistent actor {
       case (?holding) {
         if (holding.quantity < quantity) { return #err("Insufficient coin quantity.") };
         let order = CryptoLib.calculateSellOrder(quantity, currentPrice, cryptoConfig.sellFeePercent);
+        let isFirstTrade = not wallet.hasCompletedFirstTrade;
         cryptoWallets.add(userId, { wallet with
           balance = wallet.balance + order.netProceeds;
           mpinFailedAttempts = 0;
+          hasCompletedFirstTrade = true;
           updatedAt = Time.now();
         });
+        // Referral first-trade bonus on first sell too
+        if (isFirstTrade and cryptoConfig.referralBonusEnabled and wallet.referralCode != "") {
+          let refCode = wallet.referralCode;
+          switch (offerUsers.values().find(func(u : OPTypes.OfferUser) : Bool { u.referralCode == refCode })) {
+            case (?referrer) {
+              let refWallet = getOrCreateCryptoWallet(referrer.email);
+              cryptoWallets.add(referrer.email, { refWallet with
+                balance = refWallet.balance + cryptoConfig.referralBonusAmount;
+                updatedAt = Time.now();
+              });
+              let refTxId = nextCryptoId("refbonus");
+              let rnow = Time.now();
+              let refTxn : CryptoTypes.CryptoTransaction = {
+                id = refTxId; userId = referrer.email; txType = #dailyReward;
+                coinId = null; coinSymbol = null; quantity = null; priceAtTime = null;
+                totalAmount = cryptoConfig.referralBonusAmount;
+                feePercent = null; feeAmount = null;
+                netAmount = cryptoConfig.referralBonusAmount;
+                status = #completed;
+                adminNote = ?("Referral bonus for " # userId # " first trade");
+                createdAt = rnow; updatedAt = rnow;
+              };
+              cryptoTransactions.add(refTxId, refTxn);
+            };
+            case null {};
+          };
+        };
         switch (CryptoLib.updatePortfolioOnSell(holding, quantity)) {
           case null { cryptoPortfolio.remove(holdingKey) };
           case (?updated) { cryptoPortfolio.add(holdingKey, updated) };
@@ -4324,5 +4432,331 @@ persistent actor {
       return #err("Unauthorized: Admin only");
     };
     #ok(supportTickets.values().toArray());
+  };
+
+  // ── Deposit Requests (UTR-based) ──────────────────────────────────────────
+
+  public shared func getUserDepositRequests(userId : Text) : async [CryptoTypes.DepositRequest] {
+    cryptoDepositRequests.values()
+      .filter(func(r : CryptoTypes.DepositRequest) : Bool { r.userId == userId })
+      .toArray();
+  };
+
+  public shared ({ caller }) func getDepositRequests(adminToken : ?Text) : async { #ok : [CryptoTypes.DepositRequest]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoDepositRequests.values().toArray());
+  };
+
+  public shared ({ caller }) func adminRejectDeposit(
+    adminToken : ?Text,
+    depositId  : Text,
+    adminNote  : ?Text,
+  ) : async { #ok : (); #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoDepositRequests.get(depositId)) {
+      case null { #err("Deposit request not found") };
+      case (?req) {
+        if (req.status != #pending) {
+          return #err("Deposit request is not pending.");
+        };
+        cryptoDepositRequests.add(depositId, {
+          req with
+          status = #rejected;
+          adminNote;
+          rejectionReason = adminNote;
+          resolvedAt = ?Time.now();
+        });
+        switch (cryptoTransactions.get(depositId)) {
+          case (?txn) { cryptoTransactions.add(depositId, { txn with status = #rejected; adminNote; updatedAt = Time.now() }) };
+          case null {};
+        };
+        logCryptoAudit("reject_deposit", ?depositId, ?req.userId, ?req.amount.toText());
+        #ok(());
+      };
+    };
+  };
+
+  // ── Multi-UPI Management ──────────────────────────────────────────────────
+
+  /// Returns the active UPI entry, falling back to the legacy upiId in cryptoConfig.
+  func getActiveUpiInternal() : { upiId : Text; upiName : Text } {
+    switch (cryptoUpiList.find(func(e : CryptoTypes.UpiEntry) : Bool { e.isActive })) {
+      case (?e) { { upiId = e.upiId; upiName = e.upiName } };
+      case null  { { upiId = cryptoConfig.upiId; upiName = "" } };
+    };
+  };
+
+  /// Returns the active QR entry, falling back to the legacy qrCodeUrl in cryptoConfig.
+  func getActiveQrInternal() : Text {
+    switch (cryptoQrList.find(func(e : CryptoTypes.QrEntry) : Bool { e.isActive })) {
+      case (?e) { e.qrUrl };
+      case null  { cryptoConfig.qrCodeUrl };
+    };
+  };
+
+  /// Public query — no auth required. Returns the currently active UPI ID, name, and QR URL.
+  public query func getActivePaymentInfo() : async { upiId : Text; upiName : Text; qrUrl : Text } {
+    let upi = getActiveUpiInternal();
+    { upiId = upi.upiId; upiName = upi.upiName; qrUrl = getActiveQrInternal() };
+  };
+
+  public shared ({ caller }) func addUpiEntry(
+    adminToken : ?Text,
+    upiId      : Text,
+    upiName    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    cryptoUpiCounter += 1;
+    let id = "upi_" # cryptoUpiCounter.toText();
+    cryptoUpiList.add({ id; upiId; upiName; isActive = false });
+    #ok(id);
+  };
+
+  public shared ({ caller }) func removeUpiEntry(
+    adminToken : ?Text,
+    entryId    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let sizeBefore = cryptoUpiList.size();
+    // Rebuild list without the removed entry
+    let filtered = cryptoUpiList.filter(func(e : CryptoTypes.UpiEntry) : Bool { e.id != entryId });
+    // Replace contents in-place by clearing and re-adding
+    cryptoUpiList.clear();
+    cryptoUpiList.append(filtered);
+    if (cryptoUpiList.size() == sizeBefore) {
+      return #err("UPI entry not found");
+    };
+    #ok(entryId);
+  };
+
+  public shared ({ caller }) func setActiveUpi(
+    adminToken : ?Text,
+    entryId    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    // Check entry exists
+    switch (cryptoUpiList.find(func(e : CryptoTypes.UpiEntry) : Bool { e.id == entryId })) {
+      case null { return #err("UPI entry not found") };
+      case (?_) {};
+    };
+    // Deactivate all, activate only the chosen entry
+    cryptoUpiList.mapInPlace(func(e : CryptoTypes.UpiEntry) : CryptoTypes.UpiEntry {
+      { e with isActive = (e.id == entryId) }
+    });
+    // Sync legacy field for backwards compat
+    switch (cryptoUpiList.find(func(e : CryptoTypes.UpiEntry) : Bool { e.id == entryId })) {
+      case (?e) { cryptoConfig := { cryptoConfig with upiId = e.upiId } };
+      case null {};
+    };
+    #ok(entryId);
+  };
+
+  public shared ({ caller }) func getUpiList(adminToken : ?Text) : async { #ok : [CryptoTypes.UpiEntry]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoUpiList.toArray());
+  };
+
+  public shared ({ caller }) func addQrEntry(
+    adminToken : ?Text,
+    qrUrl      : Text,
+    qrLabel    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    cryptoQrCounter += 1;
+    let id = "qr_" # cryptoQrCounter.toText();
+    cryptoQrList.add({ id; qrUrl; qrLabel; isActive = false });
+    #ok(id);
+  };
+
+  public shared ({ caller }) func removeQrEntry(
+    adminToken : ?Text,
+    entryId    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    let sizeBefore = cryptoQrList.size();
+    let filtered = cryptoQrList.filter(func(e : CryptoTypes.QrEntry) : Bool { e.id != entryId });
+    cryptoQrList.clear();
+    cryptoQrList.append(filtered);
+    if (cryptoQrList.size() == sizeBefore) {
+      return #err("QR entry not found");
+    };
+    #ok(entryId);
+  };
+
+
+  public shared ({ caller }) func setActiveQr(
+    adminToken : ?Text,
+    entryId    : Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    switch (cryptoQrList.find(func(e : CryptoTypes.QrEntry) : Bool { e.id == entryId })) {
+      case null { return #err("QR entry not found") };
+      case (?_) {};
+    };
+    cryptoQrList.mapInPlace(func(e : CryptoTypes.QrEntry) : CryptoTypes.QrEntry {
+      { e with isActive = (e.id == entryId) }
+    });
+    switch (cryptoQrList.find(func(e : CryptoTypes.QrEntry) : Bool { e.id == entryId })) {
+      case (?e) { cryptoConfig := { cryptoConfig with qrCodeUrl = e.qrUrl } };
+      case null {};
+    };
+    #ok(entryId);
+  };
+
+  public shared ({ caller }) func getQrList(adminToken : ?Text) : async { #ok : [CryptoTypes.QrEntry]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoQrList.toArray());
+  };
+
+  // ── Stop-Loss Rules ───────────────────────────────────────────────────────
+
+  public shared func setStopLossRule(
+    userId        : Text,
+    coinId        : Text,
+    coinSymbol    : Text,
+    quantityToSell : Float,
+    limitPriceInr : Float,
+  ) : async { #ok : CryptoTypes.StopLossRule; #err : Text } {
+    if (quantityToSell <= 0.0) { return #err("Quantity must be greater than zero.") };
+    if (limitPriceInr <= 0.0) { return #err("Limit price must be greater than zero.") };
+    // Verify user has enough holding
+    let holdingKey = userId # "_" # coinId;
+    switch (cryptoPortfolio.get(holdingKey)) {
+      case null { return #err("No holding found for this coin.") };
+      case (?h) {
+        if (h.quantity < quantityToSell) { return #err("Insufficient coin quantity for stop-loss.") };
+      };
+    };
+    let id = nextCryptoId("sl");
+    let rule : CryptoTypes.StopLossRule = {
+      id; userId; coinId; coinSymbol; quantityToSell; limitPriceInr;
+      isActive = true;
+      triggeredAt = null;
+      createdAt = Time.now();
+    };
+    cryptoStopLossRules.add(id, rule);
+    #ok(rule);
+  };
+
+  public shared func deleteStopLossRule(
+    userId : Text,
+    ruleId : Text,
+  ) : async { #ok : (); #err : Text } {
+    switch (cryptoStopLossRules.get(ruleId)) {
+      case null { #err("Rule not found.") };
+      case (?rule) {
+        if (rule.userId != userId) { return #err("Not your rule.") };
+        cryptoStopLossRules.remove(ruleId);
+        #ok(());
+      };
+    };
+  };
+
+  public shared func getUserStopLossRules(userId : Text) : async [CryptoTypes.StopLossRule] {
+    cryptoStopLossRules.values()
+      .filter(func(r : CryptoTypes.StopLossRule) : Bool { r.userId == userId })
+      .toArray();
+  };
+
+  public shared ({ caller }) func adminGetAllStopLossRules(adminToken : ?Text) : async { #ok : [CryptoTypes.StopLossRule]; #err : Text } {
+    if (not isAdminCallerOrToken(caller, adminToken)) {
+      return #err("Unauthorized: Admin only");
+    };
+    #ok(cryptoStopLossRules.values().toArray());
+  };
+
+  /// Called from frontend when a coin price update arrives.
+  /// Finds all active stop-loss rules for the coin where limitPrice >= currentPrice,
+  /// executes a sell for each (without MPIN — system-triggered), and marks rules as triggered.
+  public shared func checkAndExecuteStopLoss(
+    coinId       : Text,
+    currentPrice : Float,
+  ) : async { triggered : Nat } {
+    let allRules = cryptoStopLossRules.values().toArray();
+    let triggered = CryptoLib.findTriggeredStopLossRules(allRules, coinId, currentPrice);
+    var count = 0;
+    for (rule in triggered.values()) {
+      let holdingKey = rule.userId # "_" # coinId;
+      switch (cryptoPortfolio.get(holdingKey)) {
+        case null {
+          // Holding gone — deactivate rule
+          cryptoStopLossRules.add(rule.id, { rule with isActive = false; triggeredAt = ?Time.now() });
+        };
+        case (?holding) {
+          let qty = if (holding.quantity < rule.quantityToSell) { holding.quantity } else { rule.quantityToSell };
+          if (qty > 0.0) {
+            let order = CryptoLib.calculateSellOrder(qty, currentPrice, cryptoConfig.sellFeePercent);
+            let wallet = getOrCreateCryptoWallet(rule.userId);
+            cryptoWallets.add(rule.userId, { wallet with
+              balance = wallet.balance + order.netProceeds;
+              hasCompletedFirstTrade = true;
+              updatedAt = Time.now();
+            });
+            switch (CryptoLib.updatePortfolioOnSell(holding, qty)) {
+              case null { cryptoPortfolio.remove(holdingKey) };
+              case (?updated) { cryptoPortfolio.add(holdingKey, updated) };
+            };
+            let txId = nextCryptoId("sl_sell");
+            let now = Time.now();
+            let txn : CryptoTypes.CryptoTransaction = {
+              id = txId; userId = rule.userId; txType = #sell;
+              coinId = ?coinId; coinSymbol = ?rule.coinSymbol; quantity = ?qty;
+              priceAtTime = ?currentPrice; totalAmount = order.grossValue;
+              feePercent = ?cryptoConfig.sellFeePercent; feeAmount = ?order.feeAmount;
+              netAmount = order.netProceeds; status = #completed;
+              adminNote = ?("Stop-loss triggered at " # currentPrice.toText());
+              createdAt = now; updatedAt = now;
+            };
+            cryptoTransactions.add(txId, txn);
+            cryptoStopLossRules.add(rule.id, { rule with isActive = false; triggeredAt = ?Time.now() });
+            count += 1;
+          };
+        };
+      };
+    };
+    { triggered = count };
+  };
+
+  // ── Referral Code Linking for Crypto ─────────────────────────────────────
+
+  /// Link an Offer Portal referral code to a crypto wallet so that
+  /// when the user completes their first trade the referrer gets a bonus.
+  public shared func linkCryptoReferral(
+    userId       : Text,
+    referralCode : Text,
+  ) : async { #ok : (); #err : Text } {
+    if (referralCode == "") { return #err("Referral code cannot be empty.") };
+    let wallet = getOrCreateCryptoWallet(userId);
+    if (wallet.hasCompletedFirstTrade) {
+      return #err("Cannot link referral after completing your first trade.");
+    };
+    // Validate that referral code belongs to an actual offer user
+    switch (offerUsers.values().find(func(u : OPTypes.OfferUser) : Bool { u.referralCode == referralCode })) {
+      case null { return #err("Invalid referral code.") };
+      case (?_referrer) {
+        cryptoWallets.add(userId, { wallet with referralCode; updatedAt = Time.now() });
+        #ok(());
+      };
+    };
   };
 };

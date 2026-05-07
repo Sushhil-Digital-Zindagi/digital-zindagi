@@ -60,6 +60,7 @@ export const UdhaarTransaction = IDL.Record({
 export const CryptoWallet = IDL.Record({
   'dailyRewardStreak' : IDL.Nat,
   'mpinHash' : IDL.Text,
+  'referralCode' : IDL.Text,
   'balance' : IDL.Float64,
   'mpinLockedUntil' : IDL.Int,
   'userId' : IDL.Text,
@@ -67,9 +68,21 @@ export const CryptoWallet = IDL.Record({
   'createdAt' : IDL.Int,
   'lastDailyRewardClaimed' : IDL.Int,
   'updatedAt' : IDL.Int,
+  'hasCompletedFirstTrade' : IDL.Bool,
   'totalWithdrawn' : IDL.Float64,
   'totalDeposited' : IDL.Float64,
   'mpinSetAt' : IDL.Int,
+});
+export const StopLossRule = IDL.Record({
+  'id' : IDL.Text,
+  'quantityToSell' : IDL.Float64,
+  'userId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'coinSymbol' : IDL.Text,
+  'limitPriceInr' : IDL.Float64,
+  'isActive' : IDL.Bool,
+  'triggeredAt' : IDL.Opt(IDL.Int),
+  'coinId' : IDL.Text,
 });
 export const TicketStatus = IDL.Variant({
   'resolved' : IDL.Null,
@@ -575,8 +588,12 @@ export const CryptoInvestConfig = IDL.Record({
   'buyFeePercent' : IDL.Float64,
   'highRiskThreshold' : IDL.Float64,
   'isEnabled' : IDL.Bool,
+  'referralBonusAmount' : IDL.Float64,
   'maxWithdrawal' : IDL.Float64,
   'minWithdrawal' : IDL.Float64,
+  'upiId' : IDL.Text,
+  'referralBonusEnabled' : IDL.Bool,
+  'qrCodeUrl' : IDL.Text,
   'sellFeePercent' : IDL.Float64,
   'dailyRewardAmount' : IDL.Float64,
   'isDailyRewardEnabled' : IDL.Bool,
@@ -614,6 +631,22 @@ export const Order = IDL.Record({
   'imageUrl' : IDL.Opt(IDL.Text),
   'customerId' : IDL.Nat,
   'providerId' : IDL.Nat,
+});
+export const DepositRequest = IDL.Record({
+  'id' : IDL.Text,
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  }),
+  'userId' : IDL.Text,
+  'screenshotUrl' : IDL.Opt(IDL.Text),
+  'createdAt' : IDL.Int,
+  'rejectionReason' : IDL.Opt(IDL.Text),
+  'adminNote' : IDL.Opt(IDL.Text),
+  'utrNumber' : IDL.Text,
+  'amount' : IDL.Float64,
+  'resolvedAt' : IDL.Opt(IDL.Int),
 });
 export const JobItem = IDL.Record({
   'id' : IDL.Nat,
@@ -740,6 +773,12 @@ export const PremiumPrices = IDL.Record({
   'quarterly' : IDL.Nat,
   'monthly' : IDL.Nat,
 });
+export const QrEntry = IDL.Record({
+  'id' : IDL.Text,
+  'qrUrl' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'qrLabel' : IDL.Text,
+});
 export const RechargeApiConfig = IDL.Record({
   'autoRefundEnabled' : IDL.Bool,
   'isActive' : IDL.Bool,
@@ -771,6 +810,12 @@ export const TicketReply = IDL.Record({
   'authorRole' : IDL.Variant({ 'admin' : IDL.Null, 'user' : IDL.Null }),
   'ticketId' : IDL.Text,
   'message' : IDL.Text,
+});
+export const UpiEntry = IDL.Record({
+  'id' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'upiName' : IDL.Text,
+  'upiId' : IDL.Text,
 });
 export const PortfolioHolding = IDL.Record({
   'id' : IDL.Text,
@@ -900,6 +945,11 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'addQrEntry' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'addScrapRate' : IDL.Func(
       [IDL.Text, IDL.Float64, IDL.Float64],
       [IDL.Nat],
@@ -915,6 +965,11 @@ export const idlService = IDL.Service({
   'addUdhaarTransaction' : IDL.Func(
       [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+      [],
+    ),
+  'addUpiEntry' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
   'addVideo' : IDL.Func(
@@ -984,6 +1039,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Vec(CryptoWallet), 'err' : IDL.Text })],
       [],
     ),
+  'adminGetAllStopLossRules' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(StopLossRule), 'err' : IDL.Text })],
+      [],
+    ),
   'adminGetAllTickets' : IDL.Func(
       [IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : IDL.Vec(SupportTicket), 'err' : IDL.Text })],
@@ -1031,6 +1091,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'adminRejectCryptoWithdrawal' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'adminRejectDeposit' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
@@ -1101,6 +1166,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+  'checkAndExecuteStopLoss' : IDL.Func(
+      [IDL.Text, IDL.Float64],
+      [IDL.Record({ 'triggered' : IDL.Nat })],
+      [],
+    ),
   'claimDailyReward' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
@@ -1163,6 +1233,11 @@ export const idlService = IDL.Service({
   'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'deleteStopLossRule' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteUdhaarCustomer' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -1197,6 +1272,17 @@ export const idlService = IDL.Service({
     ),
   'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
   'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
+  'getActivePaymentInfo' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'qrUrl' : IDL.Text,
+          'upiName' : IDL.Text,
+          'upiId' : IDL.Text,
+        }),
+      ],
+      ['query'],
+    ),
   'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
   'getAdminAuditLog' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Nat],
@@ -1315,6 +1401,11 @@ export const idlService = IDL.Service({
   'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
   'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
   'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
+  'getDepositRequests' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(DepositRequest), 'err' : IDL.Text })],
+      [],
+    ),
   'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
   'getListedCoins' : IDL.Func([], [IDL.Vec(CryptoCoin)], ['query']),
   'getListings' : IDL.Func(
@@ -1469,6 +1560,11 @@ export const idlService = IDL.Service({
       ],
       ['query'],
     ),
+  'getQrList' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(QrEntry), 'err' : IDL.Text })],
+      [],
+    ),
   'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'getRechargeApiConfig' : IDL.Func([], [RechargeApiConfig], ['query']),
   'getRechargeReceipt' : IDL.Func(
@@ -1500,6 +1596,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Vec(UdhaarTransaction), 'err' : IDL.Text })],
       ['query'],
     ),
+  'getUpiList' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(UpiEntry), 'err' : IDL.Text })],
+      [],
+    ),
   'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
   'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
   'getUserCryptoTransactions' : IDL.Func(
@@ -1513,12 +1614,18 @@ export const idlService = IDL.Service({
       [IDL.Vec(CryptoWithdrawal)],
       [],
     ),
+  'getUserDepositRequests' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(DepositRequest)],
+      [],
+    ),
   'getUserPortfolio' : IDL.Func([IDL.Text], [IDL.Vec(PortfolioHolding)], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserStopLossRules' : IDL.Func([IDL.Text], [IDL.Vec(StopLossRule)], []),
   'getUserSubscriptionStatus' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(UserSubscription)],
@@ -1538,6 +1645,11 @@ export const idlService = IDL.Service({
   'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
   'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'linkCryptoReferral' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'login' : IDL.Func(
       [MobileNumber, IDL.Text],
@@ -1596,7 +1708,17 @@ export const idlService = IDL.Service({
       [],
     ),
   'removeManager' : IDL.Func([IDL.Text], [IDL.Bool], []),
+  'removeQrEntry' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'removeUpiEntry' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'replyToChatStory' : IDL.Func(
       [IDL.Nat, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
@@ -1614,8 +1736,8 @@ export const idlService = IDL.Service({
       [],
     ),
   'requestDeposit' : IDL.Func(
-      [IDL.Text, IDL.Float64],
-      [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+      [IDL.Text, IDL.Float64, IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : DepositRequest, 'err' : IDL.Text })],
       [],
     ),
   'requestOfferPasswordReset' : IDL.Func(
@@ -1683,6 +1805,16 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
+  'setActiveQr' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'setActiveUpi' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setChatAutoReply' : IDL.Func([IDL.Bool, IDL.Vec(IDL.Text)], [IDL.Bool], []),
   'setChatGhostMode' : IDL.Func([IDL.Bool], [IDL.Bool], []),
@@ -1700,6 +1832,11 @@ export const idlService = IDL.Service({
   'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
   'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
   'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+  'setStopLossRule' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
+      [IDL.Variant({ 'ok' : StopLossRule, 'err' : IDL.Text })],
+      [],
+    ),
   'submitUpiPremiumRequest' : IDL.Func(
       [PremiumPlan, IDL.Text, IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
@@ -1997,6 +2134,7 @@ export const idlFactory = ({ IDL }) => {
   const CryptoWallet = IDL.Record({
     'dailyRewardStreak' : IDL.Nat,
     'mpinHash' : IDL.Text,
+    'referralCode' : IDL.Text,
     'balance' : IDL.Float64,
     'mpinLockedUntil' : IDL.Int,
     'userId' : IDL.Text,
@@ -2004,9 +2142,21 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'lastDailyRewardClaimed' : IDL.Int,
     'updatedAt' : IDL.Int,
+    'hasCompletedFirstTrade' : IDL.Bool,
     'totalWithdrawn' : IDL.Float64,
     'totalDeposited' : IDL.Float64,
     'mpinSetAt' : IDL.Int,
+  });
+  const StopLossRule = IDL.Record({
+    'id' : IDL.Text,
+    'quantityToSell' : IDL.Float64,
+    'userId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'coinSymbol' : IDL.Text,
+    'limitPriceInr' : IDL.Float64,
+    'isActive' : IDL.Bool,
+    'triggeredAt' : IDL.Opt(IDL.Int),
+    'coinId' : IDL.Text,
   });
   const TicketStatus = IDL.Variant({
     'resolved' : IDL.Null,
@@ -2512,8 +2662,12 @@ export const idlFactory = ({ IDL }) => {
     'buyFeePercent' : IDL.Float64,
     'highRiskThreshold' : IDL.Float64,
     'isEnabled' : IDL.Bool,
+    'referralBonusAmount' : IDL.Float64,
     'maxWithdrawal' : IDL.Float64,
     'minWithdrawal' : IDL.Float64,
+    'upiId' : IDL.Text,
+    'referralBonusEnabled' : IDL.Bool,
+    'qrCodeUrl' : IDL.Text,
     'sellFeePercent' : IDL.Float64,
     'dailyRewardAmount' : IDL.Float64,
     'isDailyRewardEnabled' : IDL.Bool,
@@ -2551,6 +2705,22 @@ export const idlFactory = ({ IDL }) => {
     'imageUrl' : IDL.Opt(IDL.Text),
     'customerId' : IDL.Nat,
     'providerId' : IDL.Nat,
+  });
+  const DepositRequest = IDL.Record({
+    'id' : IDL.Text,
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'approved' : IDL.Null,
+      'rejected' : IDL.Null,
+    }),
+    'userId' : IDL.Text,
+    'screenshotUrl' : IDL.Opt(IDL.Text),
+    'createdAt' : IDL.Int,
+    'rejectionReason' : IDL.Opt(IDL.Text),
+    'adminNote' : IDL.Opt(IDL.Text),
+    'utrNumber' : IDL.Text,
+    'amount' : IDL.Float64,
+    'resolvedAt' : IDL.Opt(IDL.Int),
   });
   const JobItem = IDL.Record({
     'id' : IDL.Nat,
@@ -2674,6 +2844,12 @@ export const idlFactory = ({ IDL }) => {
     'quarterly' : IDL.Nat,
     'monthly' : IDL.Nat,
   });
+  const QrEntry = IDL.Record({
+    'id' : IDL.Text,
+    'qrUrl' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'qrLabel' : IDL.Text,
+  });
   const RechargeApiConfig = IDL.Record({
     'autoRefundEnabled' : IDL.Bool,
     'isActive' : IDL.Bool,
@@ -2705,6 +2881,12 @@ export const idlFactory = ({ IDL }) => {
     'authorRole' : IDL.Variant({ 'admin' : IDL.Null, 'user' : IDL.Null }),
     'ticketId' : IDL.Text,
     'message' : IDL.Text,
+  });
+  const UpiEntry = IDL.Record({
+    'id' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'upiName' : IDL.Text,
+    'upiId' : IDL.Text,
   });
   const PortfolioHolding = IDL.Record({
     'id' : IDL.Text,
@@ -2831,6 +3013,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'addQrEntry' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'addScrapRate' : IDL.Func(
         [IDL.Text, IDL.Float64, IDL.Float64],
         [IDL.Nat],
@@ -2846,6 +3033,11 @@ export const idlFactory = ({ IDL }) => {
     'addUdhaarTransaction' : IDL.Func(
         [IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : UdhaarTransaction, 'err' : IDL.Text })],
+        [],
+      ),
+    'addUpiEntry' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
     'addVideo' : IDL.Func(
@@ -2915,6 +3107,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Vec(CryptoWallet), 'err' : IDL.Text })],
         [],
       ),
+    'adminGetAllStopLossRules' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(StopLossRule), 'err' : IDL.Text })],
+        [],
+      ),
     'adminGetAllTickets' : IDL.Func(
         [IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Vec(SupportTicket), 'err' : IDL.Text })],
@@ -2962,6 +3159,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'adminRejectCryptoWithdrawal' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminRejectDeposit' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
@@ -3032,6 +3234,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'checkAdminToken' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'checkAndExecuteStopLoss' : IDL.Func(
+        [IDL.Text, IDL.Float64],
+        [IDL.Record({ 'triggered' : IDL.Nat })],
+        [],
+      ),
     'claimDailyReward' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Float64, 'err' : IDL.Text })],
@@ -3094,6 +3301,11 @@ export const idlFactory = ({ IDL }) => {
     'deleteNews' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteScrapRate' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteServiceRate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'deleteStopLossRule' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteUdhaarCustomer' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -3128,6 +3340,17 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
     'getActiveChatStories' : IDL.Func([], [IDL.Vec(Story)], ['query']),
+    'getActivePaymentInfo' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'qrUrl' : IDL.Text,
+            'upiName' : IDL.Text,
+            'upiId' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'getActiveProviders' : IDL.Func([], [IDL.Vec(ProviderProfile)], ['query']),
     'getAdminAuditLog' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Nat],
@@ -3246,6 +3469,11 @@ export const idlFactory = ({ IDL }) => {
     'getCustomCodes' : IDL.Func([], [IDL.Vec(CustomCode)], ['query']),
     'getCustomSections' : IDL.Func([], [IDL.Vec(CustomSection)], ['query']),
     'getCustomerOrders' : IDL.Func([IDL.Nat], [IDL.Vec(Order)], ['query']),
+    'getDepositRequests' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(DepositRequest), 'err' : IDL.Text })],
+        [],
+      ),
     'getJobs' : IDL.Func([], [IDL.Vec(JobItem)], ['query']),
     'getListedCoins' : IDL.Func([], [IDL.Vec(CryptoCoin)], ['query']),
     'getListings' : IDL.Func(
@@ -3412,6 +3640,11 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getQrList' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(QrEntry), 'err' : IDL.Text })],
+        [],
+      ),
     'getRecentUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'getRechargeApiConfig' : IDL.Func([], [RechargeApiConfig], ['query']),
     'getRechargeReceipt' : IDL.Func(
@@ -3443,6 +3676,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Vec(UdhaarTransaction), 'err' : IDL.Text })],
         ['query'],
       ),
+    'getUpiList' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(UpiEntry), 'err' : IDL.Text })],
+        [],
+      ),
     'getUserById' : IDL.Func([IDL.Nat], [IDL.Opt(User)], ['query']),
     'getUserByMobile' : IDL.Func([MobileNumber], [IDL.Opt(User)], ['query']),
     'getUserCryptoTransactions' : IDL.Func(
@@ -3456,12 +3694,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(CryptoWithdrawal)],
         [],
       ),
+    'getUserDepositRequests' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(DepositRequest)],
+        [],
+      ),
     'getUserPortfolio' : IDL.Func([IDL.Text], [IDL.Vec(PortfolioHolding)], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserStopLossRules' : IDL.Func([IDL.Text], [IDL.Vec(StopLossRule)], []),
     'getUserSubscriptionStatus' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(UserSubscription)],
@@ -3481,6 +3725,11 @@ export const idlFactory = ({ IDL }) => {
     'isManager' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'isPremiumUser' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], ['query']),
     'leaveChatGroup' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'linkCryptoReferral' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'login' : IDL.Func(
         [MobileNumber, IDL.Text],
@@ -3543,7 +3792,17 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'removeManager' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'removeQrEntry' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'removeShopPhoto' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'removeUpiEntry' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'replyToChatStory' : IDL.Func(
         [IDL.Nat, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
@@ -3561,8 +3820,8 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'requestDeposit' : IDL.Func(
-        [IDL.Text, IDL.Float64],
-        [IDL.Variant({ 'ok' : CryptoTransaction, 'err' : IDL.Text })],
+        [IDL.Text, IDL.Float64, IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : DepositRequest, 'err' : IDL.Text })],
         [],
       ),
     'requestOfferPasswordReset' : IDL.Func(
@@ -3636,6 +3895,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'setActiveQr' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'setActiveUpi' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setChatAutoReply' : IDL.Func(
         [IDL.Bool, IDL.Vec(IDL.Text)],
@@ -3657,6 +3926,11 @@ export const idlFactory = ({ IDL }) => {
     'setPaymentConfig' : IDL.Func([PaymentConfig], [IDL.Bool], []),
     'setPlanType' : IDL.Func([IDL.Nat, PlanType], [], []),
     'setRechargeServiceEnabled' : IDL.Func([IDL.Bool], [IDL.Bool], []),
+    'setStopLossRule' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Float64, IDL.Float64],
+        [IDL.Variant({ 'ok' : StopLossRule, 'err' : IDL.Text })],
+        [],
+      ),
     'submitUpiPremiumRequest' : IDL.Func(
         [PremiumPlan, IDL.Text, IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],

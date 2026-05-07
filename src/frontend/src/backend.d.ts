@@ -84,6 +84,18 @@ export interface AutoReply {
     userId: Principal;
     isEnabled: boolean;
 }
+export interface UpiEntry {
+    id: string;
+    isActive: boolean;
+    upiName: string;
+    upiId: string;
+}
+export interface QrEntry {
+    id: string;
+    qrUrl: string;
+    isActive: boolean;
+    qrLabel: string;
+}
 export type ShortcutCreator = {
     __kind__: "admin";
     admin: null;
@@ -91,6 +103,18 @@ export type ShortcutCreator = {
     __kind__: "user";
     user: Principal;
 };
+export interface DepositRequest {
+    id: string;
+    status: ApprovalStatus;
+    userId: string;
+    screenshotUrl?: string;
+    createdAt: bigint;
+    rejectionReason?: string;
+    adminNote?: string;
+    utrNumber: string;
+    amount: number;
+    resolvedAt?: bigint;
+}
 export interface ChatMessage {
     id: bigint;
     lockPrice?: bigint;
@@ -169,6 +193,7 @@ export interface JobItem {
 export interface CryptoWallet {
     dailyRewardStreak: bigint;
     mpinHash: string;
+    referralCode: string;
     balance: number;
     mpinLockedUntil: bigint;
     userId: string;
@@ -176,6 +201,7 @@ export interface CryptoWallet {
     createdAt: bigint;
     lastDailyRewardClaimed: bigint;
     updatedAt: bigint;
+    hasCompletedFirstTrade: boolean;
     totalWithdrawn: number;
     totalDeposited: number;
     mpinSetAt: bigint;
@@ -215,14 +241,16 @@ export interface Story {
     mediaUrl?: string;
     textContent?: string;
 }
-export interface AuditLogEntry {
+export interface StopLossRule {
     id: string;
-    action: AuditAction;
-    note: string;
-    timestamp: bigint;
-    adminEmail: string;
-    amount?: bigint;
-    targetUserId: string;
+    quantityToSell: number;
+    userId: string;
+    createdAt: bigint;
+    coinSymbol: string;
+    limitPriceInr: number;
+    isActive: boolean;
+    triggeredAt?: bigint;
+    coinId: string;
 }
 export interface UdhaarCustomer {
     id: string;
@@ -231,6 +259,17 @@ export interface UdhaarCustomer {
     createdAt: bigint;
     address: string;
     mobile: string;
+}
+export interface Order {
+    id: bigint;
+    customerName: string;
+    status: string;
+    createdAt: bigint;
+    description: string;
+    orderType: string;
+    imageUrl?: string;
+    customerId: bigint;
+    providerId: bigint;
 }
 export interface OfferTransaction {
     id: bigint;
@@ -245,17 +284,6 @@ export interface PointsHistoryEntry {
     at: bigint;
     action: string;
     points: bigint;
-}
-export interface Order {
-    id: bigint;
-    customerName: string;
-    status: string;
-    createdAt: bigint;
-    description: string;
-    orderType: string;
-    imageUrl?: string;
-    customerId: bigint;
-    providerId: bigint;
 }
 export interface ChatAdminSettings {
     voiceToTextEnabled: boolean;
@@ -287,6 +315,15 @@ export interface Banner {
     displayOrder: bigint;
     imageUrl: string;
     subtitle: string;
+}
+export interface AuditLogEntry {
+    id: string;
+    action: AuditAction;
+    note: string;
+    timestamp: bigint;
+    adminEmail: string;
+    amount?: bigint;
+    targetUserId: string;
 }
 export interface LockedMessagePayment {
     id: bigint;
@@ -321,13 +358,13 @@ export interface Conversation {
     participantIds: Array<Principal>;
     groupName?: string;
 }
-export type MobileNumber = string;
 export interface UserProfile {
     userId: bigint;
     name: string;
     role: UserRole;
     mobile: MobileNumber;
 }
+export type MobileNumber = string;
 export interface VaultItem {
     id: bigint;
     isViewOnce: boolean;
@@ -590,8 +627,12 @@ export interface CryptoInvestConfig {
     buyFeePercent: number;
     highRiskThreshold: number;
     isEnabled: boolean;
+    referralBonusAmount: number;
     maxWithdrawal: number;
     minWithdrawal: number;
+    upiId: string;
+    referralBonusEnabled: boolean;
+    qrCodeUrl: string;
     sellFeePercent: number;
     dailyRewardAmount: number;
     isDailyRewardEnabled: boolean;
@@ -857,6 +898,13 @@ export interface backendInterface {
      */
     addManager(mobile: string): Promise<boolean>;
     addNews(title: string, summary: string, imageUrl: string, link: string, category: string): Promise<bigint>;
+    addQrEntry(adminToken: string | null, qrUrl: string, qrLabel: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     addScrapRate(itemName: string, ratePerKg: number, ratePerGram: number): Promise<bigint>;
     addServiceRate(userId: bigint, newRate: ServiceRate): Promise<void>;
     addShopPhoto(userId: bigint, blobId: string): Promise<void>;
@@ -877,6 +925,13 @@ export interface backendInterface {
     addUdhaarTransaction(customerId: string, amount: number, transactionType: string, date: string, note: string): Promise<{
         __kind__: "ok";
         ok: UdhaarTransaction;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    addUpiEntry(adminToken: string | null, upiId: string, upiName: string): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -929,7 +984,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    adminApproveDeposit(adminToken: string | null, txId: string): Promise<{
+    adminApproveDeposit(adminToken: string | null, depositId: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -975,6 +1030,13 @@ export interface backendInterface {
     adminGetAllCryptoUsers(adminToken: string | null): Promise<{
         __kind__: "ok";
         ok: Array<CryptoWallet>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    adminGetAllStopLossRules(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<StopLossRule>;
     } | {
         __kind__: "err";
         err: string;
@@ -1037,6 +1099,13 @@ export interface backendInterface {
         err: string;
     }>;
     adminRejectCryptoWithdrawal(adminToken: string | null, withdrawalId: string, adminNote: string | null): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    adminRejectDeposit(adminToken: string | null, depositId: string, adminNote: string | null): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -1133,6 +1202,14 @@ export interface backendInterface {
      * / Returns true if the token is valid and not expired.
      */
     checkAdminToken(token: string): Promise<boolean>;
+    /**
+     * / Called from frontend when a coin price update arrives.
+     * / Finds all active stop-loss rules for the coin where limitPrice >= currentPrice,
+     * / executes a sell for each (without MPIN — system-triggered), and marks rules as triggered.
+     */
+    checkAndExecuteStopLoss(coinId: string, currentPrice: number): Promise<{
+        triggered: bigint;
+    }>;
     claimDailyReward(userId: string): Promise<{
         __kind__: "ok";
         ok: number;
@@ -1209,6 +1286,13 @@ export interface backendInterface {
     deleteNews(id: bigint): Promise<boolean>;
     deleteScrapRate(id: bigint): Promise<boolean>;
     deleteServiceRate(userId: bigint, rateName: string): Promise<void>;
+    deleteStopLossRule(userId: string, ruleId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     /**
      * / Delete a customer and all its transactions. Caller must own the customer.
      */
@@ -1255,6 +1339,14 @@ export interface backendInterface {
     }>;
     getActiveBanners(): Promise<Array<Banner>>;
     getActiveChatStories(): Promise<Array<Story>>;
+    /**
+     * / Public query — no auth required. Returns the currently active UPI ID, name, and QR URL.
+     */
+    getActivePaymentInfo(): Promise<{
+        qrUrl: string;
+        upiName: string;
+        upiId: string;
+    }>;
     getActiveProviders(): Promise<Array<ProviderProfile>>;
     /**
      * / Return the most recent `limit` audit log entries — admin only.
@@ -1363,6 +1455,13 @@ export interface backendInterface {
     getCustomCodes(): Promise<Array<CustomCode>>;
     getCustomSections(): Promise<Array<CustomSection>>;
     getCustomerOrders(userId: bigint): Promise<Array<Order>>;
+    getDepositRequests(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<DepositRequest>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getJobs(): Promise<Array<JobItem>>;
     getListedCoins(): Promise<Array<CryptoCoin>>;
     getListings(city: string | null, category: MarketCategory | null): Promise<Array<MarketListing>>;
@@ -1509,6 +1608,13 @@ export interface backendInterface {
         isEnabled: boolean;
         offerWallUrl: string;
     }>;
+    getQrList(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<QrEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getRecentUsers(): Promise<Array<User>>;
     /**
      * / Return the current recharge API config — admin only.
@@ -1562,13 +1668,22 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    getUpiList(adminToken: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<UpiEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getUserById(userId: bigint): Promise<User | null>;
     getUserByMobile(mobile: MobileNumber): Promise<User | null>;
     getUserCryptoTransactions(userId: string): Promise<Array<CryptoTransaction>>;
     getUserCryptoWallet(userId: string): Promise<CryptoWallet>;
     getUserCryptoWithdrawals(userId: string): Promise<Array<CryptoWithdrawal>>;
+    getUserDepositRequests(userId: string): Promise<Array<DepositRequest>>;
     getUserPortfolio(userId: string): Promise<Array<PortfolioHolding>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserStopLossRules(userId: string): Promise<Array<StopLossRule>>;
     /**
      * / Get the current subscription status for a given user.
      */
@@ -1594,6 +1709,17 @@ export interface backendInterface {
     isManager(mobile: string): Promise<boolean>;
     isPremiumUser(userId: Principal | null): Promise<boolean>;
     leaveChatGroup(conversationId: bigint): Promise<boolean>;
+    /**
+     * / Link an Offer Portal referral code to a crypto wallet so that
+     * / when the user completes their first trade the referrer gets a bonus.
+     */
+    linkCryptoReferral(userId: string, referralCode: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     login(mobile: MobileNumber, passwordHash: string): Promise<{
         __kind__: "ok";
@@ -1690,7 +1816,21 @@ export interface backendInterface {
      * / Remove a manager by mobile number — admin only.
      */
     removeManager(mobile: string): Promise<boolean>;
+    removeQrEntry(adminToken: string | null, entryId: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     removeShopPhoto(userId: bigint, blobId: string): Promise<void>;
+    removeUpiEntry(adminToken: string | null, entryId: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     replyToChatStory(storyId: bigint, message: string): Promise<{
         __kind__: "ok";
         ok: bigint;
@@ -1713,9 +1853,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    requestDeposit(userId: string, amount: number): Promise<{
+    requestDeposit(userId: string, amount: number, utrNumber: string, screenshotUrl: string | null): Promise<{
         __kind__: "ok";
-        ok: CryptoTransaction;
+        ok: DepositRequest;
     } | {
         __kind__: "err";
         err: string;
@@ -1819,6 +1959,20 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    setActiveQr(adminToken: string | null, entryId: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setActiveUpi(adminToken: string | null, entryId: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setChatAutoReply(enabled: boolean, messages: Array<string>): Promise<boolean>;
     setChatGhostMode(enabled: boolean): Promise<boolean>;
@@ -1849,6 +2003,13 @@ export interface backendInterface {
      * / Enable or disable the recharge service — admin only.
      */
     setRechargeServiceEnabled(enabled: boolean): Promise<boolean>;
+    setStopLossRule(userId: string, coinId: string, coinSymbol: string, quantityToSell: number, limitPriceInr: number): Promise<{
+        __kind__: "ok";
+        ok: StopLossRule;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     submitUpiPremiumRequest(plan: PremiumPlan, upiTxnRef: string, amount: bigint): Promise<{
         __kind__: "ok";
         ok: bigint;

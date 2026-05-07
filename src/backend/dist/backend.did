@@ -123,6 +123,13 @@ type UpiPaymentRequest =
    upiTxnRef: text;
    userId: principal;
  };
+type UpiEntry = 
+ record {
+   id: text;
+   isActive: bool;
+   upiId: text;
+   upiName: text;
+ };
 type UdhaarTransaction = 
  record {
    amount: float64;
@@ -234,6 +241,18 @@ type Story =
    textContent: opt text;
    viewerIds: vec principal;
  };
+type StopLossRule = 
+ record {
+   coinId: text;
+   coinSymbol: text;
+   createdAt: int;
+   id: text;
+   isActive: bool;
+   limitPriceInr: float64;
+   quantityToSell: float64;
+   triggeredAt: opt int;
+   userId: text;
+ };
 type SmsConfig = 
  record {
    fast2smsApiKey: text;
@@ -328,6 +347,13 @@ type RechargeApiConfig =
    autoRefundEnabled: bool;
    isActive: bool;
    responseParam: text;
+ };
+type QrEntry = 
+ record {
+   id: text;
+   isActive: bool;
+   qrLabel: text;
+   qrUrl: text;
  };
 type ProviderProfile = 
  record {
@@ -617,6 +643,23 @@ type JobItem =
    title: text;
  };
 type ExternalBlob = blob;
+type DepositRequest = 
+ record {
+   adminNote: opt text;
+   amount: float64;
+   createdAt: int;
+   id: text;
+   rejectionReason: opt text;
+   resolvedAt: opt int;
+   screenshotUrl: opt text;
+   status: variant {
+             approved;
+             pending;
+             rejected;
+           };
+   userId: text;
+   utrNumber: text;
+ };
 type CustomSection = 
  record {
    buttons: text;
@@ -663,11 +706,13 @@ type CryptoWallet =
    balance: float64;
    createdAt: int;
    dailyRewardStreak: nat;
+   hasCompletedFirstTrade: bool;
    lastDailyRewardClaimed: int;
    mpinFailedAttempts: nat;
    mpinHash: text;
    mpinLockedUntil: int;
    mpinSetAt: int;
+   referralCode: text;
    totalDeposited: float64;
    totalWithdrawn: float64;
    updatedAt: int;
@@ -700,7 +745,11 @@ type CryptoInvestConfig =
    isEnabled: bool;
    maxWithdrawal: float64;
    minWithdrawal: float64;
+   qrCodeUrl: text;
+   referralBonusAmount: float64;
+   referralBonusEnabled: bool;
    sellFeePercent: float64;
+   upiId: text;
  };
 type CryptoCoin = 
  record {
@@ -938,6 +987,11 @@ service : {
   addManager: (mobile: text) -> (bool);
   addNews: (title: text, summary: text, imageUrl: text, link: text, category:
    text) -> (nat);
+  addQrEntry: (adminToken: opt text, qrUrl: text, qrLabel: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   addScrapRate: (itemName: text, ratePerKg: float64, ratePerGram: float64) ->
    (nat);
   addServiceRate: (userId: nat, newRate: ServiceRate) -> ();
@@ -955,6 +1009,11 @@ service : {
    (variant {
       err: text;
       ok: UdhaarTransaction;
+    });
+  addUpiEntry: (adminToken: opt text, upiId: text, upiName: text) ->
+   (variant {
+      err: text;
+      ok: text;
     });
   addVideo: (title: text, videoUrl: text, thumbnailUrl: text, platform: 
    text, category: text) -> (nat);
@@ -990,7 +1049,7 @@ service : {
                                     err: text;
                                     ok;
                                   });
-  adminApproveDeposit: (adminToken: opt text, txId: text) ->
+  adminApproveDeposit: (adminToken: opt text, depositId: text) ->
    (variant {
       err: text;
       ok;
@@ -1020,6 +1079,11 @@ service : {
    (variant {
       err: text;
       ok: vec CryptoWallet;
+    });
+  adminGetAllStopLossRules: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec StopLossRule;
     });
   adminGetAllTickets: (adminToken: opt text) ->
    (variant {
@@ -1068,6 +1132,11 @@ service : {
                               err: text;
                               ok;
                             });
+  adminRejectDeposit: (adminToken: opt text, depositId: text, adminNote:
+   opt text) -> (variant {
+                   err: text;
+                   ok;
+                 });
   adminRejectUpiPremium: (requestId: nat) -> (variant {
                                                 err: text;
                                                 ok;
@@ -1134,6 +1203,11 @@ service : {
   /// Validate an admin session token — public query.
   /// Returns true if the token is valid and not expired.
   checkAdminToken: (token: text) -> (bool) query;
+  /// Called from frontend when a coin price update arrives.
+  /// Finds all active stop-loss rules for the coin where limitPrice >= currentPrice,
+  /// executes a sell for each (without MPIN — system-triggered), and marks rules as triggered.
+  checkAndExecuteStopLoss: (coinId: text, currentPrice: float64) ->
+   (record {triggered: nat;});
   claimDailyReward: (userId: text) -> (variant {
                                          err: text;
                                          ok: float64;
@@ -1189,6 +1263,11 @@ service : {
   deleteNews: (id: nat) -> (bool);
   deleteScrapRate: (id: nat) -> (bool);
   deleteServiceRate: (userId: nat, rateName: text) -> ();
+  deleteStopLossRule: (userId: text, ruleId: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   /// Delete a customer and all its transactions. Caller must own the customer.
   deleteUdhaarCustomer: (customerId: text) -> (variant {
                                                  err: text;
@@ -1220,6 +1299,13 @@ service : {
                      });
   getActiveBanners: () -> (vec Banner) query;
   getActiveChatStories: () -> (vec Story) query;
+  /// Public query — no auth required. Returns the currently active UPI ID, name, and QR URL.
+  getActivePaymentInfo: () ->
+   (record {
+      qrUrl: text;
+      upiId: text;
+      upiName: text;
+    }) query;
   getActiveProviders: () -> (vec ProviderProfile) query;
   /// Return the most recent `limit` audit log entries — admin only.
   /// Returns empty array if caller is not admin (never traps).
@@ -1310,6 +1396,11 @@ service : {
   getCustomCodes: () -> (vec CustomCode) query;
   getCustomSections: () -> (vec CustomSection) query;
   getCustomerOrders: (userId: nat) -> (vec Order) query;
+  getDepositRequests: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec DepositRequest;
+    });
   getJobs: () -> (vec JobItem) query;
   getListedCoins: () -> (vec CryptoCoin) query;
   getListings: (city: opt text, category: opt MarketCategory) ->
@@ -1429,6 +1520,10 @@ service : {
       offerWallName: text;
       offerWallUrl: text;
     }) query;
+  getQrList: (adminToken: opt text) -> (variant {
+                                          err: text;
+                                          ok: vec QrEntry;
+                                        });
   getRecentUsers: () -> (vec User) query;
   /// Return the current recharge API config — admin only.
   /// Returns default config for non-admin callers (never traps).
@@ -1461,13 +1556,20 @@ service : {
       err: text;
       ok: vec UdhaarTransaction;
     }) query;
+  getUpiList: (adminToken: opt text) ->
+   (variant {
+      err: text;
+      ok: vec UpiEntry;
+    });
   getUserById: (userId: nat) -> (opt User) query;
   getUserByMobile: (mobile: MobileNumber) -> (opt User) query;
   getUserCryptoTransactions: (userId: text) -> (vec CryptoTransaction);
   getUserCryptoWallet: (userId: text) -> (CryptoWallet);
   getUserCryptoWithdrawals: (userId: text) -> (vec CryptoWithdrawal);
+  getUserDepositRequests: (userId: text) -> (vec DepositRequest);
   getUserPortfolio: (userId: text) -> (vec PortfolioHolding);
   getUserProfile: (user: principal) -> (opt UserProfile) query;
+  getUserStopLossRules: (userId: text) -> (vec StopLossRule);
   /// Get the current subscription status for a given user.
   getUserSubscriptionStatus: (userId: text) -> (opt UserSubscription) query;
   getUserTickets: (userId: text) -> (vec SupportTicket);
@@ -1486,6 +1588,13 @@ service : {
   isManager: (mobile: text) -> (bool) query;
   isPremiumUser: (userId: opt principal) -> (bool) query;
   leaveChatGroup: (conversationId: nat) -> (bool);
+  /// Link an Offer Portal referral code to a crypto wallet so that
+  /// when the user completes their first trade the referrer gets a bonus.
+  linkCryptoReferral: (userId: text, referralCode: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
   listApprovals: () -> (vec UserApprovalInfo) query;
   login: (mobile: MobileNumber, passwordHash: text) ->
    (variant {
@@ -1552,7 +1661,17 @@ service : {
                                              });
   /// Remove a manager by mobile number — admin only.
   removeManager: (mobile: text) -> (bool);
+  removeQrEntry: (adminToken: opt text, entryId: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   removeShopPhoto: (userId: nat, blobId: text) -> ();
+  removeUpiEntry: (adminToken: opt text, entryId: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   replyToChatStory: (storyId: nat, message: text) ->
    (variant {
       err: text;
@@ -1569,11 +1688,11 @@ service : {
                                   err: text;
                                   ok: CryptoWithdrawal;
                                 });
-  requestDeposit: (userId: text, amount: float64) ->
-   (variant {
-      err: text;
-      ok: CryptoTransaction;
-    });
+  requestDeposit: (userId: text, amount: float64, utrNumber: text,
+   screenshotUrl: opt text) -> (variant {
+                                  err: text;
+                                  ok: DepositRequest;
+                                });
   /// Request an OTP for Offer Portal password reset.
   /// Stores the OTP in stable memory with a 10-minute TTL.
   /// If the user has a mobile number and Fast2SMS is configured, the SMS is sent.
@@ -1642,6 +1761,16 @@ service : {
                               err: text;
                               ok: nat;
                             });
+  setActiveQr: (adminToken: opt text, entryId: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
+  setActiveUpi: (adminToken: opt text, entryId: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   setApproval: (user: principal, status: ApprovalStatus) -> ();
   setChatAutoReply: (enabled: bool, messages: vec text) -> (bool);
   setChatGhostMode: (enabled: bool) -> (bool);
@@ -1661,6 +1790,12 @@ service : {
   setPlanType: (userId: nat, planType: PlanType) -> ();
   /// Enable or disable the recharge service — admin only.
   setRechargeServiceEnabled: (enabled: bool) -> (bool);
+  setStopLossRule: (userId: text, coinId: text, coinSymbol: text,
+   quantityToSell: float64, limitPriceInr: float64) ->
+   (variant {
+      err: text;
+      ok: StopLossRule;
+    });
   submitUpiPremiumRequest: (plan: PremiumPlan, upiTxnRef: text, amount:
    nat) -> (variant {
               err: text;

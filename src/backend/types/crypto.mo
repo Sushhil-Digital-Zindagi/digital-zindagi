@@ -1,5 +1,21 @@
 module {
 
+  // A single UPI entry in the multi-UPI list
+  public type UpiEntry = {
+    id       : Text;
+    upiId    : Text;
+    upiName  : Text;
+    isActive : Bool;
+  };
+
+  // A single QR code entry in the multi-QR list
+  public type QrEntry = {
+    id       : Text;
+    qrUrl    : Text;
+    qrLabel  : Text;
+    isActive : Bool;
+  };
+
   // Module-level config for the Digital Invest feature
   public type CryptoInvestConfig = {
     isEnabled : Bool;
@@ -10,6 +26,10 @@ module {
     dailyRewardAmount : Float;
     isDailyRewardEnabled : Bool;
     highRiskThreshold : Float;     // coins dropping more than this % are tagged High Risk
+    upiId : Text;                  // legacy: active UPI ID (kept for backwards compat)
+    qrCodeUrl : Text;              // legacy: active QR code URL (kept for backwards compat)
+    referralBonusAmount : Float;   // INR credited to referrer on referree's first trade
+    referralBonusEnabled : Bool;
   };
 
   // A tradable coin listed in the app
@@ -35,6 +55,8 @@ module {
     mpinLockedUntil : Int;         // 0 if not locked
     lastDailyRewardClaimed : Int;  // timestamp of last claim (nanoseconds)
     dailyRewardStreak : Nat;
+    hasCompletedFirstTrade : Bool; // for referral first-trade bonus tracking
+    referralCode : Text;           // the offer portal referral code (if linked)
     createdAt : Int;
     updatedAt : Int;
   };
@@ -148,6 +170,33 @@ module {
     isBlocked : Bool;  // cannot access the module at all
     reason : Text;
     updatedAt : Int;
+  };
+
+  // Deposit request with UTR submitted by a user
+  public type DepositRequest = {
+    id : Text;
+    userId : Text;
+    amount : Float;
+    utrNumber : Text;              // Bank/UPI Transaction Reference Number
+    screenshotUrl : ?Text;         // Cloudinary URL of payment screenshot
+    status : { #pending; #approved; #rejected };
+    adminNote : ?Text;
+    rejectionReason : ?Text;       // Populated on admin rejection
+    createdAt : Int;
+    resolvedAt : ?Int;
+  };
+
+  // Stop-loss rule set by a user for automatic sell on price drop
+  public type StopLossRule = {
+    id : Text;
+    userId : Text;
+    coinId : Text;
+    coinSymbol : Text;
+    quantityToSell : Float;        // quantity to auto-sell when triggered
+    limitPriceInr : Float;         // sell triggers when price <= this value
+    isActive : Bool;
+    triggeredAt : ?Int;
+    createdAt : Int;
   };
 
   // Admin action audit trail entry

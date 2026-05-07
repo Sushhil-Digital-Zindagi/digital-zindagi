@@ -131,9 +131,35 @@ export interface CryptoStats {
 export interface DepositRequest {
   id: string;
   userId: string;
+  userEmail: string;
   amount: number;
+  utrNumber: string;
   status: string;
+  adminNote: string;
+  screenshotUrl?: string | null;
+  rejectionReason?: string | null;
   createdAt: bigint;
+  updatedAt: bigint;
+}
+
+export interface StopLossRule {
+  id: string;
+  userId: string;
+  coinId: string;
+  coinName: string;
+  symbol: string;
+  limitPrice: number;
+  createdAt: bigint;
+  isActive: boolean;
+}
+
+export interface ReferralEntry {
+  referredUserId: string;
+  referredEmail: string;
+  joinedAt: bigint;
+  firstTradeAt: bigint | null;
+  bonusCredited: number;
+  bonusPaid: boolean;
 }
 
 export type CoinPriceData = { usd: number; usd_24h_change: number };
@@ -370,16 +396,93 @@ export function useRequestDeposit() {
     mutationFn: async ({
       userId,
       amount,
-    }: { userId: string; amount: number }) => {
+      utrNumber,
+      screenshotUrl,
+    }: {
+      userId: string;
+      amount: number;
+      utrNumber?: string;
+      screenshotUrl?: string | null;
+    }) => {
       if (!actor) throw new Error("Actor not available");
-      return unwrapResult(asActor(actor).requestDeposit(userId, amount));
+      return unwrapResult(
+        asActor(actor).requestDeposit(
+          userId,
+          amount,
+          utrNumber ?? "",
+          screenshotUrl ? [screenshotUrl] : [],
+        ),
+      );
     },
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ["cryptoWallet", v.userId] });
       qc.invalidateQueries({ queryKey: ["depositRequests", v.userId] });
+      qc.invalidateQueries({ queryKey: ["adminDepositRequests"] });
     },
     onError: (e) =>
       toast.error(`Deposit request fail: ${(e as Error).message}`),
+  });
+}
+
+export function useUserDepositRequests(userId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<DepositRequest[]>({
+    queryKey: ["depositRequests", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return (await asActor(actor).getUserDepositRequests(
+          userId,
+        )) as DepositRequest[];
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 10000,
+  });
+}
+
+export function useAdminGetDepositRequests() {
+  const { actor, isFetching } = useActor();
+  return useQuery<DepositRequest[]>({
+    queryKey: ["adminDepositRequests"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult<DepositRequest[]>(
+          asActor(actor).adminGetAllDepositRequests(adminToken()),
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 10000,
+  });
+}
+
+export function useAdminRejectDeposit() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      depositId,
+      adminNote,
+    }: { depositId: string; adminNote?: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor(actor).adminRejectDeposit(
+          adminToken(),
+          depositId,
+          optText(adminNote),
+        ),
+      );
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["adminDepositRequests"] }),
+    onError: (e) =>
+      toast.error(`Deposit reject nahi hua: ${(e as Error).message}`),
   });
 }
 
@@ -393,7 +496,10 @@ export function useAdminApproveDeposit() {
         asActor(actor).adminApproveDeposit(adminToken(), txId),
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cryptoStats"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cryptoStats"] });
+      qc.invalidateQueries({ queryKey: ["adminDepositRequests"] });
+    },
     onError: (e) =>
       toast.error(`Deposit approve nahi hua: ${(e as Error).message}`),
   });
@@ -875,6 +981,33 @@ export function useAdminGetAllTickets() {
   });
 }
 
+// ─── COINGECKO CHART DATA ─────────────────────────────────────────────────────
+
+export async function fetchCoinPriceHistory(
+  coinGeckoId: string,
+  days: 1 | 7 | 30,
+): Promise<Array<[number, number]>> {
+  if (!coinGeckoId) return [];
+  try {
+    const url = `https://api.coingecko.com/api/v3/coins/${coinGeckoId}/market_chart?vs_currency=inr&days=${days}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { prices?: Array<[number, number]> };
+    return data.prices ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export function useCoinPriceHistory(coinGeckoId: string, days: 1 | 7 | 30) {
+  return useQuery<Array<[number, number]>>({
+    queryKey: ["coinHistory", coinGeckoId, days],
+    queryFn: () => fetchCoinPriceHistory(coinGeckoId, days),
+    enabled: !!coinGeckoId,
+    staleTime: 120000,
+  });
+}
+
 // ─── Compatibility aliases for CryptoAdminPanel ───────────────────────────
 
 export const useAdminGetCryptoWithdrawals = useAdminGetAllWithdrawals;
@@ -897,6 +1030,331 @@ export function useUpdateCryptoConfig() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cryptoConfig"] }),
     onError: (e) =>
       toast.error(`Config update nahi hua: ${(e as Error).message}`),
+  });
+}
+
+// ─── STOP LOSS RULES ─────────────────────────────────────────────────────────
+
+export function useSetStopLossRule() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      coinId,
+      limitPrice,
+    }: { userId: string; coinId: string; limitPrice: number }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor(actor).setStopLossRule(userId, coinId, limitPrice),
+      );
+    },
+    onSuccess: (_d, v) =>
+      qc.invalidateQueries({ queryKey: ["stopLossRules", v.userId] }),
+    onError: (e) =>
+      toast.error(`Stop-loss set nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useDeleteStopLossRule() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      ruleId,
+    }: { userId: string; ruleId: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor(actor).deleteStopLossRule(userId, ruleId));
+    },
+    onSuccess: (_d, v) =>
+      qc.invalidateQueries({ queryKey: ["stopLossRules", v.userId] }),
+    onError: (e) =>
+      toast.error(`Stop-loss delete nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useGetUserStopLossRules(userId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<StopLossRule[]>({
+    queryKey: ["stopLossRules", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return (await asActor(actor).getUserStopLossRules(
+          userId,
+        )) as StopLossRule[];
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 15000,
+  });
+}
+
+export function useCheckAndExecuteStopLoss() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      coinId,
+      currentPrice,
+    }: { userId: string; coinId: string; currentPrice: number }) => {
+      if (!actor) return null;
+      try {
+        return await unwrapResult(
+          asActor(actor).checkAndExecuteStopLoss(userId, coinId, currentPrice),
+        );
+      } catch {
+        return null;
+      }
+    },
+    onSuccess: (_d, v) => {
+      if (_d) {
+        qc.invalidateQueries({ queryKey: ["stopLossRules", v.userId] });
+        qc.invalidateQueries({ queryKey: ["cryptoWallet", v.userId] });
+        qc.invalidateQueries({ queryKey: ["portfolio", v.userId] });
+        toast.success(`Stop-loss triggered! ${v.coinId} sold.`);
+      }
+    },
+  });
+}
+
+// ─── REFERRAL ─────────────────────────────────────────────────────────────────
+
+export function useGetUserReferrals(userId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<ReferralEntry[]>({
+    queryKey: ["userReferrals", userId],
+    queryFn: async () => {
+      if (!actor || !userId) return [];
+      try {
+        return (await asActor(actor).getUserReferrals(
+          userId,
+        )) as ReferralEntry[];
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!userId,
+    staleTime: 30000,
+  });
+}
+
+// ─── PAYMENT SETTINGS (Admin) ─────────────────────────────────────────────────
+
+export function useUpdatePaymentSettings() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      upiId,
+      qrCodeUrl,
+    }: { upiId: string; qrCodeUrl: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor(actor).updateCryptoConfig(
+          adminToken(),
+          JSON.stringify({ upiId, qrCodeUrl }),
+        ),
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cryptoConfig"] }),
+    onError: (e) =>
+      toast.error(`Payment settings update nahi hua: ${(e as Error).message}`),
+  });
+}
+
+// ─── ACTIVE PAYMENT INFO (public) ────────────────────────────────────────────
+
+export interface ActivePaymentInfo {
+  upiId: string;
+  upiName: string;
+  qrUrl: string;
+}
+
+export function useGetActivePaymentInfo() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ActivePaymentInfo>({
+    queryKey: ["activePaymentInfo"],
+    queryFn: async () => {
+      if (!actor) return { upiId: "", upiName: "", qrUrl: "" };
+      try {
+        return await unwrapResult<ActivePaymentInfo>(
+          asActor(actor).getActivePaymentInfo(),
+        );
+      } catch {
+        return { upiId: "", upiName: "", qrUrl: "" };
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 30000,
+  });
+}
+
+// ─── UPI MANAGEMENT (Admin) ───────────────────────────────────────────────────
+
+export interface UpiEntry {
+  id: string;
+  upiId: string;
+  upiName: string;
+  isActive: boolean;
+}
+
+export interface QrEntry {
+  id: string;
+  qrUrl: string;
+  qrLabel: string;
+  isActive: boolean;
+}
+
+export function useGetUpiList() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UpiEntry[]>({
+    queryKey: ["upiList"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult<UpiEntry[]>(
+          asActor(actor).getUpiList(adminToken()),
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 15000,
+  });
+}
+
+export function useAddUpiEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      upiId,
+      upiName,
+    }: { upiId: string; upiName: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor(actor).addUpiEntry(adminToken(), upiId, upiName),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["upiList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+    },
+    onError: (e) => toast.error(`UPI add nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useRemoveUpiEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor(actor).removeUpiEntry(adminToken(), entryId));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["upiList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+    },
+    onError: (e) => toast.error(`UPI remove nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useSetActiveUpi() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor(actor).setActiveUpi(adminToken(), entryId));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["upiList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+      qc.invalidateQueries({ queryKey: ["activePaymentInfo"] });
+    },
+    onError: (e) =>
+      toast.error(`Active UPI set nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useGetQrList() {
+  const { actor, isFetching } = useActor();
+  return useQuery<QrEntry[]>({
+    queryKey: ["qrList"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await unwrapResult<QrEntry[]>(
+          asActor(actor).getQrList(adminToken()),
+        );
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 15000,
+  });
+}
+
+export function useAddQrEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      qrUrl,
+      qrLabel,
+    }: { qrUrl: string; qrLabel: string }) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(
+        asActor(actor).addQrEntry(adminToken(), qrUrl, qrLabel),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qrList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+    },
+    onError: (e) => toast.error(`QR add nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useRemoveQrEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor(actor).removeQrEntry(adminToken(), entryId));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qrList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+    },
+    onError: (e) => toast.error(`QR remove nahi hua: ${(e as Error).message}`),
+  });
+}
+
+export function useSetActiveQr() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      return unwrapResult(asActor(actor).setActiveQr(adminToken(), entryId));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qrList"] });
+      qc.invalidateQueries({ queryKey: ["cryptoConfig"] });
+      qc.invalidateQueries({ queryKey: ["activePaymentInfo"] });
+    },
+    onError: (e) =>
+      toast.error(`Active QR set nahi hua: ${(e as Error).message}`),
   });
 }
 
