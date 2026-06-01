@@ -1,11 +1,11 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "bcbe7219a7fcc7e19897e3fb494c04d881aa4ff6b9ed6f5cd803815adeae2795",
+  "mopsTomlDepsHash": "02a2ef963832c992e7a72f2bffb4a0298c8a1626175738373081b427da956cea",
   "deps": {
     "core": "2.2.0",
-    "caffeineai-authorization": "0.1.0",
-    "caffeineai-object-storage": "0.1.1",
-    "caffeineai-user-approval": "0.1.0"
+    "caffeineai-authorization": "0.1.1",
+    "caffeineai-object-storage": "0.1.2",
+    "caffeineai-user-approval": "0.1.1"
   },
   "hashes": {
     "core@2.2.0": {
@@ -64,30 +64,30 @@
       "core@2.2.0/src/pure/RealTimeQueue.mo": "af133ae61c69ce4e00db5e9db53ddeccad84373fef82a156c85360c2426349dd",
       "core@2.2.0/src/pure/Set.mo": "f0155b1d548cbc8889fcff75ef52f0cab7998b034621e4faac8d3b79d7bbac07"
     },
-    "caffeineai-authorization@0.1.0": {
-      "caffeineai-authorization@0.1.0/rules/mixin-authorization-included.toml": "57fa6a81594ea8c12e0a3315c36dec4adf718444b8ef70a11cda1aaa1b11624a",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-is-caller-admin.toml": "10a57bed38437b1db5624f3b7261ee5f5922311b0bd30e01e2007a7edb274946",
-      "caffeineai-authorization@0.1.0/README.md": "9ec8eb5aefb7c96cd48d7b4111707dcb01d3f991a12dfd6b98f2e73b97b3758b",
-      "caffeineai-authorization@0.1.0/src/MixinAuthorization.mo": "818108e2188d91637eef39e6a9f0358f9958aa38ecec1e34b46fc7376cb6c09c",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-get-caller-user-role.toml": "934befe7ed91e8b7b8d7e9ec583730cbd2965b5f77354cea2770b709c1558093",
-      "caffeineai-authorization@0.1.0/mops.toml": "35c677e24b6ce03eed10e255a2a6dcccc5239f81f154d137cb9410236136d6cc",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-initialize-access-control.toml": "1ecedde0d8fe2b3d71fa46a20fa721754fcb0591bdb8b6b668b69f2593e120a4",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-assign-caller-user-role.toml": "e8669dfe4931aaa4268682877388255342ce2cb2cdafd21a121ddf22ef42b500",
-      "caffeineai-authorization@0.1.0/src/access-control.mo": "e517d2a028b510d804a633631a15981160def610ea9410dd5a122f92af3c04d8"
+    "caffeineai-authorization@0.1.1": {
+      "caffeineai-authorization@0.1.1/rules/no-redeclare-get-caller-user-role.toml": "934befe7ed91e8b7b8d7e9ec583730cbd2965b5f77354cea2770b709c1558093",
+      "caffeineai-authorization@0.1.1/src/MixinAuthorization.mo": "818108e2188d91637eef39e6a9f0358f9958aa38ecec1e34b46fc7376cb6c09c",
+      "caffeineai-authorization@0.1.1/rules/no-redeclare-initialize-access-control.toml": "1ecedde0d8fe2b3d71fa46a20fa721754fcb0591bdb8b6b668b69f2593e120a4",
+      "caffeineai-authorization@0.1.1/mops.toml": "36f8bccb06893e5c6e164e915f5d9e07c255cb59404a6a940b09bfb182f0c7bf",
+      "caffeineai-authorization@0.1.1/README.md": "7df09c051d9943be6cab58bfc0a208425b1d48512ae7f73b898dfed86ec6fd85",
+      "caffeineai-authorization@0.1.1/rules/no-redeclare-is-caller-admin.toml": "10a57bed38437b1db5624f3b7261ee5f5922311b0bd30e01e2007a7edb274946",
+      "caffeineai-authorization@0.1.1/rules/no-redeclare-assign-caller-user-role.toml": "e8669dfe4931aaa4268682877388255342ce2cb2cdafd21a121ddf22ef42b500",
+      "caffeineai-authorization@0.1.1/rules/mixin-authorization-included.toml": "57fa6a81594ea8c12e0a3315c36dec4adf718444b8ef70a11cda1aaa1b11624a",
+      "caffeineai-authorization@0.1.1/src/access-control.mo": "e517d2a028b510d804a633631a15981160def610ea9410dd5a122f92af3c04d8"
     },
-    "caffeineai-object-storage@0.1.1": {
-      "caffeineai-object-storage@0.1.1/README.md": "50a3a9fae3d9d534cdb76ebab8e5b04bd9be85698c2f13f7753beba22e86941b",
-      "caffeineai-object-storage@0.1.1/src/Storage.mo": "e4b61a9c3400f7d38f9b239451c37d81719889cbbf23a5a45bbd166c437500f5",
-      "caffeineai-object-storage@0.1.1/mops.toml": "f404e8d9caa6e45a02aba750709bbcd07ce1bab76ecae1f5480e23f2400c2a1d",
-      "caffeineai-object-storage@0.1.1/rules/mixin-storage-included.toml": "d2ab392a7a2a07f1c23f77f9357f6d0967346bff30a4588b8b53736f3931f1d5",
-      "caffeineai-object-storage@0.1.1/rules/no-redeclare-caffeine-storage-refill.toml": "ef27548d981848d1e9940053aae9c31162d4c9352778c1c3a2de7476924da9f7",
-      "caffeineai-object-storage@0.1.1/rules/no-redeclare-caffeine-storage-gateway.toml": "8a232d3119adc5d29ff9cfeaea5ba4dedd96c6e7d9a6c1b544723bc666e923be",
-      "caffeineai-object-storage@0.1.1/src/Mixin.mo": "175c6b98672a83054fc08855062d1a7b7f2bd3713bf11a60d5319ac5afefe2b3"
+    "caffeineai-object-storage@0.1.2": {
+      "caffeineai-object-storage@0.1.2/rules/no-redeclare-caffeine-storage-refill.toml": "ef27548d981848d1e9940053aae9c31162d4c9352778c1c3a2de7476924da9f7",
+      "caffeineai-object-storage@0.1.2/rules/no-redeclare-caffeine-storage-gateway.toml": "8a232d3119adc5d29ff9cfeaea5ba4dedd96c6e7d9a6c1b544723bc666e923be",
+      "caffeineai-object-storage@0.1.2/rules/mixin-storage-included.toml": "d2ab392a7a2a07f1c23f77f9357f6d0967346bff30a4588b8b53736f3931f1d5",
+      "caffeineai-object-storage@0.1.2/README.md": "cec7c399f7f9dee04709ba8e6610fe380e887ef667b9981082dac06eeb9c36fc",
+      "caffeineai-object-storage@0.1.2/src/Storage.mo": "e4b61a9c3400f7d38f9b239451c37d81719889cbbf23a5a45bbd166c437500f5",
+      "caffeineai-object-storage@0.1.2/mops.toml": "530718e8c2e82e9641f6feb4dfdf9beff590ef1a45b3ae2dbcdd9dce863e140a",
+      "caffeineai-object-storage@0.1.2/src/Mixin.mo": "175c6b98672a83054fc08855062d1a7b7f2bd3713bf11a60d5319ac5afefe2b3"
     },
-    "caffeineai-user-approval@0.1.0": {
-      "caffeineai-user-approval@0.1.0/src/approval.mo": "feb5d0093b4510a5c46c24be6262482cf2e3f10a3346c603e6973d9f2568d87d",
-      "caffeineai-user-approval@0.1.0/mops.toml": "e19eb0afac9bdc420c6a58dd62ce8ce2564019ce11701274c625d4a577562358",
-      "caffeineai-user-approval@0.1.0/README.md": "cfb4f4beb4372bf531aa72a6f7fae9cc61c54ca92f2dee2abdb23256ef70235b"
+    "caffeineai-user-approval@0.1.1": {
+      "caffeineai-user-approval@0.1.1/mops.toml": "1de9baf1b046ebb3e5652f47fabcece3daf21b42818e835b1c828e4aa4f7edc4",
+      "caffeineai-user-approval@0.1.1/README.md": "e7037698382a7273824173bd792a86f08e8f8acba95ec171cb888fdd2ab384ca",
+      "caffeineai-user-approval@0.1.1/src/approval.mo": "feb5d0093b4510a5c46c24be6262482cf2e3f10a3346c603e6973d9f2568d87d"
     }
   }
 }

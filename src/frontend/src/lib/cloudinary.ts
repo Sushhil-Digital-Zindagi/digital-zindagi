@@ -1,7 +1,7 @@
 /**
  * Cloudinary upload utility for Digital Zindagi.
  * API Secret is NEVER used here — it lives only in the canister backend.
- * All uploads use unsigned upload with the "ml_default" preset.
+ * All uploads use unsigned upload with the "digital_zindagi" preset.
  */
 
 export interface CloudinaryConfig {
@@ -18,16 +18,13 @@ export async function uploadToCloudinary(
   config: CloudinaryConfig,
   options?: { folder?: string },
 ): Promise<string> {
-  const { cloudName, apiKey } = config;
+  const { cloudName } = config;
   const folder = options?.folder ?? "digital-zindagi";
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "ml_default");
-  formData.append("api_key", apiKey);
+  formData.append("upload_preset", "digital_zindagi");
   formData.append("folder", folder);
-  // Apply eager transformations for auto quality/format
-  formData.append("eager", "q_auto,f_auto,c_fill,w_400,h_400");
 
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -49,7 +46,7 @@ export async function uploadToCloudinary(
   }
 
   if (!result.secure_url) {
-    throw new Error("Cloudinary did not return a URL");
+    throw new Error("Image upload failed. Please try again.");
   }
 
   return result.secure_url;

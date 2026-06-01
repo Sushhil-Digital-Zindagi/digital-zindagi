@@ -934,7 +934,7 @@ function AddMoneyTab({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const CLOUDINARY_CONFIG = {
-    cloudName: "dquyiiu7o",
+    cloudName: "dqruy1u7o",
     apiKey: "199372638334688",
   };
 
@@ -1919,6 +1919,13 @@ export default function DigitalInvestPage() {
   const { data: livePrices = {} as CoinPriceMap } =
     useLiveCoinPrices(coinGeckoIds);
 
+  // Redirect unauthenticated users to signup as trader
+  useEffect(() => {
+    if (!user) {
+      window.location.href = "/signup?role=trader";
+    }
+  }, [user]);
+
   if (!configLoading && config && !config.isEnabled && !isAdmin) {
     return (
       <div
@@ -1947,17 +1954,11 @@ export default function DigitalInvestPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="text-center">
-          <p className="text-3xl mb-3">\ud83d\udd12</p>
-          <p className="font-semibold">Pehle login karein</p>
+          <p className="text-3xl mb-3">🔒</p>
+          <p className="font-semibold">Redirect ho raha hai...</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Digital Invest use karne ke liye login zaroor hai
+            Digital Invest use karne ke liye signup/login zaroor hai
           </p>
-          <a
-            href="/login"
-            className="mt-4 inline-block bg-emerald-600 text-white px-6 py-2 rounded-xl font-semibold"
-          >
-            Login Karein
-          </a>
         </div>
       </div>
     );

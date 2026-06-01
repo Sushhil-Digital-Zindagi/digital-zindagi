@@ -4,7 +4,6 @@ import List      "mo:core/List";
 import Array     "mo:core/Array";
 import Types     "../types/chat";
 // Result not needed — using inline variants
-import Principal "mo:core/Principal";
 import Text      "mo:core/Text";
 import Nat       "mo:core/Nat";
 import Int       "mo:core/Int";

@@ -10,7 +10,6 @@ import Types      "../types/wallet-recharge";
 import WRLib      "../lib/wallet-recharge";
 import Map        "mo:core/Map";
 import Time       "mo:core/Time";
-import Principal  "mo:core/Principal";
 
 module {
 

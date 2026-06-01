@@ -433,7 +433,7 @@ function ModuleSettings() {
 
 // ─── Cloudinary Config + Coin Logo Upload Helper ───────────────────────────────
 
-const CLOUDINARY_CONFIG = { cloudName: "dquyiiu7o", apiKey: "199372638334688" };
+const CLOUDINARY_CONFIG = { cloudName: "dqruy1u7o", apiKey: "199372638334688" };
 
 function CoinLogoUpload({
   value,

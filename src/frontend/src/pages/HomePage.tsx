@@ -17,6 +17,7 @@ import Header from "../components/Header";
 import HeroCarousel from "../components/HeroCarousel";
 import ProviderCard from "../components/ProviderCard";
 import VideoGallery from "../components/VideoGallery";
+import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   useActiveBanners,
@@ -659,6 +660,7 @@ export default function HomePage() {
   const { data: customSections } = useCustomSections();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { location: userLocation, status: locationStatus } = useUserLocation();
 
   const [socialSettings, setSocialSettings] =
@@ -1702,7 +1704,13 @@ export default function HomePage() {
               <button
                 type="button"
                 data-ocid="digital_invest.primary_button"
-                onClick={() => navigate("/crypto")}
+                onClick={() => {
+                  if (!user) {
+                    navigate("/signup?role=trader");
+                  } else {
+                    navigate("/digital-invest");
+                  }
+                }}
                 className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl hover:shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all active:scale-[0.99]"
               >
                 {/* Subtle shimmer overlay */}

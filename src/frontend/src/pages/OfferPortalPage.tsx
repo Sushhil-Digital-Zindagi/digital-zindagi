@@ -790,23 +790,56 @@ function SignupView({
             return;
           }
 
+          const lower = msg.toLowerCase();
+
+          // Extract the clean mapped message when we wrapped a raw error
+          const displayMsg = msg.startsWith("__RAW__")
+            ? msg.slice("__RAW__".length, msg.indexOf("__RAWEND__"))
+            : msg;
+
           const isAlreadyRegistered =
-            msg.toLowerCase().includes("already") ||
-            msg.toLowerCase().includes("pehle se registered") ||
-            msg.toLowerCase().includes("already registered") ||
-            msg.toLowerCase().includes("yeh email already");
+            lower.includes("already") ||
+            lower.includes("pehle se registered") ||
+            lower.includes("already registered") ||
+            lower.includes("yeh email already") ||
+            lower.includes("already exists");
+
+          const isNetworkError =
+            lower.includes("timeout") ||
+            lower.includes("unavailable") ||
+            lower.includes("network") ||
+            lower.includes("fetch") ||
+            lower.includes("internet connection slow") ||
+            lower.includes("server se connect nahi") ||
+            lower.includes("server error aaya") ||
+            lower.includes("thodi der baad") ||
+            lower.includes("connect nahi");
+
           if (isAlreadyRegistered) {
-            toast.error("Yeh email already registered hai — Login karein");
-            setErrorMsg("Yeh email already registered hai — Login karein");
-          } else if (
-            msg.toLowerCase().includes("server") ||
-            msg.toLowerCase().includes("connect")
-          ) {
+            toast.error("Yeh email pehle se registered hai. Login karein.");
+            setErrorMsg("Yeh email pehle se registered hai. Login karein.");
+          } else if (isNetworkError) {
             setErrorMsg(
-              "Server se connect nahi ho pa raha, 1 minute baad try karein",
+              "Server se connect nahi ho paa raha. 1 minute baad try karein.",
             );
-          } else {
+          } else if (displayMsg && displayMsg !== msg) {
+            // Wrapped raw error — show the clean mapped message
+            setErrorMsg(displayMsg);
+          } else if (lower.includes("server") || lower.includes("connect")) {
+            setErrorMsg(
+              "Server se connect nahi ho paa raha. 1 minute baad try karein.",
+            );
+          } else if (
+            msg &&
+            !lower.includes("registration nahi ho payi") &&
+            msg.length < 120
+          ) {
+            // Meaningful backend error — show it directly
             setErrorMsg(msg);
+          } else {
+            setErrorMsg(
+              "Registration nahi ho payi. Email aur password check karein aur dobara try karein.",
+            );
           }
         },
       },

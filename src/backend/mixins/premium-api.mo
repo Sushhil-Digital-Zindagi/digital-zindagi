@@ -2,7 +2,6 @@
 import Map        "mo:core/Map";
 import List       "mo:core/List";
 import Time       "mo:core/Time";
-import Principal  "mo:core/Principal";
 import Types      "../types/premium";
 import PremiumLib "../lib/premium";
 

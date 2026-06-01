@@ -108,7 +108,11 @@ function withTimeout<T>(promise: Promise<T>, ms = 30000): Promise<T> {
 }
 
 export default function SignupPage() {
-  const [role, setRole] = useState<"customer" | "provider">("customer");
+  const [role, setRole] = useState<"customer" | "provider" | "trader">(
+    "customer",
+  );
+  const [shopName, setShopName] = useState("");
+  const [shopCategory, setShopCategory] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
@@ -380,12 +384,16 @@ export default function SignupPage() {
       const passwordHash = await hashPassword(password);
 
       // BLOCKING canister call — await confirmation
+      // Trader maps to customer in the backend enum
+      const backendRole =
+        role === "provider" ? UserRole.provider : UserRole.customer;
+
       const custResult = await withTimeout(
         (actor as unknown as ActorWithRegister).registerUser(
           name.trim(),
           mobile.trim(),
           passwordHash,
-          UserRole.customer,
+          backendRole,
           secQ,
           secA.trim(),
         ),
@@ -502,33 +510,97 @@ export default function SignupPage() {
               <p className="text-sm font-medium text-foreground mb-2">
                 Aap kaun hain?
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   data-ocid="signup.toggle"
                   onClick={() => setRole("customer")}
-                  className={`flex items-center gap-2 justify-center p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
+                  className={`flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${
                     role === "customer"
                       ? "border-primary bg-accent text-accent-foreground"
                       : "border-border text-muted-foreground hover:border-primary/40"
                   }`}
                 >
-                  <User2 size={16} /> Customer
+                  <User2 size={14} /> Customer
                 </button>
                 <button
                   type="button"
                   data-ocid="signup.toggle"
                   onClick={() => setRole("provider")}
-                  className={`flex items-center gap-2 justify-center p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
+                  className={`flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${
                     role === "provider"
                       ? "border-primary bg-accent text-accent-foreground"
                       : "border-border text-muted-foreground hover:border-primary/40"
                   }`}
                 >
-                  <Briefcase size={16} /> Provider
+                  <Briefcase size={14} /> Provider
+                </button>
+                <button
+                  type="button"
+                  data-ocid="signup.trader_toggle"
+                  onClick={() => setRole("trader")}
+                  className={`flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${
+                    role === "trader"
+                      ? "border-primary bg-accent text-accent-foreground"
+                      : "border-border text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Tv2 size={14} /> Trader
                 </button>
               </div>
             </div>
+
+            {/* Extra fields for provider and trader */}
+            {(role === "provider" || role === "trader") && (
+              <div className="space-y-4">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-foreground mb-1.5"
+                    htmlFor="shop-name"
+                  >
+                    {role === "trader" ? "Business / Shop Naam" : "Shop Naam"}{" "}
+                    <span className="text-muted-foreground text-xs">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    id="shop-name"
+                    data-ocid="signup.shop_name_input"
+                    type="text"
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    placeholder={
+                      role === "trader" ? "Business ka naam" : "Dukaan ka naam"
+                    }
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-foreground mb-1.5"
+                    htmlFor="shop-category-text"
+                  >
+                    {role === "trader" ? "Trade Category" : "Shop Category"}{" "}
+                    <span className="text-muted-foreground text-xs">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    id="shop-category-text"
+                    data-ocid="signup.shop_category_input"
+                    type="text"
+                    value={shopCategory}
+                    onChange={(e) => setShopCategory(e.target.value)}
+                    placeholder={
+                      role === "trader"
+                        ? "jaise: Gold, Silver, Electronics"
+                        : "jaise: Grocery, Electronics"
+                    }
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Category dropdown — only for providers */}
             {role === "provider" && (

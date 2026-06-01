@@ -2355,7 +2355,7 @@ function AdminSettings() {
   const { data: adminSettingsData } = useGetAdminSettings();
   const updateAdminSettings = useUpdateAdminSettings();
   const [cloudinaryCloudName, setCloudinaryCloudName] = useState(
-    localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o",
+    localStorage.getItem("dz_cloudinary_cloud_name") ?? "dqruy1u7o",
   );
   const [cloudinaryApiKey, setCloudinaryApiKey] = useState(
     localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688",
@@ -3031,7 +3031,7 @@ function AdminSettings() {
               type="text"
               value={cloudinaryCloudName}
               onChange={(e) => setCloudinaryCloudName(e.target.value)}
-              placeholder="e.g. dquyiiu7o"
+              placeholder="e.g. dqruy1u7o"
               className="w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>

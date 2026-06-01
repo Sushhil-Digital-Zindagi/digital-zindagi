@@ -1,28 +1,21 @@
 {
-  "overview": "Digital Zindagi is a premium super-app for India with crypto trading, offer earning, recharge, Ludo game, chat, and more — all managed from a powerful Admin Panel with instant universal sync.",
+  "overview": "Digital Zindagi is a multi-service super-app for India with recharge, crypto trading, offer portal, chat, and more",
   "features": [
-    "Crypto Trading with live prices, charts, and MPIN security",
-    "Payment & Deposit system with UPI/QR code",
-    "Stop-Loss auto-sell feature",
-    "Price charts (1D/1W/1M)",
-    "Coin logo upload to Cloudinary",
-    "Referral bonus after first trade",
-    "Offer Portal with CPAGrip offers",
-    "Multi-role Admin Panel",
-    "Ludo Game with 3D dice",
-    "WhatsApp-style Chat module",
-    "Recharge system with wallet"
+    "Crypto trading with live prices, portfolio, and MPIN security",
+    "Offer portal with CPAGrip integration for user earnings",
+    "Mobile recharge with commission system",
+    "Admin panel controlling all features and settings",
+    "P2P deposit system with UTR verification and admin approval",
+    "Chat, marketplace, Ludo game, and more"
   ],
-  "category": "finance",
+  "category": "super-app",
   "tags": [
-    "crypto",
-    "trading",
-    "super-app",
     "india",
     "fintech",
-    "offer-wall",
-    "admin-panel",
-    "pwa"
+    "crypto",
+    "recharge",
+    "earning",
+    "admin-panel"
   ],
-  "last_updated": "2026-05-07T06:44:06.622Z"
+  "last_updated": "2026-06-01T09:48:27.850Z"
 }

@@ -1,7 +1,6 @@
 // lib/marketplace.mo — Marketplace domain logic (stateless, state injected)
 import Map       "mo:core/Map";
 import Types     "../types/marketplace";
-import Principal "mo:core/Principal";
 import Int       "mo:core/Int";
 import Nat       "mo:core/Nat";
 import Text      "mo:core/Text";
@@ -91,7 +90,7 @@ module {
   ) : [Types.MarketListing] {
     listings.values()
       .filter(func(l : Types.MarketListing) : Bool {
-        Principal.equal(l.sellerId, callerId) and l.isActive
+        l.sellerId == callerId and l.isActive
       })
       .toArray();
   };
@@ -111,7 +110,7 @@ module {
     switch (listings.get(id)) {
       case null { #err("Listing not found") };
       case (?l) {
-        if (not Principal.equal(l.sellerId, callerId)) {
+        if (l.sellerId != callerId) {
           return #err("Unauthorized: You do not own this listing");
         };
         let newTitle   = switch (title)           { case null { l.title };           case (?v) { v } };
@@ -143,7 +142,7 @@ module {
     switch (listings.get(id)) {
       case null { #err("Listing not found") };
       case (?l) {
-        if (not isAdmin and not Principal.equal(l.sellerId, callerId)) {
+        if (not isAdmin and l.sellerId != callerId) {
           return #err("Unauthorized: You do not own this listing");
         };
         listings.add(id, { l with isActive = false });

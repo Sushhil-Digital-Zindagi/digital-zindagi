@@ -28,9 +28,10 @@ args = [
   "-E=M0236,M0235,M0223,M0237",
   "-A=M0198"
 ]
+version = "1.8.2"
 
 [dependencies]
 core = "2.2.0"
-caffeineai-authorization = "0.1.0"
-caffeineai-object-storage = "0.1.1"
-caffeineai-user-approval = "0.1.0"
+caffeineai-authorization = "0.1.1"
+caffeineai-object-storage = "0.1.2"
+caffeineai-user-approval = "0.1.1"

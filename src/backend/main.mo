@@ -11,7 +11,6 @@ import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Order "mo:core/Order";
-import Principal "mo:core/Principal";
 import Int "mo:core/Int";
 import Float "mo:core/Float";
 import WRTypes    "types/wallet-recharge";
@@ -35,7 +34,7 @@ import PremTypes  "types/premium";
 import PremApi    "mixins/premium-api";
 import CryptoTypes "types/crypto";
 import CryptoLib "lib/crypto";
-import Migration "migration";
+
 
 
 
@@ -45,7 +44,7 @@ import Migration "migration";
 
 
 
-(with migration = Migration.run)
+
 persistent actor {
   type MobileNumber = Text;
   type PlanType = {

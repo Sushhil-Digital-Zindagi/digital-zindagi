@@ -1,7 +1,6 @@
 // mixins/marketplace-api.mo — Marketplace domain API module
 import Map          "mo:core/Map";
 import Time         "mo:core/Time";
-import Principal    "mo:core/Principal";
 import Types        "../types/marketplace";
 import MarketLib    "../lib/marketplace";
 

@@ -52868,14 +52868,12 @@ function useLiveCoinPrices(coinGeckoIds) {
 }
 async function uploadToCloudinary(file, config2, options) {
   var _a3;
-  const { cloudName, apiKey } = config2;
+  const { cloudName } = config2;
   const folder = (options == null ? void 0 : options.folder) ?? "digital-zindagi";
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "ml_default");
-  formData.append("api_key", apiKey);
+  formData.append("upload_preset", "digital_zindagi");
   formData.append("folder", folder);
-  formData.append("eager", "q_auto,f_auto,c_fill,w_400,h_400");
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
     { method: "POST", body: formData }
@@ -52889,7 +52887,7 @@ async function uploadToCloudinary(file, config2, options) {
     throw new Error(`Cloudinary error: ${result.error.message}`);
   }
   if (!result.secure_url) {
-    throw new Error("Cloudinary did not return a URL");
+    throw new Error("Image upload failed. Please try again.");
   }
   return result.secure_url;
 }
@@ -53244,7 +53242,7 @@ function ModuleSettings() {
     )
   ] });
 }
-const CLOUDINARY_CONFIG = { cloudName: "dquyiiu7o", apiKey: "199372638334688" };
+const CLOUDINARY_CONFIG = { cloudName: "dqruy1u7o", apiKey: "199372638334688" };
 function CoinLogoUpload({
   value,
   onChange
@@ -58202,7 +58200,7 @@ function useRegisterOfferUser() {
       });
       actorRef.current = getActor();
       setStatus("Server se connect ho rahe hain...");
-      const a2 = await waitForActor(actorRef, 9e4, (elapsedMs) => {
+      const a2 = await waitForActor(actorRef, 12e4, (elapsedMs) => {
         setStatus(getWarmupStatusMessage(elapsedMs));
       });
       const hash = await sha256hex$1(password);
@@ -58221,7 +58219,7 @@ function useRegisterOfferUser() {
           throw new Error(mapRegistrationError(firstErr));
         }
         setStatus("Dobara connect karne ki koshish kar rahe hain...");
-        await new Promise((r2) => setTimeout(r2, 3e3));
+        await new Promise((r2) => setTimeout(r2, 5e3));
         try {
           regResult = await a2.registerOfferUser(email, hash, refCodeArg);
         } catch (retryErr) {
@@ -58229,7 +58227,10 @@ function useRegisterOfferUser() {
             "[OfferPortal] registerOfferUser retry error:",
             retryErr
           );
-          throw new Error(mapRegistrationError(retryErr));
+          const retryMsg = (retryErr == null ? void 0 : retryErr.message) ?? (typeof retryErr === "string" ? retryErr : "");
+          throw new Error(
+            `__RAW__${mapRegistrationError(new Error(retryMsg))}__RAWEND__${retryMsg}`
+          );
         }
       }
       if (regResult && typeof regResult === "object") {
@@ -60623,7 +60624,7 @@ function AdminSettings() {
   const { data: adminSettingsData } = useGetAdminSettings();
   const updateAdminSettings = useUpdateAdminSettings();
   const [cloudinaryCloudName, setCloudinaryCloudName] = reactExports.useState(
-    localStorage.getItem("dz_cloudinary_cloud_name") ?? "dquyiiu7o"
+    localStorage.getItem("dz_cloudinary_cloud_name") ?? "dqruy1u7o"
   );
   const [cloudinaryApiKey, setCloudinaryApiKey] = reactExports.useState(
     localStorage.getItem("dz_cloudinary_api_key") ?? "199372638334688"
@@ -61310,7 +61311,7 @@ function AdminSettings() {
               type: "text",
               value: cloudinaryCloudName,
               onChange: (e3) => setCloudinaryCloudName(e3.target.value),
-              placeholder: "e.g. dquyiiu7o",
+              placeholder: "e.g. dqruy1u7o",
               className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             }
           )
@@ -102187,7 +102188,7 @@ function AddMoneyTab({
   const [successId, setSuccessId] = reactExports.useState("");
   const fileInputRef = u$1.useRef(null);
   const CLOUDINARY_CONFIG2 = {
-    cloudName: "dquyiiu7o",
+    cloudName: "dqruy1u7o",
     apiKey: "199372638334688"
   };
   const handleUtrChange = (val) => {
@@ -103101,6 +103102,11 @@ function DigitalInvestPage() {
   const { data: listedCoins = [] } = useListedCoins();
   const coinGeckoIds = listedCoins.map((c2) => c2.coinGeckoId).filter(Boolean);
   const { data: livePrices = {} } = useLiveCoinPrices(coinGeckoIds);
+  reactExports.useEffect(() => {
+    if (!user) {
+      window.location.href = "/signup?role=trader";
+    }
+  }, [user]);
   if (!configLoading && config2 && !config2.isEnabled && !isAdmin) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
@@ -103123,17 +103129,9 @@ function DigitalInvestPage() {
   }
   if (!user) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen flex items-center justify-center bg-background px-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl mb-3", children: "\\ud83d\\udd12" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold", children: "Pehle login karein" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-1", children: "Digital Invest use karne ke liye login zaroor hai" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "a",
-        {
-          href: "/login",
-          className: "mt-4 inline-block bg-emerald-600 text-white px-6 py-2 rounded-xl font-semibold",
-          children: "Login Karein"
-        }
-      )
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl mb-3", children: "🔒" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold", children: "Redirect ho raha hai..." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-1", children: "Digital Invest use karne ke liye signup/login zaroor hai" })
     ] }) });
   }
   const TABS2 = [
@@ -106717,6 +106715,7 @@ function HomePage() {
   const { data: customSections } = useCustomSections();
   const { t: t2 } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { location: userLocation, status: locationStatus } = useUserLocation();
   const [socialSettings, setSocialSettings] = reactExports.useState(readSocialSettings);
   const [affiliateSettings, setAffiliateSettings] = reactExports.useState(
@@ -107523,7 +107522,13 @@ function HomePage() {
                 {
                   type: "button",
                   "data-ocid": "digital_invest.primary_button",
-                  onClick: () => navigate("/crypto"),
+                  onClick: () => {
+                    if (!user) {
+                      navigate("/signup?role=trader");
+                    } else {
+                      navigate("/digital-invest");
+                    }
+                  },
                   className: "w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl hover:shadow-2xl hover:from-emerald-700 hover:to-teal-700 transition-all active:scale-[0.99]",
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -111641,16 +111646,29 @@ function SignupView({
             }, 2e3);
             return;
           }
-          const isAlreadyRegistered = msg.toLowerCase().includes("already") || msg.toLowerCase().includes("pehle se registered") || msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("yeh email already");
+          const lower = msg.toLowerCase();
+          const displayMsg = msg.startsWith("__RAW__") ? msg.slice("__RAW__".length, msg.indexOf("__RAWEND__")) : msg;
+          const isAlreadyRegistered = lower.includes("already") || lower.includes("pehle se registered") || lower.includes("already registered") || lower.includes("yeh email already") || lower.includes("already exists");
+          const isNetworkError = lower.includes("timeout") || lower.includes("unavailable") || lower.includes("network") || lower.includes("fetch") || lower.includes("internet connection slow") || lower.includes("server se connect nahi") || lower.includes("server error aaya") || lower.includes("thodi der baad") || lower.includes("connect nahi");
           if (isAlreadyRegistered) {
-            ue.error("Yeh email already registered hai — Login karein");
-            setErrorMsg("Yeh email already registered hai — Login karein");
-          } else if (msg.toLowerCase().includes("server") || msg.toLowerCase().includes("connect")) {
+            ue.error("Yeh email pehle se registered hai. Login karein.");
+            setErrorMsg("Yeh email pehle se registered hai. Login karein.");
+          } else if (isNetworkError) {
             setErrorMsg(
-              "Server se connect nahi ho pa raha, 1 minute baad try karein"
+              "Server se connect nahi ho paa raha. 1 minute baad try karein."
             );
-          } else {
+          } else if (displayMsg && displayMsg !== msg) {
+            setErrorMsg(displayMsg);
+          } else if (lower.includes("server") || lower.includes("connect")) {
+            setErrorMsg(
+              "Server se connect nahi ho paa raha. 1 minute baad try karein."
+            );
+          } else if (msg && !lower.includes("registration nahi ho payi") && msg.length < 120) {
             setErrorMsg(msg);
+          } else {
+            setErrorMsg(
+              "Registration nahi ho payi. Email aur password check karein aur dobara try karein."
+            );
           }
         }
       }
@@ -116850,7 +116868,11 @@ function withTimeout(promise, ms = 3e4) {
   ]);
 }
 function SignupPage() {
-  const [role, setRole] = reactExports.useState("customer");
+  const [role, setRole] = reactExports.useState(
+    "customer"
+  );
+  const [shopName, setShopName] = reactExports.useState("");
+  const [shopCategory, setShopCategory] = reactExports.useState("");
   const [name, setName] = reactExports.useState("");
   const [mobile, setMobile] = reactExports.useState("");
   const [email, setEmail] = reactExports.useState("");
@@ -117057,12 +117079,13 @@ function SignupPage() {
     setSubmitting(true);
     try {
       const passwordHash = await hashPassword(password);
+      const backendRole = role === "provider" ? UserRole.provider : UserRole.customer;
       const custResult = await withTimeout(
         actor.registerUser(
           name.trim(),
           mobile.trim(),
           passwordHash,
-          UserRole.customer,
+          backendRole,
           secQ,
           secA.trim()
         )
@@ -117148,16 +117171,16 @@ function SignupPage() {
           /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleCustomerSubmit, className: "px-8 py-7 space-y-5", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-medium text-foreground mb-2", children: "Aap kaun hain?" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-3 gap-3", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   "button",
                   {
                     type: "button",
                     "data-ocid": "signup.toggle",
                     onClick: () => setRole("customer"),
-                    className: `flex items-center gap-2 justify-center p-3 rounded-xl border-2 transition-all text-sm font-semibold ${role === "customer" ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:border-primary/40"}`,
+                    className: `flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${role === "customer" ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:border-primary/40"}`,
                     children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(UserRound, { size: 16 }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(UserRound, { size: 14 }),
                       " Customer"
                     ]
                   }
@@ -117168,11 +117191,78 @@ function SignupPage() {
                     type: "button",
                     "data-ocid": "signup.toggle",
                     onClick: () => setRole("provider"),
-                    className: `flex items-center gap-2 justify-center p-3 rounded-xl border-2 transition-all text-sm font-semibold ${role === "provider" ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:border-primary/40"}`,
+                    className: `flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${role === "provider" ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:border-primary/40"}`,
                     children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Briefcase, { size: 16 }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Briefcase, { size: 14 }),
                       " Provider"
                     ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    "data-ocid": "signup.trader_toggle",
+                    onClick: () => setRole("trader"),
+                    className: `flex items-center gap-1.5 justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold ${role === "trader" ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:border-primary/40"}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(TvMinimal, { size: 14 }),
+                      " Trader"
+                    ]
+                  }
+                )
+              ] })
+            ] }),
+            (role === "provider" || role === "trader") && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "label",
+                  {
+                    className: "block text-sm font-medium text-foreground mb-1.5",
+                    htmlFor: "shop-name",
+                    children: [
+                      role === "trader" ? "Business / Shop Naam" : "Shop Naam",
+                      " ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "(optional)" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    id: "shop-name",
+                    "data-ocid": "signup.shop_name_input",
+                    type: "text",
+                    value: shopName,
+                    onChange: (e3) => setShopName(e3.target.value),
+                    placeholder: role === "trader" ? "Business ka naam" : "Dukaan ka naam",
+                    className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "label",
+                  {
+                    className: "block text-sm font-medium text-foreground mb-1.5",
+                    htmlFor: "shop-category-text",
+                    children: [
+                      role === "trader" ? "Trade Category" : "Shop Category",
+                      " ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "(optional)" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    id: "shop-category-text",
+                    "data-ocid": "signup.shop_category_input",
+                    type: "text",
+                    value: shopCategory,
+                    onChange: (e3) => setShopCategory(e3.target.value),
+                    placeholder: role === "trader" ? "jaise: Gold, Silver, Electronics" : "jaise: Grocery, Electronics",
+                    className: "w-full border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                   }
                 )
               ] })

@@ -2,7 +2,6 @@
 // All functions accept injected state parameters; called directly from main.mo.
 import Map       "mo:core/Map";
 import List      "mo:core/List";
-import Principal "mo:core/Principal";
 import Text      "mo:core/Text";
 import Nat       "mo:core/Nat";
 // Result not needed — using inline variants

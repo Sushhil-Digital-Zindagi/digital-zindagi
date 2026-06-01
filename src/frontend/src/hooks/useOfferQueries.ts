@@ -463,11 +463,11 @@ export function useRegisterOfferUser() {
     }): Promise<OfferUser> => {
       const setStatus = onStatusChange ?? (() => {});
 
-      // Step 1: Wait for actor to be ready (up to 90s — cold ICP canister can take 50-60s)
+      // Step 1: Wait for actor to be ready (up to 120s — cold ICP canister can take 50-60s)
       // Update actorRef with current value before starting wait
       actorRef.current = getActor();
       setStatus("Server se connect ho rahe hain...");
-      const a = await waitForActor(actorRef, 90_000, (elapsedMs) => {
+      const a = await waitForActor(actorRef, 120_000, (elapsedMs) => {
         setStatus(getWarmupStatusMessage(elapsedMs));
       });
 
@@ -506,9 +506,9 @@ export function useRegisterOfferUser() {
           throw new Error(mapRegistrationError(firstErr));
         }
 
-        // Transient/network/timeout error → retry once after 3s with status message
+        // Transient/network/timeout error → retry once after 5s with status message
         setStatus("Dobara connect karne ki koshish kar rahe hain...");
-        await new Promise((r) => setTimeout(r, 3_000));
+        await new Promise((r) => setTimeout(r, 5_000));
         try {
           regResult = await a.registerOfferUser(email, hash, refCodeArg);
         } catch (retryErr) {
@@ -516,7 +516,13 @@ export function useRegisterOfferUser() {
             "[OfferPortal] registerOfferUser retry error:",
             retryErr,
           );
-          throw new Error(mapRegistrationError(retryErr));
+          // Include the actual error text so OfferPortalPage can show the right message
+          const retryMsg =
+            (retryErr as Error)?.message ??
+            (typeof retryErr === "string" ? retryErr : "");
+          throw new Error(
+            `__RAW__${mapRegistrationError(new Error(retryMsg))}__RAWEND__${retryMsg}`,
+          );
         }
       }
 
